@@ -1,21 +1,29 @@
-from django.http import HttpResponse
-from django.shortcuts import render
+from comments.views import add_comment
+from users.views import get_user_id_by_username
 from .models import Claim
-from django.views.decorators.csrf import csrf_protect, csrf_exempt
-import json
 
-# add a new claim to system.
-@csrf_exempt
+
+# add a new claim to the website.
 def add_claim(request):
-    #TODO: check for a post request
-    # request should contain body with all details.
+    if request.method == "POST":
+        claim_info = request.POST.dict()
+        claim = Claim(
+        title=claim_info['claim'],
+        category=claim_info['category'],
+        authentic_grade = -1
+        )
+        try:
+            claim.save()
+            add_comment(claim.id, get_user_id_by_username(claim_info['username']), claim_info['title'],
+                        claim_info['description'], claim_info['url'], claim_info['verdict_date'],
+                        claim_info['tags'], claim_info['label'])
+        except Exception as e:
+            print('Adding new comment failed ' + str(e))
 
-    body = request.POST.dict()
-    claim = Claim(
-        title=body['title'],
-        category=body['category'],
-        authentic_grade = 1
-    )
 
-    claim.save()
-    return HttpResponse(status=204)
+def get_all_claims():
+    Claim.objects.all()
+
+
+def reset_claims():
+    Claim.objects.all().delete()

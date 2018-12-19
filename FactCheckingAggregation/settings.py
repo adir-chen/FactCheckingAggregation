@@ -31,9 +31,10 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'entities.apps.EntitiesConfig',
+    'claims.apps.ClaimsConfig',
+    'comments.apps.CommentsConfig',
+    'users.apps.UsersConfig',
     'home',
-    'claims',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

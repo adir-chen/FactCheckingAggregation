@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class TryappConfig(AppConfig):
+class ClaimsConfig(AppConfig):
     name = 'claims'

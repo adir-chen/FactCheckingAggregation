@@ -1,136 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="78ad3f19-e56d-4b58-9524-c7c57f105c2e" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/claims/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/claims/admin.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/claims/apps.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/claims/migrations/0001_initial.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/claims/migrations/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/claims/models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/claims/tests.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/claims/urls.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/claims/views.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/entities/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/entities/admin.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/entities/apps.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/entities/migrations/0001_initial.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/entities/migrations/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/entities/models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/entities/tests.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/entities/views.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/factChecking" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/home/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/home/admin.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/home/apps.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/home/migrations/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/home/models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/home/tests.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/home/urls.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/home/views.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/404.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/css/animate.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/css/bootstrap-progressbar-3.3.4.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/css/bootstrap.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/css/font-awesome.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/css/jquery.fancybox.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/css/slick.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/css/theme-color/bridge-theme.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/css/theme-color/dark-red-theme.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/css/theme-color/default-theme.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/css/theme-color/fountain-blue-theme.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/css/theme-color/green-theme.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/css/theme-color/lite-blue-theme.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/css/theme-color/orange-theme.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/css/theme-color/pink-theme.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/css/theme-color/purple-theme.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/css/theme-color/red-theme.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/fonts/FontAwesome.otf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/fonts/fontawesome-webfont.eot" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/fonts/fontawesome-webfont.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/fonts/fontawesome-webfont.ttf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/fonts/fontawesome-webfont.woff" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/fonts/fontawesome-webfont.woff2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/fonts/glyphicons-halflings-regular.eot" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/fonts/glyphicons-halflings-regular.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/fonts/glyphicons-halflings-regular.ttf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/fonts/glyphicons-halflings-regular.woff" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/fonts/glyphicons-halflings-regular.woff2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/amazon.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/blog-img-1.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/blog-img-2.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/blog-img-3.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/counter-bg.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/discovery.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/envato.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/fancybox_buttons.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/fancybox_loading.gif" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/fancybox_loading@2x.gif" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/fancybox_overlay.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/fancybox_sprite.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/fancybox_sprite@2x.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/favicon.ico" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/loader.gif" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/logo.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/person1.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/person2.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/portfolio/portfolio-1.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/portfolio/portfolio-2.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/portfolio/portfolio-3.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/portfolio/portfolio-4.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/portfolio/portfolio-5.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/portfolio/portfolio-big-1.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/portfolio/portfolio-big-2.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/portfolio/portfolio-big-3.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/portfolio/portfolio-big-4.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/portfolio/portfolio-big-5.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/slider-1.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/slider-3.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/slider-5.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/subscribe-bg.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/team-member-1.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/team-member-2.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/team-member-3.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/testi1.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/testi2.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/testi3.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/testimonial-1.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/images/tuenti.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/js/bootstrap-progressbar.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/js/bootstrap.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/js/custom.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/js/jquery.counterup.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/js/jquery.fancybox.pack.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/js/jquery.mixitup.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/js/slick.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/js/waypoints.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/assets/js/wow.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/blog-archive.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/blog-single-with-left-sidebar.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/blog-single-with-out-sidebar.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/blog-single-with-right-sidebar.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/contact.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/feature.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/portfolio.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/service.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/Intensely/style.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScrapingManagement/.idea/WebScrapingManagement.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScrapingManagement/.idea/dictionaries/adirc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScrapingManagement/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScrapingManagement/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScrapingManagement/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScrapingManagement/AbstractScraper.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScrapingManagement/Main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScrapingManagement/Polygraph.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScrapingManagement/SnopesScraper.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScrapingManagement/TruthOrFictionScraper.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScrapingManagement/WebScrapingManage.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/FactCheckingAggregation.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/FactCheckingAggregation.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="78ad3f19-e56d-4b58-9524-c7c57f105c2e" name="Default" comment="WSM, DB, pages were added">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/FactCheckingAggregation/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/FactCheckingAggregation/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FactCheckingAggregation/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/FactCheckingAggregation/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/claims/apps.py" beforeDir="false" afterPath="$PROJECT_DIR$/claims/apps.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/claims/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/claims/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entities/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/entities/admin.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/entities/apps.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/entities/migrations/0001_initial.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/entities/migrations/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/entities/models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/entities/tests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/entities/views.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/factChecking" beforeDir="false" afterPath="$PROJECT_DIR$/factChecking" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/home/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/home/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/users/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/users/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WebScrapingManagement/SnopesScraper.py" beforeDir="false" afterPath="$PROJECT_DIR$/../WebScrapingManagement/SnopesScraper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WebScrapingManagement/WebScrapingManage.py" beforeDir="false" afterPath="$PROJECT_DIR$/../WebScrapingManagement/WebScrapingManage.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -141,81 +29,52 @@
   </component>
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/FactCheckingAggregation$WSM.coverage" NAME="WSM Coverage Results" MODIFIED="1545068918410" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../WebScrapingManagement" />
-    <SUITE FILE_PATH="coverage/FactCheckingAggregation$Main.coverage" NAME="Main Coverage Results" MODIFIED="1545069286702" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../WebScrapingManagement" />
+    <SUITE FILE_PATH="coverage/FactCheckingAggregation$Main.coverage" NAME="Main Coverage Results" MODIFIED="1545226312656" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../WebScrapingManagement" />
   </component>
   <component name="DjangoConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)">
     <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
-      <file leaf-file-name="request.py" pinned="false" current-in-tab="true">
-        <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/urllib/request.py">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file leaf-file-name="views.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/users/views.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="350">
-              <caret line="14" column="33" lean-forward="true" selection-start-line="14" selection-start-column="33" selection-end-line="14" selection-end-column="33" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="WebScrapingManage.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../WebScrapingManagement/WebScrapingManage.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="146">
-              <caret line="13" column="49" lean-forward="true" selection-start-line="13" selection-start-column="49" selection-end-line="13" selection-end-column="49" />
-              <folding>
-                <element signature="e#0#15#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Main.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../WebScrapingManagement/Main.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="325">
-              <caret line="13" selection-start-line="13" selection-end-line="13" />
-              <folding>
-                <element signature="e#0#47#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="SnopesScraper.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../WebScrapingManagement/SnopesScraper.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="275">
-              <caret line="11" column="8" selection-start-line="11" selection-start-column="8" selection-end-line="11" selection-end-column="8" />
-              <folding>
-                <element signature="e#0#43#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="AbstractScraper.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../WebScrapingManagement/AbstractScraper.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="221">
-              <caret line="18" selection-start-line="18" selection-end-line="18" />
-              <folding>
-                <element signature="e#0#43#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="313">
+              <caret line="21" lean-forward="true" selection-start-line="21" selection-end-line="21" />
             </state>
           </provider>
         </entry>
       </file>
     </leaf>
   </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>claim</find>
+      <find>form</find>
+      <find>clai</find>
+      <find>csrf</find>
+    </findStrings>
+  </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$USER_HOME$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/claims/views.py" />
-        <option value="$PROJECT_DIR$/../WebScrapingManagement/SnopesScraper.py" />
         <option value="$PROJECT_DIR$/../WebScrapingManagement/Main.py" />
+        <option value="$PROJECT_DIR$/users/models.py" />
+        <option value="$PROJECT_DIR$/comments/admin.py" />
+        <option value="$PROJECT_DIR$/users/admin.py" />
+        <option value="$PROJECT_DIR$/claims/apps.py" />
+        <option value="$PROJECT_DIR$/claims/models.py" />
+        <option value="$PROJECT_DIR$/FactCheckingAggregation/settings.py" />
+        <option value="$PROJECT_DIR$/../WebScrapingManagement/SnopesScraper.py" />
+        <option value="$PROJECT_DIR$/home/views.py" />
+        <option value="$PROJECT_DIR$/comments/models.py" />
+        <option value="$PROJECT_DIR$/../WebScrapingManagement/WebScrapingManage.py" />
+        <option value="$PROJECT_DIR$/claims/views.py" />
+        <option value="$PROJECT_DIR$/comments/views.py" />
+        <option value="$PROJECT_DIR$/users/views.py" />
       </list>
     </option>
   </component>
@@ -254,6 +113,36 @@
             <path>
               <item name="FactCheckingAggregation" type="b2602c69:ProjectViewProjectNode" />
               <item name="FactCheckingAggregation" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="FactCheckingAggregation" type="462c0819:PsiDirectoryNode" />
+              <item name="claims" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="FactCheckingAggregation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="FactCheckingAggregation" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="FactCheckingAggregation" type="462c0819:PsiDirectoryNode" />
+              <item name="comments" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="FactCheckingAggregation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="FactCheckingAggregation" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="FactCheckingAggregation" type="462c0819:PsiDirectoryNode" />
+              <item name="FactCheckingAggregation" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="FactCheckingAggregation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="FactCheckingAggregation" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="FactCheckingAggregation" type="462c0819:PsiDirectoryNode" />
+              <item name="home" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="FactCheckingAggregation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="FactCheckingAggregation" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="FactCheckingAggregation" type="462c0819:PsiDirectoryNode" />
+              <item name="users" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="FactCheckingAggregation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="FactCheckingAggregation" type="47feb1d3:ProjectViewModuleNode" />
               <item name="WebScrapingManagement" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
@@ -283,7 +172,7 @@
     </option>
   </component>
   <component name="RunManager" selected="Python.Main">
-    <configuration name="Main" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="Main" type="PythonConfigurationType" factoryName="Python">
       <module name="FactCheckingAggregation" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -329,11 +218,6 @@
       <item itemvalue="Django server.FactCheckingAggregation" />
       <item itemvalue="Python.Main" />
     </list>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Python.Main" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -346,20 +230,37 @@
       <option name="presentableId" value="Default" />
       <updated>1545067243530</updated>
     </task>
+    <task id="LOCAL-00001" summary="WSM, DB, pages were added">
+      <created>1545069659540</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1545069659540</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="TodoView" selected-index="4">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.32965517" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Database Changes" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.32965517" />
+      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.32965517" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.32965517" />
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.1842448" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.1842448" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="right" id="Database" order="3" />
       <window_info anchor="right" id="SciView" order="3" />
@@ -381,35 +282,334 @@
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="WSM, DB, pages were added" />
+    <option name="LAST_COMMIT_MESSAGE" value="WSM, DB, pages were added" />
+  </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../WebScrapingManagement/AbstractScraper.py</url>
-          <line>17</line>
-        </line-breakpoint>
-      </breakpoints>
-      <option name="time" value="1" />
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+      <option name="time" value="9" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/claims/views.py">
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/urllib/request.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="400">
-          <caret line="16" column="27" selection-start-line="16" selection-start-column="27" selection-end-line="16" selection-end-column="27" />
+        <state relative-caret-position="350">
+          <caret line="14" column="33" lean-forward="true" selection-start-line="14" selection-start-column="33" selection-end-line="14" selection-end-column="33" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../WebScrapingManagement/WebScrapingManage.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="275">
+          <caret line="13" column="49" lean-forward="true" selection-start-line="13" selection-start-column="49" selection-end-line="13" selection-end-column="49" />
           <folding>
-            <element signature="e#0#36#0" expanded="true" />
+            <element signature="e#0#15#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../WebScrapingManagement/Main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="300">
+          <caret line="13" selection-start-line="13" selection-end-line="13" />
+          <folding>
+            <element signature="e#0#47#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../WebScrapingManagement/SnopesScraper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="250">
+          <caret line="11" column="8" selection-start-line="11" selection-start-column="8" selection-end-line="11" selection-end-column="8" />
+          <folding>
+            <element signature="e#0#43#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../WebScrapingManagement/AbstractScraper.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
+        <state relative-caret-position="250">
           <caret line="18" selection-start-line="18" selection-end-line="18" />
           <folding>
             <element signature="e#0#43#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/claims/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="225">
+          <caret line="9" column="5" selection-start-line="9" selection-start-column="5" selection-end-line="9" selection-end-column="5" />
+          <folding>
+            <element signature="e#0#36#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/urllib/request.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="25">
+          <caret line="14" column="33" selection-start-line="14" selection-start-column="33" selection-end-line="14" selection-end-column="33" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../WebScrapingManagement/Polygraph.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#0#22#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/entities/__init__.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/comments/admin.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="100">
+          <caret line="4" column="25" lean-forward="true" selection-start-line="4" selection-start-column="25" selection-end-line="4" selection-end-column="25" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/claims/admin.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/entities/admin.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="100">
+          <caret line="4" selection-start-line="4" selection-end-line="4" selection-end-column="25" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/users/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="3" column="29" lean-forward="true" selection-start-line="3" selection-start-column="29" selection-end-line="3" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/users/admin.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="100">
+          <caret line="4" column="21" selection-start-line="4" selection-start-column="21" selection-end-line="4" selection-end-column="21" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/entities/apps.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/entities/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="250">
+          <caret line="10" column="7" selection-start-line="10" selection-start-column="7" selection-end-line="10" selection-end-column="7" />
+          <folding>
+            <element signature="e#0#28#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/entities/tests.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/entities/views.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/entities/migrations/0001_initial.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/FactCheckingAggregation/settings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="200">
+          <caret line="35" column="29" lean-forward="true" selection-start-line="35" selection-start-column="29" selection-end-line="35" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/claims/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="250">
+          <caret line="10" column="21" selection-start-line="10" selection-start-column="21" selection-end-line="10" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../WebScrapingManagement/SnopesScraper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="524">
+          <caret line="37" column="68" selection-start-line="37" selection-start-column="68" selection-end-line="37" selection-end-column="68" />
+          <folding>
+            <element signature="e#0#43#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/comments/apps.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/claims/apps.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="27" lean-forward="true" selection-start-column="27" selection-end-column="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../WebScrapingManagement/AbstractScraper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
+          <folding>
+            <element signature="e#0#43#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/FactCheckingAggregation/__init__.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/FactCheckingAggregation/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-225" />
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/site-packages/django/utils/deprecation.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="288">
+          <caret line="91" column="6" lean-forward="true" selection-start-line="91" selection-start-column="6" selection-end-line="91" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/site-packages/django/views/decorators/csrf.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="185">
+          <caret line="53" selection-start-line="53" selection-end-line="53" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/site-packages/django/core/handlers/base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="129">
+          <caret line="157" selection-start-line="157" selection-end-line="157" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/site-packages/django/db/models/query.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="336">
+          <caret line="284" selection-start-line="284" selection-end-line="284" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../WebScrapingManagement/TruthOrFictionScraper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="25">
+          <caret line="1" selection-start-line="1" selection-end-line="1" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/site-packages/django/core/handlers/exception.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="286">
+          <caret line="36" selection-start-line="36" selection-end-line="36" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/comments/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="325">
+          <caret line="13" column="49" selection-start-line="13" selection-start-column="49" selection-end-line="13" selection-end-column="49" />
+          <folding>
+            <element signature="e#0#28#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/home/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="250">
+          <caret line="10" column="17" selection-start-line="10" selection-start-column="17" selection-end-line="10" selection-end-column="17" />
+          <folding>
+            <element signature="e#0#36#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/site-packages/django/conf/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="129">
+          <caret line="56" selection-start-line="56" selection-end-line="56" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/codecs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="236">
+          <caret line="311" selection-start-line="311" selection-end-line="311" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/Intensely/portfolio.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="137">
+          <caret line="111" column="15" selection-start-line="111" selection-start-column="11" selection-end-line="111" selection-end-column="15" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/Intensely/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1186">
+          <caret line="51" column="8" selection-start-line="51" selection-start-column="8" selection-end-line="51" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/site-packages/requests/api.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="211">
+          <caret line="67" column="19" lean-forward="true" selection-start-line="67" selection-start-column="19" selection-end-line="67" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/site-packages/urllib3/response.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="211">
+          <caret line="522" selection-start-line="522" selection-end-line="522" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/Intensely/service.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="137">
+          <caret line="11" column="25" selection-start-line="11" selection-start-column="25" selection-end-line="11" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/site-packages/django/db/models/manager.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="129">
+          <caret line="191" selection-start-line="191" selection-end-line="191" />
         </state>
       </provider>
     </entry>
@@ -425,28 +625,32 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../WebScrapingManagement/WebScrapingManage.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="146">
-          <caret line="13" column="49" lean-forward="true" selection-start-line="13" selection-start-column="49" selection-end-line="13" selection-end-column="49" />
+        <state relative-caret-position="400">
+          <caret line="16" column="112" selection-start-line="16" selection-start-column="112" selection-end-line="16" selection-end-column="112" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../WebScrapingManagement/SnopesScraper.py">
+    <entry file="file://$PROJECT_DIR$/comments/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="275">
-          <caret line="11" column="8" selection-start-line="11" selection-start-column="8" selection-end-line="11" selection-end-column="8" />
-          <folding>
-            <element signature="e#0#43#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="950">
+          <caret line="38" lean-forward="true" selection-start-line="38" selection-end-line="38" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/urllib/request.py">
+    <entry file="file://$PROJECT_DIR$/claims/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="350">
-          <caret line="14" column="33" lean-forward="true" selection-start-line="14" selection-start-column="33" selection-end-line="14" selection-end-column="33" />
+        <state relative-caret-position="75">
+          <caret line="5" selection-start-line="5" selection-end-line="5" selection-end-column="33" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/users/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="313">
+          <caret line="21" lean-forward="true" selection-start-line="21" selection-end-line="21" />
         </state>
       </provider>
     </entry>
