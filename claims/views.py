@@ -4,7 +4,7 @@ from .models import Claim
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 import json
 
-# add a new claim to system.
+# add a new claims to system.
 @csrf_exempt
 def add_claim(request):
     #TODO: check for a post request
@@ -19,3 +19,10 @@ def add_claim(request):
 
     claim.save()
     return HttpResponse(status=204)
+
+
+def view_claim(request):
+    return render(request, 'claims/claim.html', {
+        'claim': 'Did CNN’s Don Lemon Say the ‘Biggest Terror Threat in This Country Is White Men’?',
+        'authenticity_grade': 'True'
+    })

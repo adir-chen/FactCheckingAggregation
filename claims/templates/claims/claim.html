@@ -1,0 +1,13 @@
+{% extends 'claims/layout.html' %}
+
+{% block claim_head_title %}
+    FactCheckProject | {{ claim }}
+{% endblock %}
+
+{% block claim_title %}
+    {{ claim }}
+{% endblock %}
+
+{% block claim_authenticity %}
+    <h2 style="color: green;">{{ authenticity_grade }}</h2>
+{% endblock %}
