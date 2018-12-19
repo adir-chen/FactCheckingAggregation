@@ -58,11 +58,7 @@
                 <div class="row">
                     <div class="col-md-6 col-sm-6 col-xs-6">
                         <div class="header-contact">
-                            <ul>
-                                <li>
-                                    add button here if necessary
-                                </li>
-                            </ul>
+
                         </div>
                     </div>
                     <div class="col-md-6 col-sm-6 col-xs-6">
@@ -94,13 +90,13 @@
                     <!-- IMG BASED LOGO  -->
                     <!-- <a class="navbar-brand" href="index.html"><img src="assets/images/logo.png" alt="logo"></a> -->
                 </div>
-            <div id="navbar" class="navbar-collapse collapse">
-                <ul id="top-menu" class="nav navbar-nav navbar-right main-nav">
-                    <li><a href="">Home</a></li>
-                    <li><a href="">About</a></li>
-                    <li><a href="">Contact Us</a></li>
-                </ul>
-            </div><!--/.nav-collapse -->
+                <div id="navbar" class="navbar-collapse collapse">
+                    <ul id="top-menu" class="nav navbar-nav navbar-right main-nav">
+                        <li><a href="">Home</a></li>
+                        <li><a href="">About</a></li>
+                        <li><a href="">Contact Us</a></li>
+                    </ul>
+                </div><!--/.nav-collapse -->
                 <!-- search icon -->
                 <a href="#" id="search-icon">
                     <i class="fa fa-search">
@@ -111,13 +107,26 @@
     </section>
     <!-- END MENU -->
 
-    <h1>
-        {% block claim_title %}
+    <!-- START PAGE CONTENT -->
+    <section id="blog-archive">
+        {% block page_content %}
 
         {% endblock %}
-    </h1>
-    {% block claim_authenticity %}
+    </section>
+    <!-- END PAGE CONTENT -->
 
-    {% endblock %}
+    <!-- Start footer -->
+    <footer id="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 col-sm-6">
+                    <div class="footer-left">
+                        <p>Designed by <a href="http://www.markups.io/">MarkUps.io</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- End footer -->
 </body>
 </html>

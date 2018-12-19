@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
                 ('label', models.CharField(max_length=50)),
                 ('pos_votes', models.IntegerField()),
                 ('neg_votes', models.IntegerField()),
-                ('claim', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='entities.Claim')),
+                ('claims', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='entities.Claim')),
             ],
         ),
         migrations.CreateModel(
