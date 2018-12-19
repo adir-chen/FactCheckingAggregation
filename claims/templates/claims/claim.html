@@ -1,5 +1,28 @@
 {% extends 'claims/layout.html' %}
 
+
+{% block claim_page %}
+    <div id="claim_page_wrapper">
+        <div>
+            <h1 id="claim_page_title">{{ title }}</h1><p>{{ authenticity_grade }}</p>
+        </div>
+        <div id="claim_page_comments">
+            <ul>
+                {% if comments %}
+                    {% for comment in comments %}
+                        {% include 'path to comment template' with comment=comment only %}
+                    {% endfor %}
+                {% else %}
+                    <h3>No Comments</h3>
+                {%  endif %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}
+
+
+
+
 {% block claim_head_title %}
     FactCheckProject | {{ claim }}
 {% endblock %}
