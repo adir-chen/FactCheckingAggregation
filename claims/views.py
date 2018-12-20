@@ -1,10 +1,12 @@
 from django.shortcuts import render
 
-from comments.views import add_comment
+from comments.models import Comment
+from comments.views import add_comment, get_all_comments_for_claim_id
 from users.views import get_user_id_by_username
 from .models import Claim
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 import json
+
 
 # add a new claim to system.
 @csrf_exempt
@@ -28,13 +30,21 @@ def add_claim(request):
 def get_all_claims():
     Claim.objects.all()
 
-
 def reset_claims():
     Claim.objects.all().delete()
 
 
 def view_claim(request):
+    data = request.POST.dict()
+    #Claim.objects.get(id=data['claim_id'])
+    claim = Claim.objects.filter(id=34)[0]
+    comments = get_all_comments_for_claim_id(34)
+    #print("comments")
+    #print(Comment.objects.filter(claim_id=34))
+    #request.session['comments'] = get_all_comments_for_claim_id(data['claim_id'])
     return render(request, 'claims/claim.html', {
-        'claim': 'Did CNN’s Don Lemon Say the ‘Biggest Terror Threat in This Country Is White Men’?',
-        'authenticity_grade': 'True'
+        'title': claim.title,
+        'category': claim.category,
+        'authenticity_grade': claim.authentic_grade,
+        'comments': Comment.objects.filter(claim_id=34),
     })
