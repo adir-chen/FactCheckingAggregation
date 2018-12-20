@@ -14,7 +14,8 @@ def add_claim(request):
         claim = Claim(
             title=claim_info['claim'],
             category=claim_info['category'],
-            authentic_grade = -1
+            authentic_grade = -1,
+            image_src=claim_info['img_src']
         )
         try:
             claim.save()
@@ -60,6 +61,7 @@ def view_claim(request, id):
         'title': claim.title,
         'category': claim.category,
         'authenticity_grade': claim.authentic_grade,
+        'image_url': claim.image_src,
         'comments': Comment.objects.filter(claim_id=id),
     })
 

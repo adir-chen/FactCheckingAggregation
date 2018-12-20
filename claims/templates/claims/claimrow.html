@@ -1,11 +1,7 @@
 {% load staticfiles%}
 
 <div class="claim_row">
-    {%  if claim.authentic_grade > 5 %}
-        <img src="{% static 'claims/true.jpg' %}">
-    {% else %}
-        <img src="{% static 'claims/false.jpg' %}">
-    {% endif %}
+    <img src="{{ claim.image_url }}">
     <div class="claim_row_info">
         <h3>{{ claim.title }}</h3>
         <p>
