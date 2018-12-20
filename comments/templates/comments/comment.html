@@ -1,0 +1,27 @@
+{#title=comment.title#}
+{#user_id = comment.user_id#}
+{#claim_id =comment.claim_id #}
+{#title =comment.title #}
+{#description = comment.description #}
+{#url = comment.url #}
+{#verdict_date =comment.verdict_date #}
+{#tags = comment.tags #}
+{#label = comment.label #}
+{#pos_votes = comment.pos_votes #}
+{#neg_votes = comment.neg_votes#}
+<div style="margin: auto;">
+    <table id="comment">
+        <tr>
+           <td class="left"><h3>{{ comment.title }}</h3></td>
+            <td class="right"><a href="#">User ID:{{ comment.user_id }}</a></td>
+        </tr>
+        <tr>
+            <td class="left"><p>{{ comment.description }}</p></td>
+            <td class="right"><p>{{ comment.label }}</p></td>
+        </tr>
+        <tr>
+            <td class="left">References: <a href={{ comment.url }}>website</a>,<a href="">image</a></td>
+            <td class="right"><p>Votes : +{{ comment.pos_votes }} -{{ comment.neg_votes }}</p></td>
+        </tr>
+    </table>
+</div>

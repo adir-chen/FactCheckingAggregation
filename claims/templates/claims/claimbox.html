@@ -1,0 +1,16 @@
+{% load staticfiles%}
+
+<div class="claim_box">
+    {%  if claim.authentic_grade > 5 %}
+        <img src="{% static 'claims/true.jpg' %}">
+    {% else %}
+        <img src="{% static 'claims/false.jpg' %}">
+    {% endif %}
+    <div class="claim_box_info">
+        <h3>{{ claim.title }}</h3>
+        <p>
+            Category: {{ claim.category }}
+        </p>
+        <a href="/claim/{{ claim.id }}">Read more...</a>
+    </div>
+</div>
