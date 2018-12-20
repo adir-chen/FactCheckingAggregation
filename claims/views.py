@@ -38,3 +38,7 @@ def view_claim(request):
         'claim': 'Did CNN’s Don Lemon Say the ‘Biggest Terror Threat in This Country Is White Men’?',
         'authenticity_grade': 'True'
     })
+
+
+def view_home(request):
+    return render(request, 'claims/index.html', {'headlines': Claim.objects.all()[:2], 'sub_headlines': Claim.objects.all()[2:17]})
