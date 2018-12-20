@@ -2,21 +2,25 @@
 
 
 {% block page_content %}
-    <div id="claim_page_wrapper">
-        <div id="claim_page_title_wrapper">
-            <a id="claim_page_title">{{ title }}</a><p>Authenticity Grade:{{ authenticity_grade }}</p>
+    <div id="claim_page">
+        <div  id="claim_page_title_wrapper">
+            <h1 id="claim_page_title">{{ title }}</h1>
+            <p>Authenticity Grade:{{ authenticity_grade }}</p>
         </div>
-        <div id="claim_page_comments">
-            <ul>
-                {% if comments %}
-                    {% for comment in comments %}
-                        {% include 'comments/comment.html' with comment=comment only %}
+
+        <div id="comments">
+            {% if comments %}
+                {% for comment in comments %}
+                    {% include 'comments/comment.html' with comment=comment only %}
 {#                        title=comment.title user_id = comment.user_id claim_id =comment.claim_id title =comment.title description = comment.description url = comment.url verdict_date =comment.verdict_date tags = comment.tags label = comment.label pos_votes = comment.pos_votes neg_votes = comment.neg_votes %}#}
-                    {% endfor %}
-                {% else %}
-                    <h3>No Comments</h3>
-                {%  endif %}
-            </ul>
+                {% endfor %}
+            {% else %}
+                <h3>No Comments</h3>
+            {%  endif %}
+        </div>
+        <div class="text">
+            <textarea placeholder="Enter new comment..."></textarea>
+            <div><button id="add_button" href="#">Add</button></div>
         </div>
     </div>
 {% endblock %}

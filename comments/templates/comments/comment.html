@@ -9,19 +9,19 @@
 {#label = comment.label #}
 {#pos_votes = comment.pos_votes #}
 {#neg_votes = comment.neg_votes#}
-<div class="comment" id="comment_wrapper">
+<div id="comment" >
     <table>
         <tr>
-           <td><p>{{ comment.title }}</p></td>
-            <td><a href="#">User ID:{{ comment.user_id }}</a></td>
+           <td class="left"><h3>{{ comment.title }}</h3></td>
+            <td class="right"><a href="#">User ID:{{ comment.user_id }}</a></td>
         </tr>
         <tr>
-            <td><p>{{ comment.description }}</p></td>
-            <td><p>{{ comment.label }}</p></td>
+            <td class="left"><p>{{ comment.description }}</p></td>
+            <td class="right"><p>{{ comment.label }}</p></td>
         </tr>
         <tr>
-            <td><p>References: {{ comment.description }}</p></td>
-            <td><p>{{ comment.label }}</p></td>
+            <td class="left">References: <a href={{ comment.url }}>website</a>,<a href="">image</a></td>
+            <td class="right"><p>Votes : +{{ comment.pos_votes }} -{{ comment.neg_votes }}</p></td>
         </tr>
     </table>
 </div>

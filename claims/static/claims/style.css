@@ -6,7 +6,7 @@ body {
 
 }
 
-a{ 
+a{
 	text-decoration: none;
 	color: #2f2f2f;
 }
@@ -224,12 +224,7 @@ img{
 /* MENU */
 /*--------------------*/
 
-#menu-area{
-	display: inline;
-	float: left;
-	width: 100%;
-	position: relative;
-}
+
 
 #menu-area #navbar {  
   padding-right: 50px;
@@ -280,36 +275,71 @@ img{
 /*--------------------*/
 /* Claim Page, made by barak */
 /*--------------------*/
-.comment{
-    margin-left:5%;
-    margin-right:5%;
-    margin-bottom: 3%;
-    padding: 1% 1% 1% 1%;
+#comment{
+    /*margin-left:5%;*/
+    /*margin-right:5%;*/
+    width:100%;
+    margin-bottom: 2%;
+    padding: 0% 1% 1% 1%;
     background-color: grey;
     color: black;
-
+    box-shadow: 5px 5px 5px lightgray;
+    max-height: 300px;
+    font-size: 13px;
+    /*border: 2px solid darkblue;*/
 }
-#claim_page_wrapper{
+#comment .left{
+    max-width: 900px;
+    width:900px;
+    padding-right: 10px;
+    border-right: 2px solid #323554;
+}
+#comment .right{
+    max-width: 150px;
+    width:150px;
+    padding-left: 10px;
+}
+
+#claim_page{
     margin-left:5%;
     margin-right:5%;
+    /*padding: 2% 5% 2% 5%;*/
+    /*border: 2px solid red;*/
 }
-#claim_page_title_wrapper{
-    /*overflow: hidden;*/
+
+#claim_page_title{
+    width: 80%;
 }
-    #claim_page_title{
-        width: 80%;
-        float:left;
-    }
+#claim_page_title_wrapper a{
+    /*font-size: 20;*/
+    /*float:left;*/
+}
 
-    #claim_page_authgrade{
-        width:10%;
-        float:left;
-        /*background-color: green;*/
-    }
+#claim_page_title_wrapper p{
+    /*float:right;*/
+}
 
-    #claim_page_comments{
-        /*float:none;*/
-    }
+#claim_page_authgrade{
+    width:10%;
+    float:right;
+    border: 2px solid orange;
+    /*background-color: green;*/
+}
+
+#comments{
+    /*float:none;*/
+
+}
+#claim_page textarea {
+    width: 80%;
+    height: 100px;
+    resize: none;
+}
+
+#claim_page #add_button{
+    width:5%;
+
+}
 
 /*--------------------*/
 /* Claim Page, made by barak */
