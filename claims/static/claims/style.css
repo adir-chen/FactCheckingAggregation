@@ -359,7 +359,7 @@ div.claim_box_large {
     padding: 0;
     background-color: #fff;
     margin: 30px 10px;
-    display:inline-table;
+    display: inline-table;
     text-align: left;
     box-shadow: 5px 8px #eee;
 }
@@ -378,7 +378,7 @@ div.claim_box {
     padding: 0;
     background-color: #fff;
     margin: 15px;
-    display:inline-table;
+    display: inline-table;
     box-shadow: 5px 8px #eee;
     text-align: left;
 }
