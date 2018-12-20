@@ -12,12 +12,19 @@
 <div style="margin: auto;">
     <table id="comment">
         <tr>
-           <td class="left"><h3>{{ comment.title }}</h3></td>
+            <td class="left"><h3>{{ comment.title }}</h3></td>
             <td class="right"><a href="#">User ID:{{ comment.user_id }}</a></td>
         </tr>
         <tr>
             <td class="left"><p>{{ comment.description }}</p></td>
-            <td class="right"><p>{{ comment.label }}</p></td>
+            <td class="right"><p>
+                {% load static %}
+                {%  if comment.label == "TRUE" %}
+                    <img style="max-width: 70px;" src="{% static 'claims/assets/images/TrueLabel.png' %}" >
+                {% else %}
+                    <img style="max-width: 70px; " src="{% static 'claims/assets/images/FalseLabel.png' %}" >
+                {%  endif %}
+            </p></td>
         </tr>
         <tr>
             <td class="left">References: <a href={{ comment.url }}>website</a>,<a href="">image</a></td>
