@@ -1,0 +1,31 @@
+{% extends 'claims/layout.html' %}
+
+{% block page_content %}
+
+    <div id="home_page_wrapper">
+        <div id="headlines_wrapper">
+            <div>
+                {% for claim in headlines %}
+                    {% include 'claims/claimbox_large.html' with claim=claim %}
+                {% endfor %}
+            </div>
+{#            <div>#}
+{#                {% for claim in sub_headlines %}#}
+{#                    {% include 'claims/claimrow.html' with claim=claim %}#}
+{#                {% endfor %}#}
+{#            </div>#}
+            <div>
+                {% for claim in sub_headlines %}
+                    {% include 'claims/claimbox.html' with claim=claim %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+
+
+{% block claim_head_title %}
+    FactCheckProject | Home
+{% endblock %}

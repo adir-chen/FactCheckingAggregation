@@ -48,3 +48,7 @@ def view_claim(request):
         'authenticity_grade': claim.authentic_grade,
         'comments': Comment.objects.filter(claim_id=34),
     })
+
+
+def view_home(request):
+    return render(request, 'claims/index.html', {'headlines': Claim.objects.all()[:2], 'sub_headlines': Claim.objects.all()[2:17]})
