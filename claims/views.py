@@ -34,11 +34,11 @@ def reset_claims():
     Claim.objects.all().delete()
 
 
-def view_claim(request):
+def view_claim(request, id):
     data = request.POST.dict()
     #Claim.objects.get(id=data['claim_id'])
-    claim = Claim.objects.filter(id=34)[0]
-    comments = get_all_comments_for_claim_id(34)
+    claim = Claim.objects.filter(id=id)[0]
+    # comments = get_all_comments_for_claim_id(id)
     #print("comments")
     #print(Comment.objects.filter(claim_id=34))
     #request.session['comments'] = get_all_comments_for_claim_id(data['claim_id'])
@@ -46,7 +46,7 @@ def view_claim(request):
         'title': claim.title,
         'category': claim.category,
         'authenticity_grade': claim.authentic_grade,
-        'comments': Comment.objects.filter(claim_id=34),
+        'comments': Comment.objects.filter(claim_id=id),
     })
 
 

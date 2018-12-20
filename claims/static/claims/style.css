@@ -224,7 +224,12 @@ img{
 /* MENU */
 /*--------------------*/
 
-
+#menu-area{
+	display: inline;
+	float: left;
+	width: 100%;
+	position: relative;
+}
 
 #menu-area #navbar {  
   padding-right: 50px;
@@ -278,7 +283,6 @@ img{
 #comment{
     /*margin-left:5%;*/
     /*margin-right:5%;*/
-    width:100%;
     margin-bottom: 2%;
     padding: 0% 1% 1% 1%;
     background-color: grey;
@@ -286,16 +290,16 @@ img{
     box-shadow: 5px 5px 5px lightgray;
     max-height: 300px;
     font-size: 13px;
+    width: 100%;
     /*border: 2px solid darkblue;*/
 }
 #comment .left{
-    max-width: 900px;
     width:900px;
     padding-right: 10px;
+    padding-left: 10px;
     border-right: 2px solid #323554;
 }
 #comment .right{
-    max-width: 150px;
     width:150px;
     padding-left: 10px;
 }
