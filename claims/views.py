@@ -52,7 +52,7 @@ def get_claim_by_id(id):
 def view_claim(request, id):
     data = request.POST.dict()
     #Claim.objects.get(id=data['claim_id'])
-    claim = Claim.objects.filter(id=id)[0]
+    claim = get_claim_by_id(id)
     # comments = get_all_comments_for_claim_id(id)
     #print("comments")
     #print(Comment.objects.filter(claim_id=34))
