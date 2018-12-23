@@ -4,7 +4,7 @@
 
     <div id="home_page_wrapper">
         <div id="headlines_wrapper">
-            <div>
+            <div style="display: flex; flex-wrap: wrap;">
                 {% for claim in headlines %}
                     {% include 'claims/claimbox_large.html' with claim=claim %}
                 {% endfor %}
@@ -14,7 +14,7 @@
 {#                    {% include 'claims/claimrow.html' with claim=claim %}#}
 {#                {% endfor %}#}
 {#            </div>#}
-            <div style="">
+            <div style="display: flex; flex-wrap: wrap;">
                 {% for claim in sub_headlines %}
                     {% include 'claims/claimbox.html' with claim=claim %}
                 {% endfor %}

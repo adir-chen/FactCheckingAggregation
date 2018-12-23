@@ -1,12 +1,14 @@
 {% load staticfiles%}
 
-<div class="claim_box_large">
-    <img src="{{ claim.image_src }}">
-    <div class="claim_box_info">
-        <h1>{{ claim.title }}</h1>
-        <p>
-            Category: {{ claim.category }}
-        </p>
-        <a href="/claim/{{ claim.id }}">Read more...</a>
+<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12" style="padding: 25px 10px; margin: 0;">
+    <div class="claim_box">
+        <img src="{{ claim.image_src }}">
+        <div class="claim_box_info">
+            <h1>{{ claim.title }}</h1>
+            <p>
+                Category: {{ claim.category }}
+            </p>
+            <a href="/claim/{{ claim.id }}" style="font-style: italic;">Read more...</a>
+        </div>
     </div>
 </div>
