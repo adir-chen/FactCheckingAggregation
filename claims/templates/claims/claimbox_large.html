@@ -5,10 +5,11 @@
         <img src="{{ claim.image_src }}">
         <div class="claim_box_info">
             <h2>{{ claim.title }}</h2>
+            <br>
             <p>
                 Category: {{ claim.category }}
             </p>
-            <a href="/claim/{{ claim.id }}" style="font-style: italic; font-size: 20px;">Read more...</a>
+            <a href="/claim/{{ claim.id }}" class="btn btn-info">Read more...</a>
         </div>
     </div>
 </div>

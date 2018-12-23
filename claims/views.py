@@ -67,4 +67,4 @@ def view_claim(request, id):
 
 
 def view_home(request):
-    return render(request, 'claims/index.html', {'headlines': Claim.objects.all()[:2], 'sub_headlines': Claim.objects.all()[2:15]})
+    return render(request, 'claims/index.html', {'headlines': Claim.objects.all()[:2], 'sub_headlines': Claim.objects.all()[2:35]})
