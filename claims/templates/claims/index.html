@@ -2,25 +2,26 @@
 
 {% block page_content %}
 
-    <div id="home_page_wrapper">
-        <div id="headlines_wrapper">
-            <div style="display: flex; flex-wrap: wrap;">
-                {% for claim in headlines %}
-                    {% include 'claims/claimbox_large.html' with claim=claim %}
-                {% endfor %}
-            </div>
-{#            <div>#}
-{#                {% for claim in sub_headlines %}#}
-{#                    {% include 'claims/claimrow.html' with claim=claim %}#}
-{#                {% endfor %}#}
-{#            </div>#}
-            <div style="display: flex; flex-wrap: wrap;">
-                {% for claim in sub_headlines %}
-                    {% include 'claims/claimbox.html' with claim=claim %}
-                {% endfor %}
-            </div>
+    <div style="background-color: #8dc7d2; padding: 0 30px; margin-bottom: 30px;">
+        <div style="max-width: 1550px; display: flex; flex-wrap: wrap; margin: 0 auto;">
+            {% for claim in headlines %}
+                {% include 'claims/claimbox_large.html' with claim=claim %}
+            {% endfor %}
         </div>
     </div>
+    {#            <div>#}
+    {#                {% for claim in sub_headlines %}#}
+    {#                    {% include 'claims/claimrow.html' with claim=claim %}#}
+    {#                {% endfor %}#}
+    {#            </div>#}
+    <div id="home_page_wrapper">
+        <div style="column-count: 3; column-gap: 30px; padding: 0 30px;">
+            {% for claim in sub_headlines %}
+                {% include 'claims/claimbox.html' with claim=claim %}
+            {% endfor %}
+        </div>
+    </div>
+
 {% endblock %}
 
 
