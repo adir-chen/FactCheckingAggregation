@@ -27,7 +27,7 @@ SECRET_KEY = '#!#c&ejot$9bc3k%q&ckib!=ki#lk07!$u3ikfehj6!-2^s)02'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['132.73.217.220', '132.72.23.69', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['132.73.217.220', '132.72.23.69', 'localhost', '127.0.0.1', '192.168.1.22']
 
 
 # Application definition
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_nose'
 ]
 
 MIDDLEWARE = [
@@ -124,3 +125,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Use nose to run all tests
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+
+# Tell nose to measure coverage
+NOSE_ARGS = [
+    '--with-coverage',
+    '--cover-package=claims,comments,users',
+]

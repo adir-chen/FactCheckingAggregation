@@ -2,7 +2,7 @@ from users.models import User
 
 
 def get_user_id_by_username(username):
-    result = User.objects.filter(username = username)
+    result = User.objects.filter(username=username)
     if len(result) > 0:
         return result[0].id
     return None

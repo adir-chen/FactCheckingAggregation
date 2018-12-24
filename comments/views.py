@@ -23,10 +23,7 @@ def add_comment(claim_id, user_id, title, description, url, verdict_date, tags, 
         pos_votes=0,
         neg_votes=0
     )
-    try:
-        comment.save()
-    except Exception as e:
-        print('Adding new comment failed - ' + str(e))
+    comment.save()
 
 
 def get_all_comments_for_user_id(user_id):
