@@ -6,10 +6,13 @@
         <div  id="claim_page_title_wrapper">
             <h1 id="claim_page_title">{{ title }}</h1>
             <p>Authenticity Grade:{{ authenticity_grade }}</p>
+            <img src="{{ image_url }}">
         </div>
-
+        <hr><br>
         <div id="comments">
             {% if comments %}
+                <h3>Comments:</h3>
+                <br>
                 {% for comment in comments %}
                     {% include 'comments/comment.html' with comment=comment only %}
 {#                        title=comment.title user_id = comment.user_id claim_id =comment.claim_id title =comment.title description = comment.description url = comment.url verdict_date =comment.verdict_date tags = comment.tags label = comment.label pos_votes = comment.pos_votes neg_votes = comment.neg_votes %}#}
@@ -20,7 +23,7 @@
         </div>
         <div class="text">
             <textarea placeholder="Enter new comment..."></textarea>
-            <div><button id="add_button" href="#">Add</button></div>
+            <div><a class="btn btn-default" href="#" style="margin: 10px 0;">Add Comment</a></div>
         </div>
     </div>
 {% endblock %}
