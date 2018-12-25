@@ -7,7 +7,8 @@ from .models import Claim
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from datetime import datetime
 
-# add a new claim to system.
+
+# This function adds a new claim to the website, following with a comment on it
 @csrf_exempt
 def add_claim(request):
     if request.method == "POST":
@@ -36,6 +37,8 @@ def add_claim(request):
     raise Http404("Invalid method")
 
 
+# This function checks if a given claim is valid, i.e. the claim has all the fields with the correct format.
+# The function returns true in case the claim is valid, otherwise false and an error
 def check_if_claim_is_valid(claim_info):
     err = ''
     if 'claim' not in claim_info:
@@ -69,6 +72,8 @@ def check_if_claim_is_valid(claim_info):
     return True, err
 
 
+# This function checks if the verdict date of a claim is valid
+# The function returns true in case the verdict date is valid, otherwise false
 def is_valid_verdict_date(verdict_date):
     try:
         verdict_datetime = datetime.strptime(verdict_date, "%d/%m/%Y")
@@ -77,14 +82,17 @@ def is_valid_verdict_date(verdict_date):
         return False
 
 
+# This function returns all the claims in the website
 def get_all_claims():
     return Claim.objects.all()
 
 
+# This function deletes all the claims in the website
 def reset_claims():
     Claim.objects.all().delete()
 
 
+# This function returns the newest claims in the website (up to 20 claims)
 def get_newest_claims():
     result = Claim.objects.all().order_by('-id')
     if len(result) < 20:
@@ -92,13 +100,17 @@ def get_newest_claims():
     return result[0:20]
 
 
-def get_claim_by_id(id):
-    result = Claim.objects.filter(id = id)
+# This function returns a claim of a given claim's id
+# The function returns the claim in case it is found, otherwise None
+def get_claim_by_id(claim_id):
+    result = Claim.objects.filter(id=claim_id)
     if len(result) > 0:
         return result[0]
     return None
 
 
+# This function returns a claim page of a given claim id
+# The function returns the claim page in case the claim is found, otherwise Http404
 def view_claim(request, id):
     claim = get_claim_by_id(id)
     if claim is None:
@@ -112,5 +124,6 @@ def view_claim(request, id):
     })
 
 
+# This function returns the home page of the website
 def view_home(request):
     return render(request, 'claims/index.html', {'headlines': Claim.objects.all().order_by('-id')[:2], 'sub_headlines': Claim.objects.all().order_by('-id')[2:35]})

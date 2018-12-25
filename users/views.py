@@ -1,6 +1,7 @@
 from users.models import User
 
 
+# This function returns the user's id of a given username
 def get_user_id_by_username(username):
     result = User.objects.filter(username=username)
     if len(result) > 0:
@@ -8,6 +9,7 @@ def get_user_id_by_username(username):
     return None
 
 
+# This function adds all the scrapers as users to the website
 def add_all_scrapers():
     scraper_1 = User(username='Snopes', email='', state='', reputation=-1)
     scraper_2 = User(username='Polygraph', email='', state='', reputation=-1)
@@ -17,6 +19,7 @@ def add_all_scrapers():
     scraper_3.save()
 
 
+# This function deletes all the website users
 def reset_users():
     User.objects.all().delete()
 

@@ -4,7 +4,7 @@ from claims.models import Claim
 from django.http import HttpResponse
 
 
-# add a new comment to a claim in the website.
+# This function adds a new comment to a claim in the website
 def add_comment(claim_id, user_id, title, description, url, verdict_date, tags, label):
     tags_arr = tags.split(' ')
     new_tags = ''
@@ -26,6 +26,8 @@ def add_comment(claim_id, user_id, title, description, url, verdict_date, tags, 
     comment.save()
 
 
+# This function returns all the comments for a given user's id
+# The function returns all the comments in case they are found, otherwise None
 def get_all_comments_for_user_id(user_id):
     result = Comment.objects.filter(user_id=user_id)
     if len(result) > 0:
@@ -33,6 +35,8 @@ def get_all_comments_for_user_id(user_id):
     return None
 
 
+# This function returns all the comments for a given claim's id
+# The function returns all the comments in case they are found, otherwise None
 def get_all_comments_for_claim_id(claim_id):
     result = Comment.objects.filter(claim_id=claim_id)
     if len(result) > 0:
@@ -40,10 +44,13 @@ def get_all_comments_for_claim_id(claim_id):
     return None
 
 
+# The function deletes all the comments in the website
 def reset_comments():
     Comment.objects.all().delete()
 
 
+# This function returns the category for a given claim's id
+# The function returns claim's category in case it is found, otherwise None
 def get_category_for_claim(claim_id):
     result = Claim.objects.filter(id=claim_id)
     if len(result) > 0:
@@ -51,6 +58,7 @@ def get_category_for_claim(claim_id):
     return None
 
 
+# This function returns a csv which contains all the details of the claims in the website
 def export_to_csv():
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="claims.csv"'
