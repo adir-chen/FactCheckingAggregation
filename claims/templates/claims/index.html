@@ -15,7 +15,7 @@
     {#                {% endfor %}#}
     {#            </div>#}
     <div id="home_page_wrapper">
-        <div style="column-count: 3; column-gap: 30px; padding: 0 30px;">
+        <div id="claim_columns">
             {% for claim in sub_headlines %}
                 {% include 'claims/claimbox.html' with claim=claim %}
             {% endfor %}

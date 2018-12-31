@@ -377,6 +377,18 @@ img{
     text-align: center;
 }
 
+#claim_columns {
+    column-count: 1;
+    column-gap: 30px;
+    padding: 0 40px;
+}
+
+@media(min-width:767px ){
+    #claim_columns {
+        column-count: 3;
+    }
+}
+
 div.claim_box {
     background-color: #fff;
     margin-bottom: 25px;
@@ -385,6 +397,7 @@ div.claim_box {
     height: 100%;
     opacity: 0.9;
     display: inline-block;
+    border-radius: 7px;
 }
 
 div.claim_box:hover {
@@ -399,6 +412,7 @@ div.claim_box_info {
 .claim_box img{
     width: 100%;
     margin: 0;
+    border-radius: 7px 7px 0 0;
 }
 
 div.claim_row {
