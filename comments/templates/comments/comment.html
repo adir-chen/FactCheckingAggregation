@@ -10,25 +10,28 @@
 {#pos_votes = comment.pos_votes #}
 {#neg_votes = comment.neg_votes#}
 <div style="margin: auto;">
-    <table id="comment">
-        <tr>
-            <td class="left"><h4><b>{{ comment.title }}</b></h4></td>
-            <td class="right"><a href="#">User ID:{{ comment.user_id }}</a></td>
-        </tr>
-        <tr>
-            <td class="left"><p>{{ comment.description }}</p></td>
-            <td class="right"><p>
-                {% load static %}
-                {%  if comment.label == "TRUE" %}
-                    <img style="max-width: 70px;" src="{% static 'claims/assets/images/TrueLabel.png' %}" >
-                {% else %}
-                    <img style="max-width: 70px; " src="{% static 'claims/assets/images/FalseLabel.png' %}" >
-                {%  endif %}
-            </p></td>
-        </tr>
-        <tr>
-            <td class="left">References: <a href={{ comment.url }}>website</a>,<a href="">image</a></td>
-            <td class="right"><p>Votes : +{{ comment.pos_votes }} -{{ comment.neg_votes }}</p></td>
-        </tr>
-    </table>
+    <div class="claim_box" style="padding: 20px;">
+        <table id="comment">
+            <tr>
+                <td class="left"><h4><b>{{ comment.title }}</b></h4></td>
+                <td class="right"><a href="#">User ID:{{ comment.user_id }}</a></td>
+            </tr>
+            <tr>
+                <td class="left"><p>{{ comment.description }}</p></td>
+                <td class="right"><p>
+                    {% load static %}
+                    {%  if comment.label == "TRUE" %}
+                        <img style="max-width: 70px;" src="{% static 'claims/assets/images/TrueLabel.png' %}" >
+                    {% else %}
+                        <img style="max-width: 70px; " src="{% static 'claims/assets/images/FalseLabel.png' %}" >
+                    {%  endif %}
+                </p></td>
+            </tr>
+            <tr>
+                <td class="left">References: <a href={{ comment.url }}>website</a>,<a href="">image</a></td>
+                <td class="right"><p>Votes : +{{ comment.pos_votes }} -{{ comment.neg_votes }}</p></td>
+            </tr>
+        </table>
+    </div>
+
 </div>
