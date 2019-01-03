@@ -13,8 +13,8 @@
             {% if comments %}
                 <h3>Comments:</h3>
                 <br>
-                {% for comment in comments %}
-                    {% include 'comments/comment.html' with comment=comment only %}
+                {% for comment_key, comment_value in comments.items %}
+                    {% include 'comments/comment.html' with comment_key=comment_key comment_value=comment_value only %}
 {#                        title=comment.title user_id = comment.user_id claim_id =comment.claim_id title =comment.title description = comment.description url = comment.url verdict_date =comment.verdict_date tags = comment.tags label = comment.label pos_votes = comment.pos_votes neg_votes = comment.neg_votes %}#}
                 {% endfor %}
             {% else %}

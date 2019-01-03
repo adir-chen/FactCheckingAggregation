@@ -2,6 +2,7 @@ from django.http import HttpRequest, QueryDict, Http404
 from django.test import TestCase
 from claims.models import Claim
 from claims.views import view_claim, view_home, add_claim, get_all_claims, reset_claims, get_claim_by_id, get_newest_claims, is_valid_verdict_date, check_if_claim_is_valid
+from comments.models import Comment
 from users.models import User
 
 
@@ -199,6 +200,16 @@ class ClaimTests(TestCase):
         self.assertRaises(Http404, add_claim, request)
 
     def test_view_claim_valid(self):
+        request = HttpRequest()
+        request.method = 'GET'
+        response = view_claim(request, self.claim_1.id)
+        self.assertTrue(response.status_code == 200)
+
+    def test_view_claim_with_comment(self):
+        comment_1 = Comment(claim_id=self.claim_1.id, user_id=self.user.id, title=self.claim_1.claim,
+                                 description='description1', url='url1', verdict_date='verdict_date1',
+                                 tags='tags1', label='label1', pos_votes=0, neg_votes=0)
+        comment_1.save()
         request = HttpRequest()
         request.method = 'GET'
         response = view_claim(request, self.claim_1.id)

@@ -1,6 +1,6 @@
 from django.test import TestCase
 from users.models import User
-from users.views import reset_users, get_user_id_by_username, add_all_scrapers
+from users.views import reset_users, get_user_id_by_username, get_username_by_user_id, add_all_scrapers
 
 
 class UsersTest(TestCase):
@@ -24,8 +24,16 @@ class UsersTest(TestCase):
         self.assertTrue(get_user_id_by_username('User2') == self.user_2.id)
         self.assertTrue(get_user_id_by_username('User3') == self.user_3.id)
 
+    def test_get_username_by_user_id(self):
+        self.assertTrue(get_username_by_user_id(1) == self.user_1.username)
+        self.assertTrue(get_username_by_user_id(2) == self.user_2.username)
+        self.assertTrue(get_username_by_user_id(3) == self.user_3.username)
+
     def test_get_user_id_by_username_invalid_user(self):
         self.assertTrue(get_user_id_by_username('User4') is None)
+
+    def test_get_username_by_user_id_invalid_user(self):
+        self.assertTrue(get_username_by_user_id(4) is None)
 
     def test_add_all_scrapers(self):
         add_all_scrapers()

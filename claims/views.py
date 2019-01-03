@@ -3,6 +3,7 @@ from django.shortcuts import render
 from comments.models import Comment
 from comments.views import add_comment
 from users.views import get_user_id_by_username
+from users.views import get_username_by_user_id
 from .models import Claim
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from datetime import datetime
@@ -115,12 +116,16 @@ def view_claim(request, id):
     claim = get_claim_by_id(id)
     if claim is None:
         raise Http404("Claim with the given id: " + str(id) + " does not exist")
+    comment_objs = Comment.objects.filter(claim_id=id)
+    comments = {}
+    for comment in comment_objs:
+        comments[get_username_by_user_id(comment.user_id)] = comment
     return render(request, 'claims/claim.html', {
         'claim': claim.claim,
         'category': claim.category,
         'authenticity_grade': claim.authentic_grade,
         'image_url': claim.image_src,
-        'comments': Comment.objects.filter(claim_id=id),
+        'comments': comments,
     })
 
 

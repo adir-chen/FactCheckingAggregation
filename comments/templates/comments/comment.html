@@ -13,14 +13,14 @@
     <div class="claim_box" style="padding: 20px;">
         <table id="comment">
             <tr>
-                <td class="left"><h4><b>{{ comment.title }}</b></h4></td>
-                <td class="right"><a href="#">User ID:{{ comment.user_id }}</a></td>
+                <td class="left"><h4><b>{{ comment_value.title }}</b></h4></td>
+                <td class="right">User: <a href="#">{{ comment_key }}</a></td>
             </tr>
             <tr>
-                <td class="left"><p>{{ comment.description }}</p></td>
+                <td class="left"><p>{{ comment_value.description }}</p></td>
                 <td class="right"><p>
                     {% load static %}
-                    {%  if comment.label == "TRUE" %}
+                    {%  if comment_value.label == "TRUE" %}
                         <img style="max-width: 70px;" src="{% static 'claims/assets/images/TrueLabel.png' %}" >
                     {% else %}
                         <img style="max-width: 70px; " src="{% static 'claims/assets/images/FalseLabel.png' %}" >
@@ -28,8 +28,8 @@
                 </p></td>
             </tr>
             <tr>
-                <td class="left">References: <a href={{ comment.url }}>website</a>,<a href="">image</a></td>
-                <td class="right"><p>Votes : +{{ comment.pos_votes }} -{{ comment.neg_votes }}</p></td>
+                <td class="left">References: <a href={{ comment_value.url }}>website</a></td>
+                <td class="right"><p>Votes : +{{ comment_value.pos_votes }} -{{ comment_value.neg_votes }}</p></td>
             </tr>
         </table>
     </div>

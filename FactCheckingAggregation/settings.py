@@ -36,7 +36,6 @@ INSTALLED_APPS = [
     'claims.apps.ClaimsConfig',
     'comments.apps.CommentsConfig',
     'users.apps.UsersConfig',
-    'home',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -134,3 +133,4 @@ NOSE_ARGS = [
     '--with-coverage',
     '--cover-package=claims,comments,users',
 ]
+
