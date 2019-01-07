@@ -9,6 +9,6 @@ class Claim(models.Model):
     authentic_grade = models.IntegerField()
     image_src = models.CharField(max_length=1000)
 
-    # def __str__(self):
-    #     return self.claim + ' - ' + self.category
+    def __str__(self):
+        return self.claim + ' - ' + self.category
 

@@ -17,5 +17,5 @@ class Comment(models.Model):
     pos_votes = models.IntegerField()
     neg_votes = models.IntegerField()
 
-    # def __str__(self):
-    #     return self.user.username + ' - ' + self.title
+    def __str__(self):
+        return self.user.username + ' - ' + self.title

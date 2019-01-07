@@ -4,6 +4,8 @@ from claims.models import Claim
 from claims.views import view_claim, view_home, add_claim, get_all_claims, reset_claims, get_claim_by_id, get_newest_claims, is_valid_verdict_date, check_if_claim_is_valid
 from comments.models import Comment
 from users.models import User
+import random
+import datetime
 
 
 class ClaimTests(TestCase):
@@ -102,18 +104,23 @@ class ClaimTests(TestCase):
         self.assertTrue(get_claim_by_id(4) is None)
 
     def test_add_claim_missing_args(self):
-        del self.dict['username']
-        del self.dict['claim']
-        del self.dict['title']
-        len_claims = len(Claim.objects.all())
-        request = HttpRequest()
-        request.method = 'POST'
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(self.dict)
-        request.POST = query_dict
-        self.assertRaises(Exception, add_claim, request)
-        self.assertTrue(len(Claim.objects.all()) == len_claims)
-        self.assertTrue(get_claim_by_id(4) is None)
+        for i in range(10):
+            dict_copy = self.dict
+            args_to_remove = []
+            for j in range(random.randint(0, len(self.dict.keys()) - 1)):
+                args_to_remove.append(list(self.dict.keys())[j])
+            for j in range(len(args_to_remove)):
+                del self.dict[args_to_remove[j]]
+            len_claims = len(Claim.objects.all())
+            request = HttpRequest()
+            request.method = 'POST'
+            query_dict = QueryDict('', mutable=True)
+            query_dict.update(self.dict)
+            request.POST = query_dict
+            self.assertRaises(Http404, add_claim, request)
+            self.assertTrue(len(Claim.objects.all()) == len_claims)
+            self.assertTrue(get_claim_by_id(4) is None)
+            self.dict = dict_copy
 
     def test_get_newest_claims_many_claims(self):
         for i in range(4, 24):
@@ -139,13 +146,13 @@ class ClaimTests(TestCase):
         self.assertTrue(len(get_newest_claims()) == 3)
 
     def test_is_valid_verdict_date_valid(self):
-        self.assertTrue(is_valid_verdict_date('10/10/2015'))
+        self.assertTrue(is_valid_verdict_date(datetime.datetime.strftime(datetime.datetime.now() - datetime.timedelta(days=1),'%d/%m/%Y')))
 
     def test_is_valid_verdict_date_invalid_format(self):
-        self.assertFalse(is_valid_verdict_date('10.10.2015'))
+        self.assertFalse(is_valid_verdict_date(datetime.datetime.strftime(datetime.datetime.now() - datetime.timedelta(days=1),'%d.%m.%Y')))
 
     def test_is_valid_verdict_date_invalid_datetime(self):
-        self.assertFalse(is_valid_verdict_date('15/15/2025'))
+        self.assertFalse(is_valid_verdict_date(datetime.datetime.strftime(datetime.datetime.now() + datetime.timedelta(days=7),'%d/%m/%Y')))
 
     def test_check_if_claim_is_valid(self):
         self.assertTrue(check_if_claim_is_valid(self.dict))
@@ -175,7 +182,7 @@ class ClaimTests(TestCase):
         self.assertFalse(check_if_claim_is_valid(self.dict)[0])
 
     def test_check_if_claim_is_valid_invalid_verdict_date(self):
-        self.dict['verdict_date'] = '1.5.2090'
+        self.dict['verdict_date'] = datetime.datetime.strftime(datetime.datetime.now() + datetime.timedelta(days=7),'%d/%m/%Y')
         self.assertFalse(check_if_claim_is_valid(self.dict)[0])
 
     def test_check_if_claim_is_valid_missing_tags(self):

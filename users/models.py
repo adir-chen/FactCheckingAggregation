@@ -7,5 +7,5 @@ class User(models.Model):
     state = models.CharField(max_length=20)
     reputation = models.IntegerField()
 
-    # def __str__(self):
-    #     return self.username + ' - ' + self.email
+    def __str__(self):
+        return self.username + ' - ' + self.email
