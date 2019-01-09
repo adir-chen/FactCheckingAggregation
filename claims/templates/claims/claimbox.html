@@ -7,6 +7,11 @@
         <p style="font-size: 12px;">
             Category: {{ claim.category }}
         </p>
+        <ul style="list-style-type: none; padding: 0; margin: 0;">
+            {% for icon in icons %}
+                <li><img src="{{ icon }}" style="max-height: 90px; max-width: 90px; display: block;"></li>
+            {% endfor %}
+        </ul>
         <br>
         <a href="/claim/{{ claim.id }}" class="btn btn-info">Read more...</a>
     </div>

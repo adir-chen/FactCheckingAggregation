@@ -2,15 +2,15 @@ from django.http import Http404
 from django.shortcuts import render
 from comments.models import Comment
 from comments.views import add_comment
-from users.views import get_user_id_by_username
+from users.models import User
+from users.views import get_user_id_by_username, add_all_scrapers
 from users.views import get_username_by_user_id
 from .models import Claim
-from django.views.decorators.csrf import csrf_protect, csrf_exempt
+from django.views.decorators.csrf import csrf_protect, csrf_exempt, ensure_csrf_cookie
 from datetime import datetime
 
 
 # This function adds a new claim to the website, following with a comment on it
-@csrf_exempt
 def add_claim(request):
     if request.method == "POST":
         claim_info = request.POST.dict()
@@ -119,7 +119,7 @@ def view_claim(request, id):
     comment_objs = Comment.objects.filter(claim_id=id)
     comments = {}
     for comment in comment_objs:
-        comments[get_username_by_user_id(comment.user_id)] = comment
+        comments[User.objects.filter(id=comment.user_id)[0]] = comment
     return render(request, 'claims/claim.html', {
         'claim': claim.claim,
         'category': claim.category,
@@ -130,5 +130,20 @@ def view_claim(request, id):
 
 
 # This function returns the home page of the website
+@ensure_csrf_cookie
 def view_home(request):
-    return render(request, 'claims/index.html', {'headlines': Claim.objects.all().order_by('-id')[:2], 'sub_headlines': Claim.objects.all().order_by('-id')[2:35]})
+    # add_all_scrapers()
+    headlines_size = 2
+    claims_size = 40
+    claim_objs = Claim.objects.all().order_by('-id')[:claims_size]
+    headlines = {}
+    sub_headlines = {}
+    for claim in claim_objs[:headlines_size]:
+        comment_objs = Comment.objects.filter(claim_id=claim.id)
+        user_imgs = [User.objects.filter(id=comment.user_id)[0].user_img for comment in comment_objs]
+        headlines[claim] = user_imgs
+    for claim in claim_objs[headlines_size:]:
+        comment_objs = Comment.objects.filter(claim_id=claim.id)
+        user_imgs = [User.objects.filter(id=comment.user_id)[0].user_img for comment in comment_objs]
+        sub_headlines[claim] = user_imgs
+    return render(request, 'claims/index.html', {'headlines': headlines, 'sub_headlines': sub_headlines})

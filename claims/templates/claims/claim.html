@@ -11,14 +11,13 @@
         <hr><br>
         <div id="comments">
             {% if comments %}
-                <h3>Comments:</h3>
+                <h3>Users' verdicts:</h3>
                 <br>
-                {% for comment_key, comment_value in comments.items %}
-                    {% include 'comments/comment.html' with comment_key=comment_key comment_value=comment_value only %}
-{#                        title=comment.title user_id = comment.user_id claim_id =comment.claim_id title =comment.title description = comment.description url = comment.url verdict_date =comment.verdict_date tags = comment.tags label = comment.label pos_votes = comment.pos_votes neg_votes = comment.neg_votes %}#}
+                {% for user, comment in comments.items %}
+                    {% include 'comments/comment.html' with comment=comment user=user only %}
                 {% endfor %}
             {% else %}
-                <h3>No Comments</h3>
+                <h3>No verdicts yet.</h3>
             {%  endif %}
         </div>
         <div class="text">

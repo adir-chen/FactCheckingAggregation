@@ -4,8 +4,8 @@
 
     <div style="background-color: #8dc7d2; padding: 0 30px; margin-bottom: 40px;">
         <div style="max-width: 1350px; display: flex; flex-wrap: wrap; margin: 0 auto;">
-            {% for claim in headlines %}
-                {% include 'claims/claimbox_large.html' with claim=claim %}
+            {% for claim, imgs in headlines.items %}
+                {% include 'claims/claimbox_large.html' with claim=claim icons=imgs %}
             {% endfor %}
         </div>
     </div>
@@ -16,8 +16,8 @@
     {#            </div>#}
     <div id="home_page_wrapper">
         <div id="claim_columns">
-            {% for claim in sub_headlines %}
-                {% include 'claims/claimbox.html' with claim=claim %}
+            {% for claim, imgs in sub_headlines.items %}
+                {% include 'claims/claimbox.html' with claim=claim icons=imgs %}
             {% endfor %}
         </div>
     </div>
