@@ -1,29 +1,39 @@
 {% extends 'claims/layout.html' %}
 
-
 {% block page_content %}
     <div id="claim_page">
         <div  id="claim_page_title_wrapper">
-            <h1 id="claim_page_title">{{ claim }}</h1>
-            <p>Authenticity Grade:{{ authenticity_grade }}</p>
-            <img src="{{ image_url }}">
+            <h1 id="claim_page_title">{{ claim.claim }}</h1>
+            <p>Authenticity Grade:{{ claim.authenticity_grade }}</p>
+            <img src="{{ claim.image_url }}">
         </div>
         <hr><br>
+
         <div id="comments">
             {% if comments %}
                 <h3>Users' verdicts:</h3>
                 <br>
                 {% for user, comment in comments.items %}
-                    {% include 'comments/comment.html' with comment=comment user=user only %}
+                    {% include 'comments/comment.html' with comment=comment user=user request=request only %}
                 {% endfor %}
             {% else %}
                 <h3>No verdicts yet.</h3>
             {%  endif %}
         </div>
-        <div class="text">
-            <textarea placeholder="Enter new comment..."></textarea>
-            <div><a class="btn btn-default" href="#" style="margin: 10px 0;">Add Comment</a></div>
+        {% if request.user.is_authenticated %}
+        <div class="new_comment">
+            <form action={% url 'comments:add_comment' %}>
+                <input name="title" value="{{ title }}" type="text" placeholder="Title" style="width: 100%">
+                <textarea name="description" placeholder="Description"></textarea>
+                <input name="claim_id" value="{{ claim.id }}" type="hidden">
+                <input name="user_name" value="{{ request.user.username }}" type="hidden">
+                <input name="url" value="{{ url }}" type="text" placeholder="Website url"><br>
+                <input type="radio" name="label" value="{{True}}">True
+                <input type="radio" name="label" value="{{False}}">False<br>
+                <button type="submit" style="margin: 10px 0;">Add your comment</button>
+            </form>
         </div>
+        {% endif %}
     </div>
 {% endblock %}
 

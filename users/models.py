@@ -1,12 +1,17 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
-class User(models.Model):
-    username = models.CharField(max_length=20)
-    email = models.EmailField(max_length=254)
-    state = models.CharField(max_length=20)
-    reputation = models.IntegerField()
-    user_img = models.CharField(max_length=500)
+class UsersImages(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    user_img = models.CharField(max_length=250)
 
-    def __str__(self):
-        return self.username + ' - ' + self.email
+
+class UsersReputations(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    user_rep = models.IntegerField()
+
+
+class Scrapers(models.Model):
+    scraper_name = models.CharField(max_length=50)
+    scraper_id = models.ForeignKey(User, on_delete=models.CASCADE)

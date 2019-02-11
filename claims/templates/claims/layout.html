@@ -36,43 +36,6 @@
 
 </head>
 <body>
-
-
-    <!-- Start header -->
-    <header id="header">
-        <!-- header top search -->
-        <div class="header-top">
-          <div class="container">
-            <form action="">
-              <div id="search">
-              <input type="text" placeholder="Type your search keyword here and hit Enter..." name="s" id="m_search" style="display: inline-block;">
-              <button type="submit">
-                <i class="fa fa-search"></i>
-              </button>
-            </div>
-            </form>
-          </div>
-        </div>
-        <!-- header bottom -->
-        <div class="header-bottom">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-6 col-sm-6 col-xs-6">
-                        <div class="header-contact">
-
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-sm-6 col-xs-6">
-                        <div class="header-login">
-                            <a class="login modal-form" data-target="#login-form" data-toggle="modal" href="#">Login / Sign Up</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-    <!-- End header -->
-
     <!-- Start login modal window -->
     <div aria-hidden="false" role="dialog" tabindex="-1" id="login-form" class="modal leread-modal fade in">
         <div class="modal-dialog">
@@ -83,24 +46,26 @@
                     <button aria-label="Close" data-dismiss="modal" class="close" type="button"><span aria-hidden="true">×</span></button>
                     <h4 class="modal-title"><i class="fa fa-unlock-alt"></i>Login</h4>
                 </div>
-                <div class="modal-body">
-                    <form>
-                        <div class="form-group">
-                            <input type="text" placeholder="User name" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <input type="password" placeholder="Password" class="form-control">
-                        </div>
-                        <div class="loginbox">
-                            <label><input type="checkbox"><span>Remember me</span></label>
-                            <button class="btn signin-btn" type="button">SIGN IN</button>
-                        </div>
-                    </form>
+                <div class="modal-body" style="text-align: center;">
+{#                    <form>#}
+{#                        <div class="form-group">#}
+{#                            <input type="text" placeholder="User name" class="form-control">#}
+{#                        </div>#}
+{#                        <div class="form-group">#}
+{#                            <input type="password" placeholder="Password" class="form-control">#}
+{#                        </div>#}
+{#                        <div class="loginbox">#}
+{#                            <label><input type="checkbox"><span>Remember me</span></label>#}
+{#                            <button class="btn signin-btn" type="button">SIGN IN</button>#}
+{#                        </div>#}
+{#                    </form>#}
+                    <a href="{% url 'social:begin' 'google-oauth2' %}"><img src="{% static 'claims/assets/images/login_google.png' %}" style="padding: 10px;"></a><br>
+                    <a href="{% url 'social:begin' 'twitter' %}"><img src="{% static 'claims/assets/images/login_twitter.png' %}" style="padding: 10px;"></a>
                 </div>
-                <div class="modal-footer footer-box">
-                    <a href="#">Forgot password ?</a>
-                    <span>No account ? <a id="signup-btn" href="#">Sign Up.</a></span>
-                </div>
+{#                <div class="modal-footer footer-box">#}
+{#                    <a href="#">Forgot password ?</a>#}
+{#                    <span>No account ? <a id="signup-btn" href="#">Sign Up.</a></span>#}
+{#                </div>#}
 
             </div>
 
@@ -141,7 +106,7 @@
     <!-- BEGIN MENU -->
     <section id="menu-area">
         <nav class="navbar navbar-default" role="navigation">
-            <div class="container">
+            <div class="container" style="width: 90%;">
                 <div class="navbar-header">
                     <!-- FOR MOBILE VIEW COLLAPSED BUTTON -->
                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
@@ -159,15 +124,24 @@
                 <div id="navbar" class="navbar-collapse collapse">
                     <ul id="top-menu" class="nav navbar-nav navbar-right main-nav">
                         <li><a href="/">Home</a></li>
-                        <li><a href="">About</a></li>
-                        <li><a href="">Contact Us</a></li>
+
+                        <!-- search icon -->
+                        <div class="search-container" style="float: left; padding-top: 23px; margin-right: 100px;">
+                            <form action={% url 'search:search_result' %}>
+                                <input name="search_keywords" value="{{ request.GET.search_keywords }}" type="text" placeholder="Search.." style="border: 3px solid #49c7c1; width: 400px;">
+                                <button type="submit" class="search_nav"><i class="fa fa-search"></i></button>
+                            </form>
+                        </div>
+
+                        {% if request.user.is_authenticated %}
+                            <li><a href="">Welcome {{request.user.username}}</a></li>
+                            <li><a href="/logout">Sign Out</a></li>
+                        {% else %}
+                            <li><a data-target="#login-form" data-toggle="modal" href="#">Login</a></li>
+                        {% endif %}
                     </ul>
                 </div><!--/.nav-collapse -->
-                <!-- search icon -->
-                <a href="#" id="search-icon">
-                    <i class="fa fa-search">
-                    </i>
-                </a>
+
             </div>
         </nav>
     </section>
@@ -182,11 +156,12 @@
     <!-- END PAGE CONTENT -->
 
     <!-- Start footer -->
-    <footer id="footer">
+    <footer id="footer" style="text-align: center;">
         &copy; 2018-2019 WTFacts version 1.0
+        <a href="" style="padding-left:5em; color: #fff;">About</a>
+        <a href="" style="padding-left:5em; color: #fff;">Contact Us</a>
     </footer>
     <!-- End footer -->
-
 
     <!-- jQuery library -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>

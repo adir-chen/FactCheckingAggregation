@@ -1,0 +1,22 @@
+{% extends 'claims/layout.html' %}
+
+{% block page_content %}
+    <div id="home_page_wrapper">
+        <div id="claim_columns">
+            {% if search_result.items|length > 0 %}
+                {% for claim, imgs in search_result.items %}
+                    {% include 'claims/claimbox.html' with claim=claim icons=imgs %}
+                {% endfor %}
+            {% else %}
+                Your search didn't match any claims
+            {% endif %}
+
+        </div>
+    </div>
+
+{% endblock %}
+
+
+{% block claim_head_title %}
+    FactCheckProject | Search
+{% endblock %}

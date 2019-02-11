@@ -27,8 +27,23 @@ SECRET_KEY = '#!#c&ejot$9bc3k%q&ckib!=ki#lk07!$u3ikfehj6!-2^s)02'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['132.73.217.220', '132.72.23.63', 'localhost', '127.0.0.1', '192.168.1.22', '132.73.222.124']
+ALLOWED_HOSTS = ['132.72.23.63', 'localhost', '127.0.0.1', '192.168.1.15']
 
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.open_id.OpenIdAuth',  # for Google authentication
+    'social_core.backends.google.GoogleOpenId',  # for Google authentication
+    'social_core.backends.google.GoogleOAuth2',  # for Google authentication
+    'social_core.backends.twitter.TwitterOAuth',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '277531460763-6m18k9ls8r9frg59in42hgie89k6cngd.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'Lw_V-kKAsKzNM4yGN0yZeWNK'
+SOCIAL_AUTH_TWITTER_KEY = 'vNvM2kjP09HlQnZLYIMe9m6Wm'
+SOCIAL_AUTH_TWITTER_SECRET = 'VQ3a30C8H0t9tqlZGgqlDMrdqNdlo37a8owi1AXPGA3BNEFcHn'
+
+LOGIN_URL = '/'
+LOGIN_REDIRECT_URL = '/'
 
 # Application definition
 
@@ -36,13 +51,17 @@ INSTALLED_APPS = [
     'claims.apps.ClaimsConfig',
     'comments.apps.CommentsConfig',
     'users.apps.UsersConfig',
+    'search.apps.SearchConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_nose'
+    'django_nose',
+    'social_django',
+    'mathfilters',
+    'vote',
 ]
 
 MIDDLEWARE = [
@@ -70,6 +89,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
         },
     },

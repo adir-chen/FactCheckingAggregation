@@ -1,12 +1,14 @@
+from django.contrib.auth import logout
 from django.http import Http404
 from django.shortcuts import render
 from comments.models import Comment
-from comments.views import add_comment
-from users.models import User
-from users.views import get_user_id_by_username, add_all_scrapers
-from users.views import get_username_by_user_id
+from comments.views import build_comment
+from django.contrib.auth.models import User
+
+from users.models import UsersImages
+from users.views import add_all_scrapers, check_if_user_exists_by_user_id
 from .models import Claim
-from django.views.decorators.csrf import csrf_protect, csrf_exempt, ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie
 from datetime import datetime
 
 
@@ -17,21 +19,25 @@ def add_claim(request):
         valid_claim, err_msg = check_if_claim_is_valid(claim_info)
         if not valid_claim:
             raise Http404(err_msg)
-
+        tags_arr = claim_info['tags'].split(' ')
+        new_tags = ''
+        for tag in tags_arr:
+            new_tags += tag + ', '
+        new_tags = new_tags[:-2]
         claim = Claim(
             claim=claim_info['claim'],
             category=claim_info['category'],
-            authentic_grade=-1,
+            tags=new_tags,
+            authenticity_grade=-1,
             image_src=claim_info['img_src']
         )
         claim.save()
-        add_comment(claim.id, get_user_id_by_username(claim_info['username']), claim_info['title'],
-                    claim_info['description'], claim_info['url'], claim_info['verdict_date'],
-                    claim_info['tags'], claim_info['label'])
+        build_comment(claim.id, claim_info['user_id'], claim_info['title'],
+                    claim_info['description'], claim_info['url'], claim_info['verdict_date'], claim_info['label'])
         return render(request, 'claims/claim.html', {
             'claim': claim.claim,
             'category': claim.category,
-            'authenticity_grade': claim.authentic_grade,
+            'authenticity_grade': claim.authenticity_grade,
             'image_url': claim.image_src,
             'comments': Comment.objects.filter(claim_id=claim.id),
         })
@@ -64,8 +70,8 @@ def check_if_claim_is_valid(claim_info):
         err += 'Missing value for label'
     elif len(Claim.objects.filter(claim=claim_info['claim'])) > 0:
         err += 'Claim ' + claim_info['claim'] + 'already exists'
-    elif get_user_id_by_username(claim_info['username']) is None:
-        err += 'User ' + claim_info['username'] + ' does not exist'
+    elif check_if_user_exists_by_user_id(claim_info['user_id']) is None:
+        err += 'User ' + claim_info['user_id'] + ' does not exist'
     elif not is_valid_verdict_date(claim_info['verdict_date']):
         err += 'Date ' + claim_info['verdict_date'] + ' is invalid'
     if len(err) > 0:
@@ -112,19 +118,16 @@ def get_claim_by_id(claim_id):
 
 # This function returns a claim page of a given claim id
 # The function returns the claim page in case the claim is found, otherwise Http404
-def view_claim(request, id):
-    claim = get_claim_by_id(id)
+def view_claim(request, claim_id):
+    claim = get_claim_by_id(claim_id)
     if claim is None:
-        raise Http404("Claim with the given id: " + str(id) + " does not exist")
-    comment_objs = Comment.objects.filter(claim_id=id)
+        raise Http404("Claim with the given id: " + str(claim_id) + " does not exist")
+    comment_objs = Comment.objects.filter(claim_id=claim_id)
     comments = {}
     for comment in comment_objs:
         comments[User.objects.filter(id=comment.user_id)[0]] = comment
     return render(request, 'claims/claim.html', {
-        'claim': claim.claim,
-        'category': claim.category,
-        'authenticity_grade': claim.authentic_grade,
-        'image_url': claim.image_src,
+        'claim': claim,
         'comments': comments,
     })
 
@@ -140,10 +143,28 @@ def view_home(request):
     sub_headlines = {}
     for claim in claim_objs[:headlines_size]:
         comment_objs = Comment.objects.filter(claim_id=claim.id)
-        user_imgs = [User.objects.filter(id=comment.user_id)[0].user_img for comment in comment_objs]
-        headlines[claim] = user_imgs
+        users_imgs = []
+        for comment in comment_objs:
+            user_img = UsersImages.objects.filter(user_id=comment.user_id)
+            if len(user_img) > 0:
+                users_imgs.append(user_img[0].user_img)
+        headlines[claim] = users_imgs
     for claim in claim_objs[headlines_size:]:
         comment_objs = Comment.objects.filter(claim_id=claim.id)
-        user_imgs = [User.objects.filter(id=comment.user_id)[0].user_img for comment in comment_objs]
-        sub_headlines[claim] = user_imgs
+        users_imgs = []
+        for comment in comment_objs:
+            user_img = UsersImages.objects.filter(user_id=comment.user_id)
+            if len(user_img) > 0:
+                users_imgs.append(user_img[0].user_img)
+        sub_headlines[claim] = users_imgs
+
+    if request.user.is_authenticated:
+        if len(User.objects.filter(email=request.user.email)) == 0:
+            new_user = User(username=request.user.username, email=request.user.email, state='Regular', reputation=0, user_img='')
+            new_user.save()
     return render(request, 'claims/index.html', {'headlines': headlines, 'sub_headlines': sub_headlines})
+
+
+def logout_view(request):
+    logout(request)
+    return view_home(request)
