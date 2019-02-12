@@ -9,9 +9,8 @@ import datetime
 # This function converts a request to a new comment to a claim in the website
 def add_comment(request):
     from claims.views import view_claim
-    from users.views import get_user_id_by_username
     build_comment(request.GET.get('claim_id'),
-                       get_user_id_by_username(request.GET.get('user_name')),
+                       request.user.id,
                        request.GET.get('title'),
                        request.GET.get('description'),
                        request.GET.get('url'),
@@ -58,9 +57,9 @@ def check_if_comment_is_valid(comment_info):
     elif 'label' not in comment_info or not comment_info['label']:
         err += 'Missing value for label'
     elif len(Claim.objects.filter(id=comment_info['claim_id'])) == 0:
-        err += 'Claim ' + comment_info['claim_id'] + 'does not exist'
+        err += 'Claim ' + str(comment_info['claim_id']) + 'does not exist'
     elif not check_if_user_exists_by_user_id(comment_info['user_id']):
-        err += 'User with id ' + comment_info['user_id'] + ' does not exist'
+        err += 'User with id ' + str(comment_info['user_id']) + ' does not exist'
     elif not is_valid_verdict_date(comment_info['verdict_date']):
         err += 'Date ' + comment_info['verdict_date'] + ' is invalid'
     if len(err) > 0:
@@ -86,30 +85,29 @@ def get_all_comments_for_claim_id(claim_id):
     return None
 
 
-# The function deletes all the comments in the website
-def reset_comments():
-    Comment.objects.all().delete()
-
-
-# This function returns the category for a given claim's id
-# The function returns claim's category in case it is found, otherwise None
-def get_category_for_claim(claim_id):
-    result = Claim.objects.filter(id=claim_id)
-    if len(result) > 0:
-        return result[0].category
-    return None
-
-
 # This function returns a csv which contains all the details of the claims in the website
 def export_to_csv():
+    from claims.views import get_category_for_claim, get_tags_for_claim
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="claims.csv"'
     writer = csv.writer(response)
     writer.writerow(['Title', 'Description', 'Url', 'Category', 'Verdict_Date', 'Tags', 'Label'])
     for comment in Comment.objects.all():
         writer.writerow([comment.title, comment.description, comment.url, get_category_for_claim(comment.claim_id),
-                        comment.verdict_date, comment.tags, comment.label])
+                        comment.verdict_date, get_tags_for_claim(comment.claim_id), comment.label])
     return response
 
 
-# def upvote(request):
+def up_vote(request):
+    try:
+        Comment.pos_votes.up(request)
+    except Exception as e:
+        return Http404(e)
+
+
+def down_vote(request):
+    try:
+        Comment.pos_votes.down(request)
+    except Exception as e:
+        return Http404(e)
+
