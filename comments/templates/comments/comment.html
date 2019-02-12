@@ -39,6 +39,10 @@
                         {% endif %}
                         <p style="text-align: center;">{{ comment.pos_votes|sub:comment.neg_votes }}</p>
                         {% if request.user.is_authenticated %}
+                            <form action={% url 'search:search_result' %}>
+                                <input name="search_keywords" value="{{ request.GET.search_keywords }}" type="text" placeholder="Search.." style="border: 3px solid #49c7c1; width: 400px;">
+                                <button type="submit" class="search_nav"><i class="fa fa-search"></i></button>
+                            </form>
                             <a href=""><div class="arrow-down"></div></a>
                         {% endif %}
                     </div>

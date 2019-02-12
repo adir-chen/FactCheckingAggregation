@@ -26,7 +26,7 @@
                 <input name="title" value="{{ title }}" type="text" placeholder="Title" style="width: 100%">
                 <textarea name="description" placeholder="Description"></textarea>
                 <input name="claim_id" value="{{ claim.id }}" type="hidden">
-                <input name="user_name" value="{{ request.user.username }}" type="hidden">
+                <input name="user_name" value="{{ request.user.id }}" type="hidden">
                 <input name="url" value="{{ url }}" type="text" placeholder="Website url"><br>
                 <input type="radio" name="label" value="{{True}}">True
                 <input type="radio" name="label" value="{{False}}">False<br>

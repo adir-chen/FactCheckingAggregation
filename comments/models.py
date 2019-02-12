@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from vote.models import VoteModel
 
 
-class Comment(models.Model):
+class Comment(VoteModel, models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     claim = models.ForeignKey(Claim, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
@@ -12,8 +12,8 @@ class Comment(models.Model):
     url = models.CharField(max_length=200)
     verdict_date = models.CharField(max_length=10)
     label = models.CharField(max_length=50)
-    pos_votes = models.IntegerField()
-    neg_votes = models.IntegerField()
+    neg_votes = VoteModel()
+    pos_votes = VoteModel()
 
     def __str__(self):
         return self.user.username + ' - ' + self.title

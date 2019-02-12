@@ -1,11 +1,11 @@
 from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import render
 from comments.models import Comment
 from comments.views import build_comment
 from django.contrib.auth.models import User
-
-from users.models import UsersImages
+from users.models import Users_Images
 from users.views import add_all_scrapers, check_if_user_exists_by_user_id
 from .models import Claim
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -13,6 +13,7 @@ from datetime import datetime
 
 
 # This function adds a new claim to the website, following with a comment on it
+# @login_required()
 def add_claim(request):
     if request.method == "POST":
         claim_info = request.POST.dict()
@@ -28,7 +29,7 @@ def add_claim(request):
             claim=claim_info['claim'],
             category=claim_info['category'],
             tags=new_tags,
-            authenticity_grade=-1,
+            authenticity_grade=0,
             image_src=claim_info['img_src']
         )
         claim.save()
@@ -48,14 +49,12 @@ def add_claim(request):
 # The function returns true in case the claim is valid, otherwise false and an error
 def check_if_claim_is_valid(claim_info):
     err = ''
-    if 'claim' not in claim_info:
+    if 'user_id' not in claim_info:
+        err += 'Missing value for user'
+    elif 'claim' not in claim_info:
         err += 'Missing value for claim'
     elif 'category' not in claim_info:
         err += 'Missing value for category'
-    elif 'img_src' not in claim_info:
-        err += 'Missing value for img_src'
-    elif 'username' not in claim_info:
-        err += 'Missing value for username'
     elif 'title' not in claim_info:
         err += 'Missing value for title'
     elif 'description' not in claim_info:
@@ -68,9 +67,11 @@ def check_if_claim_is_valid(claim_info):
         err += 'Missing value for tags'
     elif 'label' not in claim_info:
         err += 'Missing value for label'
+    elif 'img_src' not in claim_info:
+        err += 'Missing value for img_src'
     elif len(Claim.objects.filter(claim=claim_info['claim'])) > 0:
         err += 'Claim ' + claim_info['claim'] + 'already exists'
-    elif check_if_user_exists_by_user_id(claim_info['user_id']) is None:
+    elif not check_if_user_exists_by_user_id(claim_info['user_id']):
         err += 'User ' + claim_info['user_id'] + ' does not exist'
     elif not is_valid_verdict_date(claim_info['verdict_date']):
         err += 'Date ' + claim_info['verdict_date'] + ' is invalid'
@@ -94,11 +95,6 @@ def get_all_claims():
     return Claim.objects.all()
 
 
-# This function deletes all the claims in the website
-def reset_claims():
-    Claim.objects.all().delete()
-
-
 # This function returns the newest claims in the website (up to 20 claims)
 def get_newest_claims():
     result = Claim.objects.all().order_by('-id')
@@ -113,6 +109,24 @@ def get_claim_by_id(claim_id):
     result = Claim.objects.filter(id=claim_id)
     if len(result) > 0:
         return result[0]
+    return None
+
+
+# This function returns the category for a given claim's id
+# The function returns claim's category in case it is found, otherwise None
+def get_category_for_claim(claim_id):
+    result = Claim.objects.filter(id=claim_id)
+    if len(result) > 0:
+        return result[0].category
+    return None
+
+
+# This function returns the tags for a given claim's id
+# The function returns claim's tags in case it is found, otherwise None
+def get_tags_for_claim(claim_id):
+    result = Claim.objects.filter(id=claim_id)
+    if len(result) > 0:
+        return result[0].tags
     return None
 
 
@@ -145,7 +159,7 @@ def view_home(request):
         comment_objs = Comment.objects.filter(claim_id=claim.id)
         users_imgs = []
         for comment in comment_objs:
-            user_img = UsersImages.objects.filter(user_id=comment.user_id)
+            user_img = Users_Images.objects.filter(user_id=comment.user_id)
             if len(user_img) > 0:
                 users_imgs.append(user_img[0].user_img)
         headlines[claim] = users_imgs
@@ -153,15 +167,17 @@ def view_home(request):
         comment_objs = Comment.objects.filter(claim_id=claim.id)
         users_imgs = []
         for comment in comment_objs:
-            user_img = UsersImages.objects.filter(user_id=comment.user_id)
+            user_img = Users_Images.objects.filter(user_id=comment.user_id)
             if len(user_img) > 0:
                 users_imgs.append(user_img[0].user_img)
         sub_headlines[claim] = users_imgs
 
-    if request.user.is_authenticated:
-        if len(User.objects.filter(email=request.user.email)) == 0:
-            new_user = User(username=request.user.username, email=request.user.email, state='Regular', reputation=0, user_img='')
+    try:
+        if request.user.is_authenticated and len(User.objects.filter(email=request.user.email)) == 0:
+            new_user = User(username=request.user.username, email=request.user.email)
             new_user.save()
+    except:
+        '' # do nothing
     return render(request, 'claims/index.html', {'headlines': headlines, 'sub_headlines': sub_headlines})
 
 
