@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>
+        {% block claim_head_title %}
+
+        {% endblock %}
+    </title>
+    {% load static %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.0/css/bootstrap.min.css" integrity="sha384-PDle/QlgIONtM1aqA2Qemk5gPOE7wFq8+Em+G/hmo5Iq0CCmYZLv3fVRDJ4MMwEA" crossorigin="anonymous">
+    <link href="{% static 'claims/style2.css' %}" rel="stylesheet">
+</head>
+<body>
+    <header id="header">
+        <div id="header-wrapper">
+            <div id="site-logo">
+                <img src="{% static 'claims/assets/images/site_logo.png' %}" style="height: 135px;">
+            </div>
+            <div class="header-tools">
+                <p>Welcome guest.</p>
+                <p>
+                    <ul>
+                        <li><img src="{% static 'claims/assets/images/google_icon.png' %}" style="padding: 0; margin: 0;"><a href="">Sign in With Google</a></li>
+                        <li><img src="{% static 'claims/assets/images/twitter_icon.png' %}"><a href="">Sign in With Twitter</a></li>
+                    </ul>
+                </p>
+                <form class="search-container" action="/action_page.php">
+                    <div class="searchbar">
+                        <input type="text" placeholder="Search.." name="search">
+                    </div>
+                    <div class="searchbutton">
+                        <button type="submit"><i class="fa fa-search"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </header>
+    <div class="topnav">
+        <div class="nav-wrapper">
+            <a class="active" href="#home">Home</a>
+            <a href="#about">About</a>
+            <a href="#about">Contact Us</a>
+            <a href="#about">Admin Panel</a>
+        </div>
+    </div>
+    <div id="headlines">
+
+    </div>
+    <div id="content-wrapper">
+        <section id="page_content">
+        {% block page_content %}
+
+        {% endblock %}
+        </section>
+    </div>
+    <footer id="footer">
+        &copy; 2018-2019 WTFacts version 1.0
+    </footer>
+</body>
+</html>

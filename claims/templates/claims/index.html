@@ -1,4 +1,4 @@
-{% extends 'claims/layout.html' %}
+{% extends 'claims/layout2.html' %}
 
 {% block page_content %}
 
@@ -9,11 +9,6 @@
             {% endfor %}
         </div>
     </div>
-    {#            <div>#}
-    {#                {% for claim in sub_headlines %}#}
-    {#                    {% include 'claims/claimrow.html' with claim=claim %}#}
-    {#                {% endfor %}#}
-    {#            </div>#}
     <div id="home_page_wrapper">
         <div id="claim_columns">
             {% for claim, imgs in sub_headlines.items %}
@@ -28,5 +23,5 @@
 
 
 {% block claim_head_title %}
-    FactCheckProject | Home
+    WhatTheFact?! | Home
 {% endblock %}

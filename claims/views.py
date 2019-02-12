@@ -168,3 +168,33 @@ def view_home(request):
 def logout_view(request):
     logout(request)
     return view_home(request)
+
+
+def view_layout_demo(request):
+    # headlines_size = 2
+    # claims_size = 40
+    # claim_objs = Claim.objects.all().order_by('-id')[:claims_size]
+    # headlines = {}
+    # sub_headlines = {}
+    # for claim in claim_objs[:headlines_size]:
+    #     comment_objs = Comment.objects.filter(claim_id=claim.id)
+    #     users_imgs = []
+    #     for comment in comment_objs:
+    #         user_img = UsersImages.objects.filter(user_id=comment.user_id)
+    #         if len(user_img) > 0:
+    #             users_imgs.append(user_img[0].user_img)
+    #     headlines[claim] = users_imgs
+    # for claim in claim_objs[headlines_size:]:
+    #     comment_objs = Comment.objects.filter(claim_id=claim.id)
+    #     users_imgs = []
+    #     for comment in comment_objs:
+    #         user_img = UsersImages.objects.filter(user_id=comment.user_id)
+    #         if len(user_img) > 0:
+    #             users_imgs.append(user_img[0].user_img)
+    #     sub_headlines[claim] = users_imgs
+    #
+    # if request.user.is_authenticated:
+    #     if len(User.objects.filter(email=request.user.email)) == 0:
+    #         new_user = User(username=request.user.username, email=request.user.email, state='Regular', reputation=0, user_img='')
+    #         new_user.save()
+    return render(request, 'claims/layout2.html')

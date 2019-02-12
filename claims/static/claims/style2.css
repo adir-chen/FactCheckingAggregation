@@ -1,0 +1,179 @@
+body {
+    background: #f5f5f5;
+}
+
+#header{
+    background-color: #c7ff7b;
+    padding: 20px;
+}
+
+#header-wrapper{
+    max-width: 1050px;
+    margin: auto;
+    display: grid;
+    grid-template-columns: 400px auto;
+    grid-template-areas:
+    'site-logo header-tools';
+}
+
+#site-logo{
+    grid-area: site-logo;
+}
+
+.header-tools{
+    grid-area: header-tools;
+}
+
+.header-tools ul{
+    list-style-type: none;
+    padding: 0;
+}
+
+.header-tools li{
+    margin: 5px;
+    display: inline;
+    height: 35px;
+    padding: 0;
+}
+
+.header-tools a{
+    color: gray;
+    font-size: 12px;
+    padding: 0 7px;
+}
+
+.header-tools a:hover{
+    text-decoration: none;
+}
+
+#content-wrapper{
+    margin: auto;
+    max-width: 1050px;
+}
+
+#footer{
+    background-color: #2f2f2f;
+    width:100%;
+    padding: 20px;
+    color: #bbb;
+    text-align: center;
+    font-size: 12px;
+}
+
+.topnav {
+  overflow: hidden;
+  background-color: #222;
+}
+
+.nav-wrapper{
+    max-width: 900px;
+    margin: auto;
+}
+
+.topnav a {
+  float: left;
+  display: block;
+  color: black;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: 17px;
+    color: #fff;
+}
+
+.topnav a:hover {
+  background-color: #333;
+    text-decoration: none;
+}
+
+.search-container {
+    display: grid;
+    grid-template-columns: auto 36px;
+    grid-template-areas:
+    'searchbar searchbutton';
+    width: 100%;
+    margin-top: 8px;
+    margin-right: 20px;
+    border: 1px solid gray;
+    border-radius: 5px;
+}
+
+.searchbar{
+    grid-area: searchbar;
+}
+
+.searchbutton{
+    grid-area: searchbutton;
+}
+
+
+.search-container input[type=text] {
+  padding: 6px;
+  font-size: 17px;
+  border: none;
+    width: 100%;
+    border-radius: 4px 0 0 4px;
+}
+
+.search-container button {
+  padding: 6px 10px;
+  background: #ddd;
+  font-size: 17px;
+  border: none;
+  cursor: pointer;
+    border-radius: 0 4px 4px 0;
+}
+
+.topnav .search-container button:hover {
+  background: #ccc;
+}
+
+#claim_page{
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 7px;
+    border: 1px solid #ddd;
+}
+
+.headlines{
+    background: #2f2f2f;
+}
+
+div.claim_box {
+    background-color: #fff;
+    margin-bottom: 25px;
+    text-align: left;
+    box-shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.24);
+    height: 100%;
+    opacity: 0.9;
+    display: inline-block;
+    border-radius: 7px;
+}
+
+div.claim_box:hover {
+    opacity: 1.0;
+    box-shadow: 0 1px 3px rgba(0,0,0,.25), 0 10px 10px rgba(0,0,0,.20);;
+}
+
+div.claim_box_info {
+    padding: 10px 20px 35px 20px;
+}
+
+.claim_box img{
+    width: 100%;
+    margin: 0;
+    border-radius: 7px 7px 0 0;
+}
+
+#claim_columns {
+    column-count: 1;
+    column-gap: 30px;
+    padding: 0 40px;
+}
+
+
+@media(min-width:767px ){
+    #claim_columns {
+        column-count: 3;
+    }
+}
