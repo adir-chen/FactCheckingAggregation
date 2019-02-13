@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.0/css/bootstrap.min.css" integrity="sha384-PDle/QlgIONtM1aqA2Qemk5gPOE7wFq8+Em+G/hmo5Iq0CCmYZLv3fVRDJ4MMwEA" crossorigin="anonymous">
     <link href="{% static 'claims/style2.css' %}" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 </head>
 <body>
     <header id="header">
@@ -20,16 +21,21 @@
                 <img src="{% static 'claims/assets/images/site_logo.png' %}" style="height: 135px;">
             </div>
             <div class="header-tools">
-                <p>Welcome guest.</p>
-                <p>
-                    <ul>
-                        <li><img src="{% static 'claims/assets/images/google_icon.png' %}" style="padding: 0; margin: 0;"><a href="">Sign in With Google</a></li>
-                        <li><img src="{% static 'claims/assets/images/twitter_icon.png' %}"><a href="">Sign in With Twitter</a></li>
-                    </ul>
-                </p>
-                <form class="search-container" action="/action_page.php">
+                {% if request.user.is_authenticated %}
+                    <p>Welcome <a href="">{{request.user.username}}</a></p>
+                    <a href="/logout">Sign Out</a>
+                {% else %}
+                    <p>Welcome guest.</p>
+                    <p>
+                        <ul>
+                            <li><img src="{% static 'claims/assets/images/google_icon.png' %}" style="padding: 0; margin: 0;"><a href="{% url 'social:begin' 'google-oauth2' %}">Sign in With Google</a></li>
+                            <li><img src="{% static 'claims/assets/images/twitter_icon.png' %}"><a href="">Sign in With Twitter</a></li>
+                        </ul>
+                    </p>
+                {% endif %}
+                <form class="search-container" action={% url 'search:search_result' %}>
                     <div class="searchbar">
-                        <input type="text" placeholder="Search.." name="search">
+                        <input type="text" placeholder="Search.." name="search_keywords" value="{{ request.GET.search_keywords }}">
                     </div>
                     <div class="searchbutton">
                         <button type="submit"><i class="fa fa-search"></i></button>
@@ -40,14 +46,11 @@
     </header>
     <div class="topnav">
         <div class="nav-wrapper">
-            <a class="active" href="#home">Home</a>
-            <a href="#about">About</a>
-            <a href="#about">Contact Us</a>
-            <a href="#about">Admin Panel</a>
+            <a class="active" href="/">Home</a>
+            <a href="">About</a>
+            <a href="">Contact Us</a>
+            <a href="/admin">Admin Panel</a>
         </div>
-    </div>
-    <div id="headlines">
-
     </div>
     <div id="content-wrapper">
         <section id="page_content">
@@ -59,5 +62,7 @@
     <footer id="footer">
         &copy; 2018-2019 WTFacts version 1.0
     </footer>
+
+
 </body>
 </html>

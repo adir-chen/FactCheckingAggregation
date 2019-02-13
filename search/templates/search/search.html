@@ -1,8 +1,9 @@
-{% extends 'claims/layout.html' %}
+{% extends 'claims/layout2.html' %}
 
 {% block page_content %}
-    <div id="home_page_wrapper">
-        <div id="claim_columns">
+    <div class="page_wrapper">
+        <h3>Search Results:</h3>
+        <div id="claim_columns" style="margin-top: 50px;">
             {% if search_result.items|length > 0 %}
                 {% for claim, imgs in search_result.items %}
                     {% include 'claims/claimbox.html' with claim=claim icons=imgs %}

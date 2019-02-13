@@ -150,7 +150,7 @@ def view_claim(request, claim_id):
 @ensure_csrf_cookie
 def view_home(request):
     # add_all_scrapers()
-    headlines_size = 2
+    headlines_size = 3
     claims_size = 40
     claim_objs = Claim.objects.all().order_by('-id')[:claims_size]
     headlines = {}

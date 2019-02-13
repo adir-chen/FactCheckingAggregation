@@ -35,21 +35,103 @@
                 <td class="right" style="text-align: center;">
                     <div style="margin: auto;">
                         {% if request.user.is_authenticated %}
-                            <a href=""><div class="arrow-up"></div></a>
+                            <button id="{{ comment.id }}-up" type="submit" class="arrow-up" style="">▲</button>
                         {% endif %}
-                        <p style="text-align: center;">{{ comment.pos_votes|sub:comment.neg_votes }}</p>
+                        <br>
+                        <span id="voteCount" style="text-align: center; color: #000;">{{ comment.up_votes.count|sub:comment.down_votes.count }}</span>
+                        <br>
                         {% if request.user.is_authenticated %}
-                            <form action={% url 'search:search_result' %}>
-                                <input name="search_keywords" value="{{ request.GET.search_keywords }}" type="text" placeholder="Search.." style="border: 3px solid #49c7c1; width: 400px;">
-                                <button type="submit" class="search_nav"><i class="fa fa-search"></i></button>
-                            </form>
-                            <a href=""><div class="arrow-down"></div></a>
+                            <button id="{{ comment.id }}-down" type="submit" class="arrow-down">▼</button>
                         {% endif %}
                     </div>
-
                 </td>
             </tr>
         </table>
     </div>
-
 </div>
+<script>
+    var up_voted = false;
+    var down_voted = false;
+    var up_count = {{ comment.up_votes.count }};
+    var down_count = {{ comment.down_votes.count }};
+
+    $(document).ready(function () {
+        {% for voted_user in comment.up_votes.all %}
+            {% if request.user.id == voted_user.id %}
+                up_voted = true;
+                document.getElementById("{{ comment.id }}-up").style.color = "#555";
+            {% endif %}
+        {% endfor %}
+        {% for voted_user in comment.down_votes.all %}
+            {% if request.user.id == voted_user.id %}
+                down_voted = true;
+                document.getElementById("{{ comment.id }}-down").style.color = "#555";
+            {% endif %}
+        {% endfor %}
+    });
+
+    $(".arrow-up").click(function(e){
+        e.preventDefault();
+        $.ajax({
+            type: 'GET',
+            url: "{% url 'comments:up_vote' %}",
+            data: {
+                comment_id: '{{ comment.id }}',
+                user_id: '{{ request.user.id }}'
+            },
+            success: function () {
+                if(!up_voted) {
+                    up_voted = true;
+                    up_count++;
+                    document.getElementById("{{ comment.id }}-up").style.color = "#555";
+                    if(down_voted) {
+                        down_count--;
+                        down_voted = false;
+                        document.getElementById("{{ comment.id }}-down").style.color = "#C0C0C0";
+                    }
+                }
+                else{
+                    up_voted = false;
+                    up_count--;
+                    document.getElementById("{{ comment.id }}-up").style.color = "#C0C0C0";
+                }
+                $("#voteCount").text(up_count-down_count);
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    });
+    $(".arrow-down").click(function(e){
+        e.preventDefault();
+        $.ajax({
+            type: 'GET',
+            url: "{% url 'comments:down_vote' %}",
+            data: {
+                comment_id: '{{ comment.id }}',
+                user_id: '{{ request.user.id }}'
+            },
+            success: function () {
+                if(!down_voted) {
+                    down_voted = true;
+                    down_count++;
+                    document.getElementById("{{ comment.id }}-down").style.color = "#555";
+                    if(up_voted) {
+                        up_count--;
+                        up_voted = false;
+                        document.getElementById("{{ comment.id }}-up").style.color = "#C0C0C0";
+                    }
+                }
+                else{
+                    down_voted = false;
+                    down_count--;
+                    document.getElementById("{{ comment.id }}-down").style.color = "#C0C0C0";
+                }
+                $("#voteCount").text(up_count-down_count);
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    });
+</script>

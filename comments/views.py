@@ -1,4 +1,11 @@
 import csv
+
+from django.shortcuts import get_object_or_404, render
+from django.template import RequestContext
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.generic import RedirectView
+
+
 from comments.models import Comment
 from claims.models import Claim
 from django.http import HttpResponse, Http404
@@ -33,8 +40,6 @@ def build_comment(claim_id, user_id, title, description, url, verdict_date, labe
         url=url,
         verdict_date=verdict_date,
         label=label,
-        pos_votes=0,
-        neg_votes=0
     )
     comment.save()
 
@@ -99,15 +104,24 @@ def export_to_csv():
 
 
 def up_vote(request):
-    try:
-        Comment.pos_votes.up(request)
-    except Exception as e:
-        return Http404(e)
+    from claims.views import view_claim
+    comment = get_object_or_404(Comment, id=request.GET.get('comment_id'))
+    if comment.up_votes.filter(id=request.user.id).exists():
+        comment.up_votes.remove(request.user)
+    else:
+        comment.up_votes.add(request.user)
+        if comment.down_votes.filter(id=request.user.id).exists():
+            comment.down_votes.remove(request.user)
+    return view_claim(request, comment.claim_id)
 
 
 def down_vote(request):
-    try:
-        Comment.pos_votes.down(request)
-    except Exception as e:
-        return Http404(e)
-
+    from claims.views import view_claim
+    comment = get_object_or_404(Comment, id=request.GET.get('comment_id'))
+    if comment.down_votes.filter(id=request.GET.get('user_id')).exists():
+        comment.down_votes.remove(request.user)
+    else:
+        comment.down_votes.add(request.user)
+        if comment.up_votes.filter(id=request.GET.get('user_id')).exists():
+            comment.up_votes.remove(request.user)
+    return view_claim(request, comment.claim_id)

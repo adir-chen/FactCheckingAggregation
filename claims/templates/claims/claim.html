@@ -5,7 +5,7 @@
         <div  id="claim_page_title_wrapper">
             <h1 id="claim_page_title">{{ claim.claim }}</h1>
             <p>Authenticity Grade:{{ claim.authenticity_grade }}</p>
-            <img src="{{ claim.image_url }}">
+            <img src="{{ claim.image_src }}">
         </div>
         <hr><br>
 
@@ -21,16 +21,22 @@
             {%  endif %}
         </div>
         {% if request.user.is_authenticated %}
-        <div class="new_comment">
+        <br><hr>
+        <h3>Add Comment:</h3>
+        <br>
+        <div class="new_comment claim_box" style="width: 100%; padding: 20px 40px 20px 20px;">
             <form action={% url 'comments:add_comment' %}>
-                <input name="title" value="{{ title }}" type="text" placeholder="Title" style="width: 100%">
-                <textarea name="description" placeholder="Description"></textarea>
+                <input name="title" value="{{ title }}" type="text" placeholder="Title" style="width: 100%; margin: 10px;"><br>
+                <textarea name="description" placeholder="Description" style="width: 100%; margin: 10px;"></textarea><br>
                 <input name="claim_id" value="{{ claim.id }}" type="hidden">
                 <input name="user_name" value="{{ request.user.id }}" type="hidden">
-                <input name="url" value="{{ url }}" type="text" placeholder="Website url"><br>
-                <input type="radio" name="label" value="{{True}}">True
-                <input type="radio" name="label" value="{{False}}">False<br>
-                <button type="submit" style="margin: 10px 0;">Add your comment</button>
+                <input name="url" value="{{ url }}" type="text" placeholder="Website url" style="width: 100%; margin: 10px;"><br>
+                <div style="margin: 10px;">
+                    <input type="radio" name="label" value="{{True}}">True<br>
+                    <input type="radio" name="label" value="{{False}}">False<br>
+                </div>
+
+                <button type="submit" class="btn btn-info" style="margin: 10px 0;">Add your comment</button>
             </form>
         </div>
         {% endif %}

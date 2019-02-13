@@ -2,14 +2,14 @@
 
 {% block page_content %}
 
-    <div style="background-color: #8dc7d2; padding: 0 30px; margin-bottom: 40px;">
-        <div style="max-width: 1350px; display: flex; flex-wrap: wrap; margin: 0 auto;">
+    <div class="headlines">
+        <div style="max-width: 1150px; padding: 0 30px; border-radius: 10px; background: #9ecefb; display: flex; flex-wrap: wrap; margin: 0 auto;">
             {% for claim, imgs in headlines.items %}
                 {% include 'claims/claimbox_large.html' with claim=claim icons=imgs %}
             {% endfor %}
         </div>
     </div>
-    <div id="home_page_wrapper">
+    <div class="page_wrapper">
         <div id="claim_columns">
             {% for claim, imgs in sub_headlines.items %}
                 {% include 'claims/claimbox.html' with claim=claim icons=imgs %}

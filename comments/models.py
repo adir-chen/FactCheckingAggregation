@@ -1,4 +1,6 @@
 from django.db import models
+from django.urls import reverse
+
 from claims.models import Claim
 from django.contrib.auth.models import User
 from vote.models import VoteModel
@@ -12,8 +14,12 @@ class Comment(VoteModel, models.Model):
     url = models.CharField(max_length=200)
     verdict_date = models.CharField(max_length=10)
     label = models.CharField(max_length=50)
-    neg_votes = VoteModel()
-    pos_votes = VoteModel()
+    # neg_votes = models.IntegerField(default=0)
+    # pos_votes = models.IntegerField(default=0)
+    # neg_votes = VoteModel(models.IntegerField(default=0))
+    # pos_votes = VoteModel(models.IntegerField(default=0))
+    up_votes = models.ManyToManyField(User, related_name='up_votes', blank=True)
+    down_votes = models.ManyToManyField(User, related_name='down_votes', blank=True)
 
     def __str__(self):
         return self.user.username + ' - ' + self.title
