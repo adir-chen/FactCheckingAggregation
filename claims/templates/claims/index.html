@@ -3,7 +3,7 @@
 {% block page_content %}
 
     <div class="headlines">
-        <div style="max-width: 1150px; padding: 0 30px; border-radius: 10px; background: #9ecefb; display: flex; flex-wrap: wrap; margin: 0 auto;">
+        <div style="max-width: 1150px; padding: 0 20px; border-radius: 10px; background: #aabfd6; display: flex; flex-wrap: wrap; margin: 0 auto;">
             {% for claim, imgs in headlines.items %}
                 {% include 'claims/claimbox_large.html' with claim=claim icons=imgs %}
             {% endfor %}
