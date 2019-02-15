@@ -1,7 +1,7 @@
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from comments.models import Comment
 from comments.views import build_comment
 from django.contrib.auth.models import User
@@ -26,6 +26,7 @@ def add_claim(request):
             new_tags += tag + ', '
         new_tags = new_tags[:-2]
         claim = Claim(
+            user_id=claim_info['user_id'],
             claim=claim_info['claim'],
             category=claim_info['category'],
             tags=new_tags,
@@ -35,13 +36,14 @@ def add_claim(request):
         claim.save()
         build_comment(claim.id, claim_info['user_id'], claim_info['title'],
                     claim_info['description'], claim_info['url'], claim_info['verdict_date'], claim_info['label'])
-        return render(request, 'claims/claim.html', {
-            'claim': claim.claim,
-            'category': claim.category,
-            'authenticity_grade': claim.authenticity_grade,
-            'image_url': claim.image_src,
-            'comments': Comment.objects.filter(claim_id=claim.id),
-        })
+        # return render(request, 'claims/claim.html', {
+        #     'claim': claim.claim,
+        #     'category': claim.category,
+        #     'authenticity_grade': claim.authenticity_grade,
+        #     'image_url': claim.image_src,
+        #     'comments': Comment.objects.filter(claim_id=claim.id),
+        # })
+        return view_claim(request, claim.id)
     raise Http404("Invalid method")
 
 
@@ -139,7 +141,7 @@ def view_claim(request, claim_id):
     comment_objs = Comment.objects.filter(claim_id=claim_id)
     comments = {}
     for comment in comment_objs:
-        comments[User.objects.filter(id=comment.user_id)[0]] = comment
+        comments[comment] = User.objects.filter(id=comment.user_id)[0]
     return render(request, 'claims/claim.html', {
         'claim': claim,
         'comments': comments,
@@ -186,31 +188,39 @@ def logout_view(request):
     return view_home(request)
 
 
-def view_layout_demo(request):
-    # headlines_size = 2
-    # claims_size = 40
-    # claim_objs = Claim.objects.all().order_by('-id')[:claims_size]
-    # headlines = {}
-    # sub_headlines = {}
-    # for claim in claim_objs[:headlines_size]:
-    #     comment_objs = Comment.objects.filter(claim_id=claim.id)
-    #     users_imgs = []
-    #     for comment in comment_objs:
-    #         user_img = UsersImages.objects.filter(user_id=comment.user_id)
-    #         if len(user_img) > 0:
-    #             users_imgs.append(user_img[0].user_img)
-    #     headlines[claim] = users_imgs
-    # for claim in claim_objs[headlines_size:]:
-    #     comment_objs = Comment.objects.filter(claim_id=claim.id)
-    #     users_imgs = []
-    #     for comment in comment_objs:
-    #         user_img = UsersImages.objects.filter(user_id=comment.user_id)
-    #         if len(user_img) > 0:
-    #             users_imgs.append(user_img[0].user_img)
-    #     sub_headlines[claim] = users_imgs
-    #
-    # if request.user.is_authenticated:
-    #     if len(User.objects.filter(email=request.user.email)) == 0:
-    #         new_user = User(username=request.user.username, email=request.user.email, state='Regular', reputation=0, user_img='')
-    #         new_user.save()
-    return render(request, 'claims/layout2.html')
+def add_claim_page(request):
+    return render(request, 'claims/addclaim.html')
+
+
+def edit_claim(request):
+    valid_new_claim, err_msg = check_claim_new_fields(request)
+    if not valid_new_claim:
+        raise Exception(err_msg)
+    claim = get_object_or_404(Claim, id=request.POST.get('claim_id'))
+    Claim.objects.filter(id=claim.id, user_id=request.POST.get('user_id')).update(
+        claim=request.POST.get('claim'),
+        category=request.POST.get('category'),
+        tags=request.POST.get('tags'),
+        image_src=request.POST.get('image_src'))
+    return view_claim(request, claim.id)
+
+
+def check_claim_new_fields(request):
+    err = ''
+    if not request.POST.get('claim'):
+        err += 'Missing value for claim'
+    elif not request.POST.get('category'):
+        err += 'Missing value for category'
+    elif not request.POST.get('tags'):
+        err += 'Missing value for tags'
+    elif not request.POST.get('image_src'):
+        err += 'Missing value for image_src'
+    if len(err) > 0:
+        return False, err
+    return True, err
+
+
+def delete_claim(request):
+    claim = get_object_or_404(Claim, id=request.POST.get('claim_id'))
+    Claim.objects.filter(id=claim.id).delete()
+    return view_home(request)

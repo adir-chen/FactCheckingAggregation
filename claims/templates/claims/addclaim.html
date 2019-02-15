@@ -1,0 +1,39 @@
+{% extends 'claims/layout2.html' %}
+
+{% block page_content %}
+    <div id="claim_page">
+        <h3>Add New Claim:</h3>
+        <br>
+        <div class="new_comment claim_box" style="width: 100%; padding: 20px 40px 20px 20px;">
+            <form method="post" action={% url 'claims:add_claim' %}>
+                {% csrf_token %}
+                <h5>Claim Details:</h5>
+                <input name="claim" type="text" placeholder="Claim" style="width: 100%; margin: 10px;"><br>
+                <input name="category" type="text" placeholder="Category" style="width: 100%; margin: 10px;"><br>
+                <input name="tags" type="text" placeholder="Tags (separated by ,). used for searching purpose." style="width: 100%; margin: 10px;"><br>
+                <input name="img_src" type="text" placeholder="Image Url" style="width: 100%; margin: 10px;"><br>
+                <br>
+                <h5>Comment Details (Source Information):</h5>
+                <p>
+                    The claim will be submitted along with your comment containing you verdict on it (True/False).<br>
+                    Other Users will be able to comment their on verdicts.
+                </p>
+                <input name="title" type="text" placeholder="Title" style="width: 100%; margin: 10px;"><br>
+                <textarea name="description" placeholder="Description" style="width: 100%; margin: 10px;"></textarea><br>
+                <input name="user_id" value="{{ request.user.id }}" type="hidden">
+                <input name="url" type="text" placeholder="Website url" style="width: 100%; margin: 10px;"><br>
+                <input name="verdict_date" type="text" placeholder="Verdict date (according to source website)" style="width: 100%; margin: 10px;"><br>
+                <div style="margin: 10px;">
+                    <input type="radio" name="label" value="{{True}}">True<br>
+                    <input type="radio" name="label" value="{{False}}">False<br>
+                </div>
+
+                <button type="submit" class="btn btn-info" style="margin: 10px 0;">Add Claim</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block claim_head_title %}
+    FactCheckProject | Add new Claim
+{% endblock %}

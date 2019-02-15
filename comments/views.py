@@ -1,11 +1,5 @@
 import csv
-
-from django.shortcuts import get_object_or_404, render
-from django.template import RequestContext
-from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.generic import RedirectView
-
-
+from django.shortcuts import get_object_or_404
 from comments.models import Comment
 from claims.models import Claim
 from django.http import HttpResponse, Http404
@@ -23,7 +17,6 @@ def add_comment(request):
                        request.GET.get('url'),
                        datetime.datetime.strftime(datetime.datetime.now(), '%d/%m/%Y'),
                        request.GET.get('label'))
-
     return view_claim(request, request.GET.get('claim_id'))
 
 
@@ -105,7 +98,7 @@ def export_to_csv():
 
 def up_vote(request):
     from claims.views import view_claim
-    comment = get_object_or_404(Comment, id=request.GET.get('comment_id'))
+    comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
     if comment.up_votes.filter(id=request.user.id).exists():
         comment.up_votes.remove(request.user)
     else:
@@ -117,11 +110,48 @@ def up_vote(request):
 
 def down_vote(request):
     from claims.views import view_claim
-    comment = get_object_or_404(Comment, id=request.GET.get('comment_id'))
-    if comment.down_votes.filter(id=request.GET.get('user_id')).exists():
+    comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
+    if comment.down_votes.filter(id=request.POST.get('user_id')).exists():
         comment.down_votes.remove(request.user)
     else:
         comment.down_votes.add(request.user)
-        if comment.up_votes.filter(id=request.GET.get('user_id')).exists():
+        if comment.up_votes.filter(id=request.POST.get('user_id')).exists():
             comment.up_votes.remove(request.user)
+    return view_claim(request, comment.claim_id)
+
+
+def edit_comment(request):
+    from claims.views import view_claim
+    valid_new_comment, err_msg = check_comment_new_fields(request)
+    if not valid_new_comment:
+        raise Exception(err_msg)
+    comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
+    Comment.objects.filter(id=comment.id, user_id=request.POST.get('user_id')).update(
+        title=request.POST.get('comment_title'),
+        description=request.POST.get('comment_description'),
+        url=request.POST.get('comment_reference'),
+        verdict_date=datetime.datetime.strftime(datetime.datetime.now(), '%d/%m/%Y'),
+        label=request.POST.get('comment_label'))
+    return view_claim(request, comment.claim_id)
+
+
+def check_comment_new_fields(request):
+    err = ''
+    if not request.POST.get('comment_title'):
+        err += 'Missing value for comment title'
+    elif not request.POST.get('comment_description'):
+        err += 'Missing value for comment description'
+    elif not request.POST.get('comment_reference'):
+        err += 'Missing value for comment reference'
+    elif not request.POST.get('comment_label'):
+        err += 'Missing value for comment label'
+    if len(err) > 0:
+        return False, err
+    return True, err
+
+
+def delete_comment(request):
+    from claims.views import view_claim
+    comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
+    Comment.objects.filter(id=comment.id).delete()
     return view_claim(request, comment.claim_id)

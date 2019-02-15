@@ -10,28 +10,44 @@
 {#pos_votes = comment.pos_votes #}
 {#neg_votes = comment.neg_votes#}
 {%  load mathfilters %}
-
 <div style="margin: auto;">
+
     <div class="claim_box" style="padding: 20px; width: 100%;">
-        <table id="comment" style="width: 100%">
+        <p id="{{ comment.id }}_error_msg" style="color: red; font-size: 12px;" hidden>**Error Message: </p>
+        <table id="comment_{{ comment.id }}" style="width: 100%;">
             <tr>
-                <td class="left" style="width: 100%"><h4><b>{{ comment.title }}</b></h4></td>
+                <td class="left" style="width: 100%;">
+                    <h4 id="comment_{{ comment.id }}_title"><b>{{ comment.title }}</b></h4>
+                    <input hidden="hidden" id="{{ comment.id }}_title" value="{{ comment.title }}" type="text" placeholder="{{ comment.title }}" style="width: 90%; margin: 10px;">
+                </td>
                 <td class="right">User: <a href="#">{{ user.username }}</a></td>
             </tr>
             <tr>
-                <td class="left"><p>{{ comment.description }}</p></td>
+                <td class="left">
+                    <p id="comment_{{ comment.id }}_description">{{ comment.description }}</p>
+                    <textarea hidden="hidden" id="{{ comment.id }}_description" placeholder="{{ comment.description }}" style="width: 90%; margin: 10px;"></textarea><br>
+                </td>
                 <td class="right"><p>
                     <img src="{{ user.user_img }}" style="max-height: 90px; max-width: 90px;"><br>
                     {% load static %}
                     {%  if comment.label == "TRUE" %}
                         <img style="max-width: 70px;" src="{% static 'claims/assets/images/TrueLabel.png' %}" >
+                        <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="{{True}}" checked><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
+                        <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="{{False}}"><span id='comment_{{ comment.id }}_false_label' hidden>False</span>
                     {% else %}
                         <img style="max-width: 70px; " src="{% static 'claims/assets/images/FalseLabel.png' %}" >
+                        <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="{{True}}"><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
+                        <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="{{False}}" checked><span id='comment_{{ comment.id }}_false_label' hidden>False</span>
                     {%  endif %}
+
                 </p></td>
             </tr>
             <tr>
-                <td class="left">References: <a href={{ comment.url }}>website</a></td>
+                <td class="left">
+                    References:
+                    <a id="comment_{{ comment.id }}_reference" href={{ comment.url }}>website</a>
+                    <input hidden="hidden" id="{{ comment.id }}_reference" value="{{ comment.url }}" type="text" placeholder="{{ comment.url }}" style="width: 90%; margin: 10px;">
+                </td>
                 <td class="right" style="text-align: center;">
                     <div style="margin: auto;">
                         {% if request.user.is_authenticated %}
@@ -46,9 +62,20 @@
                     </div>
                 </td>
             </tr>
+            <tr>
+                <td class="left">
+                {% if request.user.is_authenticated and comment.user_id == request.user.id %}
+                    <button id="{{ comment.id }}_edit" type="submit" class="btn btn-info" onclick="edit_comment()" style="margin: 10px 0;">Edit your comment</button>
+                    <button id="{{ comment.id }}_delete" type="submit" class="btn btn-info" style="margin: 10px 0;">Delete</button>
+                    <button id="{{ comment.id }}_save" type="submit" hidden='hidden' class="btn btn-info" style="margin: 10px 0;">Save</button>
+                {% endif %}
+                </td>
+                <td class="right"></td>
+            </tr>
         </table>
     </div>
-</div>l
+</div>
+{#<meta name="csrf-token" content="{{ csrf_token }}">#}
 <script>
     let up_voted_{{ comment.id }} = false;
     let down_voted_{{ comment.id }} = false;
@@ -73,8 +100,9 @@
     $("#{{ comment.id }}_arrow_up").click(function(e){
         e.preventDefault();
         $.ajax({
-            type: 'GET',
+            type: 'POST',
             url: "{% url 'comments:up_vote' %}",
+            headers: { "X-CSRFToken": getCookie("csrftoken") },
             data: {
                 comment_id: '{{ comment.id }}',
                 user_id: '{{ request.user.id }}'
@@ -105,8 +133,9 @@
     $("#{{ comment.id }}_arrow_down").click(function(e){
         e.preventDefault();
         $.ajax({
-            type: 'GET',
+            type: 'POST',
             url: "{% url 'comments:down_vote' %}",
+            headers: { "X-CSRFToken": getCookie("csrftoken") },
             data: {
                 comment_id: '{{ comment.id }}',
                 user_id: '{{ request.user.id }}'
@@ -134,4 +163,87 @@
             }
         });
     });
+
+    function edit_comment() {
+        $("#comment_{{ comment.id }}_title").attr("hidden", true);
+        $("#comment_{{ comment.id }}_description").attr("hidden", true);
+        $("#comment_{{ comment.id }}_reference").attr("hidden", true);
+
+        $("#{{ comment.id }}_title").attr("hidden", false);
+        $("#{{ comment.id }}_description").attr("hidden", false);
+        $("#{{ comment.id }}_reference").attr("hidden", false);
+
+        $("#comment_{{ comment.id }}_true_radio").attr("hidden", false);
+        $("#comment_{{ comment.id }}_false_radio").attr("hidden", false);
+        $("#comment_{{ comment.id }}_true_label").attr("hidden", false);
+        $("#comment_{{ comment.id }}_false_label").attr("hidden", false);
+        $("#{{ comment.id }}_save").attr("hidden", false);
+    }
+
+    $("#{{ comment.id }}_save").click(function(e){
+        {#e.preventDefault();#}
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'comments:edit_comment' %}",
+            headers: { "X-CSRFToken": getCookie("csrftoken") },
+            data: {
+                comment_id: '{{ comment.id }}',
+                comment_title: $("#{{ comment.id }}_title").val(),
+                comment_description: $("#{{ comment.id }}_description").val(),
+                comment_reference: $("#{{ comment.id }}_reference").val(),
+                comment_label: document.querySelector('input[name="label"]:checked').value,
+                user_id: '{{ request.user.id }}',
+            },
+            success: function () {
+                location.href = "http://127.0.0.1:8000/claim/{{ comment.claim_id }}"
+            },
+            error: function (error) {
+                console.log(error);
+                var err = error.responseText;
+                $("#{{ comment.id }}_error_msg").attr("hidden", false);
+                console.log(err.title);
+                {#console.log(err.text);#}
+                {#console.log(JSON.parse(error.responseText));#}
+                location.href = "http://127.0.0.1:8000/claim/{{ comment.claim_id }}"
+
+            }
+        });
+    });
+
+    $("#{{ comment.id }}_delete").click(function(e){
+        e.preventDefault();
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'comments:delete_comment' %}",
+            headers: { "X-CSRFToken": getCookie("csrftoken") },
+            data: {
+                comment_id: '{{ comment.id }}',
+                user_id: '{{ request.user.id }}'
+            },
+            success: function (page) {
+                location.href = "http://127.0.0.1:8000/claim/{{ comment.claim_id }}"
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    });
+
+    function getCookie(c_name)
+    {
+        if (document.cookie.length > 0)
+        {
+            c_start = document.cookie.indexOf(c_name + "=");
+            if (c_start != -1)
+            {
+                c_start = c_start + c_name.length + 1;
+                c_end = document.cookie.indexOf(";", c_start);
+                if (c_end == -1) c_end = document.cookie.length;
+                return unescape(document.cookie.substring(c_start,c_end));
+            }
+        }
+        return "";
+    }
+
+
 </script>
