@@ -102,3 +102,25 @@ def get_all_scrapers_ids(request):
     for scraper in result:
         scrapers[scraper.scraper_name] = scraper.scraper_id.id
     return JsonResponse(scrapers)
+
+
+# This function returns a random claim for each scraper in the system for testing (the scrapers)
+def get_random_claims_from_scrapers(request):
+    from django.http import JsonResponse
+    claims = {}
+    result = Scrapers.objects.all()
+    from claims.models import Claim
+    from comments.models import Comment
+    for scraper in result:
+        claim_comment = Comment.objects.all().filter(user_id=scraper.scraper_id.id).order_by('-id')
+        if len(claim_comment):
+            claim_comment = claim_comment[0]
+            claim_details = Claim.objects.filter(id=claim_comment.claim_id)[0]
+            claims[scraper.scraper_name] = {'title': claim_comment.title,
+                                            'claim': claim_details.claim,
+                                            'description': claim_comment.description,
+                                            'url': claim_comment.url,
+                                            'verdict_date': claim_comment.verdict_date,
+                                            'category': claim_details.category,
+                                            'label': claim_comment.label}
+    return JsonResponse(claims)

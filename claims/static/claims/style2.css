@@ -201,14 +201,14 @@ div.claim_box_info {
   /*border-top: 15px solid #C0C0C0;*/
 /*}*/
 
-.arrow-up {
+.arrow_up {
   color: #C0C0C0;
     background: none;
     border: none;
     font-size: 24px;
 }
 
-.arrow-down {
+.arrow_down {
   color: #C0C0C0;
     background: none;
     border: none;

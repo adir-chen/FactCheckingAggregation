@@ -139,7 +139,7 @@ def view_claim(request, claim_id):
     comment_objs = Comment.objects.filter(claim_id=claim_id)
     comments = {}
     for comment in comment_objs:
-        comments[User.objects.filter(id=comment.user_id)[0]] = comment
+        comments[comment] = User.objects.filter(id=comment.user_id)[0]
     return render(request, 'claims/claim.html', {
         'claim': claim,
         'comments': comments,
