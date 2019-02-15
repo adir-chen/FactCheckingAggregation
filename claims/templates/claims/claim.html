@@ -2,9 +2,9 @@
 
 {% block page_content %}
     <div id="claim_page">
-        <div id="claim_page_title_wrapper">
+        <div  id="claim_page_title_wrapper">
             <h1 id="claim_page_title">{{ claim.claim }}</h1>
-            <p>Authenticity Grade:{{ claim.authenticity_grade }}</p>
+            <p>Authenticity Grade: {{ claim.authenticity_grade }}% (correct)</p>
             <img id="img_src_{{ claim.id }}" src="{{ claim.image_src }}">
             <input hidden="hidden" id="{{ claim.id }}_image_src" value="{{ claim.image_src }}" type="text" placeholder="{{ claim.image_src }}">
         </div>
@@ -14,9 +14,9 @@
             Image Url: <input id="{{ claim.id }}_tags" value="{{ claim.tags }}" type="text" placeholder="{{ claim.tags }}" style="width: 100%; margin: 10px;">
         </div>
         {% if request.user.is_authenticated and claim.user_id == request.user.id %}
-            <button id="{{ claim.id }}_edit" type="submit" class="btn btn-info" onclick="edit_claim()" style="margin: 10px 0;">Edit your claim</button>
-            <button id="{{ claim.id }}_delete" type="submit" class="btn btn-info" style="margin: 10px 0;">Delete</button>
-            <button id="{{ claim.id }}_save" type="submit" class="btn btn-info" style="margin: 10px 0;">Save</button>
+            <button id="{{ claim.id }}_claim_edit" type="submit" class="btn btn-info" onclick="edit_claim()" style="margin: 10px 0;">Edit your claim</button>
+            <button id="{{ claim.id }}_claim_delete" type="submit" class="btn btn-info" style="margin: 10px 0;">Delete</button>
+            <button id="{{ claim.id }}_claim_save" hidden="hidden" type="submit" class="btn btn-info" style="margin: 10px 0;">Save</button>
         {% endif %}
         <hr><br>
 
@@ -56,9 +56,11 @@
         function edit_claim() {
             $("#claim_page_title_wrapper").attr("hidden", true);
             $("#claim_edit").attr("hidden", false);
+            $("#{{ claim.id }}_claim_save").attr("hidden", false);
+            $("#{{ claim.id }}_claim_edit").attr("hidden", true);
         }
 
-        $("#{{ claim.id }}_save").click(function(){
+        $("#{{ claim.id }}_claim_save").click(function(){
             {#e.preventDefault();#}
             $.ajax({
                 type: 'POST',
@@ -88,7 +90,7 @@
             });
         });
 
-        $("#{{ claim.id }}_delete").click(function(e){
+        $("#{{ claim.id }}_claim_delete").click(function(e){
         e.preventDefault();
         $.ajax({
             type: 'POST',
@@ -108,6 +110,9 @@
     });
     </script>
 {% endblock %}
+
+
+
 
 {% block claim_head_title %}
     FactCheckProject | {{ claim }}
