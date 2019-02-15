@@ -30,7 +30,7 @@
                 <td class="right"><p>
                     <img src="{{ user.user_img }}" style="max-height: 90px; max-width: 90px;"><br>
                     {% load static %}
-                    {%  if comment.label == "TRUE" %}
+                    {%  if comment.system_label %}
                         <img style="max-width: 70px;" src="{% static 'claims/assets/images/TrueLabel.png' %}" >
                         <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="{{True}}" checked><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
                         <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="{{False}}"><span id='comment_{{ comment.id }}_false_label' hidden>False</span>

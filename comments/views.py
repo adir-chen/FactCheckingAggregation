@@ -33,8 +33,11 @@ def build_comment(claim_id, user_id, title, description, url, verdict_date, labe
         url=url,
         verdict_date=verdict_date,
         label=label,
+        system_label=get_system_label_to_comment(label),
+
     )
     comment.save()
+    update_authenticity_grade(comment.claim_id)
 
 
 def check_if_comment_is_valid(comment_info):
@@ -63,6 +66,14 @@ def check_if_comment_is_valid(comment_info):
     if len(err) > 0:
         return False, err
     return True, err
+
+
+def get_system_label_to_comment(comment_label):
+    true_label_arr = ['true', 'accurate']
+    for true_label in true_label_arr:
+        if true_label.lower() in comment_label.lower():
+            return True
+    return False
 
 
 # This function returns all the comments for a given user's id
@@ -132,6 +143,7 @@ def edit_comment(request):
         url=request.POST.get('comment_reference'),
         verdict_date=datetime.datetime.strftime(datetime.datetime.now(), '%d/%m/%Y'),
         label=request.POST.get('comment_label'))
+    update_authenticity_grade(comment.claim_id)
     return view_claim(request, comment.claim_id)
 
 
@@ -154,4 +166,20 @@ def delete_comment(request):
     from claims.views import view_claim
     comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
     Comment.objects.filter(id=comment.id).delete()
+    update_authenticity_grade(comment.claim_id)
     return view_claim(request, comment.claim_id)
+
+
+def update_authenticity_grade(claim_id):
+    num_of_true_label = 0
+    num_of_false_label = 0
+    result = Comment.objects.filter(claim_id=claim_id)
+    for res in result:
+        if res.up_votes.count() - res.down_votes.count() >= 0:
+            if res.label == 'True':
+                num_of_true_label += 1
+            else:
+                num_of_false_label += 1
+    authenticity_grade = (num_of_true_label/(num_of_true_label + num_of_false_label)) * 100
+    Claim.objects.filter(id=claim_id).update(authenticity_grade=authenticity_grade)
+
