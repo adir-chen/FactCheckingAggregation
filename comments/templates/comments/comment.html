@@ -1,19 +1,8 @@
-{#title=comment.title#}
-{#user_id = comment.user_id#}
-{#claim_id =comment.claim_id #}
-{#title =comment.title #}
-{#description = comment.description #}
-{#url = comment.url #}
-{#verdict_date =comment.verdict_date #}
-{#tags = comment.tags #}
-{#label = comment.label #}
-{#pos_votes = comment.pos_votes #}
-{#neg_votes = comment.neg_votes#}
 {%  load mathfilters %}
 <div style="margin: auto;">
 
     <div class="claim_box" style="padding: 20px; width: 100%;">
-        <p id="{{ comment.id }}_error_msg" style="color: red; font-size: 12px;" hidden>**Error Message: </p>
+        <p id="{{ comment.id }}_error_msg" style="color: red; font-size: 12px;" hidden></p>
         <table id="comment_{{ comment.id }}" style="width: 100%;">
             <tr>
                 <td class="left" style="width: 100%;">
@@ -25,7 +14,7 @@
             <tr>
                 <td class="left">
                     <p id="comment_{{ comment.id }}_description">{{ comment.description }}</p>
-                    <textarea hidden="hidden" id="{{ comment.id }}_description" placeholder="{{ comment.description }}" style="width: 90%; margin: 10px;"></textarea><br>
+                    <textarea hidden="hidden" id="{{ comment.id }}_description" placeholder="{{ comment.description }}" style="width: 90%; margin: 10px;">{{ comment.description }}</textarea><br>
                 </td>
                 <td class="right"><p>
                     <img src="{{ user.user_img }}" style="max-height: 90px; max-width: 90px;"><br>
@@ -75,7 +64,7 @@
         </table>
     </div>
 </div>
-{#<meta name="csrf-token" content="{{ csrf_token }}">#}
+
 <script>
     let up_voted_{{ comment.id }} = false;
     let down_voted_{{ comment.id }} = false;
@@ -102,7 +91,7 @@
         $.ajax({
             type: 'POST',
             url: "{% url 'comments:up_vote' %}",
-            headers: { "X-CSRFToken": getCookie("csrftoken") },
+            headers: { "X-CSRFToken": getCookie('csrftoken') },
             data: {
                 comment_id: '{{ comment.id }}',
                 user_id: '{{ request.user.id }}'
@@ -126,16 +115,20 @@
                 $("#{{ comment.id }}_voteCount").text(up_count_{{ comment.id }}-down_count_{{ comment.id }});
             },
             error: function (error) {
-                console.log(error);
+                let err = error.responseText.split('\n')[1];
+                document.getElementById("{{ comment.id }}_error_msg").innerHTML =
+                    '* Error:  ' + err.toLowerCase() + ' *';
+                $("#{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
     });
+
     $("#{{ comment.id }}_arrow_down").click(function(e){
         e.preventDefault();
         $.ajax({
             type: 'POST',
             url: "{% url 'comments:down_vote' %}",
-            headers: { "X-CSRFToken": getCookie("csrftoken") },
+            headers: { "X-CSRFToken": getCookie('csrftoken') },
             data: {
                 comment_id: '{{ comment.id }}',
                 user_id: '{{ request.user.id }}'
@@ -159,7 +152,10 @@
                 $("#{{ comment.id }}_voteCount").text(up_count_{{ comment.id }}-down_count_{{ comment.id }});
             },
             error: function (error) {
-                console.log(error);
+                let err = error.responseText.split('\n')[1];
+                document.getElementById("{{ comment.id }}_error_msg").innerHTML =
+                    '* Error:  ' + err.toLowerCase() + ' *';
+                $("#{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
     });
@@ -185,7 +181,7 @@
         $.ajax({
             type: 'POST',
             url: "{% url 'comments:edit_comment' %}",
-            headers: { "X-CSRFToken": getCookie("csrftoken") },
+            headers: { "X-CSRFToken": getCookie('csrftoken') },
             data: {
                 comment_id: '{{ comment.id }}',
                 comment_title: $("#{{ comment.id }}_title").val(),
@@ -195,17 +191,13 @@
                 user_id: '{{ request.user.id }}',
             },
             success: function () {
-                location.href = "http://127.0.0.1:8000/claim/{{ comment.claim_id }}"
+                location.href = 'http://127.0.0.1:8000/claim/{{ comment.claim_id }}';
             },
             error: function (error) {
-                console.log(error);
-                var err = error.responseText;
+                let err = error.responseText.split('\n')[1];
+                document.getElementById("{{ comment.id }}_error_msg").innerHTML =
+                    '* Error:  ' + err.toLowerCase() + ' *';
                 $("#{{ comment.id }}_error_msg").attr("hidden", false);
-                console.log(err.title);
-                {#console.log(err.text);#}
-                {#console.log(JSON.parse(error.responseText));#}
-                location.href = "http://127.0.0.1:8000/claim/{{ comment.claim_id }}"
-
             }
         });
     });
@@ -215,35 +207,34 @@
         $.ajax({
             type: 'POST',
             url: "{% url 'comments:delete_comment' %}",
-            headers: { "X-CSRFToken": getCookie("csrftoken") },
+            headers: { "X-CSRFToken": getCookie('csrftoken') },
             data: {
                 comment_id: '{{ comment.id }}',
                 user_id: '{{ request.user.id }}'
             },
             success: function (page) {
-                location.href = "http://127.0.0.1:8000/claim/{{ comment.claim_id }}"
+                location.href =  'http://127.0.0.1:8000/claim/{{ comment.claim_id }}';
             },
             error: function (error) {
-                console.log(error);
+                let err = error.responseText.split('\n')[1];
+                document.getElementById("{{ comment.id }}_error_msg").innerHTML =
+                    '* Error:  ' + err.toLowerCase() + ' *';
+                $("#{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
     });
 
-    function getCookie(c_name)
-    {
-        if (document.cookie.length > 0)
-        {
+    function getCookie(c_name) {
+        if (document.cookie.length > 0) {
             c_start = document.cookie.indexOf(c_name + "=");
-            if (c_start != -1)
-            {
+            if (c_start != -1) {
                 c_start = c_start + c_name.length + 1;
                 c_end = document.cookie.indexOf(";", c_start);
                 if (c_end == -1) c_end = document.cookie.length;
-                return unescape(document.cookie.substring(c_start,c_end));
+                return unescape(document.cookie.substring(c_start, c_end));
             }
         }
         return "";
     }
-
 
 </script>

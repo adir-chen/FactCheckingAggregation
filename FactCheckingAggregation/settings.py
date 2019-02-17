@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'comments.apps.CommentsConfig',
     'users.apps.UsersConfig',
     'search.apps.SearchConfig',
+    'contact_us.apps.ContactUsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -76,6 +77,13 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'FactCheckingAggregation.urls'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'wtfactnews@gmail.com'
+EMAIL_HOST_PASSWORD = 'amc8dGig'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
 
 TEMPLATES = [
     {
@@ -153,7 +161,6 @@ TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 # Tell nose to measure coverage
 NOSE_ARGS = [
     # '--with-coverage',
-    '--cover-package=foo,bar',
     '--detailed-errors',
     '-s'
 ]

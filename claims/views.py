@@ -1,25 +1,24 @@
 from django.contrib.auth import logout
-from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import render, get_object_or_404
 from comments.models import Comment
 from comments.views import build_comment
 from django.contrib.auth.models import User
 from users.models import Users_Images
-from users.views import add_all_scrapers, check_if_user_exists_by_user_id
+from users.views import check_if_user_exists_by_user_id
 from .models import Claim
 from django.views.decorators.csrf import ensure_csrf_cookie
 from datetime import datetime
 
 
-# This function adds a new claim to the website, following with a comment on it
+# This function adds a new claim to the website, followed with a comment on it
 # @login_required()
 def add_claim(request):
     if request.method == "POST":
         claim_info = request.POST.dict()
         valid_claim, err_msg = check_if_claim_is_valid(claim_info)
         if not valid_claim:
-            raise Http404(err_msg)
+            raise Exception(err_msg)
         tags_arr = claim_info['tags'].split(' ')
         new_tags = ''
         for tag in tags_arr:
@@ -35,14 +34,8 @@ def add_claim(request):
         )
         claim.save()
         build_comment(claim.id, claim_info['user_id'], claim_info['title'],
-                    claim_info['description'], claim_info['url'], claim_info['verdict_date'], claim_info['label'])
-        # return render(request, 'claims/claim.html', {
-        #     'claim': claim.claim,
-        #     'category': claim.category,
-        #     'authenticity_grade': claim.authenticity_grade,
-        #     'image_url': claim.image_src,
-        #     'comments': Comment.objects.filter(claim_id=claim.id),
-        # })
+                      claim_info['description'], claim_info['url'],
+                      claim_info['verdict_date'], claim_info['label'])
         return view_claim(request, claim.id)
     raise Http404("Invalid method")
 
@@ -124,7 +117,7 @@ def get_category_for_claim(claim_id):
 
 
 # This function returns the tags for a given claim's id
-# The function returns claim's tags in case it is found, otherwise None
+# The function returns claim's tags in case they are found, otherwise None
 def get_tags_for_claim(claim_id):
     result = Claim.objects.filter(id=claim_id)
     if len(result) > 0:
@@ -137,7 +130,7 @@ def get_tags_for_claim(claim_id):
 def view_claim(request, claim_id):
     claim = get_claim_by_id(claim_id)
     if claim is None:
-        raise Http404("Claim with the given id: " + str(claim_id) + " does not exist")
+        raise Exception("Claim with the given id: " + str(claim_id) + " does not exist")
     comment_objs = Comment.objects.filter(claim_id=claim_id)
     comments = {}
     for comment in comment_objs:
@@ -183,15 +176,18 @@ def view_home(request):
     return render(request, 'claims/index.html', {'headlines': headlines, 'sub_headlines': sub_headlines})
 
 
+# This function disconnects the user from the website
 def logout_view(request):
     logout(request)
     return view_home(request)
 
 
+# This function return a HTML page for adding a new claim to the website
 def add_claim_page(request):
-    return render(request, 'claims/addclaim.html')
+    return render(request, 'claims/add_claim.html')
 
 
+# This function edits a claim in the website
 def edit_claim(request):
     valid_new_claim, err_msg = check_claim_new_fields(request)
     if not valid_new_claim:
@@ -205,22 +201,36 @@ def edit_claim(request):
     return view_claim(request, claim.id)
 
 
+# This function checks if the given new fields for a claim are valid, i.e. the claim has all the fields with the correct format.
+# The function returns true in case the claim's new fields are valid, otherwise false and an error
 def check_claim_new_fields(request):
     err = ''
-    if not request.POST.get('claim'):
+    if not request.POST.get('claim_id'):
+        err += 'Missing value for claim id'
+    elif not request.POST.get('user_id'):
+        err += 'Missing value for user id'
+    elif not request.POST.get('claim'):
         err += 'Missing value for claim'
     elif not request.POST.get('category'):
         err += 'Missing value for category'
     elif not request.POST.get('tags'):
         err += 'Missing value for tags'
     elif not request.POST.get('image_src'):
-        err += 'Missing value for image_src'
+        err += 'Missing value for image source'
+    if len(Claim.objects.filter(id=request.POST.get('claim_id'), user_id=request.POST.get('user_id'))) == 0:
+        err += 'Comment does not belong to user with id ' + str(request.POST.get('user_id'))
     if len(err) > 0:
         return False, err
     return True, err
 
 
+# This function deletes a claim from the website
 def delete_claim(request):
     claim = get_object_or_404(Claim, id=request.POST.get('claim_id'))
-    Claim.objects.filter(id=claim.id).delete()
+    if not claim:
+        raise Exception('Claim with the given id ' + str(request.POST.get('claim_id')) +
+                      'does not exist')
+    if len(Claim.objects.filter(id=request.POST.get('claim_id'), user_id=request.POST.get('user_id'))) == 0:
+        raise Exception('Claim does not belong to user with id ' + str(request.POST.get('user_id')))
+    Claim.objects.filter(id=claim.id, user_id=request.POST.get('user_id')).delete()
     return view_home(request)

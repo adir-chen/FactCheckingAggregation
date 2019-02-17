@@ -36,22 +36,20 @@
         <h3>Add Comment:</h3>
         <br>
         <div class="new_comment claim_box" style="width: 100%; padding: 20px 40px 20px 20px;">
-            <form action={% url 'comments:add_comment' %}>
-                <input name="title" value="{{ title }}" type="text" placeholder="Title" style="width: 100%; margin: 10px;"><br>
-                <textarea name="description" placeholder="Description" style="width: 100%; margin: 10px;"></textarea><br>
-                <input name="claim_id" value="{{ claim.id }}" type="hidden">
-                <input name="user_name" value="{{ request.user.id }}" type="hidden">
-                <input name="url" value="{{ url }}" type="text" placeholder="Website url" style="width: 100%; margin: 10px;"><br>
-                <div style="margin: 10px;">
-                    <input type="radio" name="label" value="{{True}}">True<br>
-                    <input type="radio" name="label" value="{{False}}">False<br>
-                </div>
-
-                <button type="submit" class="btn btn-info" style="margin: 10px 0;">Add your comment</button>
-            </form>
+            <input id="{{ claim.id }}_new_comment_title" name="title" value="{{ title }}" type="text" placeholder="Title" style="width: 100%; margin: 10px;"><br>
+            <textarea id="{{ claim.id }}_new_comment_description" name="description" placeholder="Description" style="width: 100%; margin: 10px;"></textarea><br>
+            <input name="claim_id" value="{{ claim.id }}" type="hidden">
+            <input name="user_id" value="{{ request.user.id }}" type="hidden">
+            <input id="{{ claim.id }}_new_comment_url" name="url" value="{{ url }}" type="text" placeholder="Website url" style="width: 100%; margin: 10px;"><br>
+            <div style="margin: 10px;">
+                <input id="{{ claim.id }}_new_comment_true_label" type="radio" name="label" value="{{True}}">True<br>
+                <input id="{{ claim.id }}_new_comment_false_label" type="radio" name="label" value="{{False}}">False<br>
+            </div>
+            <button type="submit" id="{{ claim.id }}_new_comment_save" class="btn btn-info" style="margin: 10px 0;">Add your comment</button>
         </div>
         {% endif %}
     </div>
+
     <script>
         function edit_claim() {
             $("#claim_page_title_wrapper").attr("hidden", true);
@@ -60,12 +58,39 @@
             $("#{{ claim.id }}_claim_edit").attr("hidden", true);
         }
 
+        $("#{{ claim.id }}_new_comment_save").click(function(){
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'comments:add_comment' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken') },
+                data: {
+                    claim_id: '{{ claim.id }}',
+                    user_id: '{{ request.user.id }}',
+                    title: $("#{{ claim.id }}_new_comment_title").val(),
+                    description: $("#{{ claim.id }}_new_comment_description").val(),
+                    url: $("#{{ claim.id }}_new_comment_url").val(),
+                    label: document.querySelector('input[name="label"]:checked').value,
+                },
+                success: function () {
+                    location.href = 'http://127.0.0.1:8000/claim/{{ claim.id }}';
+                },
+                error: function (error) {
+                    console.log(error);
+                    var err = error.responseText;
+                    $("#{{ claim.id }}_error_msg").attr("hidden", false);
+                    console.log(err.title);
+                    location.href = 'http://127.0.0.1:8000/claim/{{ claim.id }}';
+
+                }
+            });
+        });
+
         $("#{{ claim.id }}_claim_save").click(function(){
             {#e.preventDefault();#}
             $.ajax({
                 type: 'POST',
                 url: "{% url 'claims:edit_claim' %}",
-                headers: { "X-CSRFToken": getCookie("csrftoken") },
+                headers: { "X-CSRFToken": getCookie('csrftoken') },
                 data: {
                     claim_id: '{{ claim.id }}',
                     claim: $("#{{ claim.id }}_claim").val(),
@@ -75,16 +100,14 @@
                     user_id: '{{ request.user.id }}',
                 },
                 success: function () {
-                    location.href = "http://127.0.0.1:8000/claim/{{ claim.id }}"
+                    location.href = base_url + '/claim/{{ claim.id }}';
                 },
                 error: function (error) {
                     console.log(error);
                     var err = error.responseText;
                     $("#{{ claim.id }}_error_msg").attr("hidden", false);
                     console.log(err.title);
-                    {#console.log(err.text);#}
-                    {#console.log(JSON.parse(error.responseText));#}
-                    location.href = "http://127.0.0.1:8000/claim/{{ claim.id }}"
+                    location.href = 'http://127.0.0.1:8000/claim/{{ claim.id }}';
 
                 }
             });
@@ -95,13 +118,13 @@
         $.ajax({
             type: 'POST',
             url: "{% url 'claims:delete_claim' %}",
-            headers: { "X-CSRFToken": getCookie("csrftoken") },
+            headers: { "X-CSRFToken": '{{ csrf_token }}' },
             data: {
                 claim_id: '{{ claim.id }}',
                 user_id: '{{ request.user.id }}'
             },
             success: function () {
-                location.href = "http://127.0.0.1:8000"
+                location.href = base_url;
             },
             error: function (error) {
                 console.log(error);

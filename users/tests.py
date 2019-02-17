@@ -1,7 +1,11 @@
 from django.http import HttpRequest
 from django.test import TestCase
-from users.models import User
-from users.views import check_if_user_exists_by_user_id, get_username_by_user_id, add_all_scrapers, get_all_scrapers_ids
+from users.models import User, Scrapers
+from claims.models import Claim
+from comments.models import Comment
+from users.views import check_if_user_exists_by_user_id, get_username_by_user_id, add_all_scrapers, \
+    get_all_scrapers_ids, get_random_claims_from_scrapers
+import json
 
 
 class UsersTest(TestCase):
@@ -64,3 +68,82 @@ class UsersTest(TestCase):
                                          'FactScan': 10,
                                          'AfricaCheck': 11,
                                          })
+
+    def test_get_random_claims_from_scrapers_not_many_claims(self):
+        from claims.models import Claim
+        from comments.models import Comment
+        scrapers_comments = {}
+        add_all_scrapers()
+        scrapers_names = ['Snopes', 'Polygraph', 'TruthOrFiction', 'Politifact', 'GossipCop',
+                             'ClimateFeedback', 'FactScan', 'AfricaCheck']
+        for i in range(len(scrapers_names)):
+            claim = Claim(user_id=Scrapers.objects.filter(scraper_name=scrapers_names[i])[0].scraper_id.id,
+                          claim='Sniffing rosemary increases human memory by up to 75 percent',
+                          category='Science',
+                          tags="sniffing human memory",
+                          authenticity_grade=0)
+            claim.save()
+            comment = Comment(claim_id=claim.id,
+                                 user_id=Scrapers.objects.filter(scraper_name=scrapers_names[i])[0].scraper_id.id,
+                                 title='title_' + str(i + 1),
+                                 description='description_' + str(i + 1),
+                                 url='url_' + str(i + 1),
+                                 verdict_date='11/2/2019',
+                                 label='label' + str(i + 1))
+            comment.save()
+            scrapers_comments[scrapers_names[i]] = [claim, comment]
+        import json
+        scrapers_comments_val = json.loads(get_random_claims_from_scrapers(HttpRequest()).content.decode('utf-8'))
+        for scraper_name, scraper_comment in scrapers_comments_val.items():
+            self.assertTrue(scraper_comment == {'title': scrapers_comments[scraper_name][1].title,
+                    'claim': scrapers_comments[scraper_name][0].claim,
+                    'description': scrapers_comments[scraper_name][1].description,
+                    'url': scrapers_comments[scraper_name][1].url,
+                    'verdict_date': scrapers_comments[scraper_name][1].verdict_date,
+                    'category': scrapers_comments[scraper_name][0].category,
+                    'label':  scrapers_comments[scraper_name][1].label})
+
+    def test_get_random_claims_from_scrapers_many_claims(self):
+        scrapers_comments = {}
+        add_all_scrapers()
+        scrapers_names = ['Snopes', 'Polygraph', 'TruthOrFiction', 'Politifact', 'GossipCop',
+                             'ClimateFeedback', 'FactScan', 'AfricaCheck']
+        for i in range(len(scrapers_names)):
+            claim_1 = Claim(user_id=Scrapers.objects.filter(scraper_name=scrapers_names[i])[0].scraper_id.id,
+                          claim='Sniffing rosemary increases human memory by up to 75 percent' + str(i),
+                          category='Science',
+                          tags="sniffing human memory",
+                          authenticity_grade=0)
+            claim_2 = Claim(user_id=Scrapers.objects.filter(scraper_name=scrapers_names[i])[0].scraper_id.id,
+                          claim='Sniffing rosemary increases human memory by up to 75 percent' + str(i + 1),
+                          category='Science',
+                          tags="sniffing human memory",
+                          authenticity_grade=0)
+            claim_2.save()
+            claim_1.save()
+            comment_1 = Comment(claim_id=claim_1.id,
+                                 user_id=Scrapers.objects.filter(scraper_name=scrapers_names[i])[0].scraper_id.id,
+                                 title='title_' + str(i + 1),
+                                 description='description_' + str(i + 1),
+                                 url='url_' + str(i + 1),
+                                 verdict_date='11/2/2019',
+                                 label='label' + str(i + 1))
+            comment_2 = Comment(claim_id=claim_2.id,
+                                 user_id=Scrapers.objects.filter(scraper_name=scrapers_names[i])[0].scraper_id.id,
+                                 title='title_' + str(i + 2),
+                                 description='description_' + str(i + 2),
+                                 url='url_' + str(i + 2),
+                                 verdict_date='11/2/2019',
+                                 label='label' + str(i + 2))
+            comment_2.save()
+            comment_1.save()
+            scrapers_comments[scrapers_names[i]] = [claim_1, comment_1]
+            scrapers_comments_val = json.loads(get_random_claims_from_scrapers(HttpRequest()).content.decode('utf-8'))
+        for scraper_name, scraper_comment in scrapers_comments_val.items():
+            self.assertTrue(scraper_comment == {'title': scrapers_comments[scraper_name][1].title,
+                    'claim': scrapers_comments[scraper_name][0].claim,
+                    'description': scrapers_comments[scraper_name][1].description,
+                    'url': scrapers_comments[scraper_name][1].url,
+                    'verdict_date': scrapers_comments[scraper_name][1].verdict_date,
+                    'category': scrapers_comments[scraper_name][0].category,
+                    'label':  scrapers_comments[scraper_name][1].label})

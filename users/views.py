@@ -94,7 +94,7 @@ def add_all_scrapers():
     scraper_8_details.save()
 
 
-# This function returns all the scrapers ids'
+# This function returns all the scrapers' ids
 def get_all_scrapers_ids(request):
     from django.http import JsonResponse
     scrapers = {}

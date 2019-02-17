@@ -4,6 +4,7 @@ from comments.models import Comment
 from users.models import Users_Images
 
 
+# This function returns all the claims that are found in a search
 def search(request):
     keywords = request.GET.get('search_keywords')
     claim_objs = Claim.objects.filter(claim__icontains=keywords, tags__icontains=keywords)
