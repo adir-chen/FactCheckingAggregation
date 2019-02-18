@@ -1,4 +1,7 @@
 from django.contrib.auth.models import User
+from django.http import Http404
+from django.shortcuts import render
+
 from users.models import Users_Images, Scrapers
 from users.models import Users_Reputations
 
@@ -124,3 +127,45 @@ def get_random_claims_from_scrapers(request):
                                             'category': claim_details.category,
                                             'label': claim_comment.label}
     return JsonResponse(claims)
+
+
+# This function return an HTML page for sending a new e-mail
+def add_scraper_guide(request):
+    return render(request, 'users/add_scraper_guide.html')
+
+
+# This function add new scraper to the website
+def add_new_scraper(request):
+    if request.method == "POST":
+        scraper_info = request.POST.dict()
+        valid_scraper, err_msg = check_if_scraper_info_is_valid(scraper_info)
+        if not valid_scraper:
+            raise Exception(err_msg)
+        new_scraper = User(username=scraper_info['scraper_name'])
+        new_scraper.save()
+        new_scraper_img = Users_Images(user_id=new_scraper,
+                                       user_img=scraper_info['scraper_icon'])
+        new_scraper_img.save()
+
+        new_scraper_rep = Users_Reputations(user_id=new_scraper, user_rep=0)
+        new_scraper_rep.save()
+
+        new_scraper_img_details = Scrapers(scraper_name=new_scraper.username, scraper_id=new_scraper)
+        new_scraper_img_details.save()
+        return add_scraper_guide(request)
+    raise Http404("Invalid method")
+
+
+# This function checks if a given scraper's info is valid, i.e. the info has all the fields with the correct format.
+# The function returns true in case the info is valid, otherwise false and an error
+def check_if_scraper_info_is_valid(scraper_info):
+    err = ''
+    if 'scraper_name' not in scraper_info or not scraper_info['scraper_name']:
+        err += 'Missing value for user scraper name'
+    elif 'scraper_icon' not in scraper_info or not scraper_info['scraper_icon']:
+        err += 'Missing value for scraper icon'
+    elif len(User.objects.filter(username=scraper_info['scraper_name'])) != 0:
+        err += 'Scraper ' + scraper_info['scraper_name'] + ' already exists'
+    if len(err) > 0:
+        return False, err
+    return True, err

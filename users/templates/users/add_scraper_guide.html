@@ -1,0 +1,96 @@
+{% extends 'claims/layout2.html' %}
+
+{% block page_content %}
+    <div id="add_scraper_guide_page" style="max-width: 900px; margin: auto; min-height: 750px; padding: 40px 0;">
+        <h4>Adding a new scraper to the system:</h4>
+        <br>
+        <div class="claim_box" style="width: 100%; padding: 20px 40px 20px 20px; min-height: 400px;">
+            {% csrf_token %}
+            <h5>Step 1 (in WebScrapingManagement project):</h5>
+            <ul>
+                <li>Add a new class for the scraper (in scraper_nameScraper format, where scraper_name is the name you choose for your scraper)</li>
+                <li>Your scraper_nameScraper class extends the AbstractScraper class:</li>
+                <ul>
+                    <li>Implemented __init__(self, scraper_name='your_scraper_name', scraper_url='your_scraper_url') method which receives scraper_name and scraper_url, where scraper_url is the link to to fact checking website you want to scrape from.</li>
+                    <li>Implemented extract_claims_info(self, num_of_pages) method which receives num_of_pages- number of pages that the scraper will scrape from.
+                    <p>
+                        Use super().open_fact_check_page(self.scraper_url + str(page_num)) which opens the website and returns an HTML parsed code (Beautifulsoup).
+                    </p>
+                    <li><p>Extracts the relevant information from the website and creates a new dict with the following format:</p>
+                    </li>
+                    <p>claim_info_dict = {'username': self.scraper_name,
+                                   'title': title,
+                                   'claim': claim,
+                                   'description': description,
+                                   'url': url,
+                                   'verdict_date': verdict_date,
+                                   'tags': tags,
+                                   'category': category,
+                                   'label': label,
+                                   'img_src': img_src}
+                    </p>
+                    <li>
+                    <p>Add the dict to an array which accumulates all the dicts that you created.</p>
+                    </li>
+                    <li>
+                    Finally, return the array.
+                    </li>
+                    </li>
+                </ul>
+
+            </ul>
+            <h5>Step 2 (here):</h5>
+            <p id="error_msg" style="color: red; font-size: 12px;" hidden> </p>
+            <p id="success_msg" style="color: dodgerblue; font-size: 12px;" hidden>Your scraper has been added successfully</p>
+            <input id="scraper_name" type="text" placeholder="Scraper name" style="width: 50%; margin: 10px;"><br>
+            <input id="scraper_icon" type="text" placeholder="Scraper icon (link)" style="width: 50%; margin: 10px;"><br>
+            <br>
+            <button id="add_scraper_submit" type="submit" class="btn btn-info" style="margin: 10px 0;">Add</button>
+        </div>
+    </div>
+
+    <script>
+    $("#add_scraper_submit").click(function(e){
+        e.preventDefault();
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'users:add_new_scraper' %}",
+            headers: { "X-CSRFToken": getCookie('csrftoken')},
+            data: {
+                scraper_name: $("#scraper_name").val(),
+                scraper_icon: $("#scraper_icon").val(),
+            },
+            success: function (request) {
+                $("#error_msg").attr("hidden", true);
+                $("#scraper_name").val('');
+                $("#scraper_icon").val('');
+                $("#success_msg").attr("hidden", false);
+            },
+            error: function (error) {
+                 $("#success_msg").attr("hidden", true);
+                let err = error.responseText.split('\n')[1];
+                document.getElementById("error_msg").innerHTML =
+                    '* Error:  ' + err.toLowerCase() + ' *';
+                $("#error_msg").attr("hidden", false);
+            }
+        });
+    });
+
+    function getCookie(c_name) {
+        if (document.cookie.length > 0) {
+            c_start = document.cookie.indexOf(c_name + "=");
+            if (c_start != -1) {
+                c_start = c_start + c_name.length + 1;
+                c_end = document.cookie.indexOf(";", c_start);
+                if (c_end == -1) c_end = document.cookie.length;
+                return unescape(document.cookie.substring(c_start, c_end));
+            }
+        }
+        return "";
+    }
+</script>
+{% endblock %}
+
+{% block claim_head_title %}
+    FactCheckProject | Contact us
+{% endblock %}

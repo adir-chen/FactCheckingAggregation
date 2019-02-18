@@ -317,7 +317,7 @@ class CommentTests(TestCase):
     def test_export_to_csv(self):
         res = export_to_csv()
         self.assertTrue(res.status_code == 200)
-        self.assertTrue(res.content == b'Title,Description,Url,Category,Verdict_Date,Tags,Label\r\nSniffing rosemary increases human memory by up to 75 percent,description1,url1,Science,24/02/2019,sniffing human memory,label1\r\n"A photograph shows the largest U.S. flag ever made, displayed in front of Hoover Dam",description2,url2,Fauxtography,10/02/2019,photograph U.S. flag,label2\r\nSniffing rosemary increases human memory by up to 75 percent,description3,url3,Science,07/02/2019,sniffing human memory,label3\r\n')
+        self.assertTrue(res.content == b'Title,Description,Url,Category,Verdict_Date,Tags,Label\r\nSniffing rosemary increases human memory by up to 75 percent,description1,url1,Science,25/02/2019,sniffing human memory,label1\r\n"A photograph shows the largest U.S. flag ever made, displayed in front of Hoover Dam",description2,url2,Fauxtography,11/02/2019,photograph U.S. flag,label2\r\nSniffing rosemary increases human memory by up to 75 percent,description3,url3,Science,08/02/2019,sniffing human memory,label3\r\n')
 
     def test_export_to_csv_empty(self):
         Comment.objects.all().delete()
