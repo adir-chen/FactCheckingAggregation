@@ -55,7 +55,7 @@
                 <td class="left">
                 {% if request.user.is_authenticated and comment.user_id == request.user.id %}
                     <button id="{{ comment.id }}_edit" type="submit" class="btn btn-info" onclick="edit_comment()" style="margin: 10px 0;">Edit your comment</button>
-                    <button id="{{ comment.id }}_delete" type="submit" class="btn btn-info" style="margin: 10px 0;">Delete</button>
+                    <button id="{{ comment.id }}_delete" type="submit" class="btn btn-danger" style="margin: 10px 0;">Delete</button>
                     <button id="{{ comment.id }}_save" type="submit" hidden='hidden' class="btn btn-info" style="margin: 10px 0;">Save</button>
                 {% endif %}
                 </td>

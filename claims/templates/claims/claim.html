@@ -2,15 +2,23 @@
 
 {% block page_content %}
     <div id="claim_page">
-        <div  id="claim_page_title_wrapper" class="page_wrapper">
-            <h1 id="claim_page_title" style="margin-bottom: 30px;">{{ claim.claim }}</h1>
-            {% if claim.authenticity_grade > 50 %}
-                <div class="alert alert-success">
+        <h1 id="claim_page_title" style="margin-bottom: 30px;">{{ claim.claim }}</h1>
+        <div id="claim_page_title_wrapper" style="display: inline-block; border-radius: 10px; background: #aabfd6; padding: 20px; margin-bottom: 20px;">
+
+            <img id="img_src_{{ claim.id }}" src="{{ claim.image_src }}" style="float: left; max-width: 650px; width: 100%; border-radius: 10px;">
+            <div style="min-height: 365px; float: right; padding: 20px; width: 260px; border: 1px solid #b4b4b4; background: #fff; border-radius: 10px; margin-left: 20px;">
+            {% if claim.authenticity_grade >= 50 %}
+                <div style="background: #d4edda; width: 220px; color: #155724; text-align: center; border-radius: 10px; border: 1px solid #c3e6cb; padding: 20px; margin-bottom: 20px;">
             {% else %}
-                <div class="alert alert-danger" style="background: #d35b66;">
+                <div style="background: #d35b66; width: 220px; color: #721e3a; text-align: center; border-radius: 10px; border: 1px solid #721e3a; padding: 20px; margin-bottom: 20px;">
             {% endif %}
-            <span style="font-size: 20px;">Authenticity Grade: {{ claim.authenticity_grade }}% (correct)</span></div>
-            <img id="img_src_{{ claim.id }}" src="{{ claim.image_src }}" style="max-width: 970px;">
+
+                <span style="font-size: 20px;">Authenticity Grade:</span><br>
+                <span style="font-size: 72px;">{{ claim.authenticity_grade }}%</span><br>
+                <span style="font-size: 20px;">(correct)</span></div>
+                <h5>Category: {{ claim.category }}</h5>
+                Tags: {{ claim.tags }}
+            </div>
             <input hidden="hidden" id="{{ claim.id }}_image_src" value="{{ claim.image_src }}" type="text" placeholder="{{ claim.image_src }}">
         </div>
         <div id="claim_edit" hidden="hidden">
@@ -20,7 +28,7 @@
         </div>
         {% if request.user.is_authenticated and claim.user_id == request.user.id %}
             <button id="{{ claim.id }}_claim_edit" type="submit" class="btn btn-info" onclick="edit_claim()" style="margin: 10px 0;">Edit your claim</button>
-            <button id="{{ claim.id }}_claim_delete" type="submit" class="btn btn-info" style="margin: 10px 0;">Delete</button>
+            <button id="{{ claim.id }}_claim_delete" type="submit" class="btn btn-danger" style="margin: 10px 0;">Delete</button>
             <button id="{{ claim.id }}_claim_save" hidden="hidden" type="submit" class="btn btn-info" style="margin: 10px 0;">Save</button>
         {% endif %}
         <hr><br>

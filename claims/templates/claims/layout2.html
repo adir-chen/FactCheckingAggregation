@@ -11,9 +11,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.0/css/bootstrap.min.css" integrity="sha384-PDle/QlgIONtM1aqA2Qemk5gPOE7wFq8+Em+G/hmo5Iq0CCmYZLv3fVRDJ4MMwEA" crossorigin="anonymous">
     <link href="{% static 'claims/style2.css' %}" rel="stylesheet">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 </head>
 <body>
+
     <header id="header">
         <div id="header-wrapper">
             <div id="site-logo">
@@ -43,6 +45,7 @@
             </div>
         </div>
     </header>
+
     <div class="topnav">
         <div class="nav-wrapper">
             <a href="/">Home</a>
@@ -53,9 +56,14 @@
                 <a href="">My Profile</a>
             {% endif %}
             {% if request.user.is_superuser %}
-                <a href="/admin">Admin Panel</a>
-                <a href="/comments/export_to_csv">Export Data CSV</a>
-                <a href="/users/add_scraper_guide">Adding a Scraper Guide</a>
+                <div class="dropdown">
+                    <a class="dropdown-toggle" style="float: none; border-right: 1px solid #b1b1b1;">Admin</a>
+                    <div class="dropdown-content">
+                        <a href="/admin" target="_blank">Admin Panel</a><br>
+                        <a href="/comments/export_to_csv">Export Data CSV</a><br>
+                        <a href="/users/add_scraper_guide" style="border-right: 0;">Adding a Scraper Guide</a>
+                    </div>
+                </div>
             {% endif %}
         </div>
     </div>
