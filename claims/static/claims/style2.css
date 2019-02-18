@@ -78,11 +78,15 @@ body {
   display: block;
   color: black;
   text-align: center;
-  padding: 15px 30px;
+  padding: 15px 20px;
   text-decoration: none;
   font-size: 17px;
     color: #000;
     border-left: 1px solid #b1b1b1;
+}
+
+.topnav a:last-child {
+  border-right: 1px solid #b1b1b1;
 }
 
 .topnav a:hover {

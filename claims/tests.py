@@ -1,5 +1,5 @@
 from django.http import HttpRequest, QueryDict, Http404
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 from claims.models import Claim
 from claims.views import add_claim, check_if_claim_is_valid, is_valid_verdict_date, \
     get_all_claims, get_newest_claims, get_claim_by_id, get_category_for_claim, get_tags_for_claim,\
@@ -324,6 +324,18 @@ class ClaimTests(TestCase):
         request.method = 'GET'
         response = add_claim_page(request)
         self.assertTrue(response.status_code == 200)
+
+    # def test_logout_view(self):
+    #     from django.conf import settings
+    #     from importlib import import_module
+    #     request = HttpRequest()
+    #     engine = import_module(settings.SESSION_ENGINE)
+    #     session_key = None
+    #     request.session = engine.SessionStore(session_key)
+    #     request.method = 'GET'
+    #     response = logout_view(request)
+    #     self.assertTrue(response.status_code == 200)
+    #     self.assertFalse(response.user.is_authenticated)
 
     def test_edit_claim_valid_with_different_claim(self):
         self.data['claim'] = self.claim_2.claim

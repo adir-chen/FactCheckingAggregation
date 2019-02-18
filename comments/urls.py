@@ -9,4 +9,5 @@ urlpatterns =[
     path('delete_comment', views.delete_comment, name='delete_comment'),
     path('up_vote', views.up_vote, name='up_vote'),
     path('down_vote', views.down_vote, name='down_vote'),
+    path('export_to_csv', views.export_to_csv, name='export_to_csv'),
 ]

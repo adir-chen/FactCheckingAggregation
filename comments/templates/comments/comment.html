@@ -3,13 +3,13 @@
 
     <div class="claim_box" style="padding: 20px; width: 100%;">
         <p id="{{ comment.id }}_error_msg" style="color: red; font-size: 12px;" hidden></p>
-        <table id="comment_{{ comment.id }}" style="width: 100%;">
+        <table id="comment_{{ comment.id }}" style="table-layout: auto; width: 100%;">
             <tr>
                 <td class="left" style="width: 100%;">
                     <h4 id="comment_{{ comment.id }}_title"><b>{{ comment.title }}</b></h4>
                     <input hidden="hidden" id="{{ comment.id }}_title" value="{{ comment.title }}" type="text" placeholder="{{ comment.title }}" style="width: 90%; margin: 10px;">
                 </td>
-                <td class="right">User: <a href="#">{{ user.username }}</a></td>
+                <td class="right" style="width: 200px;">User: <a href="#">{{ user.username }}</a></td>
             </tr>
             <tr>
                 <td class="left">
@@ -20,11 +20,11 @@
                     <img src="{{ user.user_img }}" style="max-height: 90px; max-width: 90px;"><br>
                     {% load static %}
                     {%  if comment.system_label %}
-                        <img style="max-width: 70px;" src="{% static 'claims/assets/images/TrueLabel.png' %}" >
+                        <img style="max-width: 70px;" src="{% static 'claims/assets/images/TrueLabel2.png' %}" >
                         <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="{{True}}" checked><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
                         <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="{{False}}"><span id='comment_{{ comment.id }}_false_label' hidden>False</span>
                     {% else %}
-                        <img style="max-width: 70px; " src="{% static 'claims/assets/images/FalseLabel.png' %}" >
+                        <img style="max-width: 70px; " src="{% static 'claims/assets/images/FalseLabel2.png' %}" >
                         <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="{{True}}"><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
                         <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="{{False}}" checked><span id='comment_{{ comment.id }}_false_label' hidden>False</span>
                     {%  endif %}

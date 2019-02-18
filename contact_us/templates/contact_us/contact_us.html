@@ -1,10 +1,10 @@
 {% extends 'claims/layout2.html' %}
 
 {% block page_content %}
-    <div id="contact_us_page" style="max-width: 900px; margin: auto; height: 600px; padding: 40px 0;">
+    <div id="contact_us_page" style="max-width: 900px; margin: auto; min-height: 750px; padding: 40px 0;">
         <h4>How can we help?</h4>
         <br>
-        <div class="claim_box" style="width: 100%; padding: 20px 40px 20px 20px; max-height: 400px;">
+        <div class="claim_box" style="width: 100%; padding: 20px 40px 20px 20px; min-height: 400px;">
             {% csrf_token %}
             <p id="error_msg" style="color: red; font-size: 12px;" hidden> </p>
             <p id="success_msg" style="color: dodgerblue; font-size: 12px;" hidden>Your message has been sent successfully </p>

@@ -15,6 +15,7 @@ from datetime import datetime
 # @login_required()
 def add_claim(request):
     if request.method == "POST":
+        claim = request.POST.get('claim')
         claim_info = request.POST.dict()
         valid_claim, err_msg = check_if_claim_is_valid(claim_info)
         if not valid_claim:
@@ -68,6 +69,12 @@ def check_if_claim_is_valid(claim_info):
         err += 'Claim ' + claim_info['claim'] + 'already exists'
     elif not check_if_user_exists_by_user_id(claim_info['user_id']):
         err += 'User ' + claim_info['user_id'] + ' does not exist'
+    if '-' in claim_info['verdict_date']:
+        try:
+            date_parts = claim_info['verdict_date'].split('-')
+            claim_info['verdict_date'] = ''+date_parts[2]+'/'+date_parts[1]+'/'+date_parts[0]
+        except:
+            err += 'Date ' + claim_info['verdict_date'] + ' is invalid'
     elif not is_valid_verdict_date(claim_info['verdict_date']):
         err += 'Date ' + claim_info['verdict_date'] + ' is invalid'
     if len(err) > 0:

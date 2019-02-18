@@ -2,10 +2,15 @@
 
 {% block page_content %}
     <div id="claim_page">
-        <div  id="claim_page_title_wrapper">
-            <h1 id="claim_page_title">{{ claim.claim }}</h1>
-            <p>Authenticity Grade: {{ claim.authenticity_grade }}% (correct)</p>
-            <img id="img_src_{{ claim.id }}" src="{{ claim.image_src }}">
+        <div  id="claim_page_title_wrapper" class="page_wrapper">
+            <h1 id="claim_page_title" style="margin-bottom: 30px;">{{ claim.claim }}</h1>
+            {% if claim.authenticity_grade > 50 %}
+                <div class="alert alert-success">
+            {% else %}
+                <div class="alert alert-danger" style="background: #d35b66;">
+            {% endif %}
+            <span style="font-size: 20px;">Authenticity Grade: {{ claim.authenticity_grade }}% (correct)</span></div>
+            <img id="img_src_{{ claim.id }}" src="{{ claim.image_src }}" style="max-width: 970px;">
             <input hidden="hidden" id="{{ claim.id }}_image_src" value="{{ claim.image_src }}" type="text" placeholder="{{ claim.image_src }}">
         </div>
         <div id="claim_edit" hidden="hidden">

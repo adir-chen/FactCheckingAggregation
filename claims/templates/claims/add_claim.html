@@ -5,33 +5,88 @@
         <h3>Add New Claim:</h3>
         <br>
         <div class="new_comment claim_box" style="width: 100%; padding: 20px 40px 20px 20px;">
-            <form method="post" action={% url 'claims:add_claim' %}>
-                {% csrf_token %}
+            <p id="error_msg" style="color: red; font-size: 12px;" hidden> </p>
+            <p id="success_msg" style="color: dodgerblue; font-size: 12px;" hidden>Your claim has been added successfully </p>
+{#            <form method="post" action={% url 'claims:add_claim' %}>#}
+{#                {% csrf_token %}#}
                 <h5>Claim Details:</h5>
-                <input name="claim" type="text" placeholder="Claim" style="width: 100%; margin: 10px;"><br>
-                <input name="category" type="text" placeholder="Category" style="width: 100%; margin: 10px;"><br>
-                <input name="tags" type="text" placeholder="Tags (separated by ,). used for searching purpose." style="width: 100%; margin: 10px;"><br>
-                <input name="img_src" type="text" placeholder="Image Url" style="width: 100%; margin: 10px;"><br>
+                <input id="claim" type="text" placeholder="Claim" style="width: 100%; margin: 10px;"><br>
+                <input id="category" type="text" placeholder="Category" style="width: 100%; margin: 10px;"><br>
+                <input id="tags" type="text" placeholder="Tags (separated by space). used for searching purpose." style="width: 100%; margin: 10px;"><br>
+                <input id="img_src" type="text" placeholder="Image Url" style="width: 100%; margin: 10px;"><br>
                 <br>
                 <h5>Comment Details (Source Information):</h5>
                 <p>
                     The claim will be submitted along with your comment containing you verdict on it (True/False).<br>
                     Other Users will be able to comment their on verdicts.
                 </p>
-                <input name="title" type="text" placeholder="Title" style="width: 100%; margin: 10px;"><br>
-                <textarea name="description" placeholder="Description" style="width: 100%; margin: 10px;"></textarea><br>
-                <input name="user_id" value="{{ request.user.id }}" type="hidden">
-                <input name="url" type="text" placeholder="Website url" style="width: 100%; margin: 10px;"><br>
-                <input name="verdict_date" type="text" placeholder="Verdict date (according to source website)" style="width: 100%; margin: 10px;"><br>
+                <input id="title" type="text" placeholder="Title" style="width: 100%; margin: 10px;"><br>
+                <textarea id="description" placeholder="Description" style="width: 100%; margin: 10px;"></textarea><br>
+                <input id="url" type="text" placeholder="Website url" style="width: 100%; margin: 10px;"><br>
+                <p style="width: 100%; margin: 10px;">Verdict Date (according to source website):</p>
+                <input type="date" id="verdict_date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}" style="width: 100%; margin: 10px;">
+                <p style="width: 100%; margin: 10px;">Verdict:</p>
                 <div style="margin: 10px;">
-                    <input type="radio" name="label" value="{{True}}">True<br>
-                    <input type="radio" name="label" value="{{False}}">False<br>
+                    <input type="radio" class="label" value="{{True}}">True<br>
+                    <input type="radio" class="label" value="{{False}}">False<br>
                 </div>
 
-                <button type="submit" class="btn btn-info" style="margin: 10px 0;">Add Claim</button>
-            </form>
+                <button id="submit_claim" type="submit" class="btn btn-info" style="margin: 10px 0;">Add Claim</button>
+{#            </form>#}
         </div>
     </div>
+    <script>
+        $("#submit_claim").click(function(e){
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'claims:add_claim' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken') },
+                data: {
+                    user_id: '{{ request.user.id }}',
+                    claim: $("#claim").val(),
+                    category: $("#category").val(),
+                    tags: $("#tags").val(),
+                    img_src: $("#img_src").val(),
+                    title: $("#title").val(),
+                    description: $("#description").val(),
+                    url: $("#url").val(),
+                    verdict_date: $("#verdict_date").val(),
+                    label: $(".label:checked").val()
+                },
+                success: function () {
+                    $("#claim").val('');
+                    $("#category").val('');
+                    $("#tags").val('');
+                    $("#img_src").val('');
+                    $("#title").val('');
+                    $("#description").val('');
+                    $("#url").val('');
+                    $("#verdict_date").val('');
+                    $("#success_msg").attr("hidden", false);
+                },
+                error: function (error) {
+                    let err = error.responseText.split('\n')[1];
+                    document.getElementById("error_msg").innerHTML =
+                    '* Error:  ' + err.toLowerCase() + ' *';
+                    $("#error_msg").attr("hidden", false);
+                }
+            });
+        });
+
+    function getCookie(c_name) {
+        if (document.cookie.length > 0) {
+            c_start = document.cookie.indexOf(c_name + "=");
+            if (c_start != -1) {
+                c_start = c_start + c_name.length + 1;
+                c_end = document.cookie.indexOf(";", c_start);
+                if (c_end == -1) c_end = document.cookie.length;
+                return unescape(document.cookie.substring(c_start, c_end));
+            }
+        }
+        return "";
+    }
+    </script>
 {% endblock %}
 
 {% block claim_head_title %}
