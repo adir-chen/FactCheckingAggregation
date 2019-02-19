@@ -71,6 +71,8 @@ def check_if_comment_is_valid(comment_info):
 # This function checks a comment's label and returns a basic classification for it.
 # The function returns true in case the comment's label is composed from words with 'true' meaning, otherwise false
 def get_system_label_to_comment(comment_label):
+    if comment_label.isdigit():
+        return int(comment_label) > 5
     true_label_arr = ['true', 'accurate', 'correct']
     for true_label in true_label_arr:
         for word in comment_label.split():
@@ -101,7 +103,7 @@ def get_all_comments_for_claim_id(claim_id):
 def export_to_csv(request):
     from claims.views import get_category_for_claim, get_tags_for_claim
     if not request.user.is_superuser:
-        raise Http404("Permission denied.")
+        raise Http404("Permission denied")
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="claims.csv"'
     writer = csv.writer(response)

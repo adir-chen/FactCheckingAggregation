@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'social_django',
     'mathfilters',
     'vote',
+    'social_widgets',
 ]
 
 MIDDLEWARE = [

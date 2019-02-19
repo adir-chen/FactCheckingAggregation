@@ -5,7 +5,7 @@ from comments.models import Comment
 from comments.views import build_comment
 from django.contrib.auth.models import User
 from users.models import Users_Images
-from users.views import check_if_user_exists_by_user_id
+from users.views import check_if_user_exists_by_user_id, add_all_scrapers
 from .models import Claim
 from django.views.decorators.csrf import ensure_csrf_cookie
 from datetime import datetime
@@ -150,7 +150,6 @@ def view_claim(request, claim_id):
 # This function returns the home page of the website
 @ensure_csrf_cookie
 def view_home(request):
-    # add_all_scrapers()
     headlines_size = 3
     claims_size = 40
     claim_objs = Claim.objects.all().order_by('-id')[:claims_size]
