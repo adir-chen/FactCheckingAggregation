@@ -4,7 +4,7 @@
     <div id="claim_page">
         <p id="{{ claim.id }}_error_msg" style="color: red; font-size: 12px;" hidden> </p>
         <h1 id="claim_page_title" style="margin-bottom: 30px;">{{ claim.claim }}</h1>
-        <div id="claim_page_title_wrapper" style="display: inline-block; border-radius: 10px; background: #aabfd6; padding: 20px; margin-bottom: 20px;">
+        <div id="claim_page_title_wrapper" style="display: inline-block; border-radius: 10px; background: #aabfd6; padding: 20px; margin-bottom: 20px; width: 100%;">
 
             <img id="img_src_{{ claim.id }}" src="{{ claim.image_src }}" style="float: left; max-width: 650px; width: 100%; border-radius: 10px;">
             <div style="min-height: 365px; float: right; padding: 20px; width: 260px; border: 1px solid #b4b4b4; background: #fff; border-radius: 10px; margin-left: 20px;">
@@ -18,7 +18,7 @@
                 <span style="font-size: 72px; font-weight: bold;">{{ claim.authenticity_grade }}%</span><br>
                 <span style="font-size: 20px;">(correct)</span></div>
                 <h5>Category: {{ claim.category }}</h5>
-                Tags: {{ claim.tags }}
+{#                Tags: {{ claim.tags }}#}
             </div>
         </div>
         <div id="claim_edit" hidden="hidden">
