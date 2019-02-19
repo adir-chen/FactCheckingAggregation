@@ -37,7 +37,7 @@ class UsersTest(TestCase):
         self.assertTrue(get_username_by_user_id(4) is None)
 
     def test_add_all_scrapers(self):
-        add_all_scrapers()
+        add_all_scrapers(HttpRequest())
         self.assertTrue(check_if_user_exists_by_user_id(4))
         self.assertTrue(check_if_user_exists_by_user_id(5))
         self.assertTrue(check_if_user_exists_by_user_id(6))
@@ -57,7 +57,7 @@ class UsersTest(TestCase):
 
     def test_get_all_scrapers_ids(self):
         import json
-        add_all_scrapers()
+        add_all_scrapers(HttpRequest())
         scrapers_ids = json.loads(get_all_scrapers_ids(HttpRequest()).content.decode('utf-8'))
         self.assertTrue(scrapers_ids == {'Snopes': 4,
                                          'Polygraph': 5,
@@ -73,7 +73,7 @@ class UsersTest(TestCase):
         from claims.models import Claim
         from comments.models import Comment
         scrapers_comments = {}
-        add_all_scrapers()
+        add_all_scrapers(HttpRequest())
         scrapers_names = ['Snopes', 'Polygraph', 'TruthOrFiction', 'Politifact', 'GossipCop',
                              'ClimateFeedback', 'FactScan', 'AfricaCheck']
         for i in range(len(scrapers_names)):
@@ -105,7 +105,7 @@ class UsersTest(TestCase):
 
     def test_get_random_claims_from_scrapers_many_claims(self):
         scrapers_comments = {}
-        add_all_scrapers()
+        add_all_scrapers(HttpRequest())
         scrapers_names = ['Snopes', 'Polygraph', 'TruthOrFiction', 'Politifact', 'GossipCop',
                              'ClimateFeedback', 'FactScan', 'AfricaCheck']
         for i in range(len(scrapers_names)):

@@ -1,5 +1,5 @@
 {% extends 'claims/layout2.html' %}
-
+{% load social_widgets %}
 {% block page_content %}
     <div id="claim_page">
         <h1 id="claim_page_title" style="margin-bottom: 30px;">{{ claim.claim }}</h1>
@@ -31,9 +31,10 @@
             <button id="{{ claim.id }}_claim_delete" type="submit" class="btn btn-danger" style="margin: 10px 0;">Delete</button>
             <button id="{{ claim.id }}_claim_save" hidden="hidden" type="submit" class="btn btn-info" style="margin: 10px 0;">Save</button>
         {% endif %}
+        <a class="twitter-share-button" href="https://twitter.com/intent/tweet?text=http://127.0.0.1:8000{{ request.path }}%20"
+          data-size="large">Share claim on Twitter</a>
         <hr><br>
-
-        <div id="comments">
+            <div id="comments">
             {% if comments %}
                 <h3>Users' verdicts:</h3>
                 <br>
