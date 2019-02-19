@@ -15,7 +15,6 @@ from datetime import datetime
 # @login_required()
 def add_claim(request):
     if request.method == "POST":
-        claim = request.POST.get('claim')
         claim_info = request.POST.dict()
         valid_claim, err_msg = check_if_claim_is_valid(claim_info)
         if not valid_claim:

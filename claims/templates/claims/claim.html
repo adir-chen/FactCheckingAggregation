@@ -2,6 +2,7 @@
 
 {% block page_content %}
     <div id="claim_page">
+        <p id="{{ claim.id }}_error_msg" style="color: red; font-size: 12px;" hidden> </p>
         <h1 id="claim_page_title" style="margin-bottom: 30px;">{{ claim.claim }}</h1>
         <div id="claim_page_title_wrapper" style="display: inline-block; border-radius: 10px; background: #aabfd6; padding: 20px; margin-bottom: 20px;">
 
@@ -14,22 +15,23 @@
             {% endif %}
 
                 <span style="font-size: 20px;">Authenticity Grade:</span><br>
-                <span style="font-size: 72px;">{{ claim.authenticity_grade }}%</span><br>
+                <span style="font-size: 72px; font-weight: bold;">{{ claim.authenticity_grade }}%</span><br>
                 <span style="font-size: 20px;">(correct)</span></div>
                 <h5>Category: {{ claim.category }}</h5>
                 Tags: {{ claim.tags }}
             </div>
-            <input hidden="hidden" id="{{ claim.id }}_image_src" value="{{ claim.image_src }}" type="text" placeholder="{{ claim.image_src }}">
         </div>
         <div id="claim_edit" hidden="hidden">
             Claim: <input id="{{ claim.id }}_claim" value="{{ claim.claim }}" type="text" placeholder="{{ claim.claim }}" style="width: 100%; margin: 10px;"><br>
             Category: <input id="{{ claim.id }}_category" value="{{ claim.category }}" type="text" placeholder="{{ claim.category }}" style="width: 100%; margin: 10px;"><br>
-            Image Url: <input id="{{ claim.id }}_tags" value="{{ claim.tags }}" type="text" placeholder="{{ claim.tags }}" style="width: 100%; margin: 10px;">
+            Tags: <input id="{{ claim.id }}_tags" value="{{ claim.tags }}" type="text" placeholder="{{ claim.tags }}" style="width: 100%; margin: 10px;"><br>
+            Image Url: <input id="{{ claim.id }}_image_src" value="{{ claim.image_src }}" type="text" placeholder="{{ claim.image_src }}" style="width: 100%; margin: 10px;">
         </div>
+        <br>
         {% if request.user.is_authenticated and claim.user_id == request.user.id %}
             <button id="{{ claim.id }}_claim_edit" type="submit" class="btn btn-info" onclick="edit_claim()" style="margin: 10px 0;">Edit your claim</button>
-            <button id="{{ claim.id }}_claim_delete" type="submit" class="btn btn-danger" style="margin: 10px 0;">Delete</button>
             <button id="{{ claim.id }}_claim_save" hidden="hidden" type="submit" class="btn btn-info" style="margin: 10px 0;">Save</button>
+            <button id="{{ claim.id }}_claim_delete" type="submit" class="btn btn-danger" style="margin: 10px 0;">Delete</button>
         {% endif %}
         <hr><br>
 
@@ -49,6 +51,8 @@
         <h3>Add Comment:</h3>
         <br>
         <div class="new_comment claim_box" style="width: 100%; padding: 20px 40px 20px 20px;">
+            <p id="{{ claim.id }}_comment_error_msg" style="color: red; font-size: 12px;" hidden> </p>
+            <p id="success_msg_comment" style="color: dodgerblue; font-size: 12px;" hidden>Your claim has been edited successfully </p>
             <input id="{{ claim.id }}_new_comment_title" name="title" value="{{ title }}" type="text" placeholder="Title" style="width: 100%; margin: 10px;"><br>
             <textarea id="{{ claim.id }}_new_comment_description" name="description" placeholder="Description" style="width: 100%; margin: 10px;"></textarea><br>
             <input name="claim_id" value="{{ claim.id }}" type="hidden">
@@ -88,12 +92,10 @@
                     location.href = 'http://127.0.0.1:8000/claim/{{ claim.id }}';
                 },
                 error: function (error) {
-                    console.log(error);
-                    var err = error.responseText;
-                    $("#{{ claim.id }}_error_msg").attr("hidden", false);
-                    console.log(err.title);
-                    location.href = 'http://127.0.0.1:8000/claim/{{ claim.id }}';
-
+                    let err = error.responseText.split('\n')[1];
+                    document.getElementById("{{ claim.id }}_comment_error_msg").innerHTML =
+                    '* Error:  ' + err.toLowerCase() + ' *';
+                    $("#{{ claim.id }}_comment_error_msg").attr("hidden", false);
                 }
             });
         });
@@ -113,7 +115,7 @@
                     user_id: '{{ request.user.id }}',
                 },
                 success: function () {
-                    location.href = base_url + '/claim/{{ claim.id }}';
+                    location.href = 'http://127.0.0.1:8000/claim/{{ claim.id }}';
                 },
                 error: function (error) {
                     console.log(error);
@@ -137,7 +139,7 @@
                 user_id: '{{ request.user.id }}'
             },
             success: function () {
-                location.href = base_url;
+                location.href = 'http://127.0.0.1:8000';
             },
             error: function (error) {
                 console.log(error);
