@@ -246,3 +246,13 @@ div.claim_box_info {
     width: 100%;
     border: none;
 }
+
+.twitter-share-button{
+    background: #fff;
+    border: 1px solid #3a9fcd;
+    color: #3a9fcd;
+}
+
+.twitter-share-button:hover{
+    border: 1px solid #000;
+}
