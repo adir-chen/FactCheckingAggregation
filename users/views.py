@@ -140,7 +140,7 @@ def add_scraper_guide(request):
 
 # This function add new scraper to the website
 def add_new_scraper(request):
-    if request.method == "POST":
+    if request.user.is_superuser:
         scraper_info = request.POST.dict()
         valid_scraper, err_msg = check_if_scraper_info_is_valid(scraper_info)
         if not valid_scraper:
@@ -157,7 +157,7 @@ def add_new_scraper(request):
         new_scraper_img_details = Scrapers(scraper_name=new_scraper.username, scraper_id=new_scraper)
         new_scraper_img_details.save()
         return add_scraper_guide(request)
-    raise Http404("Invalid method")
+    raise Http404("Permission denied")
 
 
 # This function checks if a given scraper's info is valid, i.e. the info has all the fields with the correct format.

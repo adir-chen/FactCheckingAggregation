@@ -135,9 +135,9 @@ class CommentTests(TestCase):
 
     def test_add_comment_missing_args(self):
         for i in range(10):
-            dict_copy = self.data
+            dict_copy = self.data.copy()
             args_to_remove = []
-            for j in range(random.randint(0, len(self.data.keys()) - 1)):
+            for j in range(0, (random.randint(1, len(self.data.keys()) - 1))):
                 args_to_remove.append(list(self.data.keys())[j])
             for j in range(len(args_to_remove)):
                 del self.data[args_to_remove[j]]
@@ -145,7 +145,7 @@ class CommentTests(TestCase):
             self.post_request.POST = self.data
             self.assertTrue(len(Comment.objects.filter(claim_id=self.claim_1.id)) == len_comments)
             self.assertRaises(Exception, add_comment, self.post_request)
-            self.dict = dict_copy
+            self.data = dict_copy.copy()
 
     def test_build_comment_by_existing_user(self):
         len_comments = len(Comment.objects.all())
@@ -227,12 +227,16 @@ class CommentTests(TestCase):
         self.assertTrue(get_system_label_to_comment("TRUE"))
         self.assertTrue(get_system_label_to_comment("Accurate"))
         self.assertTrue(get_system_label_to_comment("ACCURATE"))
+        for i in range(6, 11):
+            self.assertTrue(get_system_label_to_comment(str(i)))
 
         self.assertFalse(get_system_label_to_comment("Mostly False"))
         self.assertFalse(get_system_label_to_comment("False"))
         self.assertFalse(get_system_label_to_comment("FALSE"))
         self.assertFalse(get_system_label_to_comment("Inaccurate"))
         self.assertFalse(get_system_label_to_comment("INACCURATE"))
+        for i in range(6):
+            self.assertFalse(get_system_label_to_comment(str(i)))
 
     def test_get_all_comments_for_user_id(self):
         result = get_all_comments_for_user_id(self.user_1.id)
@@ -315,15 +319,30 @@ class CommentTests(TestCase):
         self.assertTrue(result is None)
 
     def test_export_to_csv(self):
-        res = export_to_csv()
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
+        request = HttpRequest()
+        request.user = admin
+        res = export_to_csv(request)
         self.assertTrue(res.status_code == 200)
-        self.assertTrue(res.content == b'Title,Description,Url,Category,Verdict_Date,Tags,Label\r\nSniffing rosemary increases human memory by up to 75 percent,description1,url1,Science,25/02/2019,sniffing human memory,label1\r\n"A photograph shows the largest U.S. flag ever made, displayed in front of Hoover Dam",description2,url2,Fauxtography,11/02/2019,photograph U.S. flag,label2\r\nSniffing rosemary increases human memory by up to 75 percent,description3,url3,Science,08/02/2019,sniffing human memory,label3\r\n')
+        self.assertTrue(res.content == b'Title,Description,Url,Category,Verdict_Date,Tags,Label\r\nSniffing rosemary increases human memory by up to 75 percent,description1,url1,Science,27/02/2019,sniffing human memory,label1\r\n"A photograph shows the largest U.S. flag ever made, displayed in front of Hoover Dam",description2,url2,Fauxtography,13/02/2019,photograph U.S. flag,label2\r\nSniffing rosemary increases human memory by up to 75 percent,description3,url3,Science,10/02/2019,sniffing human memory,label3\r\n')
 
     def test_export_to_csv_empty(self):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
+        request = HttpRequest()
+        request.user = admin
         Comment.objects.all().delete()
-        res = export_to_csv()
+        res = export_to_csv(request)
         self.assertTrue(res.status_code == 200)
         print(res.content == b'Title,Description,Url,Category,Verdict_Date,Tags,Label\r\n')
+
+    def test_export_to_csv_not_admin_user(self):
+        request = HttpRequest()
+        request.user = self.user_1
+        self.assertRaises(Http404, export_to_csv, request)
 
     def test_up_vote(self):
         data = {'user_id': self.comment_1.user_id, 'comment_id': self.comment_2.id}
@@ -425,6 +444,18 @@ class CommentTests(TestCase):
         self.assertTrue(comment.url == self.comment_1.url)
         self.assertTrue(comment.label == self.comment_1.label)
 
+    def test_edit_comment_missing_args(self):
+        for i in range(10):
+            dict_copy = self.data_new_field.copy()
+            args_to_remove = []
+            for j in range(0, (random.randint(1, len(self.data_new_field.keys()) - 1))):
+                args_to_remove.append(list(self.data_new_field.keys())[j])
+            for j in range(len(args_to_remove)):
+                del self.data_new_field[args_to_remove[j]]
+            self.post_request.POST = self.data
+            self.assertRaises(Exception, edit_comment, self.post_request)
+            self.data_new_field = dict_copy.copy()
+
     def test_check_comment_new_fields(self):
         self.post_request.POST = self.data_new_field
         self.assertTrue(check_comment_new_fields(self.post_request)[0])
@@ -473,7 +504,7 @@ class CommentTests(TestCase):
         self.assertTrue(len(Comment.objects.all()) == len_comments)
 
     def test_delete_comment_by_invalid_comment(self):
-        data = {'user_id': self.comment_1.user_id, 'comment_id': self.num_of_saved_comments + random.randint(0, 10)}
+        data = {'user_id': self.comment_1.user_id, 'comment_id': self.num_of_saved_comments + random.randint(1, 10)}
         self.post_request.POST = data
         len_comments = len(Comment.objects.all())
         self.assertRaises(Exception, delete_comment, self.post_request)

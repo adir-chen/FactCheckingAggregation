@@ -1,12 +1,12 @@
 from django.http import HttpRequest, QueryDict, Http404
-from django.test import TestCase, RequestFactory
+from django.test import TestCase, Client
 from claims.models import Claim
 from claims.views import add_claim, check_if_claim_is_valid, is_valid_verdict_date, \
     get_all_claims, get_newest_claims, get_claim_by_id, get_category_for_claim, get_tags_for_claim,\
     view_claim, view_home, logout_view, add_claim_page, edit_claim,\
     check_claim_new_fields, delete_claim
 from comments.models import Comment
-from users.models import User
+from users.models import User, Users_Images
 import random
 import datetime
 
@@ -15,6 +15,8 @@ class ClaimTests(TestCase):
     def setUp(self):
         self.user = User(username="User1", email='user1@gmail.com')
         self.user.save()
+        self.user_image = Users_Images(user_id=self.user, user_img='user_img')
+        self.user_image.save()
         self.num_of_saved_users = 1
         self.claim_1 = Claim(user_id=self.user.id,
                              claim='Sniffing rosemary increases human memory by up to 75 percent',
@@ -43,6 +45,31 @@ class ClaimTests(TestCase):
         self.claim_1.save()
         self.claim_2.save()
         self.claim_3.save()
+        self.comment_1 = Comment(claim_id=self.claim_1.id,
+                                 user_id=self.user.id,
+                                 title=self.claim_1.claim,
+                                 description='description1',
+                                 url='url1',
+                                 verdict_date=datetime.datetime.strftime(datetime.datetime.now() - datetime.timedelta(days=7), '%d/%m/%Y'),
+                                 label='label1')
+        self.comment_2 = Comment(claim_id=self.claim_2.id,
+                                 user_id=self.user.id,
+                                 title=self.claim_2.claim,
+                                 description='description2',
+                                 url='url2',
+                                 verdict_date=datetime.datetime.strftime(datetime.datetime.now() - datetime.timedelta(days=7), '%d/%m/%Y'),
+                                 label='label2')
+        self.comment_3 = Comment(claim_id=self.claim_3.id,
+                                 user_id=self.user.id,
+                                 title=self.claim_3.claim,
+                                 description='description3',
+                                 url='url3',
+                                 verdict_date=datetime.datetime.strftime(datetime.datetime.now() - datetime.timedelta(days=10), '%d/%m/%Y'),
+                                 label='label3')
+
+        self.comment_1.save()
+        self.comment_2.save()
+        self.comment_3.save()
         self.num_of_saved_claims = 3
         self.dict = {'user_id': self.user.id,
                      'claim': self.claim_4.claim,
@@ -108,9 +135,9 @@ class ClaimTests(TestCase):
 
     def test_add_claim_missing_args(self):
         for i in range(10):
-            dict_copy = self.dict
+            dict_copy = self.dict.copy()
             args_to_remove = []
-            for j in range(random.randint(0, len(self.dict.keys()) - 1)):
+            for j in range(random.randint(1, len(self.dict.keys()) - 1)):
                 args_to_remove.append(list(self.dict.keys())[j])
             for j in range(len(args_to_remove)):
                 del self.dict[args_to_remove[j]]
@@ -123,7 +150,7 @@ class ClaimTests(TestCase):
             self.assertRaises(Exception, add_claim, request)
             self.assertTrue(len(Claim.objects.all()) == len_claims)
             self.assertTrue(get_claim_by_id(4) is None)
-            self.dict = dict_copy
+            self.dict = dict_copy.copy()
 
     def test_add_claim_get(self):
         request = HttpRequest()
@@ -308,8 +335,38 @@ class ClaimTests(TestCase):
         request.method = 'GET'
         self.assertRaises(Exception, view_claim, request, 4)
 
-    # def test_view_home_valid_user_authenticated(self):
-    #     return NotImplemented()
+    def test_view_home_many_claims(self):
+        for i in range(4, 24):
+            claim = Claim(user_id=self.user.id,
+                                 claim='claim' + str(i),
+                                 category='category ' + str(i),
+                                 tags='claim' + str(i),
+                                 authenticity_grade=0,
+                                 image_src='claim' + str(i))
+            claim.save()
+            comment = Comment(claim_id=claim.id,
+                                     user_id=claim.user.id,
+                                     title=claim.claim,
+                                     description='description1',
+                                     url='url1',
+                                     verdict_date=datetime.datetime.strftime(
+                                         datetime.datetime.now() - datetime.timedelta(days=7), '%d/%m/%Y'),
+                                     label='label1')
+            comment.save()
+        request = HttpRequest()
+        request.method = 'GET'
+        response = view_home(request)
+        self.assertTrue(response.status_code == 200)
+
+    def test_view_home_valid_user_authenticated(self):
+        client = Client()
+        user_1 = User.objects.create_user(username='user1', email='user1@gmail.com', password='user1')
+        client.login(username='user1', password='user1')
+        request = HttpRequest()
+        request.method = 'GET'
+        request.user = user_1
+        request.session = client.session
+        self.assertTrue(view_home(request).status_code == 200)
 
     def test_view_home_valid_user_not_authenticated(self):
         request = HttpRequest()
@@ -317,7 +374,15 @@ class ClaimTests(TestCase):
         response = view_home(request)
         self.assertTrue(response.status_code == 200)
 
-    # def test_logout_view(self):
+    def test_logout_view(self):
+        client = Client()
+        user_1 = User.objects.create_user(username='user1', email='user1@gmail.com', password='user1')
+        client.login(username='user1', password='user1')
+        request = HttpRequest()
+        request.method = 'GET'
+        request.user = user_1
+        request.session = client.session
+        self.assertTrue(logout_view(request).status_code == 200)
 
     def test_add_claim_page(self):
         request = HttpRequest()
@@ -363,15 +428,15 @@ class ClaimTests(TestCase):
 
     def test_edit_claim_missing_args(self):
         for i in range(10):
-            data_copy = self.dict
+            data_copy = self.data.copy()
             args_to_remove = []
-            for j in range(random.randint(0, len(self.data.keys()) - 1)):
+            for j in range(random.randint(1, len(self.data.keys()) - 1)):
                 args_to_remove.append(list(self.data.keys())[j])
             for j in range(len(args_to_remove)):
                 del self.data[args_to_remove[j]]
             self.post_request.POST = self.data
             self.assertRaises(Exception, edit_claim, self.post_request)
-            self.data = data_copy
+            self.data = data_copy.copy()
 
     def test_check_claim_new_fields(self):
         self.post_request.POST = self.data
@@ -443,11 +508,27 @@ class ClaimTests(TestCase):
         post_request.method = 'POST'
         data = {'claim_id': self.claim_4.id, 'user_id': self.user.id}
         post_request.POST = data
+        old_length = len(Claim.objects.all())
         self.assertRaises(Exception, delete_claim, post_request)
+        self.assertTrue(len(Claim.objects.all()), old_length)
 
     def test_delete_claim_valid_claim_invalid_user(self):
         post_request = HttpRequest()
         post_request.method = 'POST'
         data = {'claim_id': self.claim_4.id, 'user_id': self.num_of_saved_users + 1}
         post_request.POST = data
+        old_length = len(Claim.objects.all())
         self.assertRaises(Exception, delete_claim, post_request)
+        self.assertTrue(len(Claim.objects.all()), old_length)
+
+    def test_delete_claim_of_another_user(self):
+        self.user_2 = User(username="User2", email='user1@gmail.com')
+        self.user_2.save()
+        post_request = HttpRequest()
+        post_request.method = 'POST'
+        data = {'claim_id': self.claim_1.id, 'user_id': self.user_2.id}
+        post_request.POST = data
+        old_length = len(Claim.objects.all())
+        self.assertRaises(Exception, delete_claim, post_request)
+        self.assertTrue(len(Claim.objects.all()), old_length)
+
