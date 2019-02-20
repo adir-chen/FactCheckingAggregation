@@ -34,7 +34,7 @@
             <button id="{{ claim.id }}_claim_delete" type="submit" class="btn btn-danger" style="margin: 10px 0;">Delete</button>
         {% endif %}
         {% load static %}
-        <a class="btn twitter-share-button" href="https://twitter.com/intent/tweet?text=http://127.0.0.1:8000{{ request.path }}%20"
+        <a class="btn twitter-share-button" href="https://twitter.com/intent/tweet?text={{ request.META.HTTP_HOST }}{{ request.path }}%20"
           data-size="large"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"> Share claim on Twitter</a>
         <hr><br>
             <div id="comments">
@@ -91,7 +91,7 @@
                     label: document.querySelector('input[name="label"]:checked').value,
                 },
                 success: function () {
-                    location.href = 'http://127.0.0.1:8000/claim/{{ claim.id }}';
+                    location.href = '{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';
                 },
                 error: function (error) {
                     let err = error.responseText.split('\n')[1];
@@ -117,14 +117,14 @@
                     user_id: '{{ request.user.id }}',
                 },
                 success: function () {
-                    location.href = 'http://127.0.0.1:8000/claim/{{ claim.id }}';
+                    location.href = '{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';
                 },
                 error: function (error) {
                     console.log(error);
                     var err = error.responseText;
                     $("#{{ claim.id }}_error_msg").attr("hidden", false);
                     console.log(err.title);
-                    location.href = 'http://127.0.0.1:8000/claim/{{ claim.id }}';
+                    location.href = '{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';
 
                 }
             });
@@ -141,7 +141,7 @@
                 user_id: '{{ request.user.id }}'
             },
             success: function () {
-                location.href = 'http://127.0.0.1:8000';
+                location.href = '{{ request.META.HTTP_HOST }}';
             },
             error: function (error) {
                 console.log(error);

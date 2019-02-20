@@ -191,7 +191,7 @@
                 user_id: '{{ request.user.id }}',
             },
             success: function () {
-                location.href = 'http://127.0.0.1:8000/claim/{{ comment.claim_id }}';
+                location.href = '{{ request.META.HTTP_HOST }}/claim/{{ comment.claim_id }}';
             },
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
@@ -213,7 +213,7 @@
                 user_id: '{{ request.user.id }}'
             },
             success: function (page) {
-                location.href =  'http://127.0.0.1:8000/claim/{{ comment.claim_id }}';
+                location.href =  '{{ request.META.HTTP_HOST }}/claim/{{ comment.claim_id }}';
             },
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
