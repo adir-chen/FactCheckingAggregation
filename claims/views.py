@@ -68,13 +68,13 @@ def check_if_claim_is_valid(claim_info):
         err += 'Claim ' + claim_info['claim'] + 'already exists'
     elif not check_if_user_exists_by_user_id(claim_info['user_id']):
         err += 'User ' + claim_info['user_id'] + ' does not exist'
-    if '-' in claim_info['verdict_date']:
+    elif '-' in claim_info['verdict_date']:
         try:
             date_parts = claim_info['verdict_date'].split('-')
-            claim_info['verdict_date'] = ''+date_parts[2]+'/'+date_parts[1]+'/'+date_parts[0]
+            claim_info['verdict_date'] = '' + date_parts[2] + '/' + date_parts[1] + '/' + date_parts[0]
         except:
             err += 'Date ' + claim_info['verdict_date'] + ' is invalid'
-    elif not is_valid_verdict_date(claim_info['verdict_date']):
+    if len(err) == 0 and not is_valid_verdict_date(claim_info['verdict_date']):
         err += 'Date ' + claim_info['verdict_date'] + ' is invalid'
     if len(err) > 0:
         return False, err
@@ -171,13 +171,6 @@ def view_home(request):
             if len(user_img) > 0:
                 users_imgs.append(user_img[0].user_img)
         sub_headlines[claim] = users_imgs
-
-    try:
-        if request.user.is_authenticated and len(User.objects.filter(email=request.user.email)) == 0:
-            new_user = User(username=request.user.username, email=request.user.email)
-            new_user.save()
-    except:
-        '' # do nothing
     return render(request, 'claims/index.html', {'headlines': headlines, 'sub_headlines': sub_headlines})
 
 
@@ -231,10 +224,10 @@ def check_claim_new_fields(request):
 
 # This function deletes a claim from the website
 def delete_claim(request):
-    claim = get_object_or_404(Claim, id=request.POST.get('claim_id'))
-    if not claim:
-        raise Exception('Claim with the given id ' + str(request.POST.get('claim_id')) +
-                      'does not exist')
+    try:
+        claim = get_object_or_404(Claim, id=request.POST.get('claim_id'))
+    except:
+        raise Exception('Claim with the given id ' + str(request.POST.get('claim_id')) + 'does not exist')
     if len(Claim.objects.filter(id=request.POST.get('claim_id'), user_id=request.POST.get('user_id'))) == 0:
         raise Exception('Claim does not belong to user with id ' + str(request.POST.get('user_id')))
     Claim.objects.filter(id=claim.id, user_id=request.POST.get('user_id')).delete()
