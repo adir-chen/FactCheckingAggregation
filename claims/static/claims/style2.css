@@ -257,3 +257,21 @@ div.claim_box_info {
 .twitter-share-button:hover{
     border: 1px solid #000;
 }
+
+table.log_table{
+    border-collapse: collapse;
+    border: 1px solid #8e8e8e;
+    width: 100%;
+}
+
+.log_table td{
+    padding: 3px 12px;
+    border: 1px solid #8e8e8e;
+}
+
+.log_table th{
+    padding: 3px 12px;
+    border: 1px solid #8e8e8e;
+}
+
+.log_table tr:nth-child(even){background-color: #e2e2e2;}

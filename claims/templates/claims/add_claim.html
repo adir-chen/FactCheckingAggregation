@@ -55,6 +55,7 @@
                     label: $(".label:checked").val()
                 },
                 success: function () {
+                    $("#error_msg").attr("hidden", true);
                     $("#claim").val('');
                     $("#category").val('');
                     $("#tags").val('');
@@ -66,6 +67,7 @@
                     $("#success_msg").attr("hidden", false);
                 },
                 error: function (error) {
+                    $("#success_msg").attr("hidden", true);
                     let err = error.responseText.split('\n')[1];
                     document.getElementById("error_msg").innerHTML =
                     '* Error:  ' + err.toLowerCase() + ' *';

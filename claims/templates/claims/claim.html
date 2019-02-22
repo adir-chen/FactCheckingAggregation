@@ -34,7 +34,7 @@
             <button id="{{ claim.id }}_claim_delete" type="submit" class="btn btn-danger" style="margin: 10px 0;">Delete</button>
         {% endif %}
         {% load static %}
-        <a class="btn twitter-share-button" href="https://twitter.com/intent/tweet?text={{ request.META.HTTP_HOST }}{{ request.path }}%20"
+        <a class="btn twitter-share-button" href="https://twitter.com/intent/tweet?text=http://{{ request.META.HTTP_HOST }}{{ request.path }}%20"
           data-size="large"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"> Share claim on Twitter</a>
         <hr><br>
             <div id="comments">

@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
 from django.http import Http404
 from django.shortcuts import render
+
+from logger.views import save_log_message
 from users.models import Users_Images, Scrapers
 from users.models import Users_Reputations
 
@@ -144,6 +146,8 @@ def add_new_scraper(request):
         scraper_info = request.POST.dict()
         valid_scraper, err_msg = check_if_scraper_info_is_valid(scraper_info)
         if not valid_scraper:
+            save_log_message(request.user.id, request.user.username,
+                             ' failed to add a new scraper. Error: ' + err_msg)
             raise Exception(err_msg)
         new_scraper = User(username=scraper_info['scraper_name'])
         new_scraper.save()
@@ -156,6 +160,7 @@ def add_new_scraper(request):
 
         new_scraper_img_details = Scrapers(scraper_name=new_scraper.username, scraper_id=new_scraper)
         new_scraper_img_details.save()
+        save_log_message(request.user.id, request.user.username, ' added a new scraper successfully')
         return add_scraper_guide(request)
     raise Http404("Permission denied")
 

@@ -100,6 +100,7 @@ class ClaimTests(TestCase):
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.dict)
         request.POST = query_dict
+        request.user = self.user
         add_claim(request)
         self.assertTrue(len(Claim.objects.all()) == len_claims + 1)
         claim_4 = get_claim_by_id(4)
@@ -390,39 +391,31 @@ class ClaimTests(TestCase):
         response = add_claim_page(request)
         self.assertTrue(response.status_code == 200)
 
-    # def test_logout_view(self):
-    #     from django.conf import settings
-    #     from importlib import import_module
-    #     request = HttpRequest()
-    #     engine = import_module(settings.SESSION_ENGINE)
-    #     session_key = None
-    #     request.session = engine.SessionStore(session_key)
-    #     request.method = 'GET'
-    #     response = logout_view(request)
-    #     self.assertTrue(response.status_code == 200)
-    #     self.assertFalse(response.user.is_authenticated)
-
     def test_edit_claim_valid_with_different_claim(self):
         self.data['claim'] = self.claim_2.claim
         self.post_request.POST = self.data
+        self.post_request.user = self.user
         self.assertTrue(edit_claim(self.post_request).status_code == 200)
         self.assertTrue(Claim.objects.filter(id=self.data['claim_id'])[0].claim == self.claim_2.claim)
 
     def test_edit_claim_valid_with_different_category(self):
         self.data['category'] = self.claim_2.category
         self.post_request.POST = self.data
+        self.post_request.user = self.user
         self.assertTrue(edit_claim(self.post_request).status_code == 200)
         self.assertTrue(Claim.objects.filter(id=self.data['claim_id'])[0].category == self.claim_2.category)
 
     def test_edit_claim_valid_with_different_tags(self):
         self.data['tags'] = self.claim_2.tags
         self.post_request.POST = self.data
+        self.post_request.user = self.user
         self.assertTrue(edit_claim(self.post_request).status_code == 200)
         self.assertTrue(Claim.objects.filter(id=self.data['claim_id'])[0].tags == self.claim_2.tags)
 
     def test_edit_claim_valid_with_different_image_src(self):
         self.data['image_src'] = self.claim_2.image_src
         self.post_request.POST = self.data
+        self.post_request.user = self.user
         self.assertTrue(edit_claim(self.post_request).status_code == 200)
         self.assertTrue(Claim.objects.filter(id=self.data['claim_id'])[0].image_src == self.claim_2.image_src)
 
@@ -435,6 +428,7 @@ class ClaimTests(TestCase):
             for j in range(len(args_to_remove)):
                 del self.data[args_to_remove[j]]
             self.post_request.POST = self.data
+            self.post_request.user = self.user
             self.assertRaises(Exception, edit_claim, self.post_request)
             self.data = data_copy.copy()
 
@@ -494,6 +488,7 @@ class ClaimTests(TestCase):
         post_request.method = 'POST'
         data = {'claim_id': self.claim_1.id, 'user_id': self.user.id}
         post_request.POST = data
+        post_request.user = self.user
         old_length = len(Claim.objects.all())
         self.assertTrue(delete_claim(post_request).status_code == 200)
         self.assertTrue(len(Claim.objects.all()), old_length - 1)
@@ -508,6 +503,7 @@ class ClaimTests(TestCase):
         post_request.method = 'POST'
         data = {'claim_id': self.claim_4.id, 'user_id': self.user.id}
         post_request.POST = data
+        post_request.user = self.user
         old_length = len(Claim.objects.all())
         self.assertRaises(Exception, delete_claim, post_request)
         self.assertTrue(len(Claim.objects.all()), old_length)
@@ -515,8 +511,10 @@ class ClaimTests(TestCase):
     def test_delete_claim_valid_claim_invalid_user(self):
         post_request = HttpRequest()
         post_request.method = 'POST'
-        data = {'claim_id': self.claim_4.id, 'user_id': self.num_of_saved_users + 1}
+        user = User(id=self.num_of_saved_users + random.randint(1, 10), email="user@gmail.com")
+        data = {'claim_id': self.claim_4.id, 'user_id': user.id}
         post_request.POST = data
+        post_request.user = self.user
         old_length = len(Claim.objects.all())
         self.assertRaises(Exception, delete_claim, post_request)
         self.assertTrue(len(Claim.objects.all()), old_length)
@@ -528,6 +526,7 @@ class ClaimTests(TestCase):
         post_request.method = 'POST'
         data = {'claim_id': self.claim_1.id, 'user_id': self.user_2.id}
         post_request.POST = data
+        post_request.user = self.user_2
         old_length = len(Claim.objects.all())
         self.assertRaises(Exception, delete_claim, post_request)
         self.assertTrue(len(Claim.objects.all()), old_length)

@@ -5,6 +5,7 @@ from contact_us.views import send_email, check_if_email_is_valid, contact_us_pag
 import random
 import string
 
+
 class ContactUsTest(TestCase):
     def setUp(self):
         self.user_1 = User(username="User1", email='user1@gmail.com')
@@ -22,6 +23,7 @@ class ContactUsTest(TestCase):
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.data)
         self.post_request.POST = query_dict
+        self.post_request.user = self.user_1
         self.assertTrue(send_email(self.post_request).status_code == 200)
 
     def test_send_email_invalid_email(self):

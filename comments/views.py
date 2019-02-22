@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404
 from comments.models import Comment
 from claims.models import Claim
 from django.http import HttpResponse, Http404
+from logger.views import save_log_message
 from users.views import check_if_user_exists_by_user_id
 import csv
 import datetime
@@ -14,6 +15,9 @@ def add_comment(request):
         comment_info = request.POST
         valid_comment, err_msg = check_if_comment_is_valid(comment_info)
         if not valid_comment:
+            save_log_message(request.user.id, request.user.username,
+                             'failed to add a new comment on claim with id '
+                             + str(request.POST.get('claim_id')) + '. Error: ' + err_msg)
             raise Exception(err_msg)
         build_comment(request.POST.get('claim_id'),
                       request.POST.get('user_id'),
@@ -22,6 +26,8 @@ def add_comment(request):
                       request.POST.get('url'),
                       datetime.datetime.strftime(datetime.datetime.now(), '%d/%m/%Y'),
                       request.POST.get('label'))
+        save_log_message(request.user.id, request.user.username,
+                         'added a new comment on claim with id ' + str(request.POST.get('claim_id')) + ' successfully')
         return view_claim(request, request.POST.get('claim_id'))
     raise Http404("Invalid method")
 
@@ -37,7 +43,6 @@ def build_comment(claim_id, user_id, title, description, url, verdict_date, labe
         verdict_date=verdict_date,
         label=label,
         system_label=get_system_label_to_comment(label),
-
     )
     comment.save()
     update_authenticity_grade(comment.claim_id)
@@ -103,6 +108,7 @@ def get_all_comments_for_claim_id(claim_id):
 def export_to_csv(request):
     from claims.views import get_category_for_claim, get_tags_for_claim
     if not request.user.is_superuser:
+        save_log_message(request.user.id, request.user.username, 'failed to export website claims to a csv')
         raise Http404("Permission denied")
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="claims.csv"'
@@ -111,6 +117,8 @@ def export_to_csv(request):
     for comment in Comment.objects.all():
         writer.writerow([comment.title, comment.description, comment.url, get_category_for_claim(comment.claim_id),
                         comment.verdict_date, get_tags_for_claim(comment.claim_id), comment.label])
+    save_log_message(request.user.id, request.user.username,
+                     'exported website claims to a csv successfully')
     return response
 
 
@@ -124,6 +132,8 @@ def up_vote(request):
         comment.up_votes.add(request.POST.get('user_id'))
         if comment.down_votes.filter(id=request.POST.get('user_id')).exists():
             comment.down_votes.remove(request.POST.get('user_id'))
+    save_log_message(request.user.id, request.user.username,
+                     'up voted comment with id ' + str(request.POST.get('comment_id')) + ' successfully')
     update_authenticity_grade(comment.claim_id)
     return view_claim(request, comment.claim_id)
 
@@ -138,6 +148,8 @@ def down_vote(request):
         comment.down_votes.add(request.POST.get('user_id'))
         if comment.up_votes.filter(id=request.POST.get('user_id')).exists():
             comment.up_votes.remove(request.POST.get('user_id'))
+    save_log_message(request.user.id, request.user.username,
+                     'down voted comment with id ' + str(request.POST.get('comment_id')) + ' successfully')
     update_authenticity_grade(comment.claim_id)
     return view_claim(request, comment.claim_id)
 
@@ -147,10 +159,19 @@ def edit_comment(request):
     from claims.views import view_claim
     valid_new_comment, err_msg = check_comment_new_fields(request)
     if not valid_new_comment:
+        save_log_message(request.user.id, request.user.username,
+                         'failed to edit a comment with id ' + str(request.POST.get('comment_id')) +
+                         '. Error: ' + err_msg)
         raise Exception(err_msg)
     if len(Comment.objects.filter(id=request.POST.get('comment_id'))) == 0:
+        save_log_message(request.user.id, request.user.username,
+                         'failed to edit a comment with id ' + str(request.POST.get('comment_id')) +
+                         '. Error: Invalid comment id')
         raise Exception("Invalid comment id")
     elif not check_if_user_exists_by_user_id(request.POST.get('user_id')):
+        save_log_message(request.user.id, request.user.username,
+                         'failed to edit a comment with id ' + str(request.POST.get('comment_id')) +
+                         '. Error: User with id ' + str(request.POST.get('user_id')) + ' does not exist')
         raise Exception('User with id ' + str(request.POST.get('user_id')) + ' does not exist')
     comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
     Comment.objects.filter(id=comment.id, user_id=request.POST.get('user_id')).update(
@@ -160,6 +181,8 @@ def edit_comment(request):
         verdict_date=datetime.datetime.strftime(datetime.datetime.now(), '%d/%m/%Y'),
         system_label=request.POST.get('comment_label'))
     update_authenticity_grade(comment.claim_id)
+    save_log_message(request.user.id, request.user.username,
+                     'added edit comment with id ' + str(request.POST.get('comment_id')) + ' successfully')
     return view_claim(request, comment.claim_id)
 
 
@@ -184,11 +207,19 @@ def check_comment_new_fields(request):
 def delete_comment(request):
     from claims.views import view_claim
     if len(Comment.objects.filter(id=request.POST.get('comment_id'))) == 0:
+        save_log_message(request.user.id, request.user.username,
+                         'failed to delete comment with id ' + str(request.POST.get('comment_id')) +
+                         ' . Error: Invalid comment id')
         raise Exception("Invalid comment id")
     elif not check_if_user_exists_by_user_id(request.POST.get('user_id')):
+        save_log_message(request.user.id, 'Guest',
+                         'failed to delete comment with id ' + str(request.POST.get('comment_id')) +
+                         ' . Error: User with id ' + str(request.POST.get('user_id')) + ' does not exist')
         raise Exception('User with id ' + str(request.POST.get('user_id')) + ' does not exist')
     comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
     Comment.objects.filter(id=comment.id, user_id=request.POST.get('user_id')).delete()
+    save_log_message(request.user.id, request.user.username,
+                     'deleted comment with id ' + str(request.POST.get('comment_id')) + ' successfully')
     update_authenticity_grade(comment.claim_id)
     return view_claim(request, comment.claim_id)
 

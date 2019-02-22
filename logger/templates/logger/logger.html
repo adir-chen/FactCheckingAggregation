@@ -1,0 +1,29 @@
+{% extends 'claims/layout2.html' %}
+
+{% block page_content %}
+    <div id="logger_page" style="max-width: 900px; margin: auto; min-height: 750px; padding: 40px 0;">
+        <h5>All users activities on the website:</h5>
+        <br>
+        <div class="claim_box" style="width: 100%; padding: 20px 40px 20px 20px; min-height: 400px;">
+            {% csrf_token %}
+            <table class="log_table">
+              <tr>
+                <th>Date</th>
+                <th>Activity</th>
+              </tr>
+                {% for log in logger %}
+                    <tr class="log_table">
+                        <td>{{ log.date }}</td>
+                        <td>{{ log.activity }}</td>
+                    </tr>
+                {% endfor %}
+
+            </table>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block claim_head_title %}
+    FactCheckProject | Logger
+{% endblock %}
