@@ -232,3 +232,19 @@ def delete_claim(request):
         raise Exception('Claim does not belong to user with id ' + str(request.POST.get('user_id')))
     Claim.objects.filter(id=claim.id, user_id=request.POST.get('user_id')).delete()
     return view_home(request)
+
+
+def handler404(request):
+    return render(request, 'claims/404.html', status=404)
+
+
+def handler500(request):
+    return render(request, 'claims/500.html', status=500)
+
+
+def handler403(request):
+    return render(request, 'claims/403.html', status=404)
+
+
+def handler400(request):
+    return render(request, 'claims/400.html', status=500)

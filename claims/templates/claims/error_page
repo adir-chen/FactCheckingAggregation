@@ -1,3 +1,0 @@
-{% extends 'claims/layout2.html' %}
-
-<h1 id="claim_page_title">{{ error }}</h1>
