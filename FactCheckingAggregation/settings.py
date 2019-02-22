@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'search.apps.SearchConfig',
     'contact_us.apps.ContactUsConfig',
+    'logger.apps.LoggerConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -167,6 +168,6 @@ NOSE_ARGS = [
     # '--cover-package=comments',
     '--detailed-errors',
     '-s',
-    '--cover-html'
+    # '--cover-html'
 ]
 

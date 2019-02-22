@@ -91,6 +91,7 @@ class CommentTests(TestCase):
     def test_add_comment(self):
         len_comments = len(Comment.objects.filter(claim_id=self.claim_1.id))
         self.post_request.POST = self.data
+        self.post_request.user = self.user_1
         self.assertTrue(add_comment(self.post_request).status_code == 200)
         self.assertTrue(len(Comment.objects.filter(claim_id=self.claim_1.id)) == len_comments + 1)
         new_comment = Comment.objects.all().order_by('-id')[0]
@@ -326,7 +327,7 @@ class CommentTests(TestCase):
         request.user = admin
         res = export_to_csv(request)
         self.assertTrue(res.status_code == 200)
-        self.assertTrue(res.content == b'Title,Description,Url,Category,Verdict_Date,Tags,Label\r\nSniffing rosemary increases human memory by up to 75 percent,description1,url1,Science,27/02/2019,sniffing human memory,label1\r\n"A photograph shows the largest U.S. flag ever made, displayed in front of Hoover Dam",description2,url2,Fauxtography,13/02/2019,photograph U.S. flag,label2\r\nSniffing rosemary increases human memory by up to 75 percent,description3,url3,Science,10/02/2019,sniffing human memory,label3\r\n')
+        self.assertEqual(res.content, b'Title,Description,Url,Category,Verdict_Date,Tags,Label\r\nSniffing rosemary increases human memory by up to 75 percent,description1,url1,Science,01/03/2019,sniffing human memory,label1\r\n"A photograph shows the largest U.S. flag ever made, displayed in front of Hoover Dam",description2,url2,Fauxtography,15/02/2019,photograph U.S. flag,label2\r\nSniffing rosemary increases human memory by up to 75 percent,description3,url3,Science,12/02/2019,sniffing human memory,label3\r\n')
 
     def test_export_to_csv_empty(self):
         from django.contrib.auth import get_user_model
@@ -347,6 +348,7 @@ class CommentTests(TestCase):
     def test_up_vote(self):
         data = {'user_id': self.comment_1.user_id, 'comment_id': self.comment_2.id}
         self.post_request.POST = data
+        self.post_request.user = self.user_1
         response = up_vote(self.post_request)
         self.assertTrue(self.comment_2.up_votes.count() == 1)
         self.assertTrue(self.comment_2.down_votes.count() == 0)
@@ -355,6 +357,7 @@ class CommentTests(TestCase):
     def test_up_vote_twice(self):
         data = {'user_id': self.comment_1.user_id, 'comment_id': self.comment_2.id}
         self.post_request.POST = data
+        self.post_request.user = self.user_1
         up_vote(self.post_request)
         response = up_vote(self.post_request)
         self.assertTrue(self.comment_2.up_votes.count() == 0)
@@ -364,6 +367,7 @@ class CommentTests(TestCase):
     def test_up_vote_after_down_vote(self):
         data = {'user_id': self.comment_1.user_id, 'comment_id': self.comment_2.id}
         self.post_request.POST = data
+        self.post_request.user = self.user_1
         down_vote(self.post_request)
         response = up_vote(self.post_request)
         self.assertTrue(self.comment_2.up_votes.count() == 1)
@@ -373,6 +377,7 @@ class CommentTests(TestCase):
     def test_down_vote(self):
         data = {'user_id': self.comment_1.user_id, 'comment_id': self.comment_2.id}
         self.post_request.POST = data
+        self.post_request.user = self.user_1
         response = down_vote(self.post_request)
         self.assertTrue(self.comment_2.down_votes.count() == 1)
         self.assertTrue(self.comment_2.up_votes.count() == 0)
@@ -381,6 +386,7 @@ class CommentTests(TestCase):
     def test_down_vote_twice(self):
         data = {'user_id': self.comment_1.user_id, 'comment_id': self.comment_2.id}
         self.post_request.POST = data
+        self.post_request.user = self.user_1
         down_vote(self.post_request)
         response = down_vote(self.post_request)
         self.assertTrue(self.comment_2.down_votes.count() == 0)
@@ -390,6 +396,7 @@ class CommentTests(TestCase):
     def test_down_vote_after_up_vote(self):
         data = {'user_id': self.comment_1.user_id, 'comment_id': self.comment_2.id}
         self.post_request.POST = data
+        self.post_request.user = self.user_1
         up_vote(self.post_request)
         response = down_vote(self.post_request)
         self.assertTrue(self.comment_2.up_votes.count() == 0)
@@ -400,6 +407,7 @@ class CommentTests(TestCase):
         self.data_new_field['comment_id'] = str(self.comment_1.id)
         self.data_new_field['user_id'] = str(self.comment_1.user_id)
         self.post_request.POST = self.data_new_field
+        self.post_request.user = self.user_1
         self.assertTrue(self.comment_1.title == self.data_new_field['comment_title'])
         self.assertFalse(self.comment_1.description == self.data_new_field['comment_description'])
         self.assertFalse(self.comment_1.url == self.data_new_field['comment_reference'])
@@ -415,6 +423,7 @@ class CommentTests(TestCase):
         self.data_new_field['user_id'] = str(self.comment_3.user_id)
         self.data_new_field['comment_id'] = str(self.comment_1.id)
         self.post_request.POST = self.data_new_field
+        self.post_request.user = self.user_2
         self.assertTrue(edit_comment(self.post_request).status_code == 200)
         comment = Comment.objects.filter(id=self.comment_1.id)[0]
         self.assertTrue(comment.title == self.comment_1.title)
@@ -423,9 +432,11 @@ class CommentTests(TestCase):
         self.assertTrue(comment.label == self.comment_1.label)
 
     def test_edit_comment_by_invalid_user_id(self):
-        self.data_new_field['user_id'] = self.num_of_saved_users + random.randint(1, 10)
+        user = User(id=self.num_of_saved_users + random.randint(1, 10), email='user@gmail.com')
+        self.data_new_field['user_id'] = user.id
         self.data_new_field['comment_id'] = str(self.comment_1.id)
         self.post_request.POST = self.data_new_field
+        self.post_request.user = user
         self.assertRaises(Exception, edit_comment, self.post_request)
         comment = Comment.objects.filter(id=self.comment_1.id)[0]
         self.assertTrue(comment.title == self.comment_1.title)
@@ -437,6 +448,7 @@ class CommentTests(TestCase):
         self.data_new_field['user_id'] = str(self.comment_1.user_id)
         self.data_new_field['comment_id'] = self.num_of_saved_comments + random.randint(1, 10)
         self.post_request.POST = self.data_new_field
+        self.post_request.user = self.user_1
         self.assertRaises(Exception, edit_comment, self.post_request)
         comment = Comment.objects.filter(id=self.comment_1.id)[0]
         self.assertTrue(comment.title == self.comment_1.title)
@@ -453,6 +465,7 @@ class CommentTests(TestCase):
             for j in range(len(args_to_remove)):
                 del self.data_new_field[args_to_remove[j]]
             self.post_request.POST = self.data
+            self.post_request.user = self.user_1
             self.assertRaises(Exception, edit_comment, self.post_request)
             self.data_new_field = dict_copy.copy()
 
@@ -483,6 +496,7 @@ class CommentTests(TestCase):
     def test_delete_comment_by_user(self):
         data = {'user_id': self.comment_1.user_id, 'comment_id': self.comment_1.id}
         self.post_request.POST = data
+        self.post_request.user = self.user_1
         len_comments = len(Comment.objects.all())
         response = delete_comment(self.post_request)
         self.assertTrue(len(Comment.objects.all()) == len_comments - 1)
@@ -491,14 +505,17 @@ class CommentTests(TestCase):
     def test_delete_comment_by_user_not_his_comment(self):
         data = {'user_id': self.comment_1.user_id, 'comment_id': self.comment_3.id}
         self.post_request.POST = data
+        self.post_request.user = self.user_1
         len_comments = len(Comment.objects.all())
         response = delete_comment(self.post_request)
         self.assertTrue(len(Comment.objects.all()) == len_comments)
         self.assertTrue(response.status_code == 200)
 
     def test_delete_comment_by_invalid_user(self):
-        data = {'user_id': self.num_of_saved_users + random.randint(1, 10), 'comment_id': self.comment_3.id}
+        user = User(id=self.num_of_saved_users + random.randint(1, 10), email='user@gmail.com')
+        data = {'user_id': user.id, 'comment_id': self.comment_3.id}
         self.post_request.POST = data
+        self.post_request.user = user
         len_comments = len(Comment.objects.all())
         self.assertRaises(Exception, delete_comment, self.post_request)
         self.assertTrue(len(Comment.objects.all()) == len_comments)
@@ -506,6 +523,7 @@ class CommentTests(TestCase):
     def test_delete_comment_by_invalid_comment(self):
         data = {'user_id': self.comment_1.user_id, 'comment_id': self.num_of_saved_comments + random.randint(1, 10)}
         self.post_request.POST = data
+        self.post_request.user = self.user_1
         len_comments = len(Comment.objects.all())
         self.assertRaises(Exception, delete_comment, self.post_request)
         self.assertTrue(len(Comment.objects.all()) == len_comments)
@@ -527,6 +545,7 @@ class CommentTests(TestCase):
         Comment.objects.filter(id=self.comment_3.id).update(system_label=False)
         data = {'user_id': self.comment_3.user_id, 'comment_id': self.comment_3.id}
         self.post_request.POST = data
+        self.post_request.user = self.user_2
         down_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
         self.assertTrue(Claim.objects.filter(id=self.claim_1.id)[0].authenticity_grade == 100)
@@ -536,6 +555,7 @@ class CommentTests(TestCase):
         Comment.objects.filter(id=self.comment_3.id).update(system_label=False)
         data = {'user_id': self.comment_3.user_id, 'comment_id': self.comment_3.id}
         self.post_request.POST = data
+        self.post_request.user = self.user_2
         up_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
         self.assertTrue(Claim.objects.filter(id=self.claim_1.id)[0].authenticity_grade == 50)
@@ -545,6 +565,7 @@ class CommentTests(TestCase):
         Comment.objects.filter(id=self.comment_3.id).update(system_label=False)
         data = {'user_id': self.comment_1.user_id, 'comment_id': self.comment_1.id}
         self.post_request.POST = data
+        self.post_request.user = self.user_1
         up_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
         self.assertTrue(Claim.objects.filter(id=self.claim_1.id)[0].authenticity_grade == 50)
@@ -554,6 +575,7 @@ class CommentTests(TestCase):
         Comment.objects.filter(id=self.comment_3.id).update(system_label=False)
         data = {'user_id': self.comment_1.user_id, 'comment_id': self.comment_1.id}
         self.post_request.POST = data
+        self.post_request.user = self.user_1
         down_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
         self.assertTrue(Claim.objects.filter(id=self.claim_1.id)[0].authenticity_grade == 0)
@@ -563,6 +585,7 @@ class CommentTests(TestCase):
         Comment.objects.filter(id=self.comment_3.id).update(system_label=False)
         data = {'user_id': self.comment_1.user_id, 'comment_id': self.comment_1.id}
         self.post_request.POST = data
+        self.post_request.user = self.user_1
         down_vote(self.post_request)
         data['comment_id'] = self.comment_3.id
         self.post_request.POST = data

@@ -5,16 +5,22 @@ from validate_email import validate_email
 
 
 # This function sends an email from a website user
+from logger.views import save_log_message
+
+
 def send_email(request):
     if request.method == "POST":
         mail_info = request.POST.dict()
         valid_mail, err_msg = check_if_email_is_valid(mail_info)
         if not valid_mail:
+            save_log_message(request.user.id, request.user.username,
+                             ' failed send an email. Error: ' + err_msg)
             raise Exception(err_msg)
         send_mail(mail_info['user_email'] + ': ' + mail_info['subject'],
                   mail_info['description'],
                   'wtfactnews@gmail.com',
                   ['wtfactnews@gmail.com'])
+        save_log_message(request.user.id, request.user.username, ' send an email successfully')
         return contact_us_page(request)
     raise Http404("Invalid method")
 

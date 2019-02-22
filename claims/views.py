@@ -4,8 +4,9 @@ from django.shortcuts import render, get_object_or_404
 from comments.models import Comment
 from comments.views import build_comment
 from django.contrib.auth.models import User
+from logger.views import save_log_message
 from users.models import Users_Images
-from users.views import check_if_user_exists_by_user_id, add_all_scrapers
+from users.views import check_if_user_exists_by_user_id
 from .models import Claim
 from django.views.decorators.csrf import ensure_csrf_cookie
 from datetime import datetime
@@ -18,6 +19,8 @@ def add_claim(request):
         claim_info = request.POST.dict()
         valid_claim, err_msg = check_if_claim_is_valid(claim_info)
         if not valid_claim:
+            save_log_message(request.user.id, request.user.username,
+                             'failed to add a new claim. Error: ' + err_msg)
             raise Exception(err_msg)
         tags_arr = claim_info['tags'].split(' ')
         new_tags = ''
@@ -36,6 +39,7 @@ def add_claim(request):
         build_comment(claim.id, claim_info['user_id'], claim_info['title'],
                       claim_info['description'], claim_info['url'],
                       claim_info['verdict_date'], claim_info['label'])
+        save_log_message(request.user.id, request.user.username, 'added a new claim successfully')
         return view_claim(request, claim.id)
     raise Http404("Invalid method")
 
@@ -65,7 +69,7 @@ def check_if_claim_is_valid(claim_info):
     elif 'img_src' not in claim_info:
         err += 'Missing value for img_src'
     elif len(Claim.objects.filter(claim=claim_info['claim'])) > 0:
-        err += 'Claim ' + claim_info['claim'] + 'already exists'
+        err += 'Claim ' + claim_info['claim'] + ' already exists'
     elif not check_if_user_exists_by_user_id(claim_info['user_id']):
         err += 'User ' + claim_info['user_id'] + ' does not exist'
     elif '-' in claim_info['verdict_date']:
@@ -189,6 +193,8 @@ def add_claim_page(request):
 def edit_claim(request):
     valid_new_claim, err_msg = check_claim_new_fields(request)
     if not valid_new_claim:
+        save_log_message(request.user.id, request.user.username,
+                         'failed to edit a claim. Error: ' + err_msg)
         raise Exception(err_msg)
     claim = get_object_or_404(Claim, id=request.POST.get('claim_id'))
     Claim.objects.filter(id=claim.id, user_id=request.POST.get('user_id')).update(
@@ -196,6 +202,8 @@ def edit_claim(request):
         category=request.POST.get('category'),
         tags=request.POST.get('tags'),
         image_src=request.POST.get('image_src'))
+    save_log_message(request.user.id, request.user.username,
+                     'edited claim with id ' + str(request.POST.get('claim_id')) + ' successfully')
     return view_claim(request, claim.id)
 
 
@@ -227,8 +235,16 @@ def delete_claim(request):
     try:
         claim = get_object_or_404(Claim, id=request.POST.get('claim_id'))
     except:
+        save_log_message(request.user.id, request.user.username,
+                         'failed to delete a claim. Error: ' +
+                         'Claim with the given id ' + str(request.POST.get('claim_id')) + 'does not exist')
         raise Exception('Claim with the given id ' + str(request.POST.get('claim_id')) + 'does not exist')
     if len(Claim.objects.filter(id=request.POST.get('claim_id'), user_id=request.POST.get('user_id'))) == 0:
+        save_log_message(request.user.id, request.user.username,
+                         'failed to delete a claim. Error: ' +
+                         'Claim does not belong to this user')
         raise Exception('Claim does not belong to user with id ' + str(request.POST.get('user_id')))
     Claim.objects.filter(id=claim.id, user_id=request.POST.get('user_id')).delete()
+    save_log_message(request.user.id, request.user.username,
+                     'deleted claim with id ' + str(request.POST.get('claim_id')) + ' successfully')
     return view_home(request)
