@@ -1,6 +1,10 @@
 from django.contrib.auth.models import User
+from django.shortcuts import render
+
 from users.models import Users_Images, Scrapers
 from users.models import Users_Reputations
+from claims.models import Claim
+from comments.models import Comment
 
 
 # This function returns true in case the user exists, otherwise false
@@ -17,6 +21,22 @@ def get_username_by_user_id(user_id):
     if len(result) > 0:
         return result[0].username
     return None
+
+
+# This function return a HTML page for the user's profile
+def my_profile_page(request):
+    user_rep = Users_Reputations.objects.filter(user_id=request.user.id)
+    claims = Claim.objects.filter(user=request.user.id)
+    user_claims = {}
+    for claim in claims[:3]:
+        comment_objs = Comment.objects.filter(claim_id=claim.id)
+        users_imgs = []
+        for comment in comment_objs:
+            user_img = Users_Images.objects.filter(user_id=comment.user_id)
+            if len(user_img) > 0:
+                users_imgs.append(user_img[0].user_img)
+        user_claims[claim] = users_imgs
+    return render(request, 'users/my_profile.html', {'reputation': user_rep, 'user_claims': user_claims})
 
 
 # This function adds all the scrapers as users to the website
