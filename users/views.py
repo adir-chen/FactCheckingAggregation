@@ -27,16 +27,39 @@ def get_username_by_user_id(user_id):
 def my_profile_page(request):
     user_rep = Users_Reputations.objects.filter(user_id=request.user.id)
     claims = Claim.objects.filter(user=request.user.id)
+    comments = Comment.objects.filter(user=request.user.id)
     user_claims = {}
-    for claim in claims[:3]:
+    user_comments = {}
+    more_claims = {}
+    more_comments = {}
+    i = 0;
+    for claim in claims:
         comment_objs = Comment.objects.filter(claim_id=claim.id)
         users_imgs = []
         for comment in comment_objs:
             user_img = Users_Images.objects.filter(user_id=comment.user_id)
             if len(user_img) > 0:
                 users_imgs.append(user_img[0].user_img)
-        user_claims[claim] = users_imgs
-    return render(request, 'users/my_profile.html', {'reputation': user_rep, 'user_claims': user_claims})
+        if(i<3):
+            user_claims[claim] = users_imgs
+        else:
+            more_claims[claim] = users_imgs
+        i = i + 1
+
+    i=0
+    for comment in comments:
+        if(i<2):
+            user_comments[comment] = User.objects.filter(id=comment.user_id)[0]
+        else:
+            more_comments[comment] = User.objects.filter(id=comment.user_id)[0]
+        i = i + 1
+    return render(request, 'users/my_profile.html', {
+        'reputation': user_rep,
+        'user_claims': user_claims,
+        'more_claims': more_claims,
+        'user_comments': user_comments,
+        'more_comments': more_comments
+    })
 
 
 # This function adds all the scrapers as users to the website

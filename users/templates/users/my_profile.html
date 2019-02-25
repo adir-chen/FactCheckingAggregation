@@ -1,15 +1,11 @@
 {% extends 'claims/layout2.html' %}
 
 {% block page_content %}
-    <div id="my_profile_page" style="max-width: 900px; margin: auto; height: auto; padding: 40px 0;">
+    <div id="my_profile_page" style="max-width: 1000px; margin: auto; height: auto; padding: 40px 0;">
         <h4>Welcome {{ request.user.username }}</h4>
         <br>
-        <div class="claim_box" style="width: 100%; padding: 20px 40px 20px 20px; max-height: 400px;">
+        <div class="claim_box" style="width: 100%; padding: 20px 40px 20px 20px; height: auto;">
             {% csrf_token %}
-            <!--<p id="error_msg" style="color: red; font-size: 12px;" hidden> </p>
-            <p id="success_msg" style="color: dodgerblue; font-size: 12px;" hidden>Your message has been sent successfully </p>
-            -->
-
             {% if reputation|length > 0 %}
                 <h5> My Reputation: {{ reputation.0.user_rep }} </h5>
             {% else %}
@@ -19,56 +15,63 @@
 
             <h5> My Claims:</h5>
             <div class="headlines">
-                <div style="max-width: 1150px; padding: 0 20px; border-radius: 10px; background: #aabfd6; display: flex; flex-wrap: wrap; margin: 0 auto;">
+                <div id="claims" style="max-width: 1150px; padding: 0 20px; border-radius: 10px; background: #aabfd6; display: flex; flex-wrap: wrap; margin: 0 auto;">
                     {% for claim, imgs in user_claims.items %}
                         {% include 'claims/claimbox_large.html' with claim=claim icons=imgs %}
                     {% endfor %}
+                    <span id="more_claims" style="display: none">
+                        {% for claim, imgs in more_claims.items %}
+                            {% include 'claims/claimbox_large.html' with claim=claim icons=imgs %}
+                        {% endfor %}
+                    </span>
                 </div>
+                <button style="" onclick="showMoreClaimsFunc()" id="showMoreClaims">Show More</button>
+            </div>
+
+            <h5> My Comments:</h5>
+            <div class="headlines">
+                <div id="comments" style="max-width: 1150px; padding: 20px 20px; border-radius: 10px; background: #aabfd6; display: flex; flex-wrap: wrap; margin: 0 auto;">
+                    {% for comment, user  in user_comments.items %}
+                        {% include 'comments/comment.html' with comment=comment user=user request=request only %}
+                    {% endfor %}
+                    <span id="more_comments" style="display: none">
+                        {% for comment, user  in more_comments.items %}
+                            {% include 'comments/comment.html' with comment=comment user=user request=request only %}
+                        {% endfor %}
+                    </span>
+                </div>
+                <button style="" onclick="showMoreCommentsFunc()" id="showMoreComments">Show More</button>
             </div>
         </div>
     </div>
 
     <script>
-    $("#submit_email").click(function(e){
-        {#e.preventDefault();#}
-        $.ajax({
-            type: 'POST',
-            url: "{% url 'contact_us:send_email' %}",
-            headers: { "X-CSRFToken": getCookie('csrftoken')},
-            data: {
-                user_email: $("#user_email").val(),
-                subject: $("#subject").val(),
-                description: $("#description").val()
-            },
-            success: function (request) {
-                $("#user_email").val('');
-                $("#subject").val('');
-                $("#description").val('');
-                $("#success_msg").attr("hidden", false);
+        function showMoreClaimsFunc() {
+            var moreClaims = document.getElementById("more_claims");
+            var btnText = document.getElementById("showMoreClaims");
 
-            },
-            error: function (error) {
-                let err = error.responseText.split('\n')[1];
-                document.getElementById("error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
-                $("#error_msg").attr("hidden", false);
-            }
-        });
-    });
-
-    function getCookie(c_name) {
-        if (document.cookie.length > 0) {
-            c_start = document.cookie.indexOf(c_name + "=");
-            if (c_start != -1) {
-                c_start = c_start + c_name.length + 1;
-                c_end = document.cookie.indexOf(";", c_start);
-                if (c_end == -1) c_end = document.cookie.length;
-                return unescape(document.cookie.substring(c_start, c_end));
+            if (moreClaims.style.display === "none") {
+                btnText.innerHTML = "Show Less";
+                moreClaims.style.display = "inline";
+            } else {
+                btnText.innerHTML = "Show More";
+                moreClaims.style.display = "none";
             }
         }
-        return "";
-    }
-</script>
+
+        function showMoreCommentsFunc() {
+            var moreComments = document.getElementById("more_comments");
+            var btnText = document.getElementById("showMoreComments");
+
+            if (moreComments.style.display === "none") {
+                btnText.innerHTML = "Show Less";
+                moreComments.style.display = "inline";
+            } else {
+                btnText.innerHTML = "Show More";
+                moreComments.style.display = "none";
+            }
+        }
+    </script>
 {% endblock %}
 
 {% block claim_head_title %}
