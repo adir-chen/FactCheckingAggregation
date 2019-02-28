@@ -1,16 +1,23 @@
+from datetime import datetime
 from django.http import Http404
 from django.shortcuts import render
 from django.core.mail import send_mail
 from validate_email import validate_email
+from logger.models import Logger
+from logger.views import save_log_message
+from ipware import get_client_ip
 
 
 # This function sends an email from a website user
-from logger.views import save_log_message
-
-
 def send_email(request):
     if request.method == "POST":
+        ip = get_client_ip(request)
+        if ip is None:
+            ip = 'Unknown IP Address'
+        else:
+            ip = str(ip[0])
         mail_info = request.POST.dict()
+        mail_info['ip'] = ip
         valid_mail, err_msg = check_if_email_is_valid(mail_info)
         if not valid_mail:
             save_log_message(request.user.id, request.user.username,
@@ -20,7 +27,7 @@ def send_email(request):
                   mail_info['description'],
                   'wtfactnews@gmail.com',
                   ['wtfactnews@gmail.com'])
-        save_log_message(request.user.id, request.user.username, ' send an email successfully')
+        save_log_message(request.user.id, request.user.username, 'Sending an email from ip - ' + ip)
         return contact_us_page(request)
     raise Http404("Invalid method")
 
@@ -37,9 +44,17 @@ def check_if_email_is_valid(email_info):
         err += 'Missing value for subject'
     elif 'description' not in email_info or not email_info['description']:
         err += 'Missing value for description'
+    elif 'ip' not in email_info:
+        err += 'Missing value for ip'
+    elif check_for_spam(email_info['ip']):
+        err += 'Detected as spam'
     if len(err) > 0:
         return False, err
     return True, err
+
+
+def check_for_spam(ip):
+    return len(Logger.objects.filter(date__date=datetime.today(), action__icontains=ip)) >= 5
 
 
 # This function return an HTML page for sending a new e-mail

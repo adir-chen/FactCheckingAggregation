@@ -7,23 +7,26 @@
         {% block claim_head_title %}
         {% endblock %}
     </title>
-    {% load static %}
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.0/css/bootstrap.min.css" integrity="sha384-PDle/QlgIONtM1aqA2Qemk5gPOE7wFq8+Em+G/hmo5Iq0CCmYZLv3fVRDJ4MMwEA" crossorigin="anonymous">
+    {% load static %}
     <link href="{% static 'claims/style2.css' %}" rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+
 </head>
 <body>
     <header id="header">
         <div id="header-wrapper">
             <div id="site-logo">
-                <img src="{% static 'claims/assets/images/site_logo2.png' %}" style="height: 140px;">
+                <img src="{% static 'claims/assets/images/site_logo2.png' %}" style="height: 160px; width: 500px;"><br>
+                <h5 style="color: #C0C0C0;">Determine whether a claim is True or False</h5>
             </div>
             <div class="header-tools">
                 {% if request.user.is_authenticated %}
                     <p>Welcome <a href="">{{request.user.username}}</a></p>
-                    <a href="/logout">Sign Out</a>
+                    <a href="/logout" style="font-size: 14px;">Sign Out</a>
                 {% else %}
                     <p>Welcome guest.</p>
                     <p>
@@ -59,7 +62,7 @@
                     <a class="dropdown-toggle" style="float: none; border-right: 1px solid #b1b1b1;">Admin</a>
                     <div class="dropdown-content">
                         <a href="/admin" target="_blank">Admin Panel</a><br>
-                        <a href="/comments/export_to_csv">Export Data as CSV</a><br>
+                        <a href="/export_claims_page">Export Claims as CSV</a><br>
                         <a href="/users/add_all_scrapers" style="border-right: 0;">Add all Scrapers</a>
                         <a href="/users/add_scraper_guide" style="border-right: 0;">Adding a Scraper Guide</a>
                         <a href="/logger/view_log" style="border-right: 0;">Logger</a>

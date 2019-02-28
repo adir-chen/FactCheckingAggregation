@@ -2,14 +2,14 @@
 <div style="margin: auto;">
 
     <div class="claim_box" style="padding: 20px; width: 100%;">
-        <p id="{{ comment.id }}_error_msg" style="color: red; font-size: 12px;" hidden></p>
+        <p id="comment_{{ comment.id }}_error_msg" style="color: red; font-size: 12px;" hidden></p>
         <table id="comment_{{ comment.id }}" style="table-layout: auto; width: 100%;">
             <tr>
-                <td class="left" style="width: 100%;">
+                <td class="left" style="width: auto;">
                     <h4 id="comment_{{ comment.id }}_title"><b>{{ comment.title }}</b></h4>
                     <input hidden="hidden" id="{{ comment.id }}_title" value="{{ comment.title }}" type="text" placeholder="{{ comment.title }}" style="width: 90%; margin: 10px;">
                 </td>
-                <td class="right" style="width: 200px;">User: <a href="#">{{ user.username }}</a></td>
+                <td class="right" style="width: 100px;">User: <a href="#">{{ user_details.user.username }}</a></td>
             </tr>
             <tr>
                 <td class="left">
@@ -17,24 +17,33 @@
                     <textarea hidden="hidden" id="{{ comment.id }}_description" placeholder="{{ comment.description }}" style="width: 90%; margin: 10px;">{{ comment.description }}</textarea><br>
                 </td>
                 <td class="right"><p>
-                    <img src="{{ user.user_img }}" style="max-height: 90px; max-width: 90px;"><br>
+                    <img style="max-width: 90px; margin-bottom: 20px;" src="{{ user_details.user_img.user_img }}"><br>
                     {% load static %}
-                    {%  if comment.system_label %}
-                        <img style="max-width: 70px;" src="{% static 'claims/assets/images/TrueLabel2.png' %}" >
-                        <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="{{True}}" checked><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
-                        <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="{{False}}"><span id='comment_{{ comment.id }}_false_label' hidden>False</span>
+                    {%  if comment.system_label == 'True' %}
+                        <img src="{% static 'claims/assets/images/TrueLabel2.png' %}" >
+                        <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="True" checked><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
+                        <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="False"><span id='comment_{{ comment.id }}_false_label' hidden>False</span>
+                        <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="label" hidden='hidden' value="Unknown"><span id='comment_{{ comment.id }}_unknown_label' hidden>Unknown</span>
+                    {% elif comment.system_label == 'False' %}
+                        <img src="{% static 'claims/assets/images/FalseLabel2.png' %}" >
+                        <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="True}}"><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
+                        <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="False" checked><span id='comment_{{ comment.id }}_false_label' hidden>False</span>
+                        <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="label" hidden='hidden' value="Unknown"><span id='comment_{{ comment.id }}_unknown_label' hidden>Unknown</span>
                     {% else %}
-                        <img style="max-width: 70px; " src="{% static 'claims/assets/images/FalseLabel2.png' %}" >
-                        <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="{{True}}"><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
-                        <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="{{False}}" checked><span id='comment_{{ comment.id }}_false_label' hidden>False</span>
+                        <img src="{% static 'claims/assets/images/UnknownLabel.png' %}" >
+                        <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="True}}"><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
+                        <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="False"><span id='comment_{{ comment.id }}_false_label' hidden>False</span>
+                        <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="label" hidden='hidden' value="Unknown" checked><span id='comment_{{ comment.id }}_unknown_label' hidden>Unknown</span>
                     {%  endif %}
-
                 </p></td>
             </tr>
             <tr>
                 <td class="left">
+                    Verdict Date:
+                    <span id="comment_{{ comment.id }}_verdict_date">{{ comment.verdict_date|date:"d/m/Y" }}</span><br>
+                    <input hidden="hidden" id="{{ comment.id }}_verdict_date" type="date" value="{{ comment.verdict_date|date:"Y-m-d" }}" max="{% now "Y-m-d" %}"><br>
                     References:
-                    <a id="comment_{{ comment.id }}_reference" href={{ comment.url }}>website</a>
+                    <a target="_blank" id="comment_{{ comment.id }}_reference" href={{ comment.url }}>link to source</a>
                     <input hidden="hidden" id="{{ comment.id }}_reference" value="{{ comment.url }}" type="text" placeholder="{{ comment.url }}" style="width: 90%; margin: 10px;">
                 </td>
                 <td class="right" style="text-align: center;">
@@ -54,9 +63,9 @@
             <tr>
                 <td class="left">
                 {% if request.user.is_authenticated and comment.user_id == request.user.id %}
-                    <button id="{{ comment.id }}_edit" type="submit" class="btn btn-info" onclick="edit_comment()" style="margin: 10px 0;">Edit your comment</button>
-                    <button id="{{ comment.id }}_delete" type="submit" class="btn btn-danger" style="margin: 10px 0;">Delete</button>
-                    <button id="{{ comment.id }}_save" type="submit" hidden='hidden' class="btn btn-info" style="margin: 10px 0;">Save</button>
+                    <button id="comment_{{ comment.id }}_edit" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_comment()" style="margin: 10px 0;">Edit your comment</button>
+                    <button id="comment_{{ comment.id }}_delete" type="submit" class="btn btn-danger" style="margin: 10px 0;">Delete</button>
+                    <button id="comment_{{ comment.id }}_save" type="submit" hidden='hidden' class="btn btn-info" style="margin: 10px 0;">Save</button>
                 {% endif %}
                 </td>
                 <td class="right"></td>
@@ -70,6 +79,11 @@
     let down_voted_{{ comment.id }} = false;
     let up_count_{{ comment.id }} = {{ comment.up_votes.count }};
     let down_count_{{ comment.id }} = {{ comment.down_votes.count }};
+    let max_minutes_to_edit_comment = 5;
+    let comment_timestamp_{{ comment.id }} = new Date('{{ comment.timestamp|date:"D, d M Y H:i:s" }}');
+    if (((new Date() - comment_timestamp_{{ comment.id }}) / 60000) <= max_minutes_to_edit_comment){
+            $("#comment_{{ comment.id }}_edit").attr("hidden", false);
+    }
 
     $(document).ready(function () {
         {% for voted_user in comment.up_votes.all %}
@@ -94,7 +108,6 @@
             headers: { "X-CSRFToken": getCookie('csrftoken') },
             data: {
                 comment_id: '{{ comment.id }}',
-                user_id: '{{ request.user.id }}'
             },
             success: function () {
                 if(!up_voted_{{ comment.id }}) {
@@ -116,9 +129,9 @@
             },
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
-                document.getElementById("{{ comment.id }}_error_msg").innerHTML =
+                document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
                     '* Error:  ' + err.toLowerCase() + ' *';
-                $("#{{ comment.id }}_error_msg").attr("hidden", false);
+                $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
     });
@@ -131,7 +144,6 @@
             headers: { "X-CSRFToken": getCookie('csrftoken') },
             data: {
                 comment_id: '{{ comment.id }}',
-                user_id: '{{ request.user.id }}'
             },
             success: function () {
                 if(!down_voted_{{ comment.id }}) {
@@ -153,9 +165,9 @@
             },
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
-                document.getElementById("{{ comment.id }}_error_msg").innerHTML =
+                document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
                     '* Error:  ' + err.toLowerCase() + ' *';
-                $("#{{ comment.id }}_error_msg").attr("hidden", false);
+                $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
     });
@@ -163,21 +175,22 @@
     function edit_comment() {
         $("#comment_{{ comment.id }}_title").attr("hidden", true);
         $("#comment_{{ comment.id }}_description").attr("hidden", true);
+        $("#comment_{{ comment.id }}_verdict_date").attr("hidden", true);
         $("#comment_{{ comment.id }}_reference").attr("hidden", true);
 
         $("#{{ comment.id }}_title").attr("hidden", false);
         $("#{{ comment.id }}_description").attr("hidden", false);
+        $("#{{ comment.id }}_verdict_date").attr("hidden", false);
         $("#{{ comment.id }}_reference").attr("hidden", false);
 
         $("#comment_{{ comment.id }}_true_radio").attr("hidden", false);
         $("#comment_{{ comment.id }}_false_radio").attr("hidden", false);
         $("#comment_{{ comment.id }}_true_label").attr("hidden", false);
         $("#comment_{{ comment.id }}_false_label").attr("hidden", false);
-        $("#{{ comment.id }}_save").attr("hidden", false);
+        $("#comment_{{ comment.id }}_save").attr("hidden", false);
     }
 
-    $("#{{ comment.id }}_save").click(function(e){
-        {#e.preventDefault();#}
+    $("#comment_{{ comment.id }}_save").click(function(e){
         $.ajax({
             type: 'POST',
             url: "{% url 'comments:edit_comment' %}",
@@ -186,23 +199,23 @@
                 comment_id: '{{ comment.id }}',
                 comment_title: $("#{{ comment.id }}_title").val(),
                 comment_description: $("#{{ comment.id }}_description").val(),
+                comment_verdict_date: $("#{{ comment.id }}_verdict_date").val(),
                 comment_reference: $("#{{ comment.id }}_reference").val(),
                 comment_label: document.querySelector('input[name="label"]:checked').value,
-                user_id: '{{ request.user.id }}',
             },
             success: function () {
                 location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ comment.claim_id }}';
             },
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
-                document.getElementById("{{ comment.id }}_error_msg").innerHTML =
+                document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
                     '* Error:  ' + err.toLowerCase() + ' *';
-                $("#{{ comment.id }}_error_msg").attr("hidden", false);
+                $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
     });
 
-    $("#{{ comment.id }}_delete").click(function(e){
+    $("#comment_{{ comment.id }}_delete").click(function(e){
         e.preventDefault();
         $.ajax({
             type: 'POST',
@@ -210,31 +223,16 @@
             headers: { "X-CSRFToken": getCookie('csrftoken') },
             data: {
                 comment_id: '{{ comment.id }}',
-                user_id: '{{ request.user.id }}'
             },
             success: function (page) {
                 location.href =  'http://{{ request.META.HTTP_HOST }}/claim/{{ comment.claim_id }}';
             },
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
-                document.getElementById("{{ comment.id }}_error_msg").innerHTML =
+                document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
                     '* Error:  ' + err.toLowerCase() + ' *';
-                $("#{{ comment.id }}_error_msg").attr("hidden", false);
+                $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
     });
-
-    function getCookie(c_name) {
-        if (document.cookie.length > 0) {
-            c_start = document.cookie.indexOf(c_name + "=");
-            if (c_start != -1) {
-                c_start = c_start + c_name.length + 1;
-                c_end = document.cookie.indexOf(";", c_start);
-                if (c_end == -1) c_end = document.cookie.length;
-                return unescape(document.cookie.substring(c_start, c_end));
-            }
-        }
-        return "";
-    }
-
 </script>

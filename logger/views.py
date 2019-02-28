@@ -11,7 +11,9 @@ def view_log(request):
     return render(request, 'logger/logger.html', {'logger': Logger.objects.all()})
 
 
-def save_log_message(user_id, username, message):
-    log = Logger(date=datetime.datetime.today(), activity='User with id ' + str(user_id) + '- ' + username +
-                                                          ' ' + message)
+def save_log_message(user_id, username, action, result=False):
+    log = Logger(user_id=user_id,
+                 username=username,
+                 action=action,
+                 result=result)
     log.save()

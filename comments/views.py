@@ -1,48 +1,55 @@
+from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from comments.models import Comment
 from claims.models import Claim
 from django.http import HttpResponse, Http404
 from logger.views import save_log_message
-from users.views import check_if_user_exists_by_user_id
+from users.views import check_if_user_exists_by_user_id, get_all_scrapers_ids_arr
+from datetime import datetime
+from django.utils import timezone
 import csv
-import datetime
 
 
 # This function takes care of a request to add a new comment to a claim in the website
 def add_comment(request):
     from claims.views import view_claim
+    if not request.user.is_authenticated:
+        raise Http404("Permission denied")
     if request.method == "POST":
-        comment_info = request.POST
+        comment_info = request.POST.copy()
+        comment_info['user_id'] = request.user.id
         valid_comment, err_msg = check_if_comment_is_valid(comment_info)
         if not valid_comment:
             save_log_message(request.user.id, request.user.username,
-                             'failed to add a new comment on claim with id '
-                             + str(request.POST.get('claim_id')) + '. Error: ' + err_msg)
+                             'Adding a new comment on claim with id ' +
+                             str(request.POST.get("claim_id")) + '. Error: ' + err_msg)
             raise Exception(err_msg)
-        build_comment(request.POST.get('claim_id'),
-                      request.POST.get('user_id'),
-                      request.POST.get('title'),
-                      request.POST.get('description'),
-                      request.POST.get('url'),
-                      datetime.datetime.strftime(datetime.datetime.now(), '%d/%m/%Y'),
-                      request.POST.get('label'))
+        build_comment(comment_info['claim_id'],
+                      comment_info['user_id'],
+                      comment_info['title'],
+                      comment_info['description'],
+                      comment_info['url'],
+                      comment_info['tags'],
+                      comment_info['verdict_date'],
+                      comment_info['label'])
         save_log_message(request.user.id, request.user.username,
-                         'added a new comment on claim with id ' + str(request.POST.get('claim_id')) + ' successfully')
+                         'Adding a new comment on claim with id ' + str(request.POST.get("claim_id")), True)
         return view_claim(request, request.POST.get('claim_id'))
     raise Http404("Invalid method")
 
 
 # This function adds a new comment to a claim in the website
-def build_comment(claim_id, user_id, title, description, url, verdict_date, label):
+def build_comment(claim_id, user_id, title, description, url, tags, verdict_date, label):
     comment = Comment(
         claim_id=claim_id,
         user_id=user_id,
         title=title,
         description=description,
         url=url,
-        verdict_date=verdict_date,
+        tags=tags,
+        verdict_date=datetime.strptime(verdict_date, '%d/%m/%Y'),
         label=label,
-        system_label=get_system_label_to_comment(label),
+        system_label=get_system_label_to_comment(label, user_id),
     )
     comment.save()
     update_authenticity_grade(comment.claim_id)
@@ -52,9 +59,11 @@ def build_comment(claim_id, user_id, title, description, url, verdict_date, labe
 # The function returns true in case the comment is valid, otherwise false and an error
 def check_if_comment_is_valid(comment_info):
     err = ''
-    if 'claim_id' not in comment_info:
+    if 'tags' not in comment_info or not comment_info['tags']:
+        comment_info['tags'] = ''
+    if 'claim_id' not in comment_info or not comment_info['claim_id']:
         err += 'Missing value for claim id'
-    elif 'user_id' not in comment_info:
+    elif 'user_id' not in comment_info or not comment_info['user_id']:
         err += 'Missing value for user id'
     elif 'title' not in comment_info or not comment_info['title']:
         err += 'Missing value for title'
@@ -62,28 +71,65 @@ def check_if_comment_is_valid(comment_info):
         err += 'Missing value for description'
     elif 'url' not in comment_info or not comment_info['url']:
         err += 'Missing value for url'
+    elif 'verdict_date' not in comment_info or not comment_info['verdict_date']:
+        err += 'Missing value for verdict_date'
     elif 'label' not in comment_info or not comment_info['label']:
         err += 'Missing value for label'
     elif len(Claim.objects.filter(id=comment_info['claim_id'])) == 0:
         err += 'Claim ' + str(comment_info['claim_id']) + 'does not exist'
     elif not check_if_user_exists_by_user_id(comment_info['user_id']):
         err += 'User with id ' + str(comment_info['user_id']) + ' does not exist'
+    elif len(Comment.objects.filter(claim_id=comment_info['claim_id'], user_id=comment_info['user_id'])) > 0:
+        err += 'You can only comment once on a claim'
+    else:
+        err = convert_date_format(comment_info, 'verdict_date')
     if len(err) > 0:
         return False, err
     return True, err
 
 
+def convert_date_format(dict, date):
+    err = ''
+    if '-' in dict[date]:
+        try:
+            date_parts = dict[date].split('-')
+            new_date_start = '' + date_parts[2] + '/' + date_parts[1] + '/' + date_parts[0]
+            dict[date] = new_date_start
+        except:
+            err += 'Date ' + dict[date] + ' is invalid'
+    if len(err) == 0 and not is_valid_verdict_date(dict[date]):
+        err += 'Date ' + dict[date] + ' is invalid'
+    return err
+
+
+# This function checks if the verdict date of a claim is valid
+# The function returns true in case the verdict date is valid, otherwise false
+def is_valid_verdict_date(verdict_date):
+    try:
+        verdict_datetime = datetime.strptime(verdict_date, "%d/%m/%Y")
+        return datetime.today() >= verdict_datetime
+    except:
+        return False
+
+
 # This function checks a comment's label and returns a basic classification for it.
-# The function returns true in case the comment's label is composed from words with 'true' meaning, otherwise false
-def get_system_label_to_comment(comment_label):
-    if comment_label.isdigit():
-        return int(comment_label) > 5
-    true_label_arr = ['true', 'accurate', 'correct']
-    for true_label in true_label_arr:
-        for word in comment_label.split():
-            if word.lower() == true_label:
-                return True
-    return False
+# for user- 'True', 'False', 'Unknown'
+# for scraper- based on dicts for true and false labels for each scraper).
+def get_system_label_to_comment(comment_label, user_id):
+    from users.models import Scrapers, User
+    scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=user_id).first())
+    if len(scraper) == 0:
+        if comment_label == 'True' or comment_label == 'False':
+            return comment_label
+        return 'Unknown'
+    label = comment_label.lower().strip()
+    scraper = scraper.first()
+    if label in scraper.true_labels.split(','):
+        return 'True'
+    elif label in scraper.false_labels.split(','):
+        return 'False'
+    else:
+        return 'Unknown'
 
 
 # This function returns all the comments for a given user's id
@@ -106,98 +152,242 @@ def get_all_comments_for_claim_id(claim_id):
 
 # This function returns a csv which contains all the details of the claims in the website
 def export_to_csv(request):
-    from claims.views import get_category_for_claim, get_tags_for_claim
     if not request.user.is_superuser:
-        save_log_message(request.user.id, request.user.username, 'failed to export website claims to a csv')
+        save_log_message(request.user.id, request.user.username,
+                         'Exporting website claims to a csv. Error: user does not have permissions')
         raise Http404("Permission denied")
+    csv_fields = request.POST.dict()
+    valid_csv_fields, err_msg = check_if_csv_fields_are_valid(csv_fields)
+    if not valid_csv_fields:
+        save_log_message(request.user.id, request.user.username,
+                         'Exporting website claims to a csv. Error: ' + err_msg)
+        raise Exception(err_msg)
+    fields_to_export = request.POST.getlist('fields_to_export[]')
+    scrapers_ids = [int(scraper_id) for scraper_id in request.POST.getlist('scrapers_ids[]')]
+    regular_users = bool(csv_fields['regular_users'])
+    verdict_date_start = datetime.strptime(csv_fields['verdict_date_start'], '%d/%m/%Y').date()
+    verdict_date_end = datetime.strptime(csv_fields['verdict_date_end'], '%d/%m/%Y').date()
+    if not check_if_fields_and_scrapers_lists_valid(fields_to_export, scrapers_ids):
+        save_log_message(request.user.id, request.user.username,
+                         'Exporting website claims to a csv. Error: ' + err_msg)
+        raise Exception(err_msg)
+    df_claims = create_df_for_claims(fields_to_export, scrapers_ids, regular_users, verdict_date_start, verdict_date_end)
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="claims.csv"'
     writer = csv.writer(response)
-    writer.writerow(['Title', 'Description', 'Url', 'Category', 'Verdict_Date', 'Tags', 'Label'])
-    for comment in Comment.objects.all():
-        writer.writerow([comment.title, comment.description, comment.url, get_category_for_claim(comment.claim_id),
-                        comment.verdict_date, get_tags_for_claim(comment.claim_id), comment.label])
+    writer.writerow(fields_to_export)
+    for index, row in df_claims.iterrows():
+        claim_info = []
+        for col in df_claims:
+            claim_info.append(row[col])
+        writer.writerow(claim_info)
     save_log_message(request.user.id, request.user.username,
-                     'exported website claims to a csv successfully')
+                     'Exporting website claims to a csv', True)
     return response
+
+
+def check_if_csv_fields_are_valid(csv_fields):
+    err = ''
+    if 'regular_users' not in csv_fields:
+        csv_fields['regular_users'] = False
+    if 'fields_to_export[]' not in csv_fields:
+        err += 'Missing values for fields'
+    elif 'scrapers_ids[]' not in csv_fields:
+        err += 'Missing value for scrapers_ids'
+    elif 'verdict_date_start' not in csv_fields:
+        err += 'Missing value for verdict date start'
+    elif 'verdict_date_end' not in csv_fields:
+        err += 'Missing value for verdict date end'
+    else:
+        err = convert_date_format(csv_fields, 'verdict_date_start')
+        if len(err) == 0:
+            err = convert_date_format(csv_fields, 'verdict_date_end')
+    if len(err) > 0:
+        return False, err
+    return True, err
+
+
+# This function creates a df which contains all the details of the claims in the website
+def create_df_for_claims(fields_to_export, scrapers_ids, regular_users, verdict_date_start, verdict_date_end):
+    from claims.views import get_category_for_claim
+    import pandas as pd
+    df_claims = pd.DataFrame(columns=['User Id', 'Claim', 'Title', 'Description', 'Url', 'Category', 'Verdict Date', 'Tags', 'Label', 'System Label', 'Authenticity Grade'])
+    users_ids, claims, titles, descriptions, urls, categories, verdict_dates, tags, labels, \
+    system_labels, authenticities_grades = ([] for i in range(11))
+    for comment in Comment.objects.all():
+        claim = Claim.objects.filter(id=comment.claim_id).first()
+        users_ids.append(comment.user_id)
+        claims.append(claim.claim)
+        titles.append(comment.title)
+        descriptions.append(comment.description)
+        urls.append(comment.url)
+        categories.append(get_category_for_claim(comment.claim_id))
+        verdict_dates.append(comment.verdict_date)
+        tags.append(comment.tags)
+        labels.append(comment.label)
+        system_labels.append(comment.system_label)
+        authenticities_grades.append(claim.authenticity_grade)
+    df_claims['User Id'] = users_ids
+    df_claims['Claim'] = claims
+    df_claims['Title'] = titles
+    df_claims['Description'] = descriptions
+    df_claims['Url'] = urls
+    df_claims['Category'] = categories
+    df_claims['Verdict Date'] = verdict_dates
+    df_claims['Tags'] = tags
+    df_claims['Label'] = labels
+    df_claims['System Label'] = system_labels
+    df_claims['Authenticity Grade'] = authenticities_grades
+    if not regular_users:
+        df_claims = df_claims[df_claims['User Id'].isin(scrapers_ids)]
+    else:
+        all_scrapers_ids = get_all_scrapers_ids_arr()
+        scrapers_to_delete = [scraper_id for scraper_id in all_scrapers_ids if scraper_id not in scrapers_ids]
+        df_claims = df_claims[~df_claims['User Id'].isin(scrapers_to_delete)]
+    df_claims = df_claims.loc[(df_claims['Verdict Date'] >= verdict_date_start) &
+                              (df_claims['Verdict Date'] <= verdict_date_end)]
+    df_claims = df_claims[fields_to_export]
+    return df_claims
+
+
+def check_if_fields_and_scrapers_lists_valid(fields_to_export, scrapers_ids):
+    from users.models import Scrapers
+    err = ''
+    valid_fields_to_export = ['Title', 'Description', 'Url', 'Category', 'Verdict Date', 'Tags', 'Label', 'System Label', 'Authenticity Grade']
+    for field in fields_to_export:
+        if field not in valid_fields_to_export:
+            err += 'Field ' + field + ' is not valid'
+            return False, err
+    for scraper_id in scrapers_ids:
+        if len(User.objects.filter(id=scraper_id)) > 0 and \
+                len(Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_id).first())) == 0:
+            err += 'Scraper with id ' + scraper_id + ' does not exist'
+            return False, err
+    return True, ''
 
 
 # This function increases a comment's vote by 1
 def up_vote(request):
+    if not request.user.is_authenticated:
+        raise Http404("Permission denied")
     from claims.views import view_claim
+    vote_fields = request.POST.dict()
+    vote_fields['user_id'] = request.user.id
+    valid_vote, err_msg = check_if_vote_is_valid(vote_fields)
+    if not valid_vote:
+        save_log_message(request.user.id, request.user.username,
+                         'Up voting a comment. Error: ' + err_msg)
+        raise Exception(err_msg)
     comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
-    if comment.up_votes.filter(id=request.POST.get('user_id')).exists():
-        comment.up_votes.remove(request.POST.get('user_id'))
+    if comment.up_votes.filter(id=request.user.id).exists():
+        comment.up_votes.remove(request.user.id)
     else:
-        comment.up_votes.add(request.POST.get('user_id'))
-        if comment.down_votes.filter(id=request.POST.get('user_id')).exists():
-            comment.down_votes.remove(request.POST.get('user_id'))
-    save_log_message(request.user.id, request.user.username,
-                     'up voted comment with id ' + str(request.POST.get('comment_id')) + ' successfully')
+        comment.up_votes.add(request.user.id)
+        if comment.down_votes.filter(id=request.user.id).exists():
+            comment.down_votes.remove(request.user.id)
+    save_log_message(request.user.id, request.user.username, 'Up voting comment with id '
+                     + str(request.POST.get('comment_id')), True)
     update_authenticity_grade(comment.claim_id)
     return view_claim(request, comment.claim_id)
 
 
 # This function decreases a comment's vote by 1
 def down_vote(request):
+    if not request.user.is_authenticated:
+        raise Http404("Permission denied")
     from claims.views import view_claim
+    vote_fields = request.POST.dict()
+    vote_fields['user_id'] = request.user.id
+    valid_vote, err_msg = check_if_vote_is_valid(vote_fields)
+    if not valid_vote:
+        save_log_message(request.user.id, request.user.username,
+                         'Up voting a comment. Error: ' + err_msg)
+        raise Exception(err_msg)
     comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
-    if comment.down_votes.filter(id=request.POST.get('user_id')).exists():
-        comment.down_votes.remove(request.POST.get('user_id'))
+    if comment.down_votes.filter(id=request.user.id).exists():
+        comment.down_votes.remove(request.user.id)
     else:
-        comment.down_votes.add(request.POST.get('user_id'))
-        if comment.up_votes.filter(id=request.POST.get('user_id')).exists():
-            comment.up_votes.remove(request.POST.get('user_id'))
+        comment.down_votes.add(request.user.id)
+        if comment.up_votes.filter(id=request.user.id).exists():
+            comment.up_votes.remove(request.user.id)
     save_log_message(request.user.id, request.user.username,
-                     'down voted comment with id ' + str(request.POST.get('comment_id')) + ' successfully')
+                     'Down voting comment with id ' + str(request.POST.get('comment_id')), True)
     update_authenticity_grade(comment.claim_id)
     return view_claim(request, comment.claim_id)
+
+
+def check_if_vote_is_valid(vote_fields):
+    err = ''
+    if 'user_id' not in vote_fields or not vote_fields['user_id']:
+        err += 'Missing value for user id'
+    elif not check_if_user_exists_by_user_id(vote_fields['user_id']):
+        err += 'User with id ' + vote_fields['user_id'] + ' does not exist'
+    elif 'comment_id' not in vote_fields or not vote_fields['comment_id']:
+        err += 'Missing value for comment id'
+    elif len(Comment.objects.filter(id=vote_fields['comment_id'])) == 0:
+        err += 'Comment with id ' + vote_fields['comment_id'] + ' does not exist'
+    if len(err) > 0:
+        return False, err
+    return True, err
 
 
 # This function edits a comment in the website
 def edit_comment(request):
+    if not request.user.is_authenticated:
+        raise Http404("Permission denied")
     from claims.views import view_claim
-    valid_new_comment, err_msg = check_comment_new_fields(request)
+    new_comment_fields = request.POST.dict()
+    new_comment_fields['user_id'] = request.user.id
+    valid_new_comment, err_msg = check_comment_new_fields(new_comment_fields)
     if not valid_new_comment:
         save_log_message(request.user.id, request.user.username,
-                         'failed to edit a comment with id ' + str(request.POST.get('comment_id')) +
+                         'Editing comment with id ' + str(request.POST.get('comment_id')) +
                          '. Error: ' + err_msg)
         raise Exception(err_msg)
-    if len(Comment.objects.filter(id=request.POST.get('comment_id'))) == 0:
-        save_log_message(request.user.id, request.user.username,
-                         'failed to edit a comment with id ' + str(request.POST.get('comment_id')) +
-                         '. Error: Invalid comment id')
-        raise Exception("Invalid comment id")
-    elif not check_if_user_exists_by_user_id(request.POST.get('user_id')):
-        save_log_message(request.user.id, request.user.username,
-                         'failed to edit a comment with id ' + str(request.POST.get('comment_id')) +
-                         '. Error: User with id ' + str(request.POST.get('user_id')) + ' does not exist')
-        raise Exception('User with id ' + str(request.POST.get('user_id')) + ' does not exist')
-    comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
-    Comment.objects.filter(id=comment.id, user_id=request.POST.get('user_id')).update(
-        title=request.POST.get('comment_title'),
-        description=request.POST.get('comment_description'),
-        url=request.POST.get('comment_reference'),
-        verdict_date=datetime.datetime.strftime(datetime.datetime.now(), '%d/%m/%Y'),
-        system_label=request.POST.get('comment_label'))
-    update_authenticity_grade(comment.claim_id)
+    Comment.objects.filter(id=new_comment_fields['comment_id'], user_id=request.user.id).update(
+        title=new_comment_fields['comment_title'],
+        description=new_comment_fields['comment_description'],
+        url=new_comment_fields['comment_reference'],
+        verdict_date=datetime.strptime(new_comment_fields['comment_verdict_date'], '%d/%m/%Y'),
+        system_label=new_comment_fields['comment_label'])
+    claim_id = Comment.objects.filter(id=new_comment_fields['comment_id']).first().claim_id
+    update_authenticity_grade(claim_id)
     save_log_message(request.user.id, request.user.username,
-                     'added edit comment with id ' + str(request.POST.get('comment_id')) + ' successfully')
-    return view_claim(request, comment.claim_id)
+                     'Editing comment with id ' + str(request.POST.get('comment_id')), True)
+    return view_claim(request, claim_id)
 
 
-# This function checks if the given new fields for a comment are valid, i.e. the comment has all the fields with the correct format.
+# This function checks if the given new fields for a comment are valid,
+# i.e. the comment has all the fields with the correct format.
 # The function returns true in case the comment's new fields are valid, otherwise false and an error
-def check_comment_new_fields(request):
+def check_comment_new_fields(new_comment_fields):
     err = ''
-    if not request.POST.get('comment_title'):
+    max_minutes_to_edit_comment = 5
+    if 'comment_id' not in new_comment_fields or not new_comment_fields['comment_id']:
+        err += 'Missing value for comment id'
+    if 'comment_title' not in new_comment_fields or not new_comment_fields['comment_title']:
         err += 'Missing value for comment title'
-    elif not request.POST.get('comment_description'):
+    elif 'comment_description' not in new_comment_fields or not new_comment_fields['comment_description']:
         err += 'Missing value for comment description'
-    elif not request.POST.get('comment_reference'):
+    elif 'comment_verdict_date' not in new_comment_fields or not new_comment_fields['comment_verdict_date']:
+        err += 'Missing value for comment verdict date'
+    elif 'comment_reference' not in new_comment_fields or not new_comment_fields['comment_reference']:
         err += 'Missing value for comment reference'
-    elif not request.POST.get('comment_label'):
+    elif 'comment_label' not in new_comment_fields or not new_comment_fields['comment_label']:
         err += 'Missing value for comment label'
+    elif len(Comment.objects.filter(id=new_comment_fields['comment_id'])) == 0:
+        err += 'Comment with id ' + str(new_comment_fields['comment_id']) + ' does not exist'
+    elif not check_if_user_exists_by_user_id(new_comment_fields['user_id']):
+        err += 'User with id ' + str(new_comment_fields['user_id']) + ' does not exist'
+    elif len(Comment.objects.filter(id=new_comment_fields['comment_id'], user_id=new_comment_fields['user_id'])) == 0:
+        err += 'Comment with id ' + str(new_comment_fields['comment_id']) + ' does not belong to user with id ' + \
+               str(new_comment_fields['user_id'])
+    elif (timezone.now() - Comment.objects.filter(id=new_comment_fields['comment_id']).first().timestamp).total_seconds() \
+            / 60 > max_minutes_to_edit_comment:
+        err += 'You can no longer edit your comment'
+    if len(err) > 0:
+        return False, err
+    err = convert_date_format(new_comment_fields, 'comment_verdict_date')
     if len(err) > 0:
         return False, err
     return True, err
@@ -206,22 +396,38 @@ def check_comment_new_fields(request):
 # This function deletes a comment from the website
 def delete_comment(request):
     from claims.views import view_claim
-    if len(Comment.objects.filter(id=request.POST.get('comment_id'))) == 0:
+    if not request.user.is_authenticated:
+        raise Http404("Permission denied")
+    valid_delete_claim, err_msg = check_if_delete_comment_is_valid(request)
+    if not valid_delete_claim:
         save_log_message(request.user.id, request.user.username,
-                         'failed to delete comment with id ' + str(request.POST.get('comment_id')) +
-                         ' . Error: Invalid comment id')
-        raise Exception("Invalid comment id")
-    elif not check_if_user_exists_by_user_id(request.POST.get('user_id')):
-        save_log_message(request.user.id, 'Guest',
-                         'failed to delete comment with id ' + str(request.POST.get('comment_id')) +
-                         ' . Error: User with id ' + str(request.POST.get('user_id')) + ' does not exist')
-        raise Exception('User with id ' + str(request.POST.get('user_id')) + ' does not exist')
-    comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
-    Comment.objects.filter(id=comment.id, user_id=request.POST.get('user_id')).delete()
+                         'Deleting a comment. Error: ' + err_msg)
+        raise Exception(err_msg)
+    claim_id = Comment.objects.filter(id=request.POST.get('comment_id')).first().claim_id
+    Comment.objects.filter(id=request.POST.get('comment_id'), user_id=request.user.id).delete()
     save_log_message(request.user.id, request.user.username,
-                     'deleted comment with id ' + str(request.POST.get('comment_id')) + ' successfully')
-    update_authenticity_grade(comment.claim_id)
-    return view_claim(request, comment.claim_id)
+                     'Deleting comment with id ' + str(request.POST.get('comment_id')), True)
+    update_authenticity_grade(claim_id)
+    return view_claim(request, claim_id)
+
+
+# This function checks if the given fields for deleting a claim are valid,
+# i.e. the request has all the fields with the correct format.
+# The function returns true in case the given fields are valid, otherwise false and an error
+def check_if_delete_comment_is_valid(request):
+    err = ''
+    if not request.POST.get('comment_id'):
+        err += 'Missing value for claim id'
+    elif len(Comment.objects.filter(id=request.POST.get('comment_id'))) == 0:
+        err += 'Comment with id ' + str(request.user.id) + ' does not exist'
+    elif not check_if_user_exists_by_user_id(request.user.id):
+        err += 'User with id ' + str(request.user.id) + ' does not exist'
+    elif len(Comment.objects.filter(id=request.POST.get('comment_id'), user=request.user.id)) == 0:
+        err += 'Comment with id ' + str(request.POST.get('comment_id')) + ' does not belong to user with id ' + \
+               str(request.user.id)
+    if len(err) > 0:
+        return False, err
+    return True, err
 
 
 # This function updates the claim's authenticity grade
@@ -231,9 +437,9 @@ def update_authenticity_grade(claim_id):
     result = Comment.objects.filter(claim_id=claim_id)
     for res in result:
         if res.up_votes.count() - res.down_votes.count() >= 0:
-            if res.system_label:
+            if res.system_label == 'True':
                 num_of_true_label += 1
-            else:
+            elif res.system_label == 'False':
                 num_of_false_label += 1
     if num_of_true_label + num_of_false_label == 0:
         authenticity_grade = 0

@@ -3,7 +3,7 @@ body {
 }
 
 #header{
-    background-color: #060536;
+    /*background-color: #060536;*/
     /*background-image: linear-gradient(#1f3bc3, #080668); !* Standard syntax (must be last) *!*/
     background-image: linear-gradient(#121d59, #060536); /* Standard syntax (must be last) */
     padding: 20px;
@@ -13,18 +13,19 @@ body {
     max-width: 1050px;
     margin: auto;
     display: grid;
-    grid-template-columns: 400px auto;
+    grid-template-columns: 530px auto;
     grid-template-areas:
     'site-logo header-tools';
 }
 
 #site-logo{
     grid-area: site-logo;
+    text-align: center;
 }
 
 .header-tools{
     grid-area: header-tools;
-    font-size: 18px;
+    font-size: 22px;
     color: #C0C0C0;
 }
 
@@ -156,7 +157,7 @@ div.claim_box {
     text-align: left;
     box-shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.24);
     /*height: 100%;*/
-    /*display: inline-block;*/
+    display: inline-block;
     border-radius: 7px;
 }
 
@@ -175,17 +176,23 @@ div.claim_box_info {
 }
 
 #claim_columns {
-    column-count: 1;
-    column-gap: 30px;
-    padding: 0 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-column-gap: 20px;
+}
+
+#claim_large_columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-column-gap: 20px;
 }
 
 
-@media(min-width:767px ){
-    #claim_columns {
-        column-count: 4;
-    }
-}
+/*@media(min-width:767px ){*/
+    /*#claim_columns {*/
+        /*column-count: 4;*/
+    /*}*/
+/*}*/
 
 /*.arrow-up {*/
   /*width: 10px;*/

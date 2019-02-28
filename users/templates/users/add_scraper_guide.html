@@ -16,7 +16,7 @@
                     <p>
                         Use super().open_fact_check_page(self.scraper_url + str(page_num)) which opens the website and returns an HTML parsed code (Beautifulsoup).
                     </p>
-                    <li><p>Extracts the relevant information from the website and creates a new dict with the following format:</p>
+                    <li><p>Extract the relevant information from the website and create a new dict with the following format:</p>
                     </li>
                     <p>claim_info_dict = {'username': self.scraper_name,
                                    'title': title,
@@ -42,8 +42,12 @@
             <h5>Step 2 (here):</h5>
             <p id="error_msg" style="color: red; font-size: 12px;" hidden> </p>
             <p id="success_msg" style="color: dodgerblue; font-size: 12px;" hidden>Your scraper has been added successfully</p>
-            <input id="scraper_name" type="text" placeholder="Scraper name" style="width: 50%; margin: 10px;"><br>
-            <input id="scraper_icon" type="text" placeholder="Scraper icon (link)" style="width: 50%; margin: 10px;"><br>
+            <input id="scraper_name" type="text" placeholder="Scraper's name" style="width: 50%; margin: 10px;"><br>
+            <input id="scraper_password" type="password" placeholder="Scraper's password" style="width: 50%; margin: 10px;"><br>
+            <input id="scraper_password_2" type="password" placeholder="Enter scraper's password again" style="width: 50%; margin: 10px;"><br>
+            <input id="scraper_icon" type="text" placeholder="Scraper's icon (link)" style="width: 50%; margin: 10px;"><br>
+            <input id="scraper_true_labels" type="text" placeholder="Scraper true labels (separated by space). Used for labeled scraper's claims as True (default- true)." style="width: 85%; margin: 10px;"><br>
+            <input id="scraper_false_labels" type="text" placeholder="Scraper false labels (separated by space). Used for labeled scraper's claims as False (default- false)." style="width: 85%; margin: 10px;"><br>
             <br>
             <button id="add_scraper_submit" type="submit" class="btn btn-info" style="margin: 10px 0;">Add</button>
         </div>
@@ -58,12 +62,20 @@
             headers: { "X-CSRFToken": getCookie('csrftoken')},
             data: {
                 scraper_name: $("#scraper_name").val(),
+                scraper_password: $("#scraper_password").val(),
+                scraper_password_2: $("#scraper_password_2").val(),
                 scraper_icon: $("#scraper_icon").val(),
+                scraper_true_labels:  $("#scraper_true_labels").val(),
+                scraper_false_labels:  $("#scraper_false_labels").val(),
             },
             success: function (request) {
                 $("#error_msg").attr("hidden", true);
                 $("#scraper_name").val('');
                 $("#scraper_icon").val('');
+                $("#scraper_password").val('');
+                $("#scraper_password_2").val('');
+                $("#scraper_true_labels").val('');
+                $("#scraper_false_labels").val('');
                 $("#success_msg").attr("hidden", false);
             },
             error: function (error) {

@@ -1,16 +1,16 @@
 {% load staticfiles%}
 
-<div class="claim_box">
+<div class="claim_box" style="position: relative; padding-bottom: 200px;">
     <img src="{{ claim.image_src }}">
-    <div class="claim_box_info">
+    <div class="claim_box_info" style="height: 100%;">
         <h6>{{ claim.claim }}</h6>
-        <p style="font-size: 12px;">
-            Category: {{ claim.category }}
-        </p>
+    </div>
+    <div class="claim_box_info" style="font-size: 16px; position: absolute; bottom: 150px;">
+        <p>Category: {{ claim.category }}</p>
+    </div>
+    <div class="claim_box_info" style="position: absolute; bottom: 0;">
         <ul style="list-style-type: none; padding: 0; margin: 0;">
-            {% for icon in icons %}
-                <li><img src="{{ icon }}" style="max-height: 90px; max-width: 90px; display: block;"></li>
-            {% endfor %}
+            <li style=" display: inline;"><img src="{{ img }}" style="max-height: 55px; max-width: 55px;"></li>
         </ul>
         <br>
         <a href="/claim/{{ claim.id }}" class="btn btn-info">Read more...</a>

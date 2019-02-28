@@ -8,13 +8,23 @@
             {% csrf_token %}
             <table class="log_table" style="">
               <tr>
-                <th>Date</th>
-                <th>Activity</th>
+                  <th>Date</th>
+                  <th>User Id</th>
+                  <th>Username</th>
+                  <th>Action</th>
+                  <th>Result</th>
               </tr>
                 {% for log in logger %}
                     <tr class="log_table">
                         <td>{{ log.date }}</td>
-                        <td>{{ log.activity }}</td>
+                        <td>{{ log.user_id }}</td>
+                        <td>{{ log.username }}</td>
+                        <td>{{ log.action }}</td>
+                        {% if log.result %}
+                            <td>Success</td>
+                        {% else %}
+                            <td>Failure</td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
 

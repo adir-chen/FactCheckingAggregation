@@ -1,0 +1,38 @@
+{% extends 'claims/layout2.html' %}
+
+{% block page_content %}
+    <div id="claim_page">
+        <h3>Exporting claims to a csv file:</h3><br>
+        <div class="new_comment claim_box" style="width: 100%; padding: 20px 40px 20px 20px;">
+            <form action="{% url 'comments:export_to_csv' %}" method="post" target="_blank">
+                {% csrf_token %}
+                <h6>Choose which fields you want to export (default- all):</h6>
+                <input name="fields_to_export[]" class="fields_to_export" value="Title" type="checkbox" checked>Title&nbsp&nbsp
+                <input name="fields_to_export[]" class="fields_to_export" value="Description" type="checkbox" checked>Description&nbsp&nbsp
+                <input name="fields_to_export[]" class="fields_to_export" value="Url" type="checkbox" checked>Url&nbsp&nbsp
+                <input name="fields_to_export[]" class="fields_to_export" value="Category" type="checkbox" checked>Category&nbsp&nbsp
+                <input name="fields_to_export[]" class="fields_to_export" value="Verdict Date" type="checkbox" checked>Verdict Date&nbsp&nbsp
+                <input name="fields_to_export[]" class="fields_to_export" value="Tags" type="checkbox" checked>Tags&nbsp&nbsp
+                <input name="fields_to_export[]" class="fields_to_export" value="Label" type="checkbox" checked>Original Label&nbsp&nbsp
+                <input name="fields_to_export[]" class="fields_to_export" value="System Label" type="checkbox" checked>System Label&nbsp&nbsp
+                <input name="fields_to_export[]" class="fields_to_export" value="Authenticity Grade" type="checkbox" checked>Authenticity Grade<br>
+                <br><h6>Choose which scrapers you want to export claims from (default- all):</h6>
+                {% for scraper in all_scrapers %}
+                     <input name="scrapers_ids[]" class="scrapers" value="{{ scraper.scraper_id.id }}" type="checkbox" checked>{{ scraper.scraper_name }}&nbsp&nbsp
+                {% endfor %}<br><br>
+                <h6>Do you want to export claims from regular website users?</h6>
+                <input name="regular_users" id="regular_users" type="checkbox" value="{{ True }}">Yes<br><br>
+                <h6>Enter starting date:</h6>
+                <input type="date" name="verdict_date_start" id="verdict_date_start" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}">
+                <h6>Enter ending date:</h6>
+                <input type="date" name="verdict_date_end" id="verdict_date_end" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}"><br><br>
+                <button id="export_claims" type="submit" class="btn btn-info" style="margin: 10px 0;">Export Claims</button>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block claim_head_title %}
+    FactCheckProject | Add new Claim
+{% endblock %}
