@@ -282,3 +282,12 @@ table.log_table{
 }
 
 .log_table tr:nth-child(even){background-color: #e2e2e2;}
+
+div.pagination{
+    padding: 20px;
+}
+
+span.step-links{
+    margin: auto;
+    padding: 20px;
+}
