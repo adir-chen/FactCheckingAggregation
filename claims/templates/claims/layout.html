@@ -5,185 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>
         {% block claim_head_title %}
-
         {% endblock %}
     </title>
-    <link rel="shortcut icon" type="image/icon" href="../../static/claims/assets/images/favicon.ico"/>
-    <!-- Font Awesome -->
-    <link href="../../static/claims/assets/css/font-awesome.css" rel="stylesheet">
-    <!-- Bootstrap -->
-    <link href="../../static/claims/assets/css/bootstrap.css" rel="stylesheet">
-    <!-- Slick slider -->
-    <link rel="stylesheet" type="text/css" href="../../static/claims/assets/css/slick.css"/>
-    <!-- Fancybox slider -->
-    <link rel="stylesheet" href="../../static/claims/assets/css/jquery.fancybox.css" type="text/css" media="screen" />
-    <!-- Animate css -->
-    <link rel="stylesheet" type="text/css" href="../../static/claims/assets/css/animate.css"/>
-    <!-- Bootstrap progressbar  -->
-    <link rel="stylesheet" type="text/css" href="../../static/claims/assets/css/bootstrap-progressbar-3.3.4.css"/>
-     <!-- Theme color -->
-    <link id="switcher" href="../../static/claims/assets/css/theme-color/default-theme.css" rel="stylesheet">
-    <!-- Main Style -->
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.0/css/bootstrap.min.css" integrity="sha384-PDle/QlgIONtM1aqA2Qemk5gPOE7wFq8+Em+G/hmo5Iq0CCmYZLv3fVRDJ4MMwEA" crossorigin="anonymous">
     {% load static %}
     <link href="{% static 'claims/style.css' %}" rel="stylesheet">
-
-    <!-- Fonts -->
-
-    <!-- Open Sans for body font -->
-    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
-    <!-- Lato for Title -->
-    <link href='https://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 
 </head>
 <body>
-    <!-- Start login modal window -->
-    <div aria-hidden="false" role="dialog" tabindex="-1" id="login-form" class="modal leread-modal fade in">
-        <div class="modal-dialog">
-
-            <!-- Start login section -->
-            <div id="login-content" class="modal-content">
-                <div class="modal-header">
-                    <button aria-label="Close" data-dismiss="modal" class="close" type="button"><span aria-hidden="true">×</span></button>
-                    <h4 class="modal-title"><i class="fa fa-unlock-alt"></i>Login</h4>
-                </div>
-                <div class="modal-body" style="text-align: center;">
-{#                    <form>#}
-{#                        <div class="form-group">#}
-{#                            <input type="text" placeholder="User name" class="form-control">#}
-{#                        </div>#}
-{#                        <div class="form-group">#}
-{#                            <input type="password" placeholder="Password" class="form-control">#}
-{#                        </div>#}
-{#                        <div class="loginbox">#}
-{#                            <label><input type="checkbox"><span>Remember me</span></label>#}
-{#                            <button class="btn signin-btn" type="button">SIGN IN</button>#}
-{#                        </div>#}
-{#                    </form>#}
-                    <a href="{% url 'social:begin' 'google-oauth2' %}"><img src="{% static 'claims/assets/images/login_google.png' %}" style="padding: 10px;"></a><br>
-                    <a href="{% url 'social:begin' 'twitter' %}"><img src="{% static 'claims/assets/images/login_twitter.png' %}" style="padding: 10px;"></a>
-                </div>
-{#                <div class="modal-footer footer-box">#}
-{#                    <a href="#">Forgot password ?</a>#}
-{#                    <span>No account ? <a id="signup-btn" href="#">Sign Up.</a></span>#}
-{#                </div>#}
-
+    <header id="header">
+        <div id="header-wrapper">
+            <div id="site-logo">
+                <img src="{% static 'claims/assets/images/site_logo.png' %}" style="height: 160px; width: 500px;"><br>
+                <h5 style="color: #C0C0C0;">Determine whether a claim is True or False</h5>
             </div>
-
-            <!-- Start signup section -->
-            <div id="signup-content" class="modal-content">
-                <div class="modal-header">
-                    <button aria-label="Close" data-dismiss="modal" class="close" type="button"><span aria-hidden="true">×</span></button>
-                    <h4 class="modal-title"><i class="fa fa-lock"></i>Sign Up</h4>
-                </div>
-                <div class="modal-body">
-                    <form>
-                        <div class="form-group">
-                            <input placeholder="Name" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <input placeholder="Username" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <input placeholder="Email" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <input type="password" placeholder="Password" class="form-control">
-                        </div>
-                        <div class="signupbox">
-                            <span>Already got account? <a id="login-btn" href="#">Sign In.</a></span>
-                        </div>
-                        <div class="loginbox">
-                            <label><input type="checkbox"><span>Remember me</span><i class="fa"></i></label>
-                            <button class="btn signin-btn" type="button">SIGN UP</button>
-                        </div>
-                    </form>
-                </div>
+            <div class="header-tools">
+                {% if request.user.is_authenticated %}
+                    <p>Welcome <a href="">{{request.user.username}}</a></p>
+                    <a href="/logout" style="font-size: 14px;">Sign Out</a>
+                {% else %}
+                    <p>Welcome guest.</p>
+                    <p>
+                        <ul>
+                            <li><img src="{% static 'claims/assets/images/google_icon.png' %}" style="padding: 0; margin: 0;"><a href="{% url 'social:begin' 'google-oauth2' %}">Sign in with Google</a></li>
+                            <li><img src="{% static 'claims/assets/images/twitter_icon.png' %}"><a href="{% url 'social:begin' 'twitter' %}">Sign in with Twitter</a></li>
+                        </ul>
+                    </p>
+                {% endif %}
+                <form class="search-container" action={% url 'search:search_result' %}>
+                    <div class="searchbar">
+                        <input type="text" placeholder="Search.." name="search_keywords" value="{{ request.GET.search_keywords }}">
+                    </div>
+                    <div class="searchbutton">
+                        <button type="submit"><i class="fa fa-search"></i></button>
+                    </div>
+                </form>
             </div>
         </div>
-    </div>
-    <!-- End login modal window -->
+    </header>
 
-    <!-- BEGIN MENU -->
-    <section id="menu-area">
-        <nav class="navbar navbar-default" role="navigation">
-            <div class="container" style="width: 90%;">
-                <div class="navbar-header">
-                    <!-- FOR MOBILE VIEW COLLAPSED BUTTON -->
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <!-- LOGO -->
-                    <!-- TEXT BASED LOGO -->
-                    <a class="navbar-brand" href="/">WHAT THE FACT?!</a>
-                    <!-- IMG BASED LOGO  -->
-                    <!-- <a class="navbar-brand" href="index.html"><img src="assets/images/logo.png" alt="logo"></a> -->
+    <div class="topnav">
+        <div class="nav-wrapper">
+            <a href="/">Home</a>
+            <a href="">About us</a>
+            <a href="/contact_us/contact_us_page">Contact us</a>
+            {% if request.user.is_authenticated %}
+                <a href="/add_claim_page">Add New Claim</a>
+                <a href="">My Profile</a>
+            {% endif %}
+            {% if request.user.is_superuser %}
+                <div class="dropdown">
+                    <a class="dropdown-toggle" style="float: none; border-right: 1px solid #b1b1b1;">Admin</a>
+                    <div class="dropdown-content">
+                        <a href="/admin" target="_blank">Admin Panel</a><br>
+                        <a href="/export_claims_page">Export Claims as CSV</a><br>
+                        <a href="/users/add_all_scrapers" style="border-right: 0;">Add all Scrapers</a>
+                        <a href="/users/add_scraper_guide" style="border-right: 0;">Adding a Scraper Guide</a>
+                        <a href="/logger/view_log" style="border-right: 0;">Logger</a>
+                    </div>
                 </div>
-                <div id="navbar" class="navbar-collapse collapse">
-                    <ul id="top-menu" class="nav navbar-nav navbar-right main-nav">
-                        <li><a href="/">Home</a></li>
-
-                        <!-- search icon -->
-                        <div class="search-container" style="float: left; padding-top: 23px; margin-right: 100px;">
-                            <form action={% url 'search:search_result' %}>
-                                <input name="search_keywords" value="{{ request.GET.search_keywords }}" type="text" placeholder="Search.." style="border: 3px solid #49c7c1; width: 400px;">
-                                <button type="submit" class="search_nav"><i class="fa fa-search"></i></button>
-                            </form>
-                        </div>
-
-                        {% if request.user.is_authenticated %}
-                            <li><a href="">Welcome {{request.user.username}}</a></li>
-                            <li><a href="/logout">Sign Out</a></li>
-                        {% else %}
-                            <li><a data-target="#login-form" data-toggle="modal" href="#">Login</a></li>
-                        {% endif %}
-                    </ul>
-                </div><!--/.nav-collapse -->
-
-            </div>
-        </nav>
-    </section>
-    <!-- END MENU -->
-
-    <!-- START PAGE CONTENT -->
-    <section id="blog-archive">
+            {% endif %}
+        </div>
+    </div>
+    <div id="content-wrapper">
+        <section id="page_content">
         {% block page_content %}
 
         {% endblock %}
-    </section>
-    <!-- END PAGE CONTENT -->
-
-    <!-- Start footer -->
-    <footer id="footer" style="text-align: center;">
+        </section>
+    </div>
+    <footer id="footer">
         &copy; 2018-2019 WTFacts version 1.0
-        <a href="" style="padding-left:5em; color: #fff;">About</a>
-        <a href="" style="padding-left:5em; color: #fff;">Contact Us</a>
     </footer>
-    <!-- End footer -->
-
-    <!-- jQuery library -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <!-- Bootstrap -->
-    <script src="{% static 'claims/assets/js/bootstrap.js' %}"></script>
-    <!-- Slick Slider -->
-    <script type="text/javascript" src="{% static 'claims/assets/js/slick.js' %}"></script>
-    <!-- mixit slider -->
-    <script type="text/javascript" src="{% static 'claims/assets/js/jquery.mixitup.js' %}"></script>
-    <!-- Add fancyBox -->
-    <script type="text/javascript" src="{% static 'claims/assets/js/jquery.fancybox.pack.js' %}"></script>
-    <!-- counter -->
-    <script src="{% static 'claims/assets/js/waypoints.js' %}"></script>
-    <script src="{% static 'claims/assets/js/jquery.counterup.js' %}"></script>
-    <!-- Wow animation -->
-    <script type="text/javascript" src="{% static 'claims/assets/js/wow.js' %}"></script>
-    <!-- progress bar   -->
-    <script type="text/javascript" src="{% static 'claims/assets/js/bootstrap-progressbar.js' %}"></script>
 
 
-    <!-- Custom js -->
-    <script type="text/javascript" src="{% static 'claims/assets/js/custom.js' %}"></script>
 </body>
 </html>
