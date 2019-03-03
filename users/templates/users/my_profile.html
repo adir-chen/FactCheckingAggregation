@@ -1,0 +1,79 @@
+{% extends 'claims/layout.html' %}
+
+{% block page_content %}
+    <div id="my_profile_page" style="max-width: 1000px; margin: auto; height: auto; padding: 40px 0;">
+        <h4>Welcome {{ request.user.username }}</h4>
+        <br>
+        <div class="claim_box" style="width: 100%; padding: 20px 40px 20px 20px; height: auto;">
+            {% csrf_token %}
+            {% if reputation|length > 0 %}
+                <h5> My Reputation: {{ reputation.0.user_rep }} </h5>
+            {% else %}
+                <h5> My Reputation: 0 </h5>
+            {% endif %}
+            <br>
+
+            <h5> My Claims:</h5>
+            <div class="headlines">
+                <div id="claims" style="max-width: 1150px; padding: 0 20px; border-radius: 10px; background: #aabfd6; display: flex; flex-wrap: wrap; margin: 0 auto;">
+                    {% for claim, imgs in user_claims.items %}
+                        {% include 'claims/claimbox_large.html' with claim=claim icons=imgs %}
+                    {% endfor %}
+                    <span id="more_claims" style="display: none">
+                        {% for claim, imgs in more_claims.items %}
+                            {% include 'claims/claimbox_large.html' with claim=claim icons=imgs %}
+                        {% endfor %}
+                    </span>
+                </div>
+                <button style="" onclick="showMoreClaimsFunc()" id="showMoreClaims">Show More</button>
+            </div>
+
+            <h5> My Comments:</h5>
+            <div class="headlines">
+                <div id="comments" style="max-width: 1150px; padding: 20px 20px; border-radius: 10px; background: #aabfd6; display: flex; flex-wrap: wrap; margin: 0 auto;">
+                    {% for comment, user  in user_comments.items %}
+                        {% include 'comments/comment.html' with comment=comment user=user request=request only %}
+                    {% endfor %}
+                    <span id="more_comments" style="display: none">
+                        {% for comment, user  in more_comments.items %}
+                            {% include 'comments/comment.html' with comment=comment user=user request=request only %}
+                        {% endfor %}
+                    </span>
+                </div>
+                <button style="" onclick="showMoreCommentsFunc()" id="showMoreComments">Show More</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showMoreClaimsFunc() {
+            var moreClaims = document.getElementById("more_claims");
+            var btnText = document.getElementById("showMoreClaims");
+
+            if (moreClaims.style.display === "none") {
+                btnText.innerHTML = "Show Less";
+                moreClaims.style.display = "inline";
+            } else {
+                btnText.innerHTML = "Show More";
+                moreClaims.style.display = "none";
+            }
+        }
+
+        function showMoreCommentsFunc() {
+            var moreComments = document.getElementById("more_comments");
+            var btnText = document.getElementById("showMoreComments");
+
+            if (moreComments.style.display === "none") {
+                btnText.innerHTML = "Show Less";
+                moreComments.style.display = "inline";
+            } else {
+                btnText.innerHTML = "Show More";
+                moreComments.style.display = "none";
+            }
+        }
+    </script>
+{% endblock %}
+
+{% block claim_head_title %}
+    FactCheckProject | My Profile
+{% endblock %}

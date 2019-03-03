@@ -1,6 +1,9 @@
 from django.contrib.auth.models import User
 from django.http import Http404
 from django.shortcuts import render
+
+from claims.models import Claim
+from comments.models import Comment
 from logger.views import save_log_message
 from users.models import Users_Images, Scrapers
 from users.models import Users_Reputations
@@ -277,3 +280,41 @@ def update_reputation_for_user(user_id, earn_points, num_of_points):
         reputation = max(1, reputation - num_of_points)
     Users_Reputations.objects.filter(user_id=user).update(user_rep=reputation)
 
+
+# This function return a HTML page for the user's profile
+def my_profile_page(request):
+    user_rep = Users_Reputations.objects.filter(user_id=request.user.id)
+    claims = Claim.objects.filter(user=request.user.id)
+    comments = Comment.objects.filter(user=request.user.id)
+    user_claims = {}
+    user_comments = {}
+    more_claims = {}
+    more_comments = {}
+    i = 0;
+    for claim in claims:
+        comment_objs = Comment.objects.filter(claim_id=claim.id)
+        users_imgs = []
+        for comment in comment_objs:
+            user_img = Users_Images.objects.filter(user_id=comment.user_id)
+            if len(user_img) > 0:
+                users_imgs.append(user_img[0].user_img)
+        if(i<3):
+            user_claims[claim] = users_imgs
+        else:
+            more_claims[claim] = users_imgs
+        i = i + 1
+
+    i=0
+    for comment in comments:
+        if(i<2):
+            user_comments[comment] = User.objects.filter(id=comment.user_id)[0]
+        else:
+            more_comments[comment] = User.objects.filter(id=comment.user_id)[0]
+        i = i + 1
+    return render(request, 'users/my_profile.html', {
+        'reputation': user_rep,
+        'user_claims': user_claims,
+        'more_claims': more_claims,
+        'user_comments': user_comments,
+        'more_comments': more_comments
+    })

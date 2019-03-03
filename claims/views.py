@@ -304,3 +304,5 @@ def handler_500(request):
     return render(request, 'claims/500.html', status=500)
 
 
+def about_page(request):
+    return render(request, 'claims/about.html')

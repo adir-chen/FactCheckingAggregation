@@ -12,4 +12,5 @@ urlpatterns =[
     path('export_claims_page', views.export_claims_page, name='export_claims_page'),
     path('edit_claim', views.edit_claim, name='edit_claim'),
     path('delete_claim', views.delete_claim, name='delete_claim'),
+    path('about', views.about_page, name='about')
 ]
