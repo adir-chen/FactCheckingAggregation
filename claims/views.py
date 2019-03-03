@@ -136,10 +136,10 @@ def get_tags_for_claim(claim_id):
 def view_claim(request, claim_id):
     claim = get_claim_by_id(claim_id)
     if claim is None:
-        raise Exception("Claim with the given id: " + str(claim_id) + " does not exist")
-    comment_objs = Comment.objects.filter(claim_id=claim_id)
+        raise Http404('Claim with id ' + str(claim_id) + ' does not exist')
+    comment_objects = Comment.objects.filter(claim_id=claim_id)
     comments = {}
-    for comment in comment_objs:
+    for comment in comment_objects:
         user_img = Users_Images.objects.filter(user_id=comment.user_id)
         if len(user_img) == 0:
             new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
@@ -207,10 +207,6 @@ def edit_claim(request):
                          'Editing a claim. Error: ' + err_msg)
         raise Exception(err_msg)
     claim = get_object_or_404(Claim, id=request.POST.get('claim_id'))
-    from django.utils import timezone
-    delta_time = timezone.now() - claim.timestamp
-    if delta_time.total_seconds() / 60 > 1:
-        raise Exception('You can\'t edit your comment')
     Claim.objects.filter(id=claim.id, user_id=request.user.id).update(
         claim=request.POST.get('claim'),
         category=request.POST.get('category'),
@@ -225,7 +221,9 @@ def edit_claim(request):
 # i.e. the claim has all the fields with the correct format.
 # The function returns true in case the claim's new fields are valid, otherwise false and an error
 def check_claim_new_fields(request):
+    from django.utils import timezone
     err = ''
+    max_minutes_to_edit_comment = 5
     if not request.POST.get('claim_id'):
         err += 'Missing value for claim id'
     elif not request.POST.get('claim'):
@@ -242,6 +240,9 @@ def check_claim_new_fields(request):
         err += 'Claim does not belong to user with id ' + str(request.user.id)
     elif len(Claim.objects.exclude(id=request.POST.get('claim_id')).filter(claim=request.POST.get('claim'))) > 0:
         err += 'Claim already exists'
+    elif (timezone.now() - Claim.objects.filter(id=request.POST.get('claim_id')).first().timestamp).total_seconds() \
+            / 60 > max_minutes_to_edit_comment:
+        err += 'You can no longer edit your comment'
     if len(err) > 0:
         return False, err
     return True, err
@@ -258,8 +259,8 @@ def delete_claim(request):
         raise Exception(err_msg)
     from users.views import update_reputation_for_user
     for comment in Comment.objects.filter(claim_id=request.POST.get('claim_id')):
-        update_reputation_for_user(comment.user_id, False, comment.up_votes.count)
-        update_reputation_for_user(comment.user_id, True, comment.down_votes.count)
+        update_reputation_for_user(comment.user_id, False, comment.up_votes.count())
+        update_reputation_for_user(comment.user_id, True, comment.down_votes.count())
     Claim.objects.filter(id=request.POST.get('claim_id'), user_id=request.user.id).delete()
     save_log_message(request.user.id, request.user.username,
                      'Deleting a claim with id ' + str(request.POST.get('claim_id')), True)

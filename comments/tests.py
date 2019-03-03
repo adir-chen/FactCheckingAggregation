@@ -833,7 +833,7 @@ class CommentTests(TestCase):
         self.update_comment_details['user_id'] = str(self.user_1.id)
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
-    def test_check_comment_new_fields_comment_after_five_minutes(self):
+    def test_check_comment_new_fields_edit_after_five_minutes(self):
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
                                                             datetime.timedelta(minutes=6))
         self.update_comment_details['comment_id'] = str(self.comment_1.id)

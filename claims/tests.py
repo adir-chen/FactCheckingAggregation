@@ -5,7 +5,7 @@ from claims.views import add_claim, check_if_claim_is_valid, post_above_limit, \
     get_all_claims, get_newest_claims, get_claim_by_id, get_category_for_claim, get_tags_for_claim,\
     view_claim, view_home, get_users_images_for_claims, logout_view, add_claim_page, export_claims_page, \
     edit_claim, check_claim_new_fields, delete_claim, check_if_delete_claim_is_valid, \
-    handler_400, handler_403, handler_404, handler_500
+    handler_400, handler_403, handler_404, handler_500, about_page
 from comments.models import Comment
 from users.models import User, Users_Images, Scrapers
 import random
@@ -17,9 +17,7 @@ class ClaimTests(TestCase):
         self.user = User(username="User1", email='user1@gmail.com')
         self.user.save()
         self.password = User.objects.make_random_password()
-        self.scraper = User(username="Scraper", password=self.password)
-        self.scraper.save()
-
+        self.scraper = User.objects.create_user(username="Scraper", password=self.password)
         self.user_image = Users_Images(user_id=self.user, user_img='user_img')
         self.user_image.save()
 
@@ -118,25 +116,30 @@ class ClaimTests(TestCase):
         self.assertTrue(claim_4.tags == self.claim_4.tags)
         self.assertTrue(claim_4.authenticity_grade == 0)
 
-    def test_add_claim_by_invalid_user(self):
+    def test_add_claim_by_user_not_authenticated(self):
+        from django.contrib.auth.models import AnonymousUser
         len_claims = len(Claim.objects.all())
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.new_claim_details)
         self.post_request.POST = query_dict
-        self.assertRaises(Exception, add_claim, self.post_request)
+        self.post_request.user = AnonymousUser()
+        self.assertRaises(Http404, add_claim, self.post_request)
         self.assertTrue(len(Claim.objects.all()) == len_claims)
-        self.assertTrue(get_claim_by_id(4) is None)
+        self.assertTrue(get_claim_by_id(self.num_of_saved_claims + 1) is None)
 
     def test_add_claim_by_scraper(self):
+        from django.contrib.auth.models import AnonymousUser
         len_claims = len(Claim.objects.all())
+        self.new_claim_details['user_id'] = self.scraper.id
         self.new_claim_details['username'] = self.scraper.username
         self.new_claim_details['password'] = self.password
+        self.post_request.user = AnonymousUser()
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.new_claim_details)
         self.post_request.POST = query_dict
-        self.assertRaises(Exception, add_claim, self.post_request)
-        self.assertTrue(len(Claim.objects.all()) == len_claims)
-        self.assertTrue(get_claim_by_id(4) is None)
+        self.assertTrue(add_claim(self.post_request).status_code == 200)
+        self.assertTrue(len(Claim.objects.all()) == len_claims + 1)
+        self.assertTrue(get_claim_by_id(self.num_of_saved_claims + 1))
 
     def test_add_existing_claim(self):
         len_claims = len(Claim.objects.all())
@@ -144,9 +147,10 @@ class ClaimTests(TestCase):
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.new_claim_details)
         self.post_request.POST = query_dict
+        self.post_request.user = self.user
         self.assertRaises(Exception, add_claim, self.post_request)
         self.assertTrue(len(Claim.objects.all()) == len_claims)
-        self.assertTrue(get_claim_by_id(4) is None)
+        self.assertTrue(get_claim_by_id(self.num_of_saved_claims + 1) is None)
 
     def test_add_claim_with_invalid_comment(self):
         comment_fields = ['title', 'description', 'url', 'verdict_date', 'label']
@@ -156,9 +160,10 @@ class ClaimTests(TestCase):
             query_dict = QueryDict('', mutable=True)
             query_dict.update(self.new_claim_details)
             self.post_request.POST = query_dict
+            self.post_request.user = self.user
             self.assertRaises(Exception, add_claim, self.post_request)
             self.assertTrue(len(Claim.objects.all()) == len_claims)
-            self.assertTrue(get_claim_by_id(4) is None)
+            self.assertTrue(get_claim_by_id(self.num_of_saved_claims + 1) is None)
 
     def test_add_claim_missing_args(self):
         for i in range(10):
@@ -172,9 +177,10 @@ class ClaimTests(TestCase):
             query_dict = QueryDict('', mutable=True)
             query_dict.update(self.new_claim_details)
             self.post_request.POST = query_dict
+            self.post_request.user = self.user
             self.assertRaises(Exception, add_claim, self.post_request)
             self.assertTrue(len(Claim.objects.all()) == len_claims)
-            self.assertTrue(get_claim_by_id(4) is None)
+            self.assertTrue(get_claim_by_id(self.num_of_saved_claims + 1) is None)
             self.new_claim_details = dict_copy.copy()
 
     def test_add_claim_get(self):
@@ -190,27 +196,33 @@ class ClaimTests(TestCase):
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_missing_claim(self):
+        self.new_claim_details['user_id'] = self.user.id
         del self.new_claim_details['claim']
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_missing_category(self):
+        self.new_claim_details['user_id'] = self.user.id
         del self.new_claim_details['category']
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_missing_tags(self):
+        self.new_claim_details['user_id'] = self.user.id
         del self.new_claim_details['tags']
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_missing_img_src(self):
+        self.new_claim_details['user_id'] = self.user.id
         del self.new_claim_details['img_src']
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_missing_add_comment(self):
+        self.new_claim_details['user_id'] = self.user.id
         del self.new_claim_details['add_comment']
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_existing_claim(self):
-        self.new_claim_details['claim'] = self.claim_1
+        self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['claim'] = self.claim_1.claim
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_invalid_user_id(self):
@@ -225,6 +237,7 @@ class ClaimTests(TestCase):
             self.post_request.POST = query_dict
             self.post_request.user = self.user
             add_claim(self.post_request)
+        self.new_claim_details['user_id'] = self.user.id
         self.new_claim_details['claim'] = 'claim_10'
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
@@ -497,6 +510,13 @@ class ClaimTests(TestCase):
             self.assertRaises(Exception, edit_claim, self.post_request)
             self.update_claim_details = data_copy.copy()
 
+    def test_edit_claim_valid_with_different_tags(self):
+        self.update_claim_details['tags'] = self.claim_2.tags
+        self.post_request.POST = self.update_claim_details
+        self.post_request.user = self.user
+        self.assertTrue(edit_claim(self.post_request).status_code == 200)
+        self.assertTrue(Claim.objects.filter(id=self.update_claim_details['claim_id'])[0].tags == self.claim_2.tags)
+
     def test_check_claim_new_fields(self):
         self.post_request.POST = self.update_claim_details
         self.post_request.user = self.user
@@ -561,6 +581,13 @@ class ClaimTests(TestCase):
 
     def test_check_claim_new_fields_existing_claim(self):
         self.update_claim_details['claim'] = self.claim_2.claim
+        self.post_request.POST = self.update_claim_details
+        self.post_request.user = self.user
+        self.assertFalse(check_claim_new_fields(self.post_request)[0])
+
+    def test_check_claim_new_fields_edit_after_five_minutes(self):
+        Claim.objects.filter(id=self.claim_1.id).update(timestamp=datetime.datetime.now() -
+                                                            datetime.timedelta(minutes=6))
         self.post_request.POST = self.update_claim_details
         self.post_request.user = self.user
         self.assertFalse(check_claim_new_fields(self.post_request)[0])
@@ -656,3 +683,6 @@ class ClaimTests(TestCase):
 
     def test_handler_500(self):
         self.assertTrue(handler_500(HttpRequest()).status_code == 500)
+
+    def test_about_page(self):
+        self.assertTrue(about_page(HttpRequest()).status_code == 200)

@@ -432,8 +432,8 @@ def delete_comment(request):
         raise Exception(err_msg)
     comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
     claim_id = comment.claim_id
-    update_reputation_for_user(comment.user_id, False, comment.up_votes.count)
-    update_reputation_for_user(comment.user_id, True, comment.down_votes.count)
+    update_reputation_for_user(comment.user_id, False, comment.up_votes.count())
+    update_reputation_for_user(comment.user_id, True, comment.down_votes.count())
     Comment.objects.filter(id=request.POST.get('comment_id'), user_id=request.user.id).delete()
     save_log_message(request.user.id, request.user.username,
                      'Deleting comment with id ' + str(request.POST.get('comment_id')), True)
