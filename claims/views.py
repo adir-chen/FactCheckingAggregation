@@ -4,6 +4,7 @@ from django.shortcuts import render, get_object_or_404
 from comments.models import Comment
 from comments.views import add_comment
 from django.contrib.auth.models import User
+from logger.models import Logger
 from logger.views import save_log_message
 from users.models import Users_Images, Scrapers
 from users.views import check_if_user_exists_by_user_id
@@ -30,7 +31,7 @@ def add_claim(request):
             user_id=claim_info['user_id'],
             claim=claim_info['claim'],
             category=claim_info['category'],
-            tags=convert_tags(claim_info['tags']),
+            tags=', '.join(claim_info['tags'].split()),
             authenticity_grade=0,
             image_src=claim_info['img_src']
         )
@@ -49,7 +50,6 @@ def add_claim(request):
                                      claim.id) + '. Error: ' + str(e) +
                                  '. This claim has been deleted because the user does not succeed to add a new claim with a comment on it.')
                 raise Exception(e)
-        request.POST['claim_id'] = claim.id
         return view_claim(request, claim.id)
     raise Http404("Invalid method")
 
@@ -69,11 +69,11 @@ def check_if_claim_is_valid(claim_info):
     elif 'img_src' not in claim_info:
         err += 'Missing value for img_src'
     elif 'add_comment' not in claim_info:
-        err += 'Missing value for add a comment option'
+        err += 'Missing value for adding a comment option'
     elif len(Claim.objects.filter(claim=claim_info['claim'])) > 0:
         err += 'Claim ' + claim_info['claim'] + ' already exists'
     elif not check_if_user_exists_by_user_id(claim_info['user_id']):
-        err += 'User ' + claim_info['user_id'] + ' does not exist'
+        err += 'User ' + str(claim_info['user_id']) + ' does not exist'
     elif post_above_limit(claim_info['user_id']):
         err += 'You have exceeded the amount limit of adding new claims today'
     if len(err) > 0:
@@ -81,21 +81,14 @@ def check_if_claim_is_valid(claim_info):
     return True, err
 
 
+# This function checks if a given user posted new claims above the maximum limit (per day).
+# The function returns true in case the user exceeded the maximum limit, otherwise false and an error
 def post_above_limit(user_id):
-    return False
-    # limit = 10
-    # from datetime import datetime
-    # return len(Logger.objects.filter(date__date=datetime.today(),
-    #                                  user_id=user_id,
-    #                                  action__icontains='Adding a new claim')) >= limit
-
-
-def convert_tags(claim_tags):
-    tags_arr = claim_tags.split(' ')
-    new_tags = ''
-    for tag in tags_arr:
-        new_tags += tag + ', '
-    return new_tags[:-2]
+    limit = 10
+    from datetime import datetime
+    return len(Logger.objects.filter(date__date=datetime.today(),
+                                     user_id=user_id,
+                                     action__icontains='Adding a new claim')) >= limit
 
 
 # This function returns all the claims in the website
@@ -143,7 +136,7 @@ def get_tags_for_claim(claim_id):
 def view_claim(request, claim_id):
     claim = get_claim_by_id(claim_id)
     if claim is None:
-        raise Exception("Claim with the given id: " + str(claim_id) + " does not exist")
+        raise Http404("Claim with the given id: " + str(claim_id) + " does not exist")
     comment_objs = Comment.objects.filter(claim_id=claim_id)
     comments = {}
     for comment in comment_objs:
@@ -229,8 +222,6 @@ def check_claim_new_fields(request):
     err = ''
     if not request.POST.get('claim_id'):
         err += 'Missing value for claim id'
-    elif not request.POST.get('user_id'):
-        err += 'Missing value for user id'
     elif not request.POST.get('claim'):
         err += 'Missing value for claim'
     elif not request.POST.get('category'):
@@ -242,7 +233,9 @@ def check_claim_new_fields(request):
     elif not check_if_user_exists_by_user_id(request.user.id):
         err += 'User with id ' + str(request.user.id) + ' does not exist'
     elif len(Claim.objects.filter(id=request.POST.get('claim_id'), user_id=request.user.id)) == 0:
-        err += 'Comment does not belong to user with id ' + str(request.user.id)
+        err += 'Claim does not belong to user with id ' + str(request.user.id)
+    elif len(Claim.objects.exclude(id=request.POST.get('claim_id')).filter(claim=request.POST.get('claim'))) > 0:
+        err += 'Claim already exists'
     if len(err) > 0:
         return False, err
     return True, err
@@ -281,21 +274,23 @@ def check_if_delete_claim_is_valid(request):
     return True, err
 
 
+# This function returns 400 error page
+def handler_400(request):
+    return render(request, 'claims/400.html', status=400)
+
+
+# This function returns 403 error page
+def handler_403(request):
+    return render(request, 'claims/403.html', status=403)
+
+
 # This function returns 404 error page
-def handler404(request):
+def handler_404(request):
     return render(request, 'claims/404.html', status=404)
 
 
 # This function returns 500 error page
-def handler500(request):
+def handler_500(request):
     return render(request, 'claims/500.html', status=500)
 
 
-# This function returns 403 error page
-def handler403(request):
-    return render(request, 'claims/403.html', status=404)
-
-
-# This function returns 400 error page
-def handler400(request):
-    return render(request, 'claims/400.html', status=500)

@@ -166,6 +166,9 @@ NOSE_ARGS = [
     # '--cover-package=users',
     # '--cover-package=claims',
     # '--cover-package=comments',
+    # '--cover-package=contact_us',
+    # '--cover-package=logger',
+    # '--cover-package=search',
     '--detailed-errors',
     '-s',
     # '--cover-html'

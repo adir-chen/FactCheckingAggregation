@@ -13,7 +13,7 @@ class Users_Images(models.Model):
 
 class Users_Reputations(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    user_rep = models.IntegerField()
+    user_rep = models.IntegerField(default=1)
 
     def __str__(self):
         return self.user_id.username + ' - ' + str(self.user_rep)

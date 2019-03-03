@@ -10,18 +10,27 @@ import json
 import random
 import datetime
 
+
 class UsersTest(TestCase):
     def setUp(self):
         self.user_1 = User(username="User1", email='user1@gmail.com')
         self.user_2 = User(username="User2", email='user2@gmail.com')
         self.user_3 = User(username="User3", email='user3@gmail.com')
-        new_scraper = User(username="newScraper")
-
+        self.new_scraper = User(username="newScraper")
         self.user_1.save()
         self.user_2.save()
         self.user_3.save()
-        new_scraper.save()
+        self.new_scraper.save()
+        self.admin = User.objects.create_superuser(username='admin',
+                                                   email='admin@gmail.com',
+                                                   password='admin')
+        self.all_users_dict = {1: self.user_1,
+                               2: self.user_2,
+                               3: self.user_3,
+                               4: self.new_scraper,
+                               5: self.admin}
 
+        self.num_of_saved_users = 5
         self.post_request = HttpRequest()
         self.post_request.method = 'POST'
         password = User.objects.make_random_password()
@@ -36,66 +45,90 @@ class UsersTest(TestCase):
         pass
 
     def test_check_if_user_exists_by_user_id(self):
-        self.assertTrue(check_if_user_exists_by_user_id(1))
-        self.assertTrue(check_if_user_exists_by_user_id(2))
-        self.assertTrue(check_if_user_exists_by_user_id(3))
+        for i in range(self.num_of_saved_users):
+            self.assertTrue(check_if_user_exists_by_user_id(i + 1))
 
     def test_check_if_user_exists_by_invalid_user_id(self):
-        self.assertFalse(check_if_user_exists_by_user_id(5))
+        self.assertFalse(check_if_user_exists_by_user_id(self.num_of_saved_users + 1))
+        self.assertFalse(check_if_user_exists_by_user_id(self.num_of_saved_users + random.randint(1, 10)))
 
     def test_get_username_by_user_id(self):
-        self.assertTrue(get_username_by_user_id(1) == self.user_1.username)
-        self.assertTrue(get_username_by_user_id(2) == self.user_2.username)
-        self.assertTrue(get_username_by_user_id(3) == self.user_3.username)
+        for user_id, user in self.all_users_dict.items():
+            self.assertTrue(get_username_by_user_id(user_id) == user.username)
 
     def test_get_username_by_user_id_invalid_user(self):
-        self.assertTrue(get_username_by_user_id(5) is None)
+        self.assertTrue(get_username_by_user_id(self.num_of_saved_users + 1) is None)
+        self.assertTrue(get_username_by_user_id(self.num_of_saved_users + random.randint(1, 10)) is None)
 
     def test_add_all_scrapers(self):
-        add_all_scrapers(HttpRequest())
-        self.assertTrue(check_if_user_exists_by_user_id(5))
-        self.assertTrue(check_if_user_exists_by_user_id(6))
-        self.assertTrue(check_if_user_exists_by_user_id(7))
-        self.assertTrue(check_if_user_exists_by_user_id(8))
-        self.assertTrue(check_if_user_exists_by_user_id(9))
-        self.assertTrue(check_if_user_exists_by_user_id(10))
-        self.assertTrue(check_if_user_exists_by_user_id(11))
-        self.assertTrue(check_if_user_exists_by_user_id(12))
-        self.assertTrue(get_username_by_user_id(5) == 'Snopes')
-        self.assertTrue(get_username_by_user_id(6) == 'Polygraph')
-        self.assertTrue(get_username_by_user_id(7) == 'TruthOrFiction')
-        self.assertTrue(get_username_by_user_id(8) == 'Politifact')
-        self.assertTrue(get_username_by_user_id(9) == 'GossipCop')
-        self.assertTrue(get_username_by_user_id(10) == 'ClimateFeedback')
-        self.assertTrue(get_username_by_user_id(11) == 'FactScan')
-        self.assertTrue(get_username_by_user_id(12) == 'AfricaCheck')
+        self.post_request.user = self.admin
+        add_all_scrapers(self.post_request)
+        self.assertTrue(check_if_user_exists_by_user_id(self.num_of_saved_users + 1))
+        self.assertTrue(check_if_user_exists_by_user_id(self.num_of_saved_users + 2))
+        self.assertTrue(check_if_user_exists_by_user_id(self.num_of_saved_users + 3))
+        self.assertTrue(check_if_user_exists_by_user_id(self.num_of_saved_users + 4))
+        self.assertTrue(check_if_user_exists_by_user_id(self.num_of_saved_users + 5))
+        self.assertTrue(check_if_user_exists_by_user_id(self.num_of_saved_users + 6))
+        self.assertTrue(check_if_user_exists_by_user_id(self.num_of_saved_users + 7))
+        self.assertTrue(check_if_user_exists_by_user_id(self.num_of_saved_users + 8))
+        self.assertTrue(get_username_by_user_id(self.num_of_saved_users + 1) == 'Snopes')
+        self.assertTrue(get_username_by_user_id(self.num_of_saved_users + 2) == 'Polygraph')
+        self.assertTrue(get_username_by_user_id(self.num_of_saved_users + 3) == 'TruthOrFiction')
+        self.assertTrue(get_username_by_user_id(self.num_of_saved_users + 4) == 'Politifact')
+        self.assertTrue(get_username_by_user_id(self.num_of_saved_users + 5) == 'GossipCop')
+        self.assertTrue(get_username_by_user_id(self.num_of_saved_users + 6) == 'ClimateFeedback')
+        self.assertTrue(get_username_by_user_id(self.num_of_saved_users + 7) == 'FactScan')
+        self.assertTrue(get_username_by_user_id(self.num_of_saved_users + 8) == 'AfricaCheck')
+
+    def test_add_all_scrapers_user_not_admin(self):
+        self.post_request.user = self.user_1
+        self.assertRaises(Http404, add_all_scrapers, self.post_request)
+        self.assertFalse(check_if_user_exists_by_user_id(self.num_of_saved_users + 1))
+        self.assertFalse(check_if_user_exists_by_user_id(self.num_of_saved_users + 2))
+        self.assertFalse(check_if_user_exists_by_user_id(self.num_of_saved_users + 3))
+        self.assertFalse(check_if_user_exists_by_user_id(self.num_of_saved_users + 4))
+        self.assertFalse(check_if_user_exists_by_user_id(self.num_of_saved_users + 5))
+        self.assertFalse(check_if_user_exists_by_user_id(self.num_of_saved_users + 6))
+        self.assertFalse(check_if_user_exists_by_user_id(self.num_of_saved_users + 7))
+        self.assertFalse(check_if_user_exists_by_user_id(self.num_of_saved_users + 8))
+        self.assertFalse(get_username_by_user_id(self.num_of_saved_users + 1) == 'Snopes')
+        self.assertFalse(get_username_by_user_id(self.num_of_saved_users + 2) == 'Polygraph')
+        self.assertFalse(get_username_by_user_id(self.num_of_saved_users + 3) == 'TruthOrFiction')
+        self.assertFalse(get_username_by_user_id(self.num_of_saved_users + 4) == 'Politifact')
+        self.assertFalse(get_username_by_user_id(self.num_of_saved_users + 5) == 'GossipCop')
+        self.assertFalse(get_username_by_user_id(self.num_of_saved_users + 6) == 'ClimateFeedback')
+        self.assertFalse(get_username_by_user_id(self.num_of_saved_users + 7) == 'FactScan')
+        self.assertFalse(get_username_by_user_id(self.num_of_saved_users + 8) == 'AfricaCheck')
 
     def test_get_all_scrapers_ids(self):
         import json
-        add_all_scrapers(HttpRequest())
+        self.post_request.user = self.admin
+        add_all_scrapers(self.post_request)
         scrapers_ids = json.loads(get_all_scrapers_ids(HttpRequest()).content.decode('utf-8'))
-        self.assertTrue(scrapers_ids == {'Snopes': 5,
-                                         'Polygraph': 6,
-                                         'TruthOrFiction': 7,
-                                         'Politifact': 8,
-                                         'GossipCop': 9,
-                                         'ClimateFeedback': 10,
-                                         'FactScan': 11,
-                                         'AfricaCheck': 12,
+        self.assertTrue(scrapers_ids == {'Snopes': self.num_of_saved_users + 1,
+                                         'Polygraph': self.num_of_saved_users + 2,
+                                         'TruthOrFiction': self.num_of_saved_users + 3,
+                                         'Politifact': self.num_of_saved_users + 4,
+                                         'GossipCop': self.num_of_saved_users + 5,
+                                         'ClimateFeedback': self.num_of_saved_users + 6,
+                                         'FactScan': self.num_of_saved_users + 7,
+                                         'AfricaCheck': self.num_of_saved_users + 8,
                                          })
 
     def test_get_all_scrapers_ids_arr(self):
-        add_all_scrapers(HttpRequest())
-        scrapers_ids = [(i+5) for i in range(8)]
+        self.post_request.user = self.admin
+        add_all_scrapers(self.post_request)
+        scrapers_ids = [(i+6) for i in range(8)]
         self.assertEqual(scrapers_ids, get_all_scrapers_ids_arr())
 
     def test_get_random_claims_from_scrapers_not_many_claims(self):
         from claims.models import Claim
         from comments.models import Comment
         scrapers_comments = {}
-        add_all_scrapers(HttpRequest())
+        self.post_request.user = self.admin
+        add_all_scrapers(self.post_request)
         scrapers_names = ['Snopes', 'Polygraph', 'TruthOrFiction', 'Politifact', 'GossipCop',
-                             'ClimateFeedback', 'FactScan', 'AfricaCheck']
+                          'ClimateFeedback', 'FactScan', 'AfricaCheck']
         for i in range(len(scrapers_names)):
             claim = Claim(user_id=Scrapers.objects.filter(scraper_name=scrapers_names[i])[0].scraper_id.id,
                           claim='Sniffing rosemary increases human memory by up to 75 percent',
@@ -125,9 +158,10 @@ class UsersTest(TestCase):
 
     def test_get_random_claims_from_scrapers_many_claims(self):
         scrapers_comments = {}
-        add_all_scrapers(HttpRequest())
+        self.post_request.user = self.admin
+        add_all_scrapers(self.post_request)
         scrapers_names = ['Snopes', 'Polygraph', 'TruthOrFiction', 'Politifact', 'GossipCop',
-                             'ClimateFeedback', 'FactScan', 'AfricaCheck']
+                          'ClimateFeedback', 'FactScan', 'AfricaCheck']
         for i in range(len(scrapers_names)):
             claim_1 = Claim(user_id=Scrapers.objects.filter(scraper_name=scrapers_names[i])[0].scraper_id.id,
                             claim='Sniffing rosemary increases human memory by up to 75 percent' + str(i),
@@ -161,24 +195,21 @@ class UsersTest(TestCase):
         scrapers_comments_val = json.loads(get_random_claims_from_scrapers(HttpRequest()).content.decode('utf-8'))
         for scraper_name, scraper_comment in scrapers_comments_val.items():
             self.assertTrue(scraper_comment == {'title': scrapers_comments[scraper_name][1].title,
-                    'claim': scrapers_comments[scraper_name][0].claim,
-                    'description': scrapers_comments[scraper_name][1].description,
-                    'url': scrapers_comments[scraper_name][1].url,
-                    'verdict_date': str(scrapers_comments[scraper_name][1].verdict_date),
-                    'category': scrapers_comments[scraper_name][0].category,
-                    'label':  scrapers_comments[scraper_name][1].label})
+                                                'claim': scrapers_comments[scraper_name][0].claim,
+                                                'description': scrapers_comments[scraper_name][1].description,
+                                                'url': scrapers_comments[scraper_name][1].url,
+                                                'verdict_date': str(scrapers_comments[scraper_name][1].verdict_date),
+                                                'category': scrapers_comments[scraper_name][0].category,
+                                                'label':  scrapers_comments[scraper_name][1].label})
 
     def test_add_scraper_guide(self):
         self.assertTrue(add_scraper_guide(HttpRequest()).status_code == 200)
 
     def test_add_new_scraper_valid(self):
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
-        self.post_request.user = admin
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.new_scraper_details)
         self.post_request.POST = query_dict
+        self.post_request.user = self.admin
         old_length = len(User.objects.all())
         self.assertTrue(add_new_scraper(self.post_request).status_code == 200)
         self.assertTrue(len(User.objects.all()) == old_length + 1)
@@ -202,10 +233,6 @@ class UsersTest(TestCase):
         self.assertTrue(len(User.objects.all()) == old_length)
 
     def test_add_new_scraper_missing_args(self):
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
-        self.post_request.user = admin
         for i in range(10):
             dict_copy = self.new_scraper_details.copy()
             args_to_remove = []
@@ -217,6 +244,7 @@ class UsersTest(TestCase):
             query_dict = QueryDict('', mutable=True)
             query_dict.update(self.new_scraper_details)
             self.post_request.POST = query_dict
+            self.post_request.user = self.admin
             self.assertRaises(Exception, add_new_scraper, self.post_request)
             self.assertTrue(len(User.objects.all()) == len_users)
             self.new_scraper_details = dict_copy.copy()

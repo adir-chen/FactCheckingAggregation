@@ -25,9 +25,11 @@ def get_username_by_user_id(user_id):
 # This function adds all the scrapers as users to the website
 def add_all_scrapers(request):
     from claims.views import view_home
+    if not request.user.is_superuser:
+        raise Http404("Permission denied")
     try:
         password = User.objects.make_random_password()
-        print(password)
+        # print(password)
         scraper_1 = User.objects.create_user(username='Snopes', password=password)
         scraper_1.save()
         scraper_1_img = Users_Images(user_id=scraper_1, user_img='https://www.snopes.com/content/themes/snopes/dist/images/logo-s-crop-on.svg')
@@ -255,3 +257,24 @@ def check_if_scraper_info_is_valid(scraper_info):
     if len(err) > 0:
         return False, err
     return True, err
+
+
+# This function updates a user's reputation
+# def update_reputation_for_user(user_id, earn_points):
+#     if not check_if_user_exists_by_user_id(user_id):
+#         raise Exception('User with id ' + str(user_id) + ' does not exist')
+#     points = 1
+#     user = User.objects.filter(id=user_id).first()
+#     user_rep = Users_Reputations.objects.filter(user_id=user)
+#     if len(user_rep) == 0:  # user has no reputation
+#         new_user_rep = Users_Reputations(user_id=user)
+#         new_user_rep.save()
+#         reputation = 1
+#     else:
+#         reputation = user_rep.first().user_rep
+#     if earn_points:
+#         reputation += points
+#     else:
+#         reputation = min(1, reputation - points)
+#     Users_Reputations.objects.filter(user_id=user).update(user_rep=reputation)
+

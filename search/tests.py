@@ -4,11 +4,10 @@ from django.test import TestCase
 from claims.models import Claim
 from comments.models import Comment
 from search.views import search
+from users.models import Users_Images
 import datetime
 import random
 import string
-
-from users.models import Users_Images
 
 
 class SearchTest(TestCase):
@@ -33,20 +32,19 @@ class SearchTest(TestCase):
         self.user_image.save()
         for i in range(1, 24):
             claim = Claim(user_id=self.user.id,
-                                 claim='claim' + str(i),
-                                 category='category ' + str(i),
-                                 tags='claim' + str(i),
-                                 authenticity_grade=0,
-                                 image_src='claim' + str(i))
+                          claim='claim' + str(i),
+                          category='category ' + str(i),
+                          tags='claim' + str(i),
+                          authenticity_grade=0,
+                          image_src='claim' + str(i))
             claim.save()
             comment = Comment(claim_id=claim.id,
-                                     user_id=claim.user.id,
-                                     title=claim.claim,
-                                     description='description1',
-                                     url='url1',
-                                     verdict_date=datetime.datetime.strftime(
-                                         datetime.datetime.now() - datetime.timedelta(days=7), '%d/%m/%Y'),
-                                     label='label1')
+                              user_id=claim.user.id,
+                              title=claim.claim,
+                              description='description1',
+                              url='url1',
+                              verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
+                              label='label1')
             comment.save()
         self.request.GET['search_keywords'] = 'claim'
         response = search(self.request)

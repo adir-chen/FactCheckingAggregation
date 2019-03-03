@@ -1,10 +1,10 @@
 from django.contrib.auth.models import User
 from django.http import HttpRequest, QueryDict, Http404
 from django.test import TestCase
-
 from logger.models import Logger
 from logger.views import view_log, save_log_message
 import random
+
 
 class LoggerTest(TestCase):
     def setUp(self):
@@ -27,11 +27,20 @@ class LoggerTest(TestCase):
         self.post_request.user = self.user_1
         self.assertRaises(Http404, view_log, self.post_request)
 
-    def test_save_log_message(self):
+    def test_save_log_message_success_action(self):
         user_id = random.randint(1, 10)
-        claim_id = random.randint(1, 20)
-        save_log_message(user_id, 'user_1', 'added a new comment on claim with id ' + str(claim_id) + ' successfully')
-        self.assertEqual(Logger.objects.all()[0].activity,
-                         'User with id ' + str(user_id) + '- user_1 added a new comment on claim with id ' + str(claim_id) + ' successfully')
+        save_log_message(user_id, 'user_1', 'Adding new claim', True)
+        self.assertTrue(Logger.objects.all()[0].username == 'user_1')
+        self.assertTrue(Logger.objects.all()[0].user_id == user_id)
+        self.assertTrue(Logger.objects.all()[0].action == 'Adding new claim')
+        self.assertTrue(Logger.objects.all()[0].result)
+
+    def test_save_log_message_failure_action(self):
+        user_id = random.randint(1, 10)
+        save_log_message(user_id, 'user_1', 'Adding new claim')
+        self.assertTrue(Logger.objects.all()[0].username == 'user_1')
+        self.assertTrue(Logger.objects.all()[0].user_id == user_id)
+        self.assertTrue(Logger.objects.all()[0].action == 'Adding new claim')
+        self.assertFalse(Logger.objects.all()[0].result)
 
 

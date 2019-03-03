@@ -12,7 +12,7 @@ from ipware import get_client_ip
 def send_email(request):
     if request.method == "POST":
         ip = get_client_ip(request)
-        if ip is None:
+        if ip[0] is None:
             ip = 'Unknown IP Address'
         else:
             ip = str(ip[0])
@@ -32,8 +32,8 @@ def send_email(request):
     raise Http404("Invalid method")
 
 
-# This function checks if a given e-mail is valid, i.e. the e-mail has all the fields with the correct format.
-# The function returns true in case the e-mail is valid, otherwise false and an error
+# This function checks if a given email is valid, i.e. the email has all the fields with the correct format.
+# The function returns true in case the email is valid, otherwise false and an error
 def check_if_email_is_valid(email_info):
     err = ''
     if 'user_email' not in email_info or not email_info['user_email']:
@@ -44,8 +44,6 @@ def check_if_email_is_valid(email_info):
         err += 'Missing value for subject'
     elif 'description' not in email_info or not email_info['description']:
         err += 'Missing value for description'
-    elif 'ip' not in email_info:
-        err += 'Missing value for ip'
     elif check_for_spam(email_info['ip']):
         err += 'Detected as spam'
     if len(err) > 0:
@@ -53,10 +51,11 @@ def check_if_email_is_valid(email_info):
     return True, err
 
 
+# This function checks for spam emails from a user
 def check_for_spam(ip):
     return len(Logger.objects.filter(date__date=datetime.today(), action__icontains=ip)) >= 5
 
 
-# This function return an HTML page for sending a new e-mail
+# This function return an HTML page for sending a new email
 def contact_us_page(request):
     return render(request, 'contact_us/contact_us.html')

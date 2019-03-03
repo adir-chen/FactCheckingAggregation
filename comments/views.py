@@ -88,6 +88,10 @@ def check_if_comment_is_valid(comment_info):
     return True, err
 
 
+# This function converts a date field in a dict from %Y-%m-%d format to the system format which is %d/%m/%Y
+# in case the date has %Y-%m-%d format.
+# In addition, this function checks if the date is in the correct format according to the system format.
+# In case that the date is not valid, it returns an error.
 def convert_date_format(dict, date):
     err = ''
     if '-' in dict[date]:
@@ -102,7 +106,7 @@ def convert_date_format(dict, date):
     return err
 
 
-# This function checks if the verdict date of a claim is valid
+# This function checks if the verdict date of a comment is valid
 # The function returns true in case the verdict date is valid, otherwise false
 def is_valid_verdict_date(verdict_date):
     try:
@@ -114,7 +118,7 @@ def is_valid_verdict_date(verdict_date):
 
 # This function checks a comment's label and returns a basic classification for it.
 # for user- 'True', 'False', 'Unknown'
-# for scraper- based on dicts for true and false labels for each scraper).
+# for scraper- based on dicts for true and false labels for each scraper.
 def get_system_label_to_comment(comment_label, user_id):
     from users.models import Scrapers, User
     scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=user_id).first())
@@ -162,6 +166,7 @@ def export_to_csv(request):
         save_log_message(request.user.id, request.user.username,
                          'Exporting website claims to a csv. Error: ' + err_msg)
         raise Exception(err_msg)
+
     fields_to_export = request.POST.getlist('fields_to_export[]')
     scrapers_ids = [int(scraper_id) for scraper_id in request.POST.getlist('scrapers_ids[]')]
     regular_users = bool(csv_fields['regular_users'])
@@ -186,6 +191,8 @@ def export_to_csv(request):
     return response
 
 
+# This function checks if given csv fields are valid, i.e. the csv fields have all the fields with the correct format.
+# The function returns true in case csv fields are valid, otherwise false and an error
 def check_if_csv_fields_are_valid(csv_fields):
     err = ''
     if 'regular_users' not in csv_fields:
@@ -250,6 +257,8 @@ def create_df_for_claims(fields_to_export, scrapers_ids, regular_users, verdict_
     return df_claims
 
 
+# This function checks if exported fields and list of scrapers' ids are valid,
+# The function returns true in case they are valid, otherwise false and an error
 def check_if_fields_and_scrapers_lists_valid(fields_to_export, scrapers_ids):
     from users.models import Scrapers
     err = ''
@@ -316,16 +325,18 @@ def down_vote(request):
     return view_claim(request, comment.claim_id)
 
 
+# This function checks if a given vote for a comment is valid, i.e. the vote has all the fields with the correct format.
+# The function returns true in case the vote is valid, otherwise false and an error
 def check_if_vote_is_valid(vote_fields):
     err = ''
     if 'user_id' not in vote_fields or not vote_fields['user_id']:
         err += 'Missing value for user id'
     elif not check_if_user_exists_by_user_id(vote_fields['user_id']):
-        err += 'User with id ' + vote_fields['user_id'] + ' does not exist'
+        err += 'User with id ' + str(vote_fields['user_id']) + ' does not exist'
     elif 'comment_id' not in vote_fields or not vote_fields['comment_id']:
         err += 'Missing value for comment id'
     elif len(Comment.objects.filter(id=vote_fields['comment_id'])) == 0:
-        err += 'Comment with id ' + vote_fields['comment_id'] + ' does not exist'
+        err += 'Comment with id ' + str(vote_fields['comment_id']) + ' does not exist'
     if len(err) > 0:
         return False, err
     return True, err
@@ -363,9 +374,13 @@ def edit_comment(request):
 def check_comment_new_fields(new_comment_fields):
     err = ''
     max_minutes_to_edit_comment = 5
-    if 'comment_id' not in new_comment_fields or not new_comment_fields['comment_id']:
+    if 'comment_tags' not in new_comment_fields or not new_comment_fields['comment_tags']:
+        new_comment_fields['comment_tags'] = ''
+    if 'user_id' not in new_comment_fields or not new_comment_fields['user_id']:
+        err += 'Missing value for user id'
+    elif 'comment_id' not in new_comment_fields or not new_comment_fields['comment_id']:
         err += 'Missing value for comment id'
-    if 'comment_title' not in new_comment_fields or not new_comment_fields['comment_title']:
+    elif 'comment_title' not in new_comment_fields or not new_comment_fields['comment_title']:
         err += 'Missing value for comment title'
     elif 'comment_description' not in new_comment_fields or not new_comment_fields['comment_description']:
         err += 'Missing value for comment description'
@@ -385,9 +400,8 @@ def check_comment_new_fields(new_comment_fields):
     elif (timezone.now() - Comment.objects.filter(id=new_comment_fields['comment_id']).first().timestamp).total_seconds() \
             / 60 > max_minutes_to_edit_comment:
         err += 'You can no longer edit your comment'
-    if len(err) > 0:
-        return False, err
-    err = convert_date_format(new_comment_fields, 'comment_verdict_date')
+    else:
+        err = convert_date_format(new_comment_fields, 'comment_verdict_date')
     if len(err) > 0:
         return False, err
     return True, err
@@ -446,4 +460,7 @@ def update_authenticity_grade(claim_id):
     else:
         authenticity_grade = (num_of_true_label/(num_of_true_label + num_of_false_label)) * 100
     Claim.objects.filter(id=claim_id).update(authenticity_grade=authenticity_grade)
+
+
+
 

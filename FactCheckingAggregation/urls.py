@@ -30,7 +30,7 @@ urlpatterns = [
     path('logger/', include('logger.urls', namespace='logger')),
 ]
 
-# handler404 = claims_views.handler404
-# handler500 = claims_views.handler500
-# handler400 = claims_views.handler400
-# handler403 = claims_views.handler403
+# handler404 = claims_views.handler_404
+# handler500 = claims_views.handler_500
+# handler400 = claims_views.handler_400
+# handler403 = claims_views.handler_403

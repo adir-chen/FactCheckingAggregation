@@ -15,6 +15,7 @@
                 <td class="left">
                     <p id="comment_{{ comment.id }}_description">{{ comment.description }}</p>
                     <textarea hidden="hidden" id="{{ comment.id }}_description" placeholder="{{ comment.description }}" style="width: 90%; margin: 10px;">{{ comment.description }}</textarea><br>
+                    <input id="{{ comment.id }}_tags" hidden="hidden" value="{{ comment.tags }}" type="text" placeholder="{{ comment.tags }}" style="width: 90%; margin: 10px;"><br>
                 </td>
                 <td class="right"><p>
                     <img style="max-width: 90px; margin-bottom: 20px;" src="{{ user_details.user_img.user_img }}"><br>
@@ -79,9 +80,9 @@
     let down_voted_{{ comment.id }} = false;
     let up_count_{{ comment.id }} = {{ comment.up_votes.count }};
     let down_count_{{ comment.id }} = {{ comment.down_votes.count }};
-    let max_minutes_to_edit_comment = 5;
+    let max_minutes_to_edit_comment_{{ comment.id }} = 5;
     let comment_timestamp_{{ comment.id }} = new Date('{{ comment.timestamp|date:"D, d M Y H:i:s" }}');
-    if (((new Date() - comment_timestamp_{{ comment.id }}) / 60000) <= max_minutes_to_edit_comment){
+    if (((new Date() - comment_timestamp_{{ comment.id }}) / 60000) <= max_minutes_to_edit_comment_{{ comment.id }}){
             $("#comment_{{ comment.id }}_edit").attr("hidden", false);
     }
 
@@ -180,6 +181,7 @@
 
         $("#{{ comment.id }}_title").attr("hidden", false);
         $("#{{ comment.id }}_description").attr("hidden", false);
+        $("#{{ comment.id }}_tags").attr("hidden", false);
         $("#{{ comment.id }}_verdict_date").attr("hidden", false);
         $("#{{ comment.id }}_reference").attr("hidden", false);
 
@@ -199,6 +201,7 @@
                 comment_id: '{{ comment.id }}',
                 comment_title: $("#{{ comment.id }}_title").val(),
                 comment_description: $("#{{ comment.id }}_description").val(),
+                comment_tags: $("#{{ comment.id }}_tags").val(),
                 comment_verdict_date: $("#{{ comment.id }}_verdict_date").val(),
                 comment_reference: $("#{{ comment.id }}_reference").val(),
                 comment_label: document.querySelector('input[name="label"]:checked').value,
