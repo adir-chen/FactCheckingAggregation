@@ -7,15 +7,15 @@
             <tr>
                 <td class="left" style="width: auto;">
                     <h4 id="comment_{{ comment.id }}_title"><b>{{ comment.title }}</b></h4>
-                    <input hidden="hidden" id="{{ comment.id }}_title" value="{{ comment.title }}" type="text" placeholder="{{ comment.title }}" style="width: 90%; margin: 10px;">
+                    <span id="{{ comment.id }}_title_name" hidden="hidden">Title:<br><input id="{{ comment.id }}_title" value="{{ comment.title }}" type="text" placeholder="{{ comment.title }}" style="width: 90%; margin: 10px;"></span>
                 </td>
                 <td class="right" style="width: 100px;">User: <a href="#">{{ user_details.user.username }}</a></td>
             </tr>
             <tr>
                 <td class="left">
                     <p id="comment_{{ comment.id }}_description">{{ comment.description }}</p>
-                    <textarea hidden="hidden" id="{{ comment.id }}_description" placeholder="{{ comment.description }}" style="width: 90%; margin: 10px;">{{ comment.description }}</textarea><br>
-                    <input id="{{ comment.id }}_tags" hidden="hidden" value="{{ comment.tags }}" type="text" placeholder="{{ comment.tags }}" style="width: 90%; margin: 10px;"><br>
+                    <span id="{{ comment.id }}_description_name" hidden="hidden">Description:<br><textarea id="{{ comment.id }}_description" placeholder="{{ comment.description }}" style="width: 90%; margin: 10px;">{{ comment.description }}</textarea></span><br>
+                    <span id="{{ comment.id }}_tags_name" hidden="hidden">Tags:<br><input id="{{ comment.id }}_tags" value="{{ comment.tags }}" type="text" placeholder="{{ comment.tags }}" style="width: 90%; margin: 10px;"><br></span>
                 </td>
                 <td class="right"><p>
                     <img style="max-width: 90px; margin-bottom: 20px;" src="{{ user_details.user_img.user_img }}"><br>
@@ -23,17 +23,17 @@
                     {%  if comment.system_label == 'True' %}
                         <img src="{% static 'claims/assets/images/TrueLabel.png' %}" >
                         <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="True" checked><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
-                        <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="False"><span id='comment_{{ comment.id }}_false_label' hidden>False</span>
+                        <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="False"><span id='comment_{{ comment.id }}_false_label' hidden>False</span><br>
                         <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="label" hidden='hidden' value="Unknown"><span id='comment_{{ comment.id }}_unknown_label' hidden>Unknown</span>
                     {% elif comment.system_label == 'False' %}
                         <img src="{% static 'claims/assets/images/FalseLabel.png' %}" >
                         <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="True}}"><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
-                        <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="False" checked><span id='comment_{{ comment.id }}_false_label' hidden>False</span>
+                        <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="False" checked><span id='comment_{{ comment.id }}_false_label' hidden>False</span><br>
                         <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="label" hidden='hidden' value="Unknown"><span id='comment_{{ comment.id }}_unknown_label' hidden>Unknown</span>
                     {% else %}
                         <img src="{% static 'claims/assets/images/UnknownLabel.png' %}" >
                         <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="True}}"><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
-                        <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="False"><span id='comment_{{ comment.id }}_false_label' hidden>False</span>
+                        <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="False"><span id='comment_{{ comment.id }}_false_label' hidden>False</span><br>
                         <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="label" hidden='hidden' value="Unknown" checked><span id='comment_{{ comment.id }}_unknown_label' hidden>Unknown</span>
                     {%  endif %}
                 </p></td>
@@ -42,7 +42,7 @@
                 <td class="left">
                     Verdict Date:
                     <span id="comment_{{ comment.id }}_verdict_date">{{ comment.verdict_date|date:"d/m/Y" }}</span><br>
-                    <input hidden="hidden" id="{{ comment.id }}_verdict_date" type="date" value="{{ comment.verdict_date|date:"Y-m-d" }}" max="{% now "Y-m-d" %}"><br>
+                    <input hidden="hidden" id="{{ comment.id }}_verdict_date" type="date" value="{{ comment.verdict_date|date:"Y-m-d" }}" max="{% now "Y-m-d" %}" style="margin: 10px;"><br>
                     References:
                     <a target="_blank" id="comment_{{ comment.id }}_reference" href={{ comment.url }}>link to source</a>
                     <input hidden="hidden" id="{{ comment.id }}_reference" value="{{ comment.url }}" type="text" placeholder="{{ comment.url }}" style="width: 90%; margin: 10px;">
@@ -50,13 +50,13 @@
                 <td class="right" style="text-align: center;">
                     <div style="margin: auto;">
                         {% if request.user.is_authenticated %}
-                            <button id="{{ comment.id }}_arrow_up" type="submit" class="arrow_up" style="">▲</button>
+                            <button id="{{ comment.id }}_arrow_up" type="submit" class="arrow_up" style="" disabled>▲</button>
                         {% endif %}
                         <br>
                         <span id="{{ comment.id }}_voteCount" style="text-align: center; color: #000;">{{ comment.up_votes.count|sub:comment.down_votes.count }}</span>
                         <br>
                         {% if request.user.is_authenticated %}
-                            <button id="{{ comment.id }}_arrow_down" type="submit" class="arrow_down">▼</button>
+                            <button id="{{ comment.id }}_arrow_down" type="submit" class="arrow_down" disabled>▼</button>
                         {% endif %}
                     </div>
                 </td>
@@ -84,6 +84,10 @@
     let comment_timestamp_{{ comment.id }} = new Date('{{ comment.timestamp|date:"D, d M Y H:i:s" }}');
     if (((new Date() - comment_timestamp_{{ comment.id }}) / 60000) <= max_minutes_to_edit_comment_{{ comment.id }}){
             $("#comment_{{ comment.id }}_edit").attr("hidden", false);
+    }
+    else{
+        $("#{{ comment.id }}_arrow_up").attr("disabled", false);
+        $("#{{ comment.id }}_arrow_down").attr("disabled", false);
     }
 
     $(document).ready(function () {
@@ -179,16 +183,19 @@
         $("#comment_{{ comment.id }}_verdict_date").attr("hidden", true);
         $("#comment_{{ comment.id }}_reference").attr("hidden", true);
 
-        $("#{{ comment.id }}_title").attr("hidden", false);
-        $("#{{ comment.id }}_description").attr("hidden", false);
-        $("#{{ comment.id }}_tags").attr("hidden", false);
+        $("#{{ comment.id }}_title_name").attr("hidden", false);
+        $("#{{ comment.id }}_description_name").attr("hidden", false);
+        $("#{{ comment.id }}_tags_name").attr("hidden", false);
         $("#{{ comment.id }}_verdict_date").attr("hidden", false);
         $("#{{ comment.id }}_reference").attr("hidden", false);
 
         $("#comment_{{ comment.id }}_true_radio").attr("hidden", false);
         $("#comment_{{ comment.id }}_false_radio").attr("hidden", false);
+        $("#comment_{{ comment.id }}_unknown_radio").attr("hidden", false);
+
         $("#comment_{{ comment.id }}_true_label").attr("hidden", false);
         $("#comment_{{ comment.id }}_false_label").attr("hidden", false);
+        $("#comment_{{ comment.id }}_unknown_label").attr("hidden", false);
         $("#comment_{{ comment.id }}_save").attr("hidden", false);
     }
 

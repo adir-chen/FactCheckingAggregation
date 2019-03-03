@@ -280,6 +280,7 @@ def up_vote(request):
     if not request.user.is_authenticated:
         raise Http404("Permission denied")
     from claims.views import view_claim
+    from users.views import update_reputation_for_user
     vote_fields = request.POST.dict()
     vote_fields['user_id'] = request.user.id
     valid_vote, err_msg = check_if_vote_is_valid(vote_fields)
@@ -290,10 +291,13 @@ def up_vote(request):
     comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
     if comment.up_votes.filter(id=request.user.id).exists():
         comment.up_votes.remove(request.user.id)
+        update_reputation_for_user(comment.user_id, False, 1)
     else:
         comment.up_votes.add(request.user.id)
+        update_reputation_for_user(comment.user_id, True, 1)
         if comment.down_votes.filter(id=request.user.id).exists():
             comment.down_votes.remove(request.user.id)
+            update_reputation_for_user(comment.user_id, True, 1)
     save_log_message(request.user.id, request.user.username, 'Up voting comment with id '
                      + str(request.POST.get('comment_id')), True)
     update_authenticity_grade(comment.claim_id)
@@ -305,6 +309,7 @@ def down_vote(request):
     if not request.user.is_authenticated:
         raise Http404("Permission denied")
     from claims.views import view_claim
+    from users.views import update_reputation_for_user
     vote_fields = request.POST.dict()
     vote_fields['user_id'] = request.user.id
     valid_vote, err_msg = check_if_vote_is_valid(vote_fields)
@@ -315,10 +320,13 @@ def down_vote(request):
     comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
     if comment.down_votes.filter(id=request.user.id).exists():
         comment.down_votes.remove(request.user.id)
+        update_reputation_for_user(comment.user_id, True, 1)
     else:
         comment.down_votes.add(request.user.id)
+        update_reputation_for_user(comment.user_id, False, 1)
         if comment.up_votes.filter(id=request.user.id).exists():
             comment.up_votes.remove(request.user.id)
+            update_reputation_for_user(comment.user_id, False, 1)
     save_log_message(request.user.id, request.user.username,
                      'Down voting comment with id ' + str(request.POST.get('comment_id')), True)
     update_authenticity_grade(comment.claim_id)
@@ -329,6 +337,7 @@ def down_vote(request):
 # The function returns true in case the vote is valid, otherwise false and an error
 def check_if_vote_is_valid(vote_fields):
     err = ''
+    max_minutes_to_vote_comment = 5
     if 'user_id' not in vote_fields or not vote_fields['user_id']:
         err += 'Missing value for user id'
     elif not check_if_user_exists_by_user_id(vote_fields['user_id']):
@@ -337,6 +346,9 @@ def check_if_vote_is_valid(vote_fields):
         err += 'Missing value for comment id'
     elif len(Comment.objects.filter(id=vote_fields['comment_id'])) == 0:
         err += 'Comment with id ' + str(vote_fields['comment_id']) + ' does not exist'
+    elif (timezone.now() - Comment.objects.filter(id=vote_fields['comment_id']).first().timestamp).total_seconds() \
+             / 60 > max_minutes_to_vote_comment:
+        err += 'You can no vote this comment yet'
     if len(err) > 0:
         return False, err
     return True, err
@@ -410,6 +422,7 @@ def check_comment_new_fields(new_comment_fields):
 # This function deletes a comment from the website
 def delete_comment(request):
     from claims.views import view_claim
+    from users.views import update_reputation_for_user
     if not request.user.is_authenticated:
         raise Http404("Permission denied")
     valid_delete_claim, err_msg = check_if_delete_comment_is_valid(request)
@@ -417,7 +430,10 @@ def delete_comment(request):
         save_log_message(request.user.id, request.user.username,
                          'Deleting a comment. Error: ' + err_msg)
         raise Exception(err_msg)
-    claim_id = Comment.objects.filter(id=request.POST.get('comment_id')).first().claim_id
+    comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
+    claim_id = comment.claim_id
+    update_reputation_for_user(comment.user_id, False, comment.up_votes.count)
+    update_reputation_for_user(comment.user_id, True, comment.down_votes.count)
     Comment.objects.filter(id=request.POST.get('comment_id'), user_id=request.user.id).delete()
     save_log_message(request.user.id, request.user.username,
                      'Deleting comment with id ' + str(request.POST.get('comment_id')), True)

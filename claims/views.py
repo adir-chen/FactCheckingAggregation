@@ -136,12 +136,19 @@ def get_tags_for_claim(claim_id):
 def view_claim(request, claim_id):
     claim = get_claim_by_id(claim_id)
     if claim is None:
-        raise Http404("Claim with the given id: " + str(claim_id) + " does not exist")
+        raise Exception("Claim with the given id: " + str(claim_id) + " does not exist")
     comment_objs = Comment.objects.filter(claim_id=claim_id)
     comments = {}
     for comment in comment_objs:
+        user_img = Users_Images.objects.filter(user_id=comment.user_id)
+        if len(user_img) == 0:
+            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
+            new_user_img.save()
+            user_img = new_user_img
+        else:
+            user_img = user_img.first()
         comments[comment] = {'user': User.objects.filter(id=comment.user_id).first(),
-                             'user_img': Users_Images.objects.filter(user_id=comment.user_id).first()}
+                             'user_img': user_img}
     return render(request, 'claims/claim.html', {
         'claim': claim,
         'comments': comments,
@@ -155,7 +162,6 @@ def view_home(request):
     claims = list(get_users_images_for_claims(Claim.objects.all().order_by('-id')).items())
     page = request.GET.get('page')
     paginator = Paginator(claims, 7)
-
     return render(request, 'claims/index.html', {'claims': paginator.get_page(page)})
 
 
@@ -250,6 +256,10 @@ def delete_claim(request):
         save_log_message(request.user.id, request.user.username,
                          'Deleting a claim. Error: ' + err_msg)
         raise Exception(err_msg)
+    from users.views import update_reputation_for_user
+    for comment in Comment.objects.filter(claim_id=request.POST.get('claim_id')):
+        update_reputation_for_user(comment.user_id, False, comment.up_votes.count)
+        update_reputation_for_user(comment.user_id, True, comment.down_votes.count)
     Claim.objects.filter(id=request.POST.get('claim_id'), user_id=request.user.id).delete()
     save_log_message(request.user.id, request.user.username,
                      'Deleting a claim with id ' + str(request.POST.get('claim_id')), True)
