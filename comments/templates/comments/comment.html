@@ -21,12 +21,12 @@
                     <img style="max-width: 90px; margin-bottom: 20px;" src="{{ user_details.user_img.user_img }}"><br>
                     {% load static %}
                     {%  if comment.system_label == 'True' %}
-                        <img src="{% static 'claims/assets/images/TrueLabel2.png' %}" >
+                        <img src="{% static 'claims/assets/images/TrueLabel.png' %}" >
                         <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="True" checked><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
                         <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="False"><span id='comment_{{ comment.id }}_false_label' hidden>False</span>
                         <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="label" hidden='hidden' value="Unknown"><span id='comment_{{ comment.id }}_unknown_label' hidden>Unknown</span>
                     {% elif comment.system_label == 'False' %}
-                        <img src="{% static 'claims/assets/images/FalseLabel2.png' %}" >
+                        <img src="{% static 'claims/assets/images/FalseLabel.png' %}" >
                         <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="True}}"><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
                         <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="False" checked><span id='comment_{{ comment.id }}_false_label' hidden>False</span>
                         <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="label" hidden='hidden' value="Unknown"><span id='comment_{{ comment.id }}_unknown_label' hidden>Unknown</span>

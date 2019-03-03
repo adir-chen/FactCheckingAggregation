@@ -151,12 +151,12 @@ def view_claim(request, claim_id):
 # This function returns the home page of the website
 @ensure_csrf_cookie
 def view_home(request):
-    headlines_size = 3
-    claims_size = 40
-    claims = Claim.objects.all().order_by('-id')[:claims_size]
-    headlines = get_users_images_for_claims(claims[:headlines_size])
-    sub_headlines = get_users_images_for_claims(claims[headlines_size:])
-    return render(request, 'claims/index.html', {'headlines': headlines, 'sub_headlines': sub_headlines})
+    from django.core.paginator import Paginator
+    claims = list(get_users_images_for_claims(Claim.objects.all().order_by('-id')).items())
+    page = request.GET.get('page')
+    paginator = Paginator(claims, 7)
+
+    return render(request, 'claims/index.html', {'claims': paginator.get_page(page)})
 
 
 # This function returns a dict with pairs of (claim, user_image)

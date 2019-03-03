@@ -1,27 +1,59 @@
-{% extends 'claims/layout2.html' %}
+{% extends 'claims/layout.html' %}
 
 {% block page_content %}
 
-    <div class="headlines">
-        <div id="claim_large_columns" style="max-width: 1150px; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
-            {% for claim, img in headlines.items %}
-                {% include 'claims/claimbox_large.html' with claim=claim img=img %}
-            {% endfor %}
+    {% if claims.number == 1 %}
+        <div class="headlines">
+            <div id="claim_large_columns" style="max-width: 1150px; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
+                {% for claim, img in claims.object_list|slice:"0:3" %}
+                    {% include 'claims/claimbox_large.html' with claim=claim img=img %}
+                {% endfor %}
+            </div>
         </div>
-    </div>
-    <div class="page_wrapper">
-        <div id="claim_columns">
-            {% for claim, img in sub_headlines.items %}
-                {% include 'claims/claimbox.html' with claim=claim img=img %}
-            {% endfor %}
+        <div class="page_wrapper">
+            <div id="claim_columns">
+                {% for claim, img in claims.object_list|slice:"3:" %}
+                    {% include 'claims/claimbox.html' with claim=claim img=img %}
+                {% endfor %}
+            </div>
         </div>
+        {% else %}
+        <div class="page_wrapper">
+            <div id="claim_columns">
+                {% for claim, img in claims.object_list %}
+                    {% include 'claims/claimbox.html' with claim=claim img=img %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+
+
+    <div class="pagination">
+        <span class="step-links">
+            {% if claims.has_previous %}
+                <a href="?page=1" class="btn btn-info">&laquo; first</a>
+                <a href="?page={{ claims.previous_page_number }}" class="btn btn-info">previous</a>
+            {% endif %}
+
+            <span class="current" style="padding: 10px 20px;">
+                Page {{ claims.number }} of {{ claims.paginator.num_pages }}
+            </span>
+
+            {% if claims.has_next %}
+                <a href="?page={{ claims.next_page_number }}" class="btn btn-info">next</a>
+                <a href="?page={{ claims.paginator.num_pages }}" class="btn btn-info">last &raquo;</a>
+            {% endif %}
+        </span>
     </div>
 
 {% endblock %}
 
 
-
-
 {% block claim_head_title %}
-    WhatTheFact?! | Home
+    {% if claims.number == 1 %}
+        WhatTheFact?! | Home
+    {%  else %}
+        WhatTheFact?! | Page {{ claims.number }}
+    {%  endif %}
 {% endblock %}
