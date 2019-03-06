@@ -17,3 +17,7 @@ def save_log_message(user_id, username, action, result=False):
                  action=action,
                  result=result)
     log.save()
+
+
+def check_duplicate_log_for_user(user_id, action):
+    return len(Logger.objects.filter(user_id=user_id, action__icontains=action)) > 0

@@ -5,7 +5,7 @@ from comments.models import Comment
 from comments.views import add_comment
 from django.contrib.auth.models import User
 from logger.models import Logger
-from logger.views import save_log_message
+from logger.views import save_log_message, check_duplicate_log_for_user
 from users.models import Users_Images, Scrapers
 from users.views import check_if_user_exists_by_user_id
 from .models import Claim
@@ -307,3 +307,27 @@ def handler_500(request):
 
 def about_page(request):
     return render(request, 'claims/about.html')
+
+
+def report_spam(request):
+    if not request.user.is_authenticated:
+        raise Http404("Permission denied")
+    valid_spam_report, err_msg = check_if_spam_report_valid(request)
+    if not valid_spam_report:
+        save_log_message(request.user.id, request.user.username,
+                         'Reporting a claim as spam. Error: ' + err_msg)
+        raise Exception(err_msg)
+    save_log_message(request.user.id, request.user.username,
+                     'Reporting a claim with id ' + str(request.POST.get('claim_id')) + ' as spam', True)
+    return view_claim(request, request.POST.get('claim_id'))
+
+
+def check_if_spam_report_valid(request):
+    err = ''
+    if len(Claim.objects.filter(id=request.POST.get('claim_id'))) == 0:
+        err += 'claim with id ' + request.POST.get('claim_id') + ' does not exist'
+    elif check_duplicate_log_for_user(request.user.id, 'Reporting a claim with id ' + str(request.POST.get('claim_id')) + ' as spam'):
+        err += 'user already reported claim with id ' + request.POST.get('claim_id') + ' as spam'
+    if len(err) > 0:
+        return False, err
+    return True, err

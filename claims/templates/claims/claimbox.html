@@ -1,9 +1,16 @@
 {% load staticfiles%}
 
-<div class="claim_box" style="position: relative; padding-bottom: 200px;">
+<div class="claim_box" style="position: relative; padding-bottom: 260px;">
     <img src="{{ claim.image_src }}">
     <div class="claim_box_info" style="height: 100%;">
         <h6>{{ claim.claim }}</h6>
+    </div>
+    <div style="position: absolute; bottom: 230px; padding: 15px;">
+        {% if claim.authenticity_grade >= 50 %}
+            <div style="width: 70px; border-radius: 7px; padding: 10px; background: #d4edda; color: #155724; text-align: center;"><b>{{ claim.authenticity_grade }}%</b></div>
+        {% else %}
+            <div style="width: 70px; border-radius: 7px; padding: 10px; background: #d35b66; color: #721e3a; text-align: center;"><b>{{ claim.authenticity_grade }}%</b></div>
+        {% endif %}
     </div>
     <div class="claim_box_info" style="font-size: 16px; position: absolute; bottom: 150px;">
         <p>Category: {{ claim.category }}</p>

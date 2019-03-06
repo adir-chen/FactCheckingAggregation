@@ -27,10 +27,13 @@
         </div>
 
         <br>
-        {% if request.user.is_authenticated and claim.user_id == request.user.id %}
-            <button id="{{ claim.id }}_claim_edit" hidden="hidden" type="submit" class="btn btn-info" onclick="edit_claim()" style="margin: 10px 0;">Edit your claim</button>
-            <button id="{{ claim.id }}_claim_save" hidden="hidden" type="submit" class="btn btn-info" style="margin: 10px 0;">Save</button>
-            <button id="{{ claim.id }}_claim_delete" type="submit" class="btn btn-danger" style="margin: 10px 0;">Delete</button>
+        {% if request.user.is_authenticated %}
+            {% if claim.user_id == request.user.id %}
+                <button id="{{ claim.id }}_claim_edit" hidden="hidden" type="submit" class="btn btn-info" onclick="edit_claim()" style="margin: 10px 0;">Edit your claim</button>
+                <button id="{{ claim.id }}_claim_save" hidden="hidden" type="submit" class="btn btn-info" style="margin: 10px 0;">Save</button>
+                <button id="{{ claim.id }}_claim_delete" type="submit" class="btn btn-danger" style="margin: 10px 0;">Delete</button>
+            {% endif %}
+            <button id="{{ claim.id }}_claim_report_spam" type="submit" class="btn btn-danger" style="margin: 10px 0;">Report Spam</button>
         {% endif %}
         {% load static %}
         <a class="btn twitter-share-button" href="https://twitter.com/intent/tweet?text=http://{{ request.META.HTTP_HOST }}{{ request.path }}%20"
@@ -143,6 +146,24 @@
                 },
                 success: function () {
                     location.href = 'http://{{ request.META.HTTP_HOST }}';
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        });
+
+        $("#{{ claim.id }}_claim_report_spam").click(function(e){
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'claims:report_spam' %}",
+                headers: { "X-CSRFToken": '{{ csrf_token }}' },
+                data: {
+                    claim_id: '{{ claim.id }}',
+                },
+                success: function () {
+                    location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';
                 },
                 error: function (error) {
                     console.log(error);
