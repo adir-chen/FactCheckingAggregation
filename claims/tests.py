@@ -1,7 +1,7 @@
 from django.http import HttpRequest, QueryDict, Http404
 from django.test import TestCase, Client
 from claims.models import Claim
-from claims.views import add_claim, check_if_claim_is_valid, post_above_limit, \
+from claims.views import add_claim, check_if_claim_is_valid, is_english_input, post_above_limit, \
     get_all_claims, get_newest_claims, get_claim_by_id, get_category_for_claim, get_tags_for_claim,\
     view_claim, view_home, get_users_images_for_claims, logout_view, add_claim_page, export_claims_page, \
     edit_claim, check_claim_new_fields, delete_claim, check_if_delete_claim_is_valid, \
@@ -10,6 +10,7 @@ from comments.models import Comment
 from users.models import User, Users_Images, Scrapers
 import random
 import datetime
+import string
 
 
 class ClaimTests(TestCase):
@@ -28,75 +29,75 @@ class ClaimTests(TestCase):
 
         self.num_of_saved_users = 2
         self.claim_1 = Claim(user_id=self.user.id,
-                             claim='Sniffing rosemary increases human memory by up to 75 percent',
-                             category='Science',
-                             tags="sniffing human memory",
+                             claim='claim1',
+                             category='category1',
+                             tags='tag1, tag2, tag3',
                              authenticity_grade=0,
-                             image_src='image_1')
+                             image_src='image1')
         self.claim_2 = Claim(user_id=self.user.id,
-                             claim='A photograph shows the largest U.S. flag ever made, displayed in front of Hoover Dam',
-                             category='Fauxtography',
-                             tags="photograph U.S. flag",
+                             claim='claim2',
+                             category='category2',
+                             tags='tag4, tag5',
                              authenticity_grade=0,
-                             image_src='image_2')
+                             image_src='image2')
         self.claim_3 = Claim(user_id=self.user.id,
-                             claim='Virginia Gov. Ralph Northam "stated he would execute a baby after birth',
-                             category='Politics',
-                             tags="Virginia baby birth",
+                             claim='claim3',
+                             category='category3',
+                             tags='tag6, tag7, tag8, tag9',
                              authenticity_grade=0,
-                             image_src='image_3')
+                             image_src='image3')
         self.claim_4 = Claim(user_id=self.user.id,
-                             claim='Kurt Russell once claimed Democrats had vowed to abolish several constitutional amendments and labelled them "enemies of the state',
-                             category='Junk News',
-                             tags="Kurt Russell constitutional democrat",
+                             claim='claim4',
+                             category='category4',
+                             tags='tag10 tag11',
                              authenticity_grade=0,
-                             image_src='image_4')
+                             image_src='image4')
         self.claim_1.save()
         self.claim_2.save()
         self.claim_3.save()
         self.comment_1 = Comment(claim_id=self.claim_1.id,
-                                 user_id=self.user.id,
-                                 title=self.claim_1.claim,
+                                 user_id=self.claim_1.user_id,
+                                 title='title1',
                                  description='description1',
                                  url='url1',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
-                                 label='label1')
+                                 label='True')
         self.comment_2 = Comment(claim_id=self.claim_2.id,
-                                 user_id=self.user.id,
-                                 title=self.claim_2.claim,
+                                 user_id=self.claim_2.user_id,
+                                 title='title2',
                                  description='description2',
                                  url='url2',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
-                                 label='label2')
+                                 label='False')
         self.comment_3 = Comment(claim_id=self.claim_3.id,
-                                 user_id=self.user.id,
-                                 title=self.claim_3.claim,
+                                 user_id=self.claim_3.user_id,
+                                 title='title3',
                                  description='description3',
                                  url='url3',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
-                                 label='label3')
+                                 label='Unknown')
 
         self.comment_1.save()
         self.comment_2.save()
         self.comment_3.save()
         self.num_of_saved_claims = 3
         self.new_claim_details = {'claim': self.claim_4.claim,
-                                  'title': 'Did Kurt Russell Say Democrats Should Be Declared ‘Enemies of the State’?',
-                                  'description': 'A notorious producer of junk news recycled an old quotation attributed to the veteran Hollywood actor.',
-                                  'url': "https://www.snopes.com/fact-check/kurt-russell-democrats/",
+                                  'title': 'title4',
+                                  'description': 'description4',
+                                  'url': 'url4',
                                   'add_comment': "true",
                                   'verdict_date': datetime.datetime.strptime(str(datetime.date.today() - datetime.timedelta(days=random.randint(0, 10))), '%Y-%m-%d').strftime('%d/%m/%Y'),
                                   'tags': self.claim_4.tags,
                                   'category': self.claim_4.category,
                                   'label': 'False',
-                                  'img_src': 'img_src'}
+                                  'image_src': self.claim_4.image_src}
         self.post_request = HttpRequest()
         self.post_request.method = 'POST'
         self.update_claim_details = {'claim_id': self.claim_1.id,
-                                     'claim': self.claim_1.claim,
-                                     'category': self.claim_1.category,
-                                     'tags': self.claim_1.tags,
-                                     'image_src': self.claim_1.image_src}
+                                     'claim': 'newClaim1',
+                                     'category': 'newCategory1',
+                                     'tags': 'newTag1 newTag2 newTag3 newTag4',
+                                     'image_src': 'image1'}
 
     def tearDown(self):
         pass
@@ -107,13 +108,13 @@ class ClaimTests(TestCase):
         query_dict.update(self.new_claim_details)
         self.post_request.POST = query_dict
         self.post_request.user = self.user
-        add_claim(self.post_request)
+        self.assertTrue(add_claim(self.post_request).status_code == 200)
         self.assertTrue(len(Claim.objects.all()) == len_claims + 1)
-        claim_4 = get_claim_by_id(4)
-        self.assertTrue(claim_4.claim == self.claim_4.claim)
-        self.assertTrue(claim_4.category == self.claim_4.category)
-        self.claim_4.tags = "Kurt, Russell, constitutional, democrat"
-        self.assertTrue(claim_4.tags == self.claim_4.tags)
+        self.assertFalse(get_claim_by_id(self.num_of_saved_claims + 1) is None)
+        claim_4 = get_claim_by_id(self.num_of_saved_claims + 1)
+        self.assertTrue(claim_4.claim == self.new_claim_details['claim'])
+        self.assertTrue(claim_4.category == self.new_claim_details['category'])
+        self.assertTrue(claim_4.tags == ', '.join(self.new_claim_details['tags'].split()))
         self.assertTrue(claim_4.authenticity_grade == 0)
 
     def test_add_claim_by_user_not_authenticated(self):
@@ -208,11 +209,11 @@ class ClaimTests(TestCase):
     def test_check_if_claim_is_valid_missing_tags(self):
         self.new_claim_details['user_id'] = self.user.id
         del self.new_claim_details['tags']
-        self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
+        self.assertTrue(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_missing_img_src(self):
         self.new_claim_details['user_id'] = self.user.id
-        del self.new_claim_details['img_src']
+        del self.new_claim_details['image_src']
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_missing_add_comment(self):
@@ -227,6 +228,21 @@ class ClaimTests(TestCase):
 
     def test_check_if_claim_is_valid_invalid_user_id(self):
         self.new_claim_details['user_id'] = self.num_of_saved_users + random.randint(1, 10)
+        self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
+
+    def test_check_if_claim_is_valid_invalid_input_for_claim(self):
+        self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['claim'] = 'קלט בשפה שאינה אנגלית'
+        self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
+
+    def test_check_if_claim_is_valid_invalid_input_for_category(self):
+        self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['category'] = 'المدخلات بلغة غير الإنجليزية'
+        self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
+
+    def test_check_if_claim_is_valid_invalid_input_for_tags(self):
+        self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['category'] = '输入英语以外的语言 输入英语以外的语言'
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_post_above_limit(self):
@@ -253,8 +269,16 @@ class ClaimTests(TestCase):
             add_claim(self.post_request)
         self.assertTrue(post_above_limit(self.new_claim_details['user_id']))
 
+    def test_is_english_input_valid(self):
+        self.assertTrue(is_english_input(''.join(random.choices(string.ascii_uppercase + string.digits, k=random.randint(10, 20)))))
+
+    def test_is_english_input_invalid(self):
+        self.assertFalse(is_english_input('בדיקה'))
+        self.assertFalse(is_english_input('فحص'))
+        self.assertFalse(is_english_input('检查'))
+
     def test_get_all_claims(self):
-        self.assertTrue(len(get_all_claims()) == 3)
+        self.assertTrue(len(get_all_claims()) == self.num_of_saved_claims)
 
     def test_get_all_claims_after_add_claim(self):
         len_claims = len(get_all_claims())
@@ -264,7 +288,7 @@ class ClaimTests(TestCase):
     def test_get_newest_claims_many_claims(self):
         for i in range(4, 24):
             claim = Claim(user_id=self.user.id, claim='claim' + str(i), category='category ' + str(i),
-                          tags='claim' + str(i), authenticity_grade=0)
+                          tags='tag' + str(i) + ' tag' + str(i + 1), authenticity_grade=0)
             claim.save()
         for claim in get_newest_claims():
             self.assertFalse(claim.claim == self.claim_1.claim)
@@ -284,16 +308,13 @@ class ClaimTests(TestCase):
         result = get_newest_claims()
         self.assertTrue(result[0].claim == self.claim_3.claim)
         self.assertTrue(result[0].category == self.claim_3.category)
-        self.claim_3.tags = 'Virginia, baby, birth'
-        self.assertFalse(result[0].tags == self.claim_3.tags)
+        self.assertTrue(result[0].tags == self.claim_3.tags)
         self.assertTrue(result[1].claim == self.claim_2.claim)
         self.assertTrue(result[1].category == self.claim_2.category)
-        self.claim_2.tags = 'photograph, U.S., flag'
-        self.assertFalse(result[1].tags == self.claim_2.tags)
+        self.assertTrue(result[1].tags == self.claim_2.tags)
         self.assertTrue(result[2].claim == self.claim_1.claim)
         self.assertTrue(result[2].category == self.claim_1.category)
-        self.claim_1.tags = 'sniffing, human ,memory'
-        self.assertFalse(result[2].tags == self.claim_1.tags)
+        self.assertTrue(result[2].tags == self.claim_1.tags)
         self.assertTrue(len(get_newest_claims()) == 3)
 
     def test_get_claim_by_id(self):
@@ -317,14 +338,15 @@ class ClaimTests(TestCase):
 
     def test_get_claim_by_id_after_add_claim(self):
         self.claim_4.save()
-        claim_4_info = get_claim_by_id(4)
+        self.assertFalse(get_claim_by_id(self.num_of_saved_claims + 1) is None)
+        claim_4_info = get_claim_by_id(self.num_of_saved_claims + 1)
         self.assertTrue(claim_4_info.claim == self.claim_4.claim)
         self.assertTrue(claim_4_info.category == self.claim_4.category)
         self.assertTrue(claim_4_info.tags == self.claim_4.tags)
         self.assertTrue(claim_4_info.authenticity_grade == self.claim_4.authenticity_grade)
 
     def test_get_claim_by_invalid_id(self):
-        self.assertTrue(get_claim_by_id(4) is None)
+        self.assertTrue(get_claim_by_id(self.num_of_saved_claims + 1) is None)
 
     def test_get_category_for_claim(self):
         self.assertTrue(get_category_for_claim(self.claim_1.id) == self.claim_1.category)
@@ -343,12 +365,16 @@ class ClaimTests(TestCase):
         self.assertTrue(get_tags_for_claim(self.claim_2.id) == self.claim_2.tags)
         self.assertTrue(get_tags_for_claim(self.claim_3.id) == self.claim_3.tags)
 
-    def test_get_tags_for_claim_new_claim(self):
-        self.claim_4.save()
-        self.assertTrue(get_tags_for_claim(self.claim_4.id) == self.claim_4.tags)
+    def test_get_tags_after_adding_new_claim(self):
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_claim_details)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user
+        self.assertTrue(add_claim(self.post_request).status_code == 200)
+        self.assertTrue(get_tags_for_claim(self.num_of_saved_claims + 1) == ', '.join(self.new_claim_details['tags'].split()))
 
     def test_get_tags_for_claim_invalid_claim(self):
-        self.assertTrue(get_tags_for_claim(self.claim_4.id) is None)
+        self.assertTrue(get_tags_for_claim(self.num_of_saved_claims + 1) is None)
 
     def test_view_claim_valid(self):
         request = HttpRequest()
@@ -359,9 +385,10 @@ class ClaimTests(TestCase):
     def test_view_claim_with_comment(self):
         comment_1 = Comment(claim_id=self.claim_1.id,
                             user_id=self.user.id,
-                            title=self.claim_1.claim,
+                            title='title1',
                             description='description1',
                             url='url1',
+                            tags='tag1',
                             verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
                             label='label1')
         comment_1.save()
@@ -379,18 +406,18 @@ class ClaimTests(TestCase):
         for i in range(4, 24):
             claim = Claim(user_id=self.user.id,
                           claim='claim' + str(i),
-                          category='category ' + str(i),
-                          tags='claim' + str(i),
+                          category='category' + str(i),
+                          tags='tag' + str(i),
                           authenticity_grade=0,
-                          image_src='claim' + str(i))
+                          image_src='image' + str(i))
             claim.save()
             comment = Comment(claim_id=claim.id,
                               user_id=claim.user.id,
-                              title=claim.claim,
-                              description='description1',
-                              url='url1',
+                              title='title' + str(i),
+                              description='description' + str(i),
+                              url='url' + str(i),
                               verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
-                              label='label1')
+                              label='label' + str(i))
             comment.save()
         request = HttpRequest()
         request.method = 'GET'
@@ -453,14 +480,18 @@ class ClaimTests(TestCase):
 
     def test_edit_claim_valid_with_different_claim(self):
         self.update_claim_details['claim'] = self.claim_1.claim + '_new'
-        self.post_request.POST = self.update_claim_details
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.update_claim_details)
+        self.post_request.POST = query_dict
         self.post_request.user = self.user
         self.assertTrue(edit_claim(self.post_request).status_code == 200)
         self.assertTrue(Claim.objects.filter(id=self.update_claim_details['claim_id'])[0].claim == self.claim_1.claim + '_new')
 
     def test_edit_claim_with_existing_claim(self):
         self.update_claim_details['claim'] = self.claim_2
-        self.post_request.POST = self.update_claim_details
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.update_claim_details)
+        self.post_request.POST = query_dict
         self.post_request.user = self.user
         self.assertRaises(Exception, edit_claim, self.post_request)
 
@@ -472,27 +503,35 @@ class ClaimTests(TestCase):
 
     def test_edit_claim_with_invalid_user(self):
         guest = User(id=self.num_of_saved_users + random.randint(1, 10), username='guest')
-        self.post_request.POST = self.update_claim_details
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.update_claim_details)
+        self.post_request.POST = query_dict
         self.post_request.user = guest
         self.assertRaises(Exception, edit_claim, self.post_request)
 
     def test_edit_claim_valid_with_different_category(self):
         self.update_claim_details['category'] = self.claim_2.category
-        self.post_request.POST = self.update_claim_details
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.update_claim_details)
+        self.post_request.POST = query_dict
         self.post_request.user = self.user
         self.assertTrue(edit_claim(self.post_request).status_code == 200)
         self.assertTrue(Claim.objects.filter(id=self.update_claim_details['claim_id'])[0].category == self.claim_2.category)
 
     def test_edit_claim_valid_with_different_tags(self):
-        self.update_claim_details['tags'] = self.claim_2.tags
-        self.post_request.POST = self.update_claim_details
+        self.update_claim_details['tags'] = 'newTag1 newTag2 newTag3'
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.update_claim_details)
+        self.post_request.POST = query_dict
         self.post_request.user = self.user
         self.assertTrue(edit_claim(self.post_request).status_code == 200)
-        self.assertTrue(Claim.objects.filter(id=self.update_claim_details['claim_id'])[0].tags == self.claim_2.tags)
+        self.assertTrue(Claim.objects.filter(id=self.update_claim_details['claim_id'])[0].tags == ', '.join('newTag1 newTag2 newTag3'.split()))
 
     def test_edit_claim_valid_with_different_image_src(self):
         self.update_claim_details['image_src'] = self.claim_2.image_src
-        self.post_request.POST = self.update_claim_details
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.update_claim_details)
+        self.post_request.POST = query_dict
         self.post_request.user = self.user
         self.assertTrue(edit_claim(self.post_request).status_code == 200)
         self.assertTrue(Claim.objects.filter(id=self.update_claim_details['claim_id'])[0].image_src == self.claim_2.image_src)
@@ -505,92 +544,85 @@ class ClaimTests(TestCase):
                 args_to_remove.append(list(self.update_claim_details.keys())[j])
             for j in range(len(args_to_remove)):
                 del self.update_claim_details[args_to_remove[j]]
-            self.post_request.POST = self.update_claim_details
+            query_dict = QueryDict('', mutable=True)
+            query_dict.update(self.update_claim_details)
+            self.post_request.POST = query_dict
             self.post_request.user = self.user
             self.assertRaises(Exception, edit_claim, self.post_request)
             self.update_claim_details = data_copy.copy()
 
-    def test_edit_claim_valid_with_different_tags(self):
-        self.update_claim_details['tags'] = self.claim_2.tags
-        self.post_request.POST = self.update_claim_details
-        self.post_request.user = self.user
-        self.assertTrue(edit_claim(self.post_request).status_code == 200)
-        self.assertTrue(Claim.objects.filter(id=self.update_claim_details['claim_id'])[0].tags == self.claim_2.tags)
-
     def test_check_claim_new_fields(self):
-        self.post_request.POST = self.update_claim_details
-        self.post_request.user = self.user
-        self.assertTrue(check_claim_new_fields(self.post_request)[0])
+        self.update_claim_details['user_id'] = self.user.id
+        self.assertTrue(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_invalid_claim_id(self):
-        self.update_claim_details['claim_id'] = random.randint(self.num_of_saved_claims + 1, self.num_of_saved_claims + 10)
-        self.post_request.POST = self.update_claim_details
-        self.post_request.user = self.user
-        self.assertFalse(check_claim_new_fields(self.post_request)[0])
+        self.update_claim_details['user_id'] = self.user.id
+        self.update_claim_details['claim_id'] = self.num_of_saved_claims + random.randint(1, 10)
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_missing_claim_id(self):
-        del self.update_claim_details['claim_id']
-        self.post_request.POST = self.update_claim_details
-        self.post_request.user = self.user
-        self.assertFalse(check_claim_new_fields(self.post_request)[0])
-
-    def test_check_claim_new_fields_user_not_authenticated(self):
-        from django.contrib.auth.models import AnonymousUser
-        self.post_request.POST = self.update_claim_details
-        self.post_request.user = AnonymousUser()
-        self.assertFalse(check_claim_new_fields(self.post_request)[0])
+        self.update_claim_details['claim_id'] = self.user.id
+        del self.update_claim_details['category']
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_missing_claim(self):
+        self.update_claim_details['user_id'] = self.user.id
         del self.update_claim_details['claim']
-        self.post_request.POST = self.update_claim_details
-        self.post_request.user = self.user
-        self.assertFalse(check_claim_new_fields(self.post_request)[0])
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_missing_category(self):
+        self.update_claim_details['user_id'] = self.user.id
         del self.update_claim_details['category']
-        self.post_request.POST = self.update_claim_details
-        self.post_request.user = self.user
-        self.assertFalse(check_claim_new_fields(self.post_request)[0])
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_missing_tags(self):
+        self.update_claim_details['user_id'] = self.user.id
         del self.update_claim_details['tags']
-        self.post_request.POST = self.update_claim_details
-        self.post_request.user = self.user
-        self.assertFalse(check_claim_new_fields(self.post_request)[0])
+        self.assertTrue(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_missing_image_src(self):
+        self.update_claim_details['user_id'] = self.user.id
         del self.update_claim_details['image_src']
-        self.post_request.POST = self.update_claim_details
-        self.post_request.user = self.user
-        self.assertFalse(check_claim_new_fields(self.post_request)[0])
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_claim_does_not_belong_to_user(self):
         user_3 = User(username='User3')
         user_3.save()
         new_claim = Claim(user_id=user_3.id,
-                          claim='New Claim',
-                          category='new_claim_category',
-                          tags="new_claims_tags",
+                          claim='newClaim',
+                          category='newCategory',
+                          tags='tag1 tag2 tag3',
                           authenticity_grade=0,
-                          image_src='new_claim_image')
+                          image_src='image')
         new_claim.save()
         self.update_claim_details['claim_id'] = new_claim.id
-        self.post_request.POST = self.update_claim_details
-        self.post_request.user = self.user
-        self.assertFalse(check_claim_new_fields(self.post_request)[0])
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_existing_claim(self):
+        self.update_claim_details['user_id'] = self.user.id
         self.update_claim_details['claim'] = self.claim_2.claim
-        self.post_request.POST = self.update_claim_details
-        self.post_request.user = self.user
-        self.assertFalse(check_claim_new_fields(self.post_request)[0])
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_edit_after_five_minutes(self):
+        self.update_claim_details['user_id'] = self.user.id
         Claim.objects.filter(id=self.claim_1.id).update(timestamp=datetime.datetime.now() -
-                                                            datetime.timedelta(minutes=6))
-        self.post_request.POST = self.update_claim_details
-        self.post_request.user = self.user
-        self.assertFalse(check_claim_new_fields(self.post_request)[0])
+                                                        datetime.timedelta(minutes=6))
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+
+    def test_check_claim_new_fields_invalid_input_for_claim(self):
+        self.update_claim_details['user_id'] = self.user.id
+        self.update_claim_details['claim'] = 'קלט בשפה שאינה אנגלית'
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+
+    def test_check_claim_new_fields_invalid_input_for_category(self):
+        self.update_claim_details['user_id'] = self.user.id
+        self.update_claim_details['category'] = 'المدخلات بلغة غير الإنجليزية'
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+
+    def test_check_claim_new_fields_invalid_input_for_tags(self):
+        self.update_claim_details['user_id'] = self.user.id
+        self.update_claim_details['category'] = '输入英语以外的语言 输入英语以外的语言'
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_delete_claim_valid_claim(self):
         claim_to_delete = {'claim_id': self.claim_1.id}

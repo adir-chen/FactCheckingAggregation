@@ -12,6 +12,9 @@ def view_log(request):
 
 # This function saves a new log in the logger
 def save_log_message(user_id, username, action, result=False):
+    if not user_id:
+        user_id = -1
+        username = 'Unknown'
     log = Logger(user_id=user_id,
                  username=username,
                  action=action,

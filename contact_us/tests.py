@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.http import HttpRequest, QueryDict
-from django.test import TestCase, Client
+from django.test import TestCase
 from contact_us.views import send_email, check_if_email_is_valid, check_for_spam, contact_us_page
 import random
 import string
@@ -28,9 +28,19 @@ class ContactUsTest(TestCase):
 
     def test_send_email_invalid_email(self):
         query_dict = QueryDict('', mutable=True)
-        self.data['user_email'] = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
+        self.data['user_email'] = ''.join(random.choices(string.ascii_uppercase, k=10))
         query_dict.update(self.data)
         self.post_request.POST = query_dict
+        self.post_request.user = self.user_1
+        self.assertRaises(Exception, send_email, self.post_request)
+
+    def test_send_email_invalid_email_user_not_authenticated(self):
+        from django.contrib.auth.models import AnonymousUser
+        query_dict = QueryDict('', mutable=True)
+        self.data['user_email'] = ''.join(random.choices(string.ascii_uppercase, k=10))
+        query_dict.update(self.data)
+        self.post_request.POST = query_dict
+        self.post_request.user = AnonymousUser()
         self.assertRaises(Exception, send_email, self.post_request)
 
     def test_send_email_invalid_request(self):
@@ -38,7 +48,37 @@ class ContactUsTest(TestCase):
         self.post_request.method = 'GET'
         query_dict.update(self.data)
         self.post_request.POST = query_dict
+        self.post_request.user = self.user_1
         self.assertRaises(Exception, send_email, self.post_request)
+
+    def test_send_email_invalid_request_user_not_authenticated(self):
+        from django.contrib.auth.models import AnonymousUser
+        query_dict = QueryDict('', mutable=True)
+        self.post_request.method = 'GET'
+        query_dict.update(self.data)
+        self.post_request.POST = query_dict
+        self.post_request.user = AnonymousUser()
+        self.assertRaises(Exception, send_email, self.post_request)
+
+    def test_send_email_missing_args(self):
+        from django.contrib.auth.models import AnonymousUser
+        for i in range(10):
+            dict_copy = self.data.copy()
+            args_to_remove = []
+            for j in range(random.randint(1, len(self.data.keys()) - 1)):
+                args_to_remove.append(list(self.data.keys())[j])
+            for j in range(len(args_to_remove)):
+                del self.data[args_to_remove[j]]
+            query_dict = QueryDict('', mutable=True)
+            query_dict.update(self.data)
+            self.post_request.POST = query_dict
+            rand_num = random.randint(1, 2)
+            if rand_num == 1:
+                self.post_request.user = self.user_1
+            else:
+                self.post_request.user = AnonymousUser()
+            self.assertRaises(Exception, send_email, self.post_request)
+            self.data = dict_copy.copy()
 
     def test_check_if_email_is_valid(self):
         ip = '127.0.0.1'

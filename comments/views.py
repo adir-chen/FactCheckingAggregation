@@ -46,7 +46,7 @@ def build_comment(claim_id, user_id, title, description, url, tags, verdict_date
         title=title,
         description=description,
         url=url,
-        tags=tags,
+        tags=', '.join(tags.split()),
         verdict_date=datetime.strptime(verdict_date, '%d/%m/%Y'),
         label=label,
         system_label=get_system_label_to_comment(label, user_id),
@@ -58,10 +58,13 @@ def build_comment(claim_id, user_id, title, description, url, tags, verdict_date
 # This function checks if a given comment is valid, i.e. the comment has all the fields with the correct format.
 # The function returns true in case the comment is valid, otherwise false and an error
 def check_if_comment_is_valid(comment_info):
+    from claims.views import check_if_tags_are_valid, is_english_input
     err = ''
     if 'tags' not in comment_info or not comment_info['tags']:
         comment_info['tags'] = ''
-    if 'claim_id' not in comment_info or not comment_info['claim_id']:
+    if not check_if_tags_are_valid(comment_info['tags']):
+        err += 'Incorrect format for tags. Tags should be separated by space'
+    elif 'claim_id' not in comment_info or not comment_info['claim_id']:
         err += 'Missing value for claim id'
     elif 'user_id' not in comment_info or not comment_info['user_id']:
         err += 'Missing value for user id'
@@ -81,6 +84,10 @@ def check_if_comment_is_valid(comment_info):
         err += 'User with id ' + str(comment_info['user_id']) + ' does not exist'
     elif len(Comment.objects.filter(claim_id=comment_info['claim_id'], user_id=comment_info['user_id'])) > 0:
         err += 'You can only comment once on a claim'
+    elif not is_english_input(comment_info['title']) or \
+            not is_english_input(comment_info['description']) or \
+            not is_english_input(comment_info['tags']):
+        err += 'Input should be in the English language'
     else:
         err = convert_date_format(comment_info, 'verdict_date')
     if len(err) > 0:
@@ -92,17 +99,15 @@ def check_if_comment_is_valid(comment_info):
 # in case the date has %Y-%m-%d format.
 # In addition, this function checks if the date is in the correct format according to the system format.
 # In case that the date is not valid, it returns an error.
-def convert_date_format(dict, date):
+def convert_date_format(comment_info, date):
     err = ''
-    if '-' in dict[date]:
+    if '-' in comment_info[date]:
         try:
-            date_parts = dict[date].split('-')
-            new_date_start = '' + date_parts[2] + '/' + date_parts[1] + '/' + date_parts[0]
-            dict[date] = new_date_start
-        except:
-            err += 'Date ' + dict[date] + ' is invalid'
-    if len(err) == 0 and not is_valid_verdict_date(dict[date]):
-        err += 'Date ' + dict[date] + ' is invalid'
+            comment_info[date] = datetime.strptime(comment_info[date], '%Y-%m-%d').strftime('%m/%d/%y')
+        except ValueError:
+            err += 'Date ' + comment_info[date] + ' is invalid'
+    if len(err) == 0 and not is_valid_verdict_date(comment_info[date]):
+        err += 'Date ' + comment_info[date] + ' is invalid'
     return err
 
 
@@ -112,7 +117,7 @@ def is_valid_verdict_date(verdict_date):
     try:
         verdict_datetime = datetime.strptime(verdict_date, "%d/%m/%Y")
         return datetime.today() >= verdict_datetime
-    except:
+    except ValueError:
         return False
 
 
@@ -347,8 +352,9 @@ def check_if_vote_is_valid(vote_fields):
     elif len(Comment.objects.filter(id=vote_fields['comment_id'])) == 0:
         err += 'Comment with id ' + str(vote_fields['comment_id']) + ' does not exist'
     elif (timezone.now() - Comment.objects.filter(id=vote_fields['comment_id']).first().timestamp).total_seconds() \
-             / 60 > max_minutes_to_vote_comment:
-        err += 'You can no vote this comment yet'
+             / 60 <= max_minutes_to_vote_comment:
+        err += 'You can no vote this comment yet. This comment has just been added, ' \
+               'therefore you will be able to vote on it in a few minutes.'
     if len(err) > 0:
         return False, err
     return True, err
@@ -371,6 +377,7 @@ def edit_comment(request):
         title=new_comment_fields['comment_title'],
         description=new_comment_fields['comment_description'],
         url=new_comment_fields['comment_reference'],
+        tags=', '.join(new_comment_fields['comment_tags'].split()),
         verdict_date=datetime.strptime(new_comment_fields['comment_verdict_date'], '%d/%m/%Y'),
         system_label=new_comment_fields['comment_label'])
     claim_id = Comment.objects.filter(id=new_comment_fields['comment_id']).first().claim_id
@@ -384,11 +391,14 @@ def edit_comment(request):
 # i.e. the comment has all the fields with the correct format.
 # The function returns true in case the comment's new fields are valid, otherwise false and an error
 def check_comment_new_fields(new_comment_fields):
+    from claims.views import check_if_tags_are_valid, is_english_input
     err = ''
     max_minutes_to_edit_comment = 5
     if 'comment_tags' not in new_comment_fields or not new_comment_fields['comment_tags']:
         new_comment_fields['comment_tags'] = ''
-    if 'user_id' not in new_comment_fields or not new_comment_fields['user_id']:
+    if not check_if_tags_are_valid(new_comment_fields['comment_tags']):
+        err += 'Incorrect format for tags. Tags should be separated by space'
+    elif 'user_id' not in new_comment_fields or not new_comment_fields['user_id']:
         err += 'Missing value for user id'
     elif 'comment_id' not in new_comment_fields or not new_comment_fields['comment_id']:
         err += 'Missing value for comment id'
@@ -402,16 +412,20 @@ def check_comment_new_fields(new_comment_fields):
         err += 'Missing value for comment reference'
     elif 'comment_label' not in new_comment_fields or not new_comment_fields['comment_label']:
         err += 'Missing value for comment label'
-    elif len(Comment.objects.filter(id=new_comment_fields['comment_id'])) == 0:
-        err += 'Comment with id ' + str(new_comment_fields['comment_id']) + ' does not exist'
     elif not check_if_user_exists_by_user_id(new_comment_fields['user_id']):
         err += 'User with id ' + str(new_comment_fields['user_id']) + ' does not exist'
+    elif len(Comment.objects.filter(id=new_comment_fields['comment_id'])) == 0:
+        err += 'Comment with id ' + str(new_comment_fields['comment_id']) + ' does not exist'
     elif len(Comment.objects.filter(id=new_comment_fields['comment_id'], user_id=new_comment_fields['user_id'])) == 0:
         err += 'Comment with id ' + str(new_comment_fields['comment_id']) + ' does not belong to user with id ' + \
                str(new_comment_fields['user_id'])
     elif (timezone.now() - Comment.objects.filter(id=new_comment_fields['comment_id']).first().timestamp).total_seconds() \
             / 60 > max_minutes_to_edit_comment:
         err += 'You can no longer edit your comment'
+    elif not is_english_input(new_comment_fields['comment_title']) or \
+            not is_english_input(new_comment_fields['comment_description']) or \
+            not is_english_input(new_comment_fields['comment_tags']):
+        err += 'Input should be in the English language'
     else:
         err = convert_date_format(new_comment_fields, 'comment_verdict_date')
     if len(err) > 0:

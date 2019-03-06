@@ -15,6 +15,16 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-134715089-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-134715089-1');
+    </script>
+
 </head>
 <body>
     <header id="header">
@@ -66,6 +76,7 @@
                         <a href="/users/add_all_scrapers" style="border-right: 0;">Add all Scrapers</a>
                         <a href="/users/add_scraper_guide" style="border-right: 0;">Adding a Scraper Guide</a>
                         <a href="/logger/view_log" style="border-right: 0;">Logger</a>
+                        <a href="/analytics/" style="border-right: 0;">View Analytics</a>
                     </div>
                 </div>
             {% endif %}

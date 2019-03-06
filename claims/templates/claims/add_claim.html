@@ -7,12 +7,12 @@
         <div class="new_comment claim_box" style="width: 100%; padding: 20px 40px 20px 20px;">
             <p id="add_new_claim_error_msg" style="color: red; font-size: 12px;" hidden> </p>
             <p id="add_new_claim_success_msg" style="color: dodgerblue; font-size: 12px;" hidden>Your claim has been added successfully.<br>
-                If you want to edit your comment you will be able to do so during the next 5 minutes.</p>
+                If you want to edit your claim/comment you will be able to do so during the next 5 minutes.</p>
                 <h5>Claim Details:</h5>
                 <input id="claim" type="text" placeholder="Claim" style="width: 100%; margin: 10px;"><br>
                 <input id="category" type="text" placeholder="Category" style="width: 100%; margin: 10px;"><br>
                 <input id="tags" type="text" placeholder="Tags (separated by space). Used for searching purpose." style="width: 100%; margin: 10px;"><br>
-                <input id="img_src" type="text" placeholder="Image Url" style="width: 100%; margin: 10px;"><br>
+                <input id="image_src" type="text" placeholder="Image Url" style="width: 100%; margin: 10px;"><br>
                 <br>
                 <input id='add_comment' type="checkbox" onclick='enable_comment()'>Add your comment on this claim<br><br>
                 <h5>Comment Details (Source Information):</h5>
@@ -45,7 +45,7 @@
                     claim: $("#claim").val(),
                     category: $("#category").val(),
                     tags: $("#tags").val(),
-                    img_src: $("#img_src").val(),
+                    image_src: $("#image_src").val(),
                     add_comment: document.getElementById('add_comment').checked,
                     title: $("#title").val(),
                     description: $("#description").val(),
@@ -58,7 +58,7 @@
                     $("#claim").val('');
                     $("#category").val('');
                     $("#tags").val('');
-                    $("#img_src").val('');
+                    $("#image_src").val('');
                     $("#title").val('');
                     $("#description").val('');
                     $("#url").val('');
@@ -70,7 +70,7 @@
                     $("#add_new_claim_success_msg").attr("hidden", true);
                     let err = error.responseText.split('\n')[1];
                     document.getElementById("add_new_claim_error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
+                    'Error: <br>' + err;
                     $("#add_new_claim_error_msg").attr("hidden", false);
                     $("html, body").animate({ scrollTop: 0 }, 0);
                 }

@@ -66,8 +66,9 @@
             <div style="margin: 10px;">
                 <input id="{{ claim.id }}_new_comment_true_label" type="radio" name="label" value="True">True<br>
                 <input id="{{ claim.id }}_new_comment_false_label" type="radio" name="label" value="False">False<br>
-                <input id="{{ claim.id }}_new_comment_unknown_label" type="radio" name="label" value="Unknown">Unknown<br>
+                <input id="{{ claim.id }}_new_comment_unknown_label" type="radio" name="label" value="Unknown" checked>Unknown<br>
             </div>
+            <p id="add_new_comment" style="color: dodgerblue; font-size: 12px;" >If you want to edit your comment you will be able to do so during the next 5 minutes from the time you added it.</p>
             <button type="submit" id="{{ claim.id }}_new_comment_save" class="btn btn-info" style="margin: 10px 0;">Add your comment</button>
         </div>
         {% endif %}
@@ -105,8 +106,8 @@
                 error: function (error) {
                     let err = error.responseText.split('\n')[1];
                     document.getElementById("{{ claim.id }}_new_comment_error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
-                    $("#{{ claim.id }}_new_comment_error_msg").attr("hidden", false);
+                    'Error: <br>' + err;
+                     $("#{{ claim.id }}_new_comment_error_msg").attr("hidden", false);
                 }
             });
         });
@@ -129,8 +130,8 @@
                 error: function (error) {
                     let err = error.responseText.split('\n')[1];
                     document.getElementById("claim_{{ claim.id }}_error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
-                    $("#claim_{{ claim.id }}_error_msg").attr("hidden", false);
+                    'Error: <br>' + err;
+                     $("#claim_{{ claim.id }}_error_msg").attr("hidden", false);
                 }
             });
         });
@@ -148,7 +149,10 @@
                     location.href = 'http://{{ request.META.HTTP_HOST }}';
                 },
                 error: function (error) {
-                    console.log(error);
+                    let err = error.responseText.split('\n')[1];
+                    document.getElementById("#claim_{{ claim.id }}_error_msg").innerHTML =
+                    'Error: <br>' + err;
+                    $("#claim_{{ claim.id }}_error_msg").attr("hidden", false);
                 }
             });
         });

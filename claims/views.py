@@ -5,6 +5,8 @@ from comments.models import Comment
 from comments.views import add_comment
 from django.contrib.auth.models import User
 from logger.models import Logger
+from logger.views import save_log_message
+from users.models import Users_Images, Scrapers, Users_Reputations
 from logger.views import save_log_message, check_duplicate_log_for_user
 from users.models import Users_Images, Scrapers
 from users.views import check_if_user_exists_by_user_id
@@ -33,7 +35,7 @@ def add_claim(request):
             category=claim_info['category'],
             tags=', '.join(claim_info['tags'].split()),
             authenticity_grade=0,
-            image_src=claim_info['img_src']
+            image_src=claim_info['image_src']
         )
         claim.save()
         save_log_message(request.user.id, request.user.username,
@@ -48,7 +50,8 @@ def add_claim(request):
                 save_log_message(request.user.id, request.user.username,
                                  'Adding a new comment on claim with id ' + str(
                                      claim.id) + '. Error: ' + str(e) +
-                                 '. This claim has been deleted because the user does not succeed to add a new claim with a comment on it.')
+                                 '. This claim has been deleted because ' +
+                                 'the user does not succeed to add a new claim with a comment on it.')
                 raise Exception(e)
         return view_claim(request, claim.id)
     raise Http404("Invalid method")
@@ -58,27 +61,49 @@ def add_claim(request):
 # The function returns true in case the claim is valid, otherwise false and an error
 def check_if_claim_is_valid(claim_info):
     err = ''
-    if 'user_id' not in claim_info:
+    if 'tags' not in claim_info or not claim_info['tags']:
+        claim_info['tags'] = ''
+    if not check_if_tags_are_valid(claim_info['tags']):
+        err += 'Incorrect format for tags. Tags should be separated by space'
+    elif 'user_id' not in claim_info:
         err += 'Missing value for user'
     elif 'claim' not in claim_info or not claim_info['claim']:
         err += 'Missing value for claim'
     elif 'category' not in claim_info or not claim_info['category']:
         err += 'Missing value for category'
-    elif 'tags' not in claim_info or not claim_info['tags']:
-        err += 'Missing value for tags'
-    elif 'img_src' not in claim_info:
-        err += 'Missing value for img_src'
+    elif 'image_src' not in claim_info:
+        err += 'Missing value for image source'
     elif 'add_comment' not in claim_info:
         err += 'Missing value for adding a comment option'
     elif len(Claim.objects.filter(claim=claim_info['claim'])) > 0:
         err += 'Claim ' + claim_info['claim'] + ' already exists'
     elif not check_if_user_exists_by_user_id(claim_info['user_id']):
         err += 'User ' + str(claim_info['user_id']) + ' does not exist'
+    elif not is_english_input(claim_info['claim']) or \
+            not is_english_input(claim_info['category']) or \
+            not is_english_input(claim_info['tags']):
+        err += 'Input should be in the English language'
     elif post_above_limit(claim_info['user_id']):
         err += 'You have exceeded the amount limit of adding new claims today'
     if len(err) > 0:
         return False, err
     return True, err
+
+
+# This function checks if given claim's tags are valid, i.e. the tags are in the correct format.
+# The function returns true in case the claim's tags are valid, otherwise false
+def check_if_tags_are_valid(tags):
+    return tags == '' or all(tag.isdigit() or tag.isalpha() or tag.isspace() for tag in tags)
+
+
+# This function checks if a given user's input is valid, i.e. the input is in the English language.
+# The function returns true in case the user's input is valid, otherwise false
+def is_english_input(user_input):
+    try:
+        user_input.encode(encoding='utf-8').decode('ascii')
+    except UnicodeDecodeError:
+        return False
+    return True
 
 
 # This function checks if a given user posted new claims above the maximum limit (per day).
@@ -134,6 +159,7 @@ def get_tags_for_claim(claim_id):
 # This function returns a claim page of a given claim id
 # The function returns the claim page in case the claim is found, otherwise Http404
 def view_claim(request, claim_id):
+    import math
     claim = get_claim_by_id(claim_id)
     if claim is None:
         raise Http404('Claim with id ' + str(claim_id) + ' does not exist')
@@ -147,8 +173,16 @@ def view_claim(request, claim_id):
             user_img = new_user_img
         else:
             user_img = user_img.first()
+        user_rep = Users_Reputations.objects.filter(user_id=comment.user_id)
+        if len(user_rep) == 0:
+            new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
+            new_user_rep.save()
+            user_rep = new_user_rep
+        else:
+            user_rep = user_rep.first()
         comments[comment] = {'user': User.objects.filter(id=comment.user_id).first(),
-                             'user_img': user_img}
+                             'user_img': user_img,
+                             'user_rep': math.ceil(user_rep.user_rep / 20)}
     return render(request, 'claims/claim.html', {
         'claim': claim,
         'comments': comments,
@@ -201,17 +235,19 @@ def export_claims_page(request):
 def edit_claim(request):
     if not request.user.is_authenticated:
         raise Http404("Permission denied")
-    valid_new_claim, err_msg = check_claim_new_fields(request)
+    new_claim_fields = request.POST.dict()
+    new_claim_fields['user_id'] = request.user.id
+    valid_new_claim, err_msg = check_claim_new_fields(new_claim_fields)
     if not valid_new_claim:
         save_log_message(request.user.id, request.user.username,
                          'Editing a claim. Error: ' + err_msg)
         raise Exception(err_msg)
     claim = get_object_or_404(Claim, id=request.POST.get('claim_id'))
     Claim.objects.filter(id=claim.id, user_id=request.user.id).update(
-        claim=request.POST.get('claim'),
-        category=request.POST.get('category'),
-        tags=request.POST.get('tags'),
-        image_src=request.POST.get('image_src'))
+        claim=new_claim_fields['claim'],
+        category=new_claim_fields['category'],
+        tags=', '.join(new_claim_fields['tags'].split()),
+        image_src=new_claim_fields['image_src'])
     save_log_message(request.user.id, request.user.username,
                      'Editing a claim with id ' + str(request.POST.get('claim_id')), True)
     return view_claim(request, claim.id)
@@ -220,29 +256,37 @@ def edit_claim(request):
 # This function checks if the given new fields for a claim are valid,
 # i.e. the claim has all the fields with the correct format.
 # The function returns true in case the claim's new fields are valid, otherwise false and an error
-def check_claim_new_fields(request):
+def check_claim_new_fields(new_claim_fields):
     from django.utils import timezone
     err = ''
-    max_minutes_to_edit_comment = 5
-    if not request.POST.get('claim_id'):
+    max_minutes_to_edit_claim = 5
+    if 'tags' not in new_claim_fields or not new_claim_fields['tags']:
+        new_claim_fields['tags'] = ''
+    if not check_if_tags_are_valid(new_claim_fields['tags']):
+        err += 'Incorrect format for tags. Tags should be separated by space'
+    elif 'user_id' not in new_claim_fields or not new_claim_fields['user_id']:
+        err += 'Missing value for user id'
+    elif 'claim_id' not in new_claim_fields or not new_claim_fields['claim_id']:
         err += 'Missing value for claim id'
-    elif not request.POST.get('claim'):
+    elif 'claim' not in new_claim_fields or not new_claim_fields['claim']:
         err += 'Missing value for claim'
-    elif not request.POST.get('category'):
+    elif 'category' not in new_claim_fields or not new_claim_fields['category']:
         err += 'Missing value for category'
-    elif not request.POST.get('tags'):
-        err += 'Missing value for tags'
-    elif not request.POST.get('image_src'):
+    elif 'image_src' not in new_claim_fields or not new_claim_fields['image_src']:
         err += 'Missing value for image source'
-    elif not check_if_user_exists_by_user_id(request.user.id):
-        err += 'User with id ' + str(request.user.id) + ' does not exist'
-    elif len(Claim.objects.filter(id=request.POST.get('claim_id'), user_id=request.user.id)) == 0:
-        err += 'Claim does not belong to user with id ' + str(request.user.id)
-    elif len(Claim.objects.exclude(id=request.POST.get('claim_id')).filter(claim=request.POST.get('claim'))) > 0:
+    elif not check_if_user_exists_by_user_id(new_claim_fields['user_id']):
+        err += 'User with id ' + str(new_claim_fields['user_id']) + ' does not exist'
+    elif len(Claim.objects.filter(id=new_claim_fields['claim_id'], user_id=new_claim_fields['user_id'])) == 0:
+        err += 'Claim does not belong to user with id ' + str(new_claim_fields['user_id'])
+    elif len(Claim.objects.exclude(id=new_claim_fields['claim_id']).filter(claim=new_claim_fields['claim'])) > 0:
         err += 'Claim already exists'
-    elif (timezone.now() - Claim.objects.filter(id=request.POST.get('claim_id')).first().timestamp).total_seconds() \
-            / 60 > max_minutes_to_edit_comment:
+    elif (timezone.now() - Claim.objects.filter(id=new_claim_fields['claim_id']).first().timestamp).total_seconds() \
+            / 60 > max_minutes_to_edit_claim:
         err += 'You can no longer edit your comment'
+    elif not is_english_input(new_claim_fields['claim']) or \
+            not is_english_input(new_claim_fields['category']) or \
+            not is_english_input(new_claim_fields['tags']):
+        err += 'Input should be in the English language'
     if len(err) > 0:
         return False, err
     return True, err
@@ -305,6 +349,7 @@ def handler_500(request):
     return render(request, 'claims/500.html', status=500)
 
 
+# This function returns about page
 def about_page(request):
     return render(request, 'claims/about.html')
 

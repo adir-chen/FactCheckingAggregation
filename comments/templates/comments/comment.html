@@ -8,6 +8,10 @@
             </div>
             <div style="padding: 20px; font-size: 14px; grid-area: user-details;">
                 User: <a href="#">{{ user_details.user.username }}</a><br>
+                {% load static %}
+                {% for i in 'i'|rjust:user_details.user_rep %}
+                    <img src="{% static 'claims/assets/images/star.png' %}" style="width: 15px" height="15px;" >
+                {% endfor %}
                 Verdict Date: <span id="comment_{{ comment.id }}_verdict_date">{{ comment.verdict_date|date:"d/m/Y" }}</span>
                 <input hidden="hidden" id="{{ comment.id }}_verdict_date" type="date" value="{{ comment.verdict_date|date:"Y-m-d" }}" max="{% now "Y-m-d" %}">
             </div>
@@ -209,7 +213,7 @@
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
                 document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
+                    'Error: <br>' + err;
                 $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
