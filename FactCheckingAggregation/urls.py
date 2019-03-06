@@ -28,6 +28,7 @@ urlpatterns = [
     path('auth/', include('social_django.urls', namespace='social')),
     path('contact_us/', include('contact_us.urls', namespace='contact_us')),
     path('logger/', include('logger.urls', namespace='logger')),
+    path('analytics/', include('analytics.urls', namespace='analytics')),
 ]
 
 # handler404 = claims_views.handler_404
