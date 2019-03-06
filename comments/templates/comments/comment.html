@@ -12,6 +12,7 @@
                 {% for i in 'i'|rjust:user_details.user_rep %}
                     <img src="{% static 'claims/assets/images/star.png' %}" style="width: 15px" height="15px;" >
                 {% endfor %}
+                <br>
                 Verdict Date: <span id="comment_{{ comment.id }}_verdict_date">{{ comment.verdict_date|date:"d/m/Y" }}</span>
                 <input hidden="hidden" id="{{ comment.id }}_verdict_date" type="date" value="{{ comment.verdict_date|date:"Y-m-d" }}" max="{% now "Y-m-d" %}">
             </div>
