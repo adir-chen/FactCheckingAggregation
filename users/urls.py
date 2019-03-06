@@ -10,4 +10,5 @@ urlpatterns = [
     path('add_new_scraper', views.add_new_scraper, name='add_new_scraper'),
     path('add_all_scrapers', views.add_all_scrapers, name='add_all_scrapers'),
     path('my_profile', views.my_profile_page, name='my_profile'),
+    path('<username>', views.user_page, name='user_page'),
 ]

@@ -9,7 +9,7 @@
                     <h4 id="comment_{{ comment.id }}_title"><b>{{ comment.title }}</b></h4>
                     <span id="{{ comment.id }}_title_name" hidden="hidden">Title:<br><input id="{{ comment.id }}_title" value="{{ comment.title }}" type="text" placeholder="{{ comment.title }}" style="width: 90%; margin: 10px;"></span>
                 </td>
-                <td class="right" style="width: 100px;">User: <a href="#">{{ user_details.user.username }}</a></td>
+                <td class="right" style="width: 100px;">User: <a href="/users/{{ user_details.user.username }}">{{ user_details.user.username }}</a></td>
             </tr>
             <tr>
                 <td class="left">

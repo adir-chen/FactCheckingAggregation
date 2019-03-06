@@ -25,7 +25,7 @@
             </div>
             <div class="header-tools">
                 {% if request.user.is_authenticated %}
-                    <p>Welcome <a href="">{{request.user.username}}</a></p>
+                    <p>Welcome <a href="users/my_profile">{{request.user.username}}</a></p>
                     <a href="/logout" style="font-size: 14px;">Sign Out</a>
                 {% else %}
                     <p>Welcome guest.</p>

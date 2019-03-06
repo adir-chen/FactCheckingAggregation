@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import render
 from claims.models import Claim
@@ -280,36 +281,77 @@ def update_reputation_for_user(user_id, earn_points, num_of_points):
     Users_Reputations.objects.filter(user_id=user).update(user_rep=reputation)
 
 
-# This function return a HTML page for user's profile
+# This function returns a HTML for user's profile
+def user_page(request, username):
+    user = get_user_by_username(username)
+    if user is None:
+        raise Http404('User with username ' + username + ' does not exist')
+    user_rep = Users_Reputations.objects.filter(user_id=user.id)
+    claims = Claim.objects.filter(user=user.id)
+    comments = Comment.objects.filter(user=user.id)
+    user_claims = list(get_users_images_for_claims(claims).items())
+    page = request.GET.get('page1')
+    paginator = Paginator(user_claims, 3)
+    headlines = {}
+    for comment in comments:
+        headlines[comment] = User.objects.filter(id=comment.user_id).first()
+    user_comments = list(headlines.items())
+    page2 = request.GET.get('page2')
+    paginator2 = Paginator(user_comments, 3)
+    return render(request, 'users/user_page.html', {
+        'reputation': user_rep,
+        'user_claims': paginator.get_page(page),
+        'user_comments': paginator2.get_page(page2),
+    })
+
+
+# This function returns a user by the specified username
+def get_user_by_username(username):
+    result = User.objects.filter(username=username)
+    if len(result) > 0:
+        return result[0]
+    return None
+
+
+# This function return a HTML page for my own profile
 def my_profile_page(request):
     user_rep = Users_Reputations.objects.filter(user_id=request.user.id)
     claims = Claim.objects.filter(user=request.user.id)
     comments = Comment.objects.filter(user=request.user.id)
-    user_claims, user_comments, more_claims, more_comments = ({} for i in range(4))
-    i = 0
-    for claim in claims:
-        comment_objs = Comment.objects.filter(claim_id=claim.id)
-        users_imgs = []
-        for comment in comment_objs:
-            user_img = Users_Images.objects.filter(user_id=comment.user_id)
-            if len(user_img) > 0:
-                users_imgs.append(user_img.first().user_img)
-        if i < 3:
-            user_claims[claim] = users_imgs
+    user_claims = list(get_users_images_for_claims(claims).items())
+    page = request.GET.get('page1')
+    paginator = Paginator(user_claims, 3)
+    headlines = {}
+    '''for claim in claims:
+        user_img = Users_Images.objects.filter(user_id=User.objects.filter(id=claim.user_id).first())
+        if len(user_img) == 0:
+            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=claim.user_id).first())
+            new_user_img.save()
+            user_img = new_user_img
         else:
-            more_claims[claim] = users_imgs
-        i += 1
-    i = 0
+            user_img = user_img.first()
+        user_claims[claim] = user_img.user_img'''
     for comment in comments:
-        if i < 2:
-            user_comments[comment] = User.objects.filter(id=comment.user_id).first()
-        else:
-            more_comments[comment] = User.objects.filter(id=comment.user_id).first()
-        i += 1
+        headlines[comment] = User.objects.filter(id=comment.user_id).first()
+    user_comments = list(headlines.items())
+    page2 = request.GET.get('page2')
+    paginator2 = Paginator(user_comments, 3)
     return render(request, 'users/my_profile.html', {
         'reputation': user_rep,
-        'user_claims': user_claims,
-        'more_claims': more_claims,
-        'user_comments': user_comments,
-        'more_comments': more_comments
+        'user_claims': paginator.get_page(page),
+        'user_comments': paginator2.get_page(page2),
     })
+
+
+def get_users_images_for_claims(claims):
+    headlines = {}
+    for claim in claims:
+        user_img = Users_Images.objects.filter(user_id=User.objects.filter(id=claim.user_id).first())
+        if len(user_img) == 0:
+            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=claim.user_id).first())
+            new_user_img.save()
+            user_img = new_user_img
+        else:
+            user_img = user_img.first()
+        headlines[claim] = user_img.user_img
+    return headlines

@@ -1,0 +1,105 @@
+{% extends 'claims/layout.html' %}
+
+{% block page_content %}
+    <div id="my_profile_page" style="max-width: 1000px; margin: auto; height: auto; padding: 40px 0;">
+        <h1>{{ request.user.username }}'s Profile:</h1>
+        <br>
+        <div class="claim_box" style="width: 100%; padding: 20px 40px 20px 20px; height: auto;">
+            {% csrf_token %}
+            {% if reputation|length > 0 %}
+                <h5> My Reputation: {{ reputation.0.user_rep }} </h5>
+            {% else %}
+                <h5> My Reputation: 0 </h5>
+            {% endif %}
+            <br>
+
+            <h5> My Claims:</h5>
+            <div class="headlines">
+                <div id="claim_large_columns" style="max-width: 1150px; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
+                    {% for claim, img in user_claims.object_list|slice:"0:3" %}
+                        {% include 'claims/claimbox_large.html' with claim=claim img=img %}
+                    {% endfor %}
+                </div>
+                <!--<button style="" onclick="showMoreClaimsFunc()" id="showMoreClaims">Show More</button>-->
+            </div>
+
+            <div class="pagination">
+                <span class="step-links">
+                    {% if user_claims.has_previous %}
+                        <a href="?page1=1" class="btn btn-info">&laquo; first</a>
+                        <a href="?page1={{ user_claims.previous_page_number }}" class="btn btn-info">previous</a>
+                    {% endif %}
+
+                    <span class="current" style="padding: 10px 20px;">
+                        Page {{ user_claims.number }} of {{ user_claims.paginator.num_pages }}
+                    </span>
+
+                    {% if user_claims.has_next %}
+                        <a href="?page1={{ user_claims.next_page_number }}" class="btn btn-info">next</a>
+                        <a href="?page1={{ user_claims.paginator.num_pages }}" class="btn btn-info">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+
+            <h5> My Comments:</h5>
+            <div class="headlines">
+                <div id="comments" style="max-width: 1150px; padding: 20px 20px; border-radius: 10px; background: #aabfd6; display: flex; flex-wrap: wrap; margin: 0 auto;">
+                    {% for comment, user  in user_comments.object_list|slice:"0:3" %}
+                        {% include 'comments/comment.html' with comment=comment user=user request=request only %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="pagination">
+                <span class="step-links">
+                    {% if user_comments.has_previous %}
+                        <a href="?page2=1" class="btn btn-info">&laquo; first</a>
+                        <a href="?page2={{ user_comments.previous_page_number }}" class="btn btn-info">previous</a>
+                    {% endif %}
+
+                    <span class="current" style="padding: 10px 20px;">
+                        Page {{ user_comments.number }} of {{ user_comments.paginator.num_pages }}
+                    </span>
+
+                    {% if user_comments.has_next %}
+                        <a href="?page2={{ user_comments.next_page_number }}" class="btn btn-info">next</a>
+                        <a href="?page2={{ user_comments.paginator.num_pages }}" class="btn btn-info">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function showMoreClaimsFunc() {
+            var moreClaims = document.getElementById("more_claims");
+            var btnText = document.getElementById("showMoreClaims");
+
+            if (moreClaims.style.display === "none") {
+                btnText.innerHTML = "Show Less";
+                moreClaims.style.display = "inline";
+            } else {
+                btnText.innerHTML = "Show More";
+                moreClaims.style.display = "none";
+            }
+        }
+
+        function showMoreCommentsFunc() {
+            var moreComments = document.getElementById("more_comments");
+            var btnText = document.getElementById("showMoreComments");
+
+            if (moreComments.style.display === "none") {
+                btnText.innerHTML = "Show Less";
+                moreComments.style.display = "inline";
+            } else {
+                btnText.innerHTML = "Show More";
+                moreComments.style.display = "none";
+            }
+        }
+    </script>
+{% endblock %}
+
+{% block claim_head_title %}
+    FactCheckProject | My Profile
+{% endblock %}

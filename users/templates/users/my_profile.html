@@ -2,7 +2,7 @@
 
 {% block page_content %}
     <div id="my_profile_page" style="max-width: 1000px; margin: auto; height: auto; padding: 40px 0;">
-        <h4>Welcome {{ request.user.username }}</h4>
+        <h1>Welcome, {{ request.user.username }}</h1>
         <br>
         <div class="claim_box" style="width: 100%; padding: 20px 40px 20px 20px; height: auto;">
             {% csrf_token %}
@@ -15,33 +15,59 @@
 
             <h5> My Claims:</h5>
             <div class="headlines">
-                <div id="claims" style="max-width: 1150px; padding: 0 20px; border-radius: 10px; background: #aabfd6; display: flex; flex-wrap: wrap; margin: 0 auto;">
-                    {% for claim, imgs in user_claims.items %}
-                        {% include 'claims/claimbox_large.html' with claim=claim icons=imgs %}
+                <div id="claim_large_columns" style="max-width: 1150px; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
+                    {% for claim, img in user_claims.object_list|slice:"0:3" %}
+                        {% include 'claims/claimbox_large.html' with claim=claim img=img %}
                     {% endfor %}
-                    <span id="more_claims" style="display: none">
-                        {% for claim, imgs in more_claims.items %}
-                            {% include 'claims/claimbox_large.html' with claim=claim icons=imgs %}
-                        {% endfor %}
-                    </span>
                 </div>
-                <button style="" onclick="showMoreClaimsFunc()" id="showMoreClaims">Show More</button>
+                <!--<button style="" onclick="showMoreClaimsFunc()" id="showMoreClaims">Show More</button>-->
+            </div>
+
+            <div class="pagination">
+                <span class="step-links">
+                    {% if user_claims.has_previous %}
+                        <a href="?page1=1" class="btn btn-info">&laquo; first</a>
+                        <a href="?page1={{ user_claims.previous_page_number }}" class="btn btn-info">previous</a>
+                    {% endif %}
+
+                    <span class="current" style="padding: 10px 20px;">
+                        Page {{ user_claims.number }} of {{ user_claims.paginator.num_pages }}
+                    </span>
+
+                    {% if user_claims.has_next %}
+                        <a href="?page1={{ user_claims.next_page_number }}" class="btn btn-info">next</a>
+                        <a href="?page1={{ user_claims.paginator.num_pages }}" class="btn btn-info">last &raquo;</a>
+                    {% endif %}
+                </span>
             </div>
 
             <h5> My Comments:</h5>
             <div class="headlines">
                 <div id="comments" style="max-width: 1150px; padding: 20px 20px; border-radius: 10px; background: #aabfd6; display: flex; flex-wrap: wrap; margin: 0 auto;">
-                    {% for comment, user  in user_comments.items %}
+                    {% for comment, user  in user_comments.object_list|slice:"0:3" %}
                         {% include 'comments/comment.html' with comment=comment user=user request=request only %}
                     {% endfor %}
-                    <span id="more_comments" style="display: none">
-                        {% for comment, user  in more_comments.items %}
-                            {% include 'comments/comment.html' with comment=comment user=user request=request only %}
-                        {% endfor %}
-                    </span>
                 </div>
-                <button style="" onclick="showMoreCommentsFunc()" id="showMoreComments">Show More</button>
             </div>
+
+            <div class="pagination">
+                <span class="step-links">
+                    {% if user_comments.has_previous %}
+                        <a href="?page2=1" class="btn btn-info">&laquo; first</a>
+                        <a href="?page2={{ user_comments.previous_page_number }}" class="btn btn-info">previous</a>
+                    {% endif %}
+
+                    <span class="current" style="padding: 10px 20px;">
+                        Page {{ user_comments.number }} of {{ user_comments.paginator.num_pages }}
+                    </span>
+
+                    {% if user_comments.has_next %}
+                        <a href="?page2={{ user_comments.next_page_number }}" class="btn btn-info">next</a>
+                        <a href="?page2={{ user_comments.paginator.num_pages }}" class="btn btn-info">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+
         </div>
     </div>
 
