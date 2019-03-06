@@ -1,11 +1,11 @@
 from django.http import HttpRequest, QueryDict, Http404
 from django.test import TestCase
-from users.models import User, Scrapers
+from users.models import User, Scrapers, Users_Reputations
 from claims.models import Claim
 from comments.models import Comment
 from users.views import check_if_user_exists_by_user_id, get_username_by_user_id, add_all_scrapers, \
     get_all_scrapers_ids, get_all_scrapers_ids_arr, get_random_claims_from_scrapers, add_scraper_guide, add_new_scraper, \
-    check_if_scraper_info_is_valid
+    check_if_scraper_info_is_valid, update_reputation_for_user
 import json
 import random
 import datetime
@@ -24,6 +24,10 @@ class UsersTest(TestCase):
         self.admin = User.objects.create_superuser(username='admin',
                                                    email='admin@gmail.com',
                                                    password='admin')
+        self.init_rep = 1
+        self.rep = random.randint(1, 80)
+        self.user_1_rep = Users_Reputations(user_id=self.user_1, user_rep=self.rep)
+        self.user_1_rep.save()
         self.all_users_dict = {1: self.user_1,
                                2: self.user_2,
                                3: self.user_3,
@@ -99,6 +103,11 @@ class UsersTest(TestCase):
         self.assertFalse(get_username_by_user_id(self.num_of_saved_users + 6) == 'ClimateFeedback')
         self.assertFalse(get_username_by_user_id(self.num_of_saved_users + 7) == 'FactScan')
         self.assertFalse(get_username_by_user_id(self.num_of_saved_users + 8) == 'AfricaCheck')
+
+    def test_add_all_scrapers_twice(self):
+        self.post_request.user = self.admin
+        self.assertTrue(add_all_scrapers(self.post_request).status_code == 200)
+        self.assertRaises(Http404, add_all_scrapers, self.post_request)
 
     def test_get_all_scrapers_ids(self):
         import json
@@ -281,3 +290,55 @@ class UsersTest(TestCase):
     def test_check_if_scraper_info_scraper_name_already_exists(self):
         self.new_scraper_details['scraper_name'] = 'newScraper'
         self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
+
+    def test_update_reputation_for_user_with_reputation_earn_points(self):
+        update_reputation_for_user(self.user_1.id, True, 1)
+        user_rep = Users_Reputations.objects.filter(user_id=self.user_1).first()
+        self.assertTrue(user_rep.user_rep == self.rep + 1)
+
+    def test_update_reputation_for_user_with_reputation_earn_many_points(self):
+        for i in range(100):
+            update_reputation_for_user(self.user_1.id, True, 1)
+        user_rep = Users_Reputations.objects.filter(user_id=self.user_1).first()
+        self.assertTrue(user_rep.user_rep == 100)
+
+    def test_update_reputation_for_user_with_reputation_lost_points(self):
+        update_reputation_for_user(self.user_1.id, False, 1)
+        user_rep = Users_Reputations.objects.filter(user_id=self.user_1).first()
+        self.assertTrue(user_rep.user_rep == self.rep - 1)
+
+    def test_update_reputation_for_user_with_reputation_lost_many_points(self):
+        for i in range(100):
+            update_reputation_for_user(self.user_1.id, False, 1)
+        user_rep = Users_Reputations.objects.filter(user_id=self.user_1).first()
+        self.assertTrue(user_rep.user_rep == 1)
+
+    def test_update_reputation_for_user_without_reputation_earn_points(self):
+        update_reputation_for_user(self.user_2.id, True, 1)
+        user_rep = Users_Reputations.objects.filter(user_id=self.user_2).first()
+        self.assertTrue(user_rep.user_rep == self.init_rep + 1)
+
+    def test_update_reputation_for_user_without_reputation_earn_many_points(self):
+        for i in range(100):
+            update_reputation_for_user(self.user_2.id, True, 1)
+        user_rep = Users_Reputations.objects.filter(user_id=self.user_2).first()
+        self.assertTrue(user_rep.user_rep == 100)
+
+    def test_update_reputation_for_user_without_reputation_lost_points(self):
+        update_reputation_for_user(self.user_2.id, False, 1)
+        user_rep = Users_Reputations.objects.filter(user_id=self.user_2).first()
+        self.assertTrue(user_rep.user_rep == 1)
+
+    def test_update_reputation_for_user_without_reputation_lost_many_points(self):
+        for i in range(100):
+            update_reputation_for_user(self.user_2.id, False, 1)
+        user_rep = Users_Reputations.objects.filter(user_id=self.user_2).first()
+        self.assertTrue(user_rep.user_rep == 1)
+
+    def test_update_reputation_for_user_invalid_user(self):
+        self.assertRaises(Exception, update_reputation_for_user,
+                          self.num_of_saved_users + random.randint(1, 10),
+                          False, random.randint(1, 20))
+        self.assertRaises(Exception, update_reputation_for_user,
+                          self.num_of_saved_users + random.randint(1, 10),
+                          True, random.randint(1, 20))

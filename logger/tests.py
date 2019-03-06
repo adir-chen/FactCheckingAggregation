@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from django.http import HttpRequest, QueryDict, Http404
+from django.http import HttpRequest, Http404
 from django.test import TestCase
 from logger.models import Logger
 from logger.views import view_log, save_log_message
@@ -30,17 +30,25 @@ class LoggerTest(TestCase):
     def test_save_log_message_success_action(self):
         user_id = random.randint(1, 10)
         save_log_message(user_id, 'user_1', 'Adding new claim', True)
-        self.assertTrue(Logger.objects.all()[0].username == 'user_1')
-        self.assertTrue(Logger.objects.all()[0].user_id == user_id)
-        self.assertTrue(Logger.objects.all()[0].action == 'Adding new claim')
-        self.assertTrue(Logger.objects.all()[0].result)
+        self.assertTrue(Logger.objects.all().first().username == 'user_1')
+        self.assertTrue(Logger.objects.all().first().user_id == user_id)
+        self.assertTrue(Logger.objects.all().first().action == 'Adding new claim')
+        self.assertTrue(Logger.objects.all().first().result)
 
     def test_save_log_message_failure_action(self):
         user_id = random.randint(1, 10)
         save_log_message(user_id, 'user_1', 'Adding new claim')
-        self.assertTrue(Logger.objects.all()[0].username == 'user_1')
-        self.assertTrue(Logger.objects.all()[0].user_id == user_id)
-        self.assertTrue(Logger.objects.all()[0].action == 'Adding new claim')
-        self.assertFalse(Logger.objects.all()[0].result)
+        self.assertTrue(Logger.objects.all().first().username == 'user_1')
+        self.assertTrue(Logger.objects.all().first().user_id == user_id)
+        self.assertTrue(Logger.objects.all().first().action == 'Adding new claim')
+        self.assertFalse(Logger.objects.all().first().result)
+
+    def test_save_log_message_failure_action_invalid_user(self):
+        save_log_message(None, '', 'Adding new claim')
+        self.assertTrue(Logger.objects.all().first().username == 'Unknown')
+        self.assertTrue(Logger.objects.all().first().user_id == -1)
+        self.assertTrue(Logger.objects.all().first().action == 'Adding new claim')
+        self.assertFalse(Logger.objects.all().first().result)
+
 
 

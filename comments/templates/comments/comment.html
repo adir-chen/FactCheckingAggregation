@@ -9,13 +9,18 @@
                     <h4 id="comment_{{ comment.id }}_title"><b>{{ comment.title }}</b></h4>
                     <span id="{{ comment.id }}_title_name" hidden="hidden">Title:<br><input id="{{ comment.id }}_title" value="{{ comment.title }}" type="text" placeholder="{{ comment.title }}" style="width: 90%; margin: 10px;"></span>
                 </td>
-                <td class="right" style="width: 100px;">User: <a href="#">{{ user_details.user.username }}</a></td>
+                <td class="right" style="width: 100px;">User: <a href="#">{{ user_details.user.username }}</a>
+                <br>{% load static %}
+                    {% for i in 'i'|rjust:user_details.user_rep %}
+                        <img src="{% static 'claims/assets/images/star.png' %}" style="width: 15px" height="15px;" >
+                    {% endfor %}
+                </td>
             </tr>
             <tr>
                 <td class="left">
                     <p id="comment_{{ comment.id }}_description">{{ comment.description }}</p>
                     <span id="{{ comment.id }}_description_name" hidden="hidden">Description:<br><textarea id="{{ comment.id }}_description" placeholder="{{ comment.description }}" style="width: 90%; margin: 10px;">{{ comment.description }}</textarea></span><br>
-                    <span id="{{ comment.id }}_tags_name" hidden="hidden">Tags:<br><input id="{{ comment.id }}_tags" value="{{ comment.tags }}" type="text" placeholder="{{ comment.tags }}" style="width: 90%; margin: 10px;"><br></span>
+                    <span id="{{ comment.id }}_tags_name" hidden="hidden">Tags:<br><input id="comment_{{ comment.id }}_tags" value="{{ comment.tags }}" type="text" placeholder="{{ comment.tags }}" style="width: 90%; margin: 10px;"><br></span>
                 </td>
                 <td class="right"><p>
                     <img style="max-width: 90px; margin-bottom: 20px;" src="{{ user_details.user_img.user_img }}"><br>
@@ -27,12 +32,12 @@
                         <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="label" hidden='hidden' value="Unknown"><span id='comment_{{ comment.id }}_unknown_label' hidden>Unknown</span>
                     {% elif comment.system_label == 'False' %}
                         <img src="{% static 'claims/assets/images/FalseLabel.png' %}" >
-                        <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="True}}"><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
+                        <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="True"><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
                         <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="False" checked><span id='comment_{{ comment.id }}_false_label' hidden>False</span><br>
                         <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="label" hidden='hidden' value="Unknown"><span id='comment_{{ comment.id }}_unknown_label' hidden>Unknown</span>
                     {% else %}
                         <img src="{% static 'claims/assets/images/UnknownLabel.png' %}" >
-                        <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="True}}"><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
+                        <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="True"><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
                         <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="False"><span id='comment_{{ comment.id }}_false_label' hidden>False</span><br>
                         <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="label" hidden='hidden' value="Unknown" checked><span id='comment_{{ comment.id }}_unknown_label' hidden>Unknown</span>
                     {%  endif %}
@@ -76,6 +81,7 @@
 </div>
 
 <script>
+console.log({{ user_details.user_rep }})
     let up_voted_{{ comment.id }} = false;
     let down_voted_{{ comment.id }} = false;
     let up_count_{{ comment.id }} = {{ comment.up_votes.count }};
@@ -135,7 +141,7 @@
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
                 document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
+                    'Error: <br>' + err;
                 $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
@@ -171,7 +177,7 @@
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
                 document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
+                    'Error: <br>' + err;
                 $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
@@ -208,7 +214,7 @@
                 comment_id: '{{ comment.id }}',
                 comment_title: $("#{{ comment.id }}_title").val(),
                 comment_description: $("#{{ comment.id }}_description").val(),
-                comment_tags: $("#{{ comment.id }}_tags").val(),
+                comment_tags: $("#comment_{{ comment.id }}_tags").val(),
                 comment_verdict_date: $("#{{ comment.id }}_verdict_date").val(),
                 comment_reference: $("#{{ comment.id }}_reference").val(),
                 comment_label: document.querySelector('input[name="label"]:checked').value,
@@ -219,7 +225,7 @@
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
                 document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
+                    'Error: <br>' + err;
                 $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
@@ -240,7 +246,7 @@
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
                 document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
+                    'Error: <br>' + err;
                 $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
