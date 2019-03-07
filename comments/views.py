@@ -99,15 +99,15 @@ def check_if_comment_is_valid(comment_info):
 # in case the date has %Y-%m-%d format.
 # In addition, this function checks if the date is in the correct format according to the system format.
 # In case that the date is not valid, it returns an error.
-def convert_date_format(comment_info, date):
+def convert_date_format(dict_info, date):
     err = ''
-    if '-' in comment_info[date]:
+    if '-' in dict_info[date]:
         try:
-            comment_info[date] = datetime.strptime(comment_info[date], '%Y-%m-%d').strftime('%m/%d/%y')
+            dict_info[date] = datetime.strptime(dict_info[date], '%Y-%m-%d').strftime('%d/%m/%Y')
         except ValueError:
-            err += 'Date ' + comment_info[date] + ' is invalid'
-    if len(err) == 0 and not is_valid_verdict_date(comment_info[date]):
-        err += 'Date ' + comment_info[date] + ' is invalid'
+            err += 'Date ' + dict_info[date] + ' is invalid'
+    if len(err) == 0 and not is_valid_verdict_date(dict_info[date]):
+        err += 'Date ' + dict_info[date] + ' is invalid'
     return err
 
 
@@ -171,13 +171,13 @@ def export_to_csv(request):
         save_log_message(request.user.id, request.user.username,
                          'Exporting website claims to a csv. Error: ' + err_msg)
         raise Exception(err_msg)
-
     fields_to_export = request.POST.getlist('fields_to_export[]')
     scrapers_ids = [int(scraper_id) for scraper_id in request.POST.getlist('scrapers_ids[]')]
     regular_users = bool(csv_fields['regular_users'])
     verdict_date_start = datetime.strptime(csv_fields['verdict_date_start'], '%d/%m/%Y').date()
     verdict_date_end = datetime.strptime(csv_fields['verdict_date_end'], '%d/%m/%Y').date()
-    if not check_if_fields_and_scrapers_lists_valid(fields_to_export, scrapers_ids):
+    valid_fields_and_scrapers_lists, err_msg = check_if_fields_and_scrapers_lists_valid(fields_to_export, scrapers_ids)
+    if not valid_fields_and_scrapers_lists:
         save_log_message(request.user.id, request.user.username,
                          'Exporting website claims to a csv. Error: ' + err_msg)
         raise Exception(err_msg)
@@ -219,13 +219,31 @@ def check_if_csv_fields_are_valid(csv_fields):
     return True, err
 
 
+# This function checks if exported fields and list of scrapers' ids are valid,
+# The function returns true in case they are valid, otherwise false and an error
+def check_if_fields_and_scrapers_lists_valid(fields_to_export, scrapers_ids):
+    from users.models import Scrapers
+    err = ''
+    valid_fields_to_export = ['Title', 'Description', 'Url', 'Category', 'Verdict Date', 'Tags', 'Label', 'System Label', 'Authenticity Grade']
+    for field in fields_to_export:
+        if field not in valid_fields_to_export:
+            err += 'Field ' + str(field) + ' is not valid'
+            return False, err
+    for scraper_id in scrapers_ids:
+        if len(User.objects.filter(id=scraper_id)) == 0 or  \
+                len(Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_id).first())) == 0:
+            err += 'Scraper with id ' + str(scraper_id) + ' does not exist'
+            return False, err
+    return True, ''
+
+
 # This function creates a df which contains all the details of the claims in the website
 def create_df_for_claims(fields_to_export, scrapers_ids, regular_users, verdict_date_start, verdict_date_end):
     from claims.views import get_category_for_claim
     import pandas as pd
     df_claims = pd.DataFrame(columns=['User Id', 'Claim', 'Title', 'Description', 'Url', 'Category', 'Verdict Date', 'Tags', 'Label', 'System Label', 'Authenticity Grade'])
     users_ids, claims, titles, descriptions, urls, categories, verdict_dates, tags, labels, \
-    system_labels, authenticities_grades = ([] for i in range(11))
+        system_labels, authenticity_grades = ([] for i in range(11))
     for comment in Comment.objects.all():
         claim = Claim.objects.filter(id=comment.claim_id).first()
         users_ids.append(comment.user_id)
@@ -238,7 +256,7 @@ def create_df_for_claims(fields_to_export, scrapers_ids, regular_users, verdict_
         tags.append(comment.tags)
         labels.append(comment.label)
         system_labels.append(comment.system_label)
-        authenticities_grades.append(claim.authenticity_grade)
+        authenticity_grades.append(claim.authenticity_grade)
     df_claims['User Id'] = users_ids
     df_claims['Claim'] = claims
     df_claims['Title'] = titles
@@ -249,35 +267,17 @@ def create_df_for_claims(fields_to_export, scrapers_ids, regular_users, verdict_
     df_claims['Tags'] = tags
     df_claims['Label'] = labels
     df_claims['System Label'] = system_labels
-    df_claims['Authenticity Grade'] = authenticities_grades
+    df_claims['Authenticity Grade'] = authenticity_grades
     if not regular_users:
         df_claims = df_claims[df_claims['User Id'].isin(scrapers_ids)]
     else:
         all_scrapers_ids = get_all_scrapers_ids_arr()
         scrapers_to_delete = [scraper_id for scraper_id in all_scrapers_ids if scraper_id not in scrapers_ids]
         df_claims = df_claims[~df_claims['User Id'].isin(scrapers_to_delete)]
-    df_claims = df_claims.loc[(df_claims['Verdict Date'] >= verdict_date_start) &
-                              (df_claims['Verdict Date'] <= verdict_date_end)]
+    df_claims = df_claims[(df_claims['Verdict Date'] >= verdict_date_start) &
+                          (df_claims['Verdict Date'] <= verdict_date_end)]
     df_claims = df_claims[fields_to_export]
     return df_claims
-
-
-# This function checks if exported fields and list of scrapers' ids are valid,
-# The function returns true in case they are valid, otherwise false and an error
-def check_if_fields_and_scrapers_lists_valid(fields_to_export, scrapers_ids):
-    from users.models import Scrapers
-    err = ''
-    valid_fields_to_export = ['Title', 'Description', 'Url', 'Category', 'Verdict Date', 'Tags', 'Label', 'System Label', 'Authenticity Grade']
-    for field in fields_to_export:
-        if field not in valid_fields_to_export:
-            err += 'Field ' + field + ' is not valid'
-            return False, err
-    for scraper_id in scrapers_ids:
-        if len(User.objects.filter(id=scraper_id)) > 0 and \
-                len(Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_id).first())) == 0:
-            err += 'Scraper with id ' + scraper_id + ' does not exist'
-            return False, err
-    return True, ''
 
 
 # This function increases a comment's vote by 1

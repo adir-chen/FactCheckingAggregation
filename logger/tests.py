@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.http import HttpRequest, Http404
 from django.test import TestCase
 from logger.models import Logger
-from logger.views import view_log, save_log_message
+from logger.views import view_log, save_log_message, check_duplicate_log_for_user
 import random
 
 
@@ -49,6 +49,15 @@ class LoggerTest(TestCase):
         self.assertTrue(Logger.objects.all().first().user_id == -1)
         self.assertTrue(Logger.objects.all().first().action == 'Adding new claim')
         self.assertFalse(Logger.objects.all().first().result)
+
+    def test_check_duplicate_log_for_user_true(self):
+        user_id = random.randint(1, 10)
+        self.assertFalse(check_duplicate_log_for_user(user_id, 'Adding new claim'))
+
+    def test_check_duplicate_log_for_user_false(self):
+        user_id = random.randint(1, 10)
+        save_log_message(user_id, 'user_1', 'Adding new claim')
+        self.assertTrue(check_duplicate_log_for_user(user_id, 'Adding new claim'))
 
 
 

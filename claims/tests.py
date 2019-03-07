@@ -5,7 +5,7 @@ from claims.views import add_claim, check_if_claim_is_valid, is_english_input, p
     get_all_claims, get_newest_claims, get_claim_by_id, get_category_for_claim, get_tags_for_claim,\
     view_claim, view_home, get_users_images_for_claims, logout_view, add_claim_page, export_claims_page, \
     edit_claim, check_claim_new_fields, delete_claim, check_if_delete_claim_is_valid, \
-    handler_400, handler_403, handler_404, handler_500, about_page
+    handler_400, handler_403, handler_404, handler_500, about_page, report_spam, check_if_spam_report_is_valid
 from comments.models import Comment
 from users.models import User, Users_Images, Scrapers
 import random
@@ -15,10 +15,10 @@ import string
 
 class ClaimTests(TestCase):
     def setUp(self):
-        self.user = User(username="User1", email='user1@gmail.com')
+        self.user = User(username='User1', email='user1@gmail.com')
         self.user.save()
         self.password = User.objects.make_random_password()
-        self.scraper = User.objects.create_user(username="Scraper", password=self.password)
+        self.scraper = User.objects.create_user(username='Scraper', password=self.password)
         self.user_image = Users_Images(user_id=self.user, user_img='user_img')
         self.user_image.save()
 
@@ -718,3 +718,66 @@ class ClaimTests(TestCase):
 
     def test_about_page(self):
         self.assertTrue(about_page(HttpRequest()).status_code == 200)
+
+    def test_report_spam_for_claim(self):
+        claim_to_report_spam = {'claim_id': self.claim_1.id}
+        self.post_request.POST = claim_to_report_spam
+        self.post_request.user = self.scraper
+        self.assertTrue(report_spam(self.post_request).status_code == 200)
+
+    def test_report_spam_for_claim_twice(self):
+        claim_to_report_spam = {'claim_id': self.claim_1.id}
+        self.post_request.POST = claim_to_report_spam
+        self.post_request.user = self.scraper
+        self.assertTrue(report_spam(self.post_request).status_code == 200)
+        self.assertRaises(Exception, report_spam, self.post_request)
+
+    def test_report_spam_user_not_authenticated(self):
+        from django.contrib.auth.models import AnonymousUser
+        claim_to_report_spam = {'claim_id': self.claim_1.id}
+        self.post_request.POST = claim_to_report_spam
+        self.post_request.user = AnonymousUser()
+        self.assertRaises(Exception, report_spam, self.post_request)
+
+    def test_report_spam_missing_claim_id(self):
+        self.post_request.POST = {}
+        self.post_request.user = self.scraper
+        self.assertRaises(Exception, report_spam, self.post_request)
+
+    def test_report_spam_invalid_user(self):
+        guest = User(id=self.num_of_saved_users + random.randint(1, 10), username='guest')
+        claim_to_report_spam = {'claim_id': self.claim_1.id}
+        self.post_request.POST = claim_to_report_spam
+        self.post_request.user = guest
+        self.assertRaises(Exception, report_spam, self.post_request)
+
+    def test_check_if_spam_report_is_valid(self):
+        claim_to_report_spam = {'claim_id': self.claim_1.id}
+        self.post_request.POST = claim_to_report_spam
+        self.post_request.user = self.scraper
+        self.assertTrue(check_if_spam_report_is_valid(self.post_request)[0])
+
+    def test_check_if_spam_report_is_valid_missing_claim_id(self):
+        self.post_request.POST = {}
+        self.post_request.user = self.scraper
+        self.assertFalse(check_if_spam_report_is_valid(self.post_request)[0])
+
+    def test_check_if_spam_report_is_valid_invalid_claim_id(self):
+        self.post_request.POST = {'claim_id': self.num_of_saved_claims + random.randint(1, 10)}
+        self.post_request.user = self.scraper
+        self.assertFalse(check_if_spam_report_is_valid(self.post_request)[0])
+
+    def test_check_if_spam_report_is_valid_invalid_user(self):
+        guest = User(id=self.num_of_saved_users + random.randint(1, 10), username='guest')
+        claim_to_report_spam = {'claim_id': self.claim_1.id}
+        self.post_request.POST = claim_to_report_spam
+        self.post_request.user = guest
+        self.assertFalse(check_if_spam_report_is_valid(self.post_request)[0])
+
+    def test_check_if_spam_report_is_valid_duplicate_spam(self):
+        claim_to_report_spam = {'claim_id': self.claim_1.id}
+        self.post_request.POST = claim_to_report_spam
+        self.post_request.user = self.scraper
+        self.assertTrue(check_if_spam_report_is_valid(self.post_request)[0])
+        self.assertTrue(report_spam(self.post_request).status_code == 200)
+        self.assertFalse(check_if_spam_report_is_valid(self.post_request)[0])

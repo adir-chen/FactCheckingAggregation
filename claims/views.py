@@ -5,10 +5,8 @@ from comments.models import Comment
 from comments.views import add_comment
 from django.contrib.auth.models import User
 from logger.models import Logger
-from logger.views import save_log_message
 from users.models import Users_Images, Scrapers, Users_Reputations
 from logger.views import save_log_message, check_duplicate_log_for_user
-from users.models import Users_Images, Scrapers
 from users.views import check_if_user_exists_by_user_id
 from .models import Claim
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -357,7 +355,7 @@ def about_page(request):
 def report_spam(request):
     if not request.user.is_authenticated:
         raise Http404("Permission denied")
-    valid_spam_report, err_msg = check_if_spam_report_valid(request)
+    valid_spam_report, err_msg = check_if_spam_report_is_valid(request)
     if not valid_spam_report:
         save_log_message(request.user.id, request.user.username,
                          'Reporting a claim as spam. Error: ' + err_msg)
@@ -367,12 +365,16 @@ def report_spam(request):
     return view_claim(request, request.POST.get('claim_id'))
 
 
-def check_if_spam_report_valid(request):
+def check_if_spam_report_is_valid(request):
     err = ''
-    if len(Claim.objects.filter(id=request.POST.get('claim_id'))) == 0:
-        err += 'claim with id ' + request.POST.get('claim_id') + ' does not exist'
+    if not request.POST.get('claim_id'):
+        err += 'Missing value for claim id'
+    elif len(Claim.objects.filter(id=request.POST.get('claim_id'))) == 0:
+        err += 'claim with id ' + str(request.POST.get('claim_id')) + ' does not exist'
+    elif not check_if_user_exists_by_user_id(request.user.id):
+        err += 'User ' + str(request.user.id) + ' does not exist'
     elif check_duplicate_log_for_user(request.user.id, 'Reporting a claim with id ' + str(request.POST.get('claim_id')) + ' as spam'):
-        err += 'user already reported claim with id ' + request.POST.get('claim_id') + ' as spam'
+        err += 'user already reported claim with id ' + str(request.POST.get('claim_id')) + ' as spam'
     if len(err) > 0:
         return False, err
     return True, err
