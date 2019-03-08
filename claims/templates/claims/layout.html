@@ -29,9 +29,9 @@
 <body>
     <header id="header">
         <div id="header-wrapper">
-            <div id="site-logo">
-                <img src="{% static 'claims/assets/images/site_logo.png' %}" style="height: 160px; width: 500px;"><br>
-                <h6 style="color: #C0C0C0; padding-top: 10px;"><i>Determine whether a claim is True or False</i></h6>
+            <div class="site-logo">
+                <img src="{% static 'claims/assets/images/site_logo.png' %}"><br>
+                <h6><i>Determine whether a claim is True or False</i></h6>
             </div>
             <div class="header-tools">
                 {% if request.user.is_authenticated %}
@@ -69,26 +69,24 @@
             {% endif %}
             {% if request.user.is_superuser %}
                 <div class="dropdown">
-                    <a class="dropdown-toggle" style="float: none; border-right: 1px solid #b1b1b1;">Admin</a>
+                    <a class="dropdown-toggle" style="float: none; border-right: 1px solid #b1b1b1;">Admin Tools</a>
                     <div class="dropdown-content">
                         <a href="/admin" target="_blank">Admin Panel</a><br>
                         <a href="/export_claims_page">Export Claims as CSV</a><br>
-                        <a href="/users/add_all_scrapers" style="border-right: 0;">Add all Scrapers</a>
-                        <a href="/users/add_scraper_guide" style="border-right: 0;">Adding a Scraper Guide</a>
-                        <a href="/logger/view_log" style="border-right: 0;">Logger</a>
+                        <a href="/users/add_all_scrapers">Add all Scrapers</a>
+                        <a href="/users/add_scraper_guide">Adding a Scraper Guide</a>
+                        <a href="/logger/view_log">Logger</a>
                         <a href="/analytics/" style="border-right: 0;">View Analytics</a>
                     </div>
                 </div>
             {% endif %}
         </div>
     </div>
-    <div id="content-wrapper">
-        <section id="page_content">
-        {% block page_content %}
+    <section id="page_content">
+    {% block page_content %}
 
-        {% endblock %}
-        </section>
-    </div>
+    {% endblock %}
+    </section>
     <footer id="footer">
         &copy; 2018-2019 WTFacts version 1.0
     </footer>

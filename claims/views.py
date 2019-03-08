@@ -181,9 +181,25 @@ def view_claim(request, claim_id):
         comments[comment] = {'user': User.objects.filter(id=comment.user_id).first(),
                              'user_img': user_img,
                              'user_rep': math.ceil(user_rep.user_rep / 20)}
+    user_img = Users_Images.objects.filter(user_id=request.user.id)
+    if len(user_img) == 0:
+        new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=request.user.id).first())
+        new_user_img.save()
+        user_img = new_user_img
+    else:
+        user_img = user_img.first()
+    user_rep = Users_Reputations.objects.filter(user_id=request.user.id)
+    if len(user_rep) == 0:
+        new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=request.user.id).first())
+        new_user_rep.save()
+        user_rep = new_user_rep
+    else:
+        user_rep = user_rep.first()
     return render(request, 'claims/claim.html', {
         'claim': claim,
         'comments': comments,
+        'user_img': user_img.user_img,
+        'user_rep': user_rep.user_rep
     })
 
 
@@ -235,7 +251,7 @@ def edit_claim(request):
         raise Http404("Permission denied")
     new_claim_fields = request.POST.dict()
     new_claim_fields['user_id'] = request.user.id
-    valid_new_claim, err_msg = check_claim_new_fields(new_claim_fields)
+    valid_new_claim, err_msg = check_claim_new_fields(new_claim_fields, request.user.is_superuser)
     if not valid_new_claim:
         save_log_message(request.user.id, request.user.username,
                          'Editing a claim. Error: ' + err_msg)
@@ -254,7 +270,7 @@ def edit_claim(request):
 # This function checks if the given new fields for a claim are valid,
 # i.e. the claim has all the fields with the correct format.
 # The function returns true in case the claim's new fields are valid, otherwise false and an error
-def check_claim_new_fields(new_claim_fields):
+def check_claim_new_fields(new_claim_fields, superuser):
     from django.utils import timezone
     err = ''
     max_minutes_to_edit_claim = 5
@@ -274,13 +290,13 @@ def check_claim_new_fields(new_claim_fields):
         err += 'Missing value for image source'
     elif not check_if_user_exists_by_user_id(new_claim_fields['user_id']):
         err += 'User with id ' + str(new_claim_fields['user_id']) + ' does not exist'
-    elif len(Claim.objects.filter(id=new_claim_fields['claim_id'], user_id=new_claim_fields['user_id'])) == 0:
+    elif (not superuser) and len(Claim.objects.filter(id=new_claim_fields['claim_id'], user_id=new_claim_fields['user_id'])) == 0:
         err += 'Claim does not belong to user with id ' + str(new_claim_fields['user_id'])
     elif len(Claim.objects.exclude(id=new_claim_fields['claim_id']).filter(claim=new_claim_fields['claim'])) > 0:
         err += 'Claim already exists'
-    elif (timezone.now() - Claim.objects.filter(id=new_claim_fields['claim_id']).first().timestamp).total_seconds() \
+    elif (not superuser) and (timezone.now() - Claim.objects.filter(id=new_claim_fields['claim_id']).first().timestamp).total_seconds() \
             / 60 > max_minutes_to_edit_claim:
-        err += 'You can no longer edit your comment'
+        err += 'You can no longer edit your claim'
     elif not is_english_input(new_claim_fields['claim']) or \
             not is_english_input(new_claim_fields['category']) or \
             not is_english_input(new_claim_fields['tags']):
