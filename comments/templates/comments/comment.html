@@ -184,7 +184,7 @@
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
                 document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
+                    'Error: <br>' + err;
                 $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
@@ -251,7 +251,7 @@
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
                 document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
+                'Error: <br>' + err;
                 $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });

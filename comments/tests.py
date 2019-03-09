@@ -779,7 +779,7 @@ class CommentTests(TestCase):
     def test_check_if_fields_and_scrapers_lists_valid_invalid_scrapers_ids(self):
         new_scrapers_ids = [int(scraper_id) for scraper_id in self.csv_fields.getlist('scrapers_ids[]')]
         for i in range(random.randint(1, 10)):
-            new_scrapers_ids.append(self.num_of_saved_users + i)
+            new_scrapers_ids.append(self.num_of_saved_users + (i + 1))
         self.csv_fields.setlist('scrapers_ids[]', new_scrapers_ids)
         self.assertFalse(check_if_fields_and_scrapers_lists_valid(self.csv_fields.getlist('fields_to_export[]'),
                                                                   self.csv_fields.getlist('scrapers_ids[]'))[0])
@@ -1106,66 +1106,107 @@ class CommentTests(TestCase):
     def test_check_comment_new_fields(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
+        self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_missing_user_id(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_invalid_user_id(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.num_of_saved_users + random.randint(1, 10))
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_missing_user_type(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_missing_comment_id(self):
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_invalid_comment_id(self):
         self.update_comment_details['comment_id'] = str(self.num_of_saved_comments + random.randint(1, 10))
         self.update_comment_details['user_id'] = self.user_1.id
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_missing_title(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
         del self.update_comment_details['comment_title']
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_missing_description(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
         del self.update_comment_details['comment_description']
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_missing_reference(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
         del self.update_comment_details['comment_reference']
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_missing_label(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
         del self.update_comment_details['comment_label']
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_comment_not_belong_to_user(self):
         self.update_comment_details['comment_id'] = str(self.comment_2.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_edit_after_five_minutes(self):
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
                                                             datetime.timedelta(minutes=6))
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_comment_invalid_date_format(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
         self.update_comment_details['comment_verdict_date'] = datetime.datetime.strptime(str(self.comment_1.verdict_date), '%Y-%m-%d').strftime('%m/%d/%y')
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_delete_comment_by_user(self):

@@ -251,7 +251,8 @@ def edit_claim(request):
         raise Http404("Permission denied")
     new_claim_fields = request.POST.dict()
     new_claim_fields['user_id'] = request.user.id
-    valid_new_claim, err_msg = check_claim_new_fields(new_claim_fields, request.user.is_superuser)
+    new_claim_fields['is_superuser'] = request.user.is_superuser
+    valid_new_claim, err_msg = check_claim_new_fields(new_claim_fields)
     if not valid_new_claim:
         save_log_message(request.user.id, request.user.username,
                          'Editing a claim. Error: ' + err_msg)
@@ -270,7 +271,7 @@ def edit_claim(request):
 # This function checks if the given new fields for a claim are valid,
 # i.e. the claim has all the fields with the correct format.
 # The function returns true in case the claim's new fields are valid, otherwise false and an error
-def check_claim_new_fields(new_claim_fields, superuser):
+def check_claim_new_fields(new_claim_fields):
     from django.utils import timezone
     err = ''
     max_minutes_to_edit_claim = 5
@@ -280,6 +281,8 @@ def check_claim_new_fields(new_claim_fields, superuser):
         err += 'Incorrect format for tags. Tags should be separated by space'
     elif 'user_id' not in new_claim_fields or not new_claim_fields['user_id']:
         err += 'Missing value for user id'
+    elif 'is_superuser' not in new_claim_fields:
+        err += 'Missing value for user type'
     elif 'claim_id' not in new_claim_fields or not new_claim_fields['claim_id']:
         err += 'Missing value for claim id'
     elif 'claim' not in new_claim_fields or not new_claim_fields['claim']:
@@ -290,11 +293,13 @@ def check_claim_new_fields(new_claim_fields, superuser):
         err += 'Missing value for image source'
     elif not check_if_user_exists_by_user_id(new_claim_fields['user_id']):
         err += 'User with id ' + str(new_claim_fields['user_id']) + ' does not exist'
-    elif (not superuser) and len(Claim.objects.filter(id=new_claim_fields['claim_id'], user_id=new_claim_fields['user_id'])) == 0:
+    elif len(Claim.objects.filter(id=new_claim_fields['claim_id'])) == 0:
+        err += 'Claim with id ' + str(new_claim_fields['claim_id']) + ' does not exist'
+    elif (not new_claim_fields['is_superuser']) and len(Claim.objects.filter(id=new_claim_fields['claim_id'], user_id=new_claim_fields['user_id'])) == 0:
         err += 'Claim does not belong to user with id ' + str(new_claim_fields['user_id'])
     elif len(Claim.objects.exclude(id=new_claim_fields['claim_id']).filter(claim=new_claim_fields['claim'])) > 0:
         err += 'Claim already exists'
-    elif (not superuser) and (timezone.now() - Claim.objects.filter(id=new_claim_fields['claim_id']).first().timestamp).total_seconds() \
+    elif (not new_claim_fields['is_superuser']) and (timezone.now() - Claim.objects.filter(id=new_claim_fields['claim_id']).first().timestamp).total_seconds() \
             / 60 > max_minutes_to_edit_claim:
         err += 'You can no longer edit your claim'
     elif not is_english_input(new_claim_fields['claim']) or \

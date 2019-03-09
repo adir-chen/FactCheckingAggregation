@@ -367,7 +367,8 @@ def edit_comment(request):
     from claims.views import view_claim
     new_comment_fields = request.POST.dict()
     new_comment_fields['user_id'] = request.user.id
-    valid_new_comment, err_msg = check_comment_new_fields(new_comment_fields, request.user.is_superuser)
+    new_comment_fields['is_superuser'] = request.user.is_superuser
+    valid_new_comment, err_msg = check_comment_new_fields(new_comment_fields)
     if not valid_new_comment:
         save_log_message(request.user.id, request.user.username,
                          'Editing comment with id ' + str(request.POST.get('comment_id')) +
@@ -390,7 +391,7 @@ def edit_comment(request):
 # This function checks if the given new fields for a comment are valid,
 # i.e. the comment has all the fields with the correct format.
 # The function returns true in case the comment's new fields are valid, otherwise false and an error
-def check_comment_new_fields(new_comment_fields, superuser):
+def check_comment_new_fields(new_comment_fields):
     from claims.views import check_if_tags_are_valid, is_english_input
     err = ''
     max_minutes_to_edit_comment = 5
@@ -400,6 +401,8 @@ def check_comment_new_fields(new_comment_fields, superuser):
         err += 'Incorrect format for tags. Tags should be separated by space'
     elif 'user_id' not in new_comment_fields or not new_comment_fields['user_id']:
         err += 'Missing value for user id'
+    elif 'is_superuser' not in new_comment_fields:
+        err += 'Missing value for user type'
     elif 'comment_id' not in new_comment_fields or not new_comment_fields['comment_id']:
         err += 'Missing value for comment id'
     elif 'comment_title' not in new_comment_fields or not new_comment_fields['comment_title']:
@@ -416,10 +419,10 @@ def check_comment_new_fields(new_comment_fields, superuser):
         err += 'User with id ' + str(new_comment_fields['user_id']) + ' does not exist'
     elif len(Comment.objects.filter(id=new_comment_fields['comment_id'])) == 0:
         err += 'Comment with id ' + str(new_comment_fields['comment_id']) + ' does not exist'
-    elif (not superuser) and len(Comment.objects.filter(id=new_comment_fields['comment_id'], user_id=new_comment_fields['user_id'])) == 0:
+    elif (not new_comment_fields['is_superuser']) and len(Comment.objects.filter(id=new_comment_fields['comment_id'], user_id=new_comment_fields['user_id'])) == 0:
         err += 'Comment with id ' + str(new_comment_fields['comment_id']) + ' does not belong to user with id ' + \
                str(new_comment_fields['user_id'])
-    elif (not superuser) and (timezone.now() - Comment.objects.filter(id=new_comment_fields['comment_id']).first().timestamp).total_seconds() \
+    elif (not new_comment_fields['is_superuser']) and (timezone.now() - Comment.objects.filter(id=new_comment_fields['comment_id']).first().timestamp).total_seconds() \
             / 60 > max_minutes_to_edit_comment:
         err += 'You can no longer edit your comment'
     elif not is_english_input(new_comment_fields['comment_title']) or \

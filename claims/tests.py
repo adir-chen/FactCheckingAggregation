@@ -93,6 +93,8 @@ class ClaimTests(TestCase):
                                   'image_src': self.claim_4.image_src}
         self.post_request = HttpRequest()
         self.post_request.method = 'POST'
+        self.get_request = HttpRequest()
+        self.get_request.method = 'GET'
         self.update_claim_details = {'claim_id': self.claim_1.id,
                                      'claim': 'newClaim1',
                                      'category': 'newCategory1',
@@ -377,9 +379,8 @@ class ClaimTests(TestCase):
         self.assertTrue(get_tags_for_claim(self.num_of_saved_claims + 1) is None)
 
     def test_view_claim_valid(self):
-        request = HttpRequest()
-        request.method = 'GET'
-        response = view_claim(request, self.claim_1.id)
+        self.get_request.user = self.user
+        response = view_claim(self.get_request, self.claim_1.id)
         self.assertTrue(response.status_code == 200)
 
     def test_view_claim_with_comment(self):
@@ -392,15 +393,13 @@ class ClaimTests(TestCase):
                             verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
                             label='label1')
         comment_1.save()
-        request = HttpRequest()
-        request.method = 'GET'
-        response = view_claim(request, self.claim_1.id)
+        self.get_request.user = self.user
+        response = view_claim(self.get_request, self.claim_1.id)
         self.assertTrue(response.status_code == 200)
 
     def test_view_claim_invalid(self):
-        request = HttpRequest()
-        request.method = 'GET'
-        self.assertRaises(Http404, view_claim, request, 4)
+        self.get_request.user = self.user
+        self.assertRaises(Http404, view_claim, self.get_request, self.num_of_saved_claims + random.randint(1, 10))
 
     def test_view_home_many_claims(self):
         for i in range(4, 24):
@@ -419,25 +418,20 @@ class ClaimTests(TestCase):
                               verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
                               label='label' + str(i))
             comment.save()
-        request = HttpRequest()
-        request.method = 'GET'
-        response = view_home(request)
+        self.get_request.user = self.user
+        response = view_home(self.get_request)
         self.assertTrue(response.status_code == 200)
 
     def test_view_home_valid_user_authenticated(self):
         client = Client()
         user_1 = User.objects.create_user(username='user1', email='user1@gmail.com', password='user1')
         client.login(username='user1', password='user1')
-        request = HttpRequest()
-        request.method = 'GET'
-        request.user = user_1
-        request.session = client.session
-        self.assertTrue(view_home(request).status_code == 200)
+        self.get_request.user = self.user
+        self.get_request.session = client.session
+        self.assertTrue(view_home(self.get_request).status_code == 200)
 
     def test_view_home_valid_user_not_authenticated(self):
-        request = HttpRequest()
-        request.method = 'GET'
-        response = view_home(request)
+        response = view_home(self.get_request)
         self.assertTrue(response.status_code == 200)
 
     def test_get_users_images_for_claims_user_with_img(self):
@@ -553,36 +547,62 @@ class ClaimTests(TestCase):
 
     def test_check_claim_new_fields(self):
         self.update_claim_details['user_id'] = self.user.id
+        self.update_claim_details['is_superuser'] = False
+        self.assertTrue(check_claim_new_fields(self.update_claim_details)[0])
+        self.update_claim_details['is_superuser'] = True
         self.assertTrue(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_invalid_claim_id(self):
         self.update_claim_details['user_id'] = self.user.id
         self.update_claim_details['claim_id'] = self.num_of_saved_claims + random.randint(1, 10)
+        self.update_claim_details['is_superuser'] = False
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        self.update_claim_details['is_superuser'] = True
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_missing_claim_id(self):
         self.update_claim_details['claim_id'] = self.user.id
+        self.update_claim_details['is_superuser'] = False
         del self.update_claim_details['category']
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        self.update_claim_details['is_superuser'] = True
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+
+    def test_check_claim_new_fields_missing_user_type(self):
+        self.update_claim_details['comment_id'] = str(self.comment_1.id)
+        self.update_claim_details['user_id'] = str(self.user.id)
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_missing_claim(self):
         self.update_claim_details['user_id'] = self.user.id
+        self.update_claim_details['is_superuser'] = False
         del self.update_claim_details['claim']
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        self.update_claim_details['is_superuser'] = True
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_missing_category(self):
         self.update_claim_details['user_id'] = self.user.id
+        self.update_claim_details['is_superuser'] = False
         del self.update_claim_details['category']
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        self.update_claim_details['is_superuser'] = True
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_missing_tags(self):
         self.update_claim_details['user_id'] = self.user.id
+        self.update_claim_details['is_superuser'] = False
         del self.update_claim_details['tags']
+        self.assertTrue(check_claim_new_fields(self.update_claim_details)[0])
+        self.update_claim_details['is_superuser'] = True
         self.assertTrue(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_missing_image_src(self):
         self.update_claim_details['user_id'] = self.user.id
+        self.update_claim_details['is_superuser'] = False
         del self.update_claim_details['image_src']
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        self.update_claim_details['is_superuser'] = True
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_claim_does_not_belong_to_user(self):
@@ -596,32 +616,50 @@ class ClaimTests(TestCase):
                           image_src='image')
         new_claim.save()
         self.update_claim_details['claim_id'] = new_claim.id
+        self.update_claim_details['is_superuser'] = False
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        self.update_claim_details['is_superuser'] = True
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_existing_claim(self):
         self.update_claim_details['user_id'] = self.user.id
         self.update_claim_details['claim'] = self.claim_2.claim
+        self.update_claim_details['is_superuser'] = False
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        self.update_claim_details['is_superuser'] = True
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_edit_after_five_minutes(self):
         self.update_claim_details['user_id'] = self.user.id
+        self.update_claim_details['is_superuser'] = False
         Claim.objects.filter(id=self.claim_1.id).update(timestamp=datetime.datetime.now() -
                                                         datetime.timedelta(minutes=6))
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        self.update_claim_details['is_superuser'] = True
+        self.assertTrue(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_invalid_input_for_claim(self):
         self.update_claim_details['user_id'] = self.user.id
+        self.update_claim_details['is_superuser'] = False
         self.update_claim_details['claim'] = 'קלט בשפה שאינה אנגלית'
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        self.update_claim_details['is_superuser'] = True
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_invalid_input_for_category(self):
         self.update_claim_details['user_id'] = self.user.id
+        self.update_claim_details['is_superuser'] = False
         self.update_claim_details['category'] = 'المدخلات بلغة غير الإنجليزية'
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        self.update_claim_details['is_superuser'] = True
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_invalid_input_for_tags(self):
         self.update_claim_details['user_id'] = self.user.id
+        self.update_claim_details['is_superuser'] = False
         self.update_claim_details['category'] = '输入英语以外的语言 输入英语以外的语言'
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        self.update_claim_details['is_superuser'] = True
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_delete_claim_valid_claim(self):
