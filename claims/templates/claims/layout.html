@@ -59,7 +59,7 @@
     </header>
 
     <div class="topnav">
-        <div class="nav-wrapper">
+        <div class="nav-wrapper" id="myTopnav">
             <a href="/">Home</a>
             <a href="/about">About us</a>
             <a href="/contact_us/contact_us_page">Contact us</a>
@@ -69,10 +69,10 @@
             {% endif %}
             {% if request.user.is_superuser %}
                 <div class="dropdown">
-                    <a class="dropdown-toggle" style="float: none; border-right: 1px solid #b1b1b1;">Admin Tools</a>
+                    <a class="dropdown-toggle">Admin Tools</a>
                     <div class="dropdown-content">
-                        <a href="/admin" target="_blank">Admin Panel</a><br>
-                        <a href="/export_claims_page">Export Claims as CSV</a><br>
+                        <a href="/admin" target="_blank">Admin Panel</a>
+                        <a href="/export_claims_page">Export Claims as CSV</a>
                         <a href="/users/add_all_scrapers">Add all Scrapers</a>
                         <a href="/users/add_scraper_guide">Adding a Scraper Guide</a>
                         <a href="/logger/view_log">Logger</a>
@@ -81,7 +81,9 @@
                 </div>
             {% endif %}
         </div>
+        <a href="javascript:void(0);" class="nav-hamburger-icon" onclick="navFunc()"><i class="fa fa-bars"></i></a>
     </div>
+    <div>
     <section id="page_content">
     {% block page_content %}
 
@@ -91,6 +93,16 @@
         &copy; 2018-2019 WTFacts version 1.0
     </footer>
 
+    <script>
+        function navFunc(){
+            var x = document.getElementById("myTopnav");
+            if (x.className === "topnav") {
+                x.className += " responsive";
+            } else {
+                x.className = "topnav";
+            }
+        }
+    </script>
 
 </body>
 </html>

@@ -72,10 +72,10 @@
                     <br>
                     Verdict Date: <input id="{{ claim.id }}_new_comment_date" type="date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}">
                 </div>
-                <div style="grid-area: verdict; padding-top: 20px;">
+                <div style="grid-area: verdict; padding: 20px;">
                     <input type="radio" id="{{ claim.id }}_new_comment_true_label" name="label" value="True"> True<br>
                     <input type="radio" id="{{ claim.id }}_new_comment_false_label" name="label" value="False"> False<br>
-                    <input type="radio" id="{{ claim.id }}_new_comment_unknown_label" name="label" value="Unknown"> Unknown
+                    <input type="radio" id="{{ claim.id }}_new_comment_unknown_label" name="label" value="Unknown" checked> Unknown
                 </div>
             </div>
             <hr>

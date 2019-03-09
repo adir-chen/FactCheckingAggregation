@@ -199,7 +199,7 @@ def view_claim(request, claim_id):
         'claim': claim,
         'comments': comments,
         'user_img': user_img.user_img,
-        'user_rep': user_rep.user_rep
+        'user_rep': math.ceil(user_rep.user_rep / 20)
     })
 
 
