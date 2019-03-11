@@ -611,7 +611,7 @@ class CommentTests(TestCase):
         self.post_request.user = admin
         res = export_to_csv(self.post_request)
         self.assertTrue(res.status_code == 200)
-        expected_info = 'Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n' + \
+        expected_info = 'Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n'\
                         'claim3,description5,url5,category3,' + str(self.comment_5.verdict_date) + ',,label5,,0\r\n'\
                         'claim4,description6,url6,category4,' + str(self.comment_6.verdict_date) + ',,label6,,0\r\n'
         self.assertEqual(res.content.decode('utf-8'), expected_info)
@@ -756,7 +756,7 @@ class CommentTests(TestCase):
         import string
         new_fields = self.csv_fields.getlist('fields_to_export[]')
         new_fields.append(''.join(random.choices(string.ascii_uppercase + string.digits, k=random.randint(1, 20))))
-        self.csv_fields['fields_to_export[]'] = new_fields
+        self.csv_fields.setlist('fields_to_export[]', new_fields)
         self.assertFalse(check_if_fields_and_scrapers_lists_valid(self.csv_fields.getlist('fields_to_export[]'),
                                                                   self.csv_fields.getlist('scrapers_ids[]'))[0])
 
@@ -765,7 +765,7 @@ class CommentTests(TestCase):
         new_fields = self.csv_fields.getlist('fields_to_export[]')
         for i in range(random.randint(1, 10)):
             new_fields.append(''.join(random.choices(string.ascii_uppercase + string.digits, k=random.randint(1, 20))))
-        self.csv_fields['fields_to_export[]'] = new_fields
+        self.csv_fields.setlist('fields_to_export[]', new_fields)
         self.assertFalse(check_if_fields_and_scrapers_lists_valid(self.csv_fields.getlist('fields_to_export[]'),
                                                                   self.csv_fields.getlist('scrapers_ids[]'))[0])
 
