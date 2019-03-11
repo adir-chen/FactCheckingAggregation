@@ -303,7 +303,7 @@ def up_vote(request):
         if comment.down_votes.filter(id=request.user.id).exists():
             comment.down_votes.remove(request.user.id)
             update_reputation_for_user(comment.user_id, True, 1)
-    save_log_message(request.user.id, request.user.username, 'Up voting comment with id '
+    save_log_message(request.user.id, request.user.username, 'Up voting a comment with id '
                      + str(request.POST.get('comment_id')), True)
     update_authenticity_grade(comment.claim_id)
     return view_claim(request, comment.claim_id)
@@ -320,7 +320,7 @@ def down_vote(request):
     valid_vote, err_msg = check_if_vote_is_valid(vote_fields)
     if not valid_vote:
         save_log_message(request.user.id, request.user.username,
-                         'Up voting a comment. Error: ' + err_msg)
+                         'Down voting a comment. Error: ' + err_msg)
         raise Exception(err_msg)
     comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
     if comment.down_votes.filter(id=request.user.id).exists():
@@ -333,7 +333,7 @@ def down_vote(request):
             comment.up_votes.remove(request.user.id)
             update_reputation_for_user(comment.user_id, False, 1)
     save_log_message(request.user.id, request.user.username,
-                     'Down voting comment with id ' + str(request.POST.get('comment_id')), True)
+                     'Down voting a comment with id ' + str(request.POST.get('comment_id')), True)
     update_authenticity_grade(comment.claim_id)
     return view_claim(request, comment.claim_id)
 
@@ -371,7 +371,7 @@ def edit_comment(request):
     valid_new_comment, err_msg = check_comment_new_fields(new_comment_fields)
     if not valid_new_comment:
         save_log_message(request.user.id, request.user.username,
-                         'Editing comment with id ' + str(request.POST.get('comment_id')) +
+                         'Editing a comment with id ' + str(request.POST.get('comment_id')) +
                          '. Error: ' + err_msg)
         raise Exception(err_msg)
     Comment.objects.filter(id=new_comment_fields['comment_id'], user_id=request.user.id).update(
@@ -384,7 +384,7 @@ def edit_comment(request):
     claim_id = Comment.objects.filter(id=new_comment_fields['comment_id']).first().claim_id
     update_authenticity_grade(claim_id)
     save_log_message(request.user.id, request.user.username,
-                     'Editing comment with id ' + str(request.POST.get('comment_id')), True)
+                     'Editing a comment with id ' + str(request.POST.get('comment_id')), True)
     return view_claim(request, claim_id)
 
 
@@ -453,7 +453,7 @@ def delete_comment(request):
     update_reputation_for_user(comment.user_id, True, comment.down_votes.count())
     Comment.objects.filter(id=request.POST.get('comment_id'), user_id=request.user.id).delete()
     save_log_message(request.user.id, request.user.username,
-                     'Deleting comment with id ' + str(request.POST.get('comment_id')), True)
+                     'Deleting a comment with id ' + str(request.POST.get('comment_id')), True)
     update_authenticity_grade(claim_id)
     return view_claim(request, claim_id)
 
