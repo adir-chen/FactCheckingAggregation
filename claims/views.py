@@ -31,7 +31,7 @@ def add_claim(request):
             user_id=claim_info['user_id'],
             claim=claim_info['claim'],
             category=claim_info['category'],
-            tags=', '.join(claim_info['tags'].split()),
+            tags=' '.join(claim_info['tags'].split()),
             authenticity_grade=0,
             image_src=claim_info['image_src']
         )
@@ -97,8 +97,13 @@ def check_if_tags_are_valid(tags):
 # This function checks if a given user's input is valid, i.e. the input is in the English language.
 # The function returns true in case the user's input is valid, otherwise false
 def is_english_input(user_input):
+    import string
+    legal_punctuation_input = ["’"]
     try:
-        user_input.encode(encoding='utf-8').decode('ascii')
+        for char in user_input:
+            if char is string.punctuation or char in legal_punctuation_input:
+                continue
+            char.encode(encoding='utf-8').decode('ascii')
     except UnicodeDecodeError:
         return False
     return True
@@ -258,10 +263,10 @@ def edit_claim(request):
                          'Editing a claim. Error: ' + err_msg)
         raise Exception(err_msg)
     claim = get_object_or_404(Claim, id=request.POST.get('claim_id'))
-    Claim.objects.filter(id=claim.id, user_id=request.user.id).update(
+    Claim.objects.filter(id=claim.id).update(
         claim=new_claim_fields['claim'],
         category=new_claim_fields['category'],
-        tags=', '.join(new_claim_fields['tags'].split()),
+        tags=' '.join(new_claim_fields['tags'].split()),
         image_src=new_claim_fields['image_src'])
     save_log_message(request.user.id, request.user.username,
                      'Editing a claim with id ' + str(request.POST.get('claim_id')), True)
@@ -324,7 +329,7 @@ def delete_claim(request):
     for comment in Comment.objects.filter(claim_id=request.POST.get('claim_id')):
         update_reputation_for_user(comment.user_id, False, comment.up_votes.count())
         update_reputation_for_user(comment.user_id, True, comment.down_votes.count())
-    Claim.objects.filter(id=request.POST.get('claim_id'), user_id=request.user.id).delete()
+    Claim.objects.filter(id=request.POST.get('claim_id')).delete()
     save_log_message(request.user.id, request.user.username,
                      'Deleting a claim with id ' + str(request.POST.get('claim_id')), True)
     return view_home(request)

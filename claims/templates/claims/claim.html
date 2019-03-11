@@ -213,7 +213,10 @@
                     location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';
                 },
                 error: function (error) {
-                    console.log(error);
+                    let err = error.responseText.split('\n')[1];
+                    document.getElementById("#claim_{{ claim.id }}_error_msg").innerHTML =
+                    'Error: <br>' + err;
+                    $("#claim_{{ claim.id }}_error_msg").attr("hidden", false);
                 }
             });
         });

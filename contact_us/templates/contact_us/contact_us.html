@@ -40,7 +40,7 @@
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
                 document.getElementById("error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
+                    'Error: <br>' + err;
                 $("#error_msg").attr("hidden", false);
             }
         });
