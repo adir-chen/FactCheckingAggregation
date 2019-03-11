@@ -116,7 +116,7 @@ class ClaimTests(TestCase):
         claim_4 = get_claim_by_id(self.num_of_saved_claims + 1)
         self.assertTrue(claim_4.claim == self.new_claim_details['claim'])
         self.assertTrue(claim_4.category == self.new_claim_details['category'])
-        self.assertTrue(claim_4.tags == ', '.join(self.new_claim_details['tags'].split()))
+        self.assertTrue(claim_4.tags == ' '.join(self.new_claim_details['tags'].split()))
         self.assertTrue(claim_4.authenticity_grade == 0)
 
     def test_add_claim_by_user_not_authenticated(self):
@@ -373,7 +373,7 @@ class ClaimTests(TestCase):
         self.post_request.POST = query_dict
         self.post_request.user = self.user
         self.assertTrue(add_claim(self.post_request).status_code == 200)
-        self.assertTrue(get_tags_for_claim(self.num_of_saved_claims + 1) == ', '.join(self.new_claim_details['tags'].split()))
+        self.assertTrue(get_tags_for_claim(self.num_of_saved_claims + 1) == ' '.join(self.new_claim_details['tags'].split()))
 
     def test_get_tags_for_claim_invalid_claim(self):
         self.assertTrue(get_tags_for_claim(self.num_of_saved_claims + 1) is None)
@@ -519,7 +519,7 @@ class ClaimTests(TestCase):
         self.post_request.POST = query_dict
         self.post_request.user = self.user
         self.assertTrue(edit_claim(self.post_request).status_code == 200)
-        self.assertTrue(Claim.objects.filter(id=self.update_claim_details['claim_id'])[0].tags == ', '.join('newTag1 newTag2 newTag3'.split()))
+        self.assertTrue(Claim.objects.filter(id=self.update_claim_details['claim_id'])[0].tags == ' '.join('newTag1 newTag2 newTag3'.split()))
 
     def test_edit_claim_valid_with_different_image_src(self):
         self.update_claim_details['image_src'] = self.claim_2.image_src
