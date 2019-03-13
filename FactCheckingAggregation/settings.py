@@ -27,7 +27,7 @@ SECRET_KEY = '#!#c&ejot$9bc3k%q&ckib!=ki#lk07!$u3ikfehj6!-2^s)02'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['132.72.23.63', 'localhost', '127.0.0.1', '192.168.1.15']
+ALLOWED_HOSTS = ['132.72.23.63', 'localhost', '127.0.0.1', '192.168.1.41']
 
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.open_id.OpenIdAuth',  # for Google authentication

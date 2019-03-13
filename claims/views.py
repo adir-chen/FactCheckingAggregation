@@ -31,7 +31,7 @@ def add_claim(request):
             user_id=claim_info['user_id'],
             claim=claim_info['claim'],
             category=claim_info['category'],
-            tags=' '.join(claim_info['tags'].split()),
+            tags=','.join(claim_info['tags'].split()),
             authenticity_grade=0,
             image_src=claim_info['image_src']
         )
@@ -62,7 +62,7 @@ def check_if_claim_is_valid(claim_info):
     if 'tags' not in claim_info or not claim_info['tags']:
         claim_info['tags'] = ''
     if not check_if_tags_are_valid(claim_info['tags']):
-        err += 'Incorrect format for tags. Tags should be separated by space'
+        err += 'Incorrect format for tags'
     elif 'user_id' not in claim_info:
         err += 'Missing value for user'
     elif 'claim' not in claim_info or not claim_info['claim']:
@@ -91,21 +91,38 @@ def check_if_claim_is_valid(claim_info):
 # This function checks if given claim's tags are valid, i.e. the tags are in the correct format.
 # The function returns true in case the claim's tags are valid, otherwise false
 def check_if_tags_are_valid(tags):
-    return tags == '' or all(tag.isdigit() or tag.isalpha() or tag.isspace() for tag in tags)
+    import string
+    not_allowed_tags = set(string.punctuation)
+    not_allowed_tags.remove('\'')
+    not_allowed_tags.remove('`')
+    not_allowed_tags.remove('.')
+    if tags == '':
+        return True
+    if not all(tag.isdigit() or
+               tag.isalpha() or
+               tag == ',' or
+               tag.isspace() or
+               tag not in not_allowed_tags for tag in tags):
+        return False
+    for tag in tags.split(','):
+        if not tag:
+            return False
+        elif not tag[0].isdigit() and not tag[0].isalpha():
+            return False
+        elif not tag[len(tag) - 1].isdigit() and not tag[len(tag) - 1].isalpha():
+            return False
+    return True
 
 
 # This function checks if a given user's input is valid, i.e. the input is in the English language.
 # The function returns true in case the user's input is valid, otherwise false
 def is_english_input(user_input):
-    import string
-    legal_punctuation_input = ["’"]
-    try:
-        for char in user_input:
-            if char is string.punctuation or char in legal_punctuation_input:
-                continue
-            char.encode(encoding='utf-8').decode('ascii')
-    except UnicodeDecodeError:
-        return False
+    for char in user_input:
+        if char.isalpha():
+            try:
+                char.encode(encoding='utf-8').decode('ascii')
+            except UnicodeDecodeError:
+                return False
     return True
 
 
@@ -186,25 +203,29 @@ def view_claim(request, claim_id):
         comments[comment] = {'user': User.objects.filter(id=comment.user_id).first(),
                              'user_img': user_img,
                              'user_rep': math.ceil(user_rep.user_rep / 20)}
-    user_img = Users_Images.objects.filter(user_id=request.user.id)
-    if len(user_img) == 0:
-        new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=request.user.id).first())
-        new_user_img.save()
-        user_img = new_user_img
-    else:
-        user_img = user_img.first()
-    user_rep = Users_Reputations.objects.filter(user_id=request.user.id)
-    if len(user_rep) == 0:
-        new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=request.user.id).first())
-        new_user_rep.save()
-        user_rep = new_user_rep
-    else:
-        user_rep = user_rep.first()
+    user_img, user_rep = None, None
+    if request.user.is_authenticated:
+        user_img = Users_Images.objects.filter(user_id=request.user.id)
+        if len(user_img) == 0:
+            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=request.user.id).first())
+            new_user_img.save()
+            user_img = new_user_img
+        else:
+            user_img = user_img.first()
+        user_img = user_img.user_img
+        user_rep = Users_Reputations.objects.filter(user_id=request.user.id)
+        if len(user_rep) == 0:
+            new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=request.user.id).first())
+            new_user_rep.save()
+            user_rep = new_user_rep
+        else:
+            user_rep = user_rep.first()
+        user_rep = math.ceil(user_rep.user_rep / 20)
     return render(request, 'claims/claim.html', {
         'claim': claim,
         'comments': comments,
-        'user_img': user_img.user_img,
-        'user_rep': math.ceil(user_rep.user_rep / 20)
+        'user_img': user_img,
+        'user_rep': user_rep
     })
 
 
@@ -266,7 +287,7 @@ def edit_claim(request):
     Claim.objects.filter(id=claim.id).update(
         claim=new_claim_fields['claim'],
         category=new_claim_fields['category'],
-        tags=' '.join(new_claim_fields['tags'].split()),
+        tags=','.join(new_claim_fields['tags'].split()),
         image_src=new_claim_fields['image_src'])
     save_log_message(request.user.id, request.user.username,
                      'Editing a claim with id ' + str(request.POST.get('claim_id')), True)
@@ -283,7 +304,7 @@ def check_claim_new_fields(new_claim_fields):
     if 'tags' not in new_claim_fields or not new_claim_fields['tags']:
         new_claim_fields['tags'] = ''
     if not check_if_tags_are_valid(new_claim_fields['tags']):
-        err += 'Incorrect format for tags. Tags should be separated by space'
+        err += 'Incorrect format for tags'
     elif 'user_id' not in new_claim_fields or not new_claim_fields['user_id']:
         err += 'Missing value for user id'
     elif 'is_superuser' not in new_claim_fields:
@@ -346,7 +367,7 @@ def check_if_delete_claim_is_valid(request):
         err += 'Claim with id ' + str(request.user.id) + ' does not exist'
     elif not check_if_user_exists_by_user_id(request.user.id):
         err += 'User with id ' + str(request.user.id) + ' does not exist'
-    elif len(Claim.objects.filter(id=request.POST.get('claim_id'), user=request.user.id)) == 0:
+    elif not request.user.is_superuser and len(Claim.objects.filter(id=request.POST.get('claim_id'), user=request.user.id)) == 0:
         err += 'Claim with id ' + str(request.POST.get('claim_id')) + ' does not belong to user with id ' + str(request.user.id)
     if len(err) > 0:
         return False, err
@@ -396,11 +417,11 @@ def check_if_spam_report_is_valid(request):
     if not request.POST.get('claim_id'):
         err += 'Missing value for claim id'
     elif len(Claim.objects.filter(id=request.POST.get('claim_id'))) == 0:
-        err += 'claim with id ' + str(request.POST.get('claim_id')) + ' does not exist'
+        err += 'Claim with id ' + str(request.POST.get('claim_id')) + ' does not exist'
     elif not check_if_user_exists_by_user_id(request.user.id):
         err += 'User ' + str(request.user.id) + ' does not exist'
     elif check_duplicate_log_for_user(request.user.id, 'Reporting a claim with id ' + str(request.POST.get('claim_id')) + ' as spam'):
-        err += 'user already reported claim with id ' + str(request.POST.get('claim_id')) + ' as spam'
+        err += 'User already reported claim with id ' + str(request.POST.get('claim_id')) + ' as spam'
     if len(err) > 0:
         return False, err
     return True, err

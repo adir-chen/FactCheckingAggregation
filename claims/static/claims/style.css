@@ -426,6 +426,16 @@ span.authenticity_grade{
     border: 1px solid #000;
 }
 
+.whatsApp-share-button{
+    background: #fff;
+    border: 1px solid #5ed055;
+    color: #5ed055;
+}
+
+.whatsApp-share-button:hover{
+    border: 1px solid #000;
+}
+
 /*################
     COMMENTS
 ################*/

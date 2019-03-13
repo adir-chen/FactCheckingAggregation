@@ -62,6 +62,7 @@
                 Reference:
                 <a target="_blank" href={{ comment.url }}>link to source</a><br>
                 Tags: {{ comment.tags }}
+                <br><button id="comment_{{ comment.id }}_search_on_twitter" onclick="search_on_twitter_{{ comment.id }}()">Search on twitter</button>
             </div>
             <div id="comment_{{ comment.id }}_footer_edit" hidden="hidden">
                 Reference:
@@ -277,4 +278,15 @@
             }
         });
     });
+
+    function search_on_twitter_{{ comment.id }}(){
+        let comment_{{ comment.id }}_new_tags = '';
+        let comment_{{ comment.id }}_tags_arr = "{{ comment.tags }}".split(' ');
+        for(let index in comment_{{ comment.id }}_tags_arr){
+            comment_{{ comment.id }}_new_tags += comment_{{ comment.id }}_tags_arr[index] + '+';
+        }
+        comment_{{ comment.id }}_new_tags = comment_{{ comment.id }}_new_tags.substring(0, comment_{{ comment.id }}_new_tags.length - 1);
+        window.open('https://twitter.com/search?q=' + comment_{{ comment.id }}_new_tags, '_blank');
+        {# for google --> 'http://google.com/search?q='#}
+    }
 </script>

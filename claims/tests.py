@@ -31,25 +31,25 @@ class ClaimTests(TestCase):
         self.claim_1 = Claim(user_id=self.user.id,
                              claim='claim1',
                              category='category1',
-                             tags='tag1, tag2, tag3',
+                             tags='tag1,tag2,tag3',
                              authenticity_grade=0,
                              image_src='image1')
         self.claim_2 = Claim(user_id=self.user.id,
                              claim='claim2',
                              category='category2',
-                             tags='tag4, tag5',
+                             tags='tag4,tag5',
                              authenticity_grade=0,
                              image_src='image2')
         self.claim_3 = Claim(user_id=self.user.id,
                              claim='claim3',
                              category='category3',
-                             tags='tag6, tag7, tag8, tag9',
+                             tags='tag6,tag7,tag8,tag9',
                              authenticity_grade=0,
                              image_src='image3')
         self.claim_4 = Claim(user_id=self.user.id,
                              claim='claim4',
                              category='category4',
-                             tags='tag10 tag11',
+                             tags='tag10,tag11',
                              authenticity_grade=0,
                              image_src='image4')
         self.claim_1.save()
@@ -98,7 +98,7 @@ class ClaimTests(TestCase):
         self.update_claim_details = {'claim_id': self.claim_1.id,
                                      'claim': 'newClaim1',
                                      'category': 'newCategory1',
-                                     'tags': 'newTag1 newTag2 newTag3 newTag4',
+                                     'tags': 'newTag1,newTag2,newTag3,newTag4',
                                      'image_src': 'image1'}
 
     def tearDown(self):
@@ -116,7 +116,7 @@ class ClaimTests(TestCase):
         claim_4 = get_claim_by_id(self.num_of_saved_claims + 1)
         self.assertTrue(claim_4.claim == self.new_claim_details['claim'])
         self.assertTrue(claim_4.category == self.new_claim_details['category'])
-        self.assertTrue(claim_4.tags == ' '.join(self.new_claim_details['tags'].split()))
+        self.assertTrue(claim_4.tags == ','.join(self.new_claim_details['tags'].split()))
         self.assertTrue(claim_4.authenticity_grade == 0)
 
     def test_add_claim_by_user_not_authenticated(self):
@@ -373,13 +373,19 @@ class ClaimTests(TestCase):
         self.post_request.POST = query_dict
         self.post_request.user = self.user
         self.assertTrue(add_claim(self.post_request).status_code == 200)
-        self.assertTrue(get_tags_for_claim(self.num_of_saved_claims + 1) == ' '.join(self.new_claim_details['tags'].split()))
+        self.assertTrue(get_tags_for_claim(self.num_of_saved_claims + 1) == ','.join(self.new_claim_details['tags'].split()))
 
     def test_get_tags_for_claim_invalid_claim(self):
         self.assertTrue(get_tags_for_claim(self.num_of_saved_claims + 1) is None)
 
     def test_view_claim_valid(self):
         self.get_request.user = self.user
+        response = view_claim(self.get_request, self.claim_1.id)
+        self.assertTrue(response.status_code == 200)
+
+    def test_view_claim_valid_user_not_authenticated(self):
+        from django.contrib.auth.models import AnonymousUser
+        self.get_request.user = AnonymousUser()
         response = view_claim(self.get_request, self.claim_1.id)
         self.assertTrue(response.status_code == 200)
 
@@ -513,13 +519,13 @@ class ClaimTests(TestCase):
         self.assertTrue(Claim.objects.filter(id=self.update_claim_details['claim_id'])[0].category == self.claim_2.category)
 
     def test_edit_claim_valid_with_different_tags(self):
-        self.update_claim_details['tags'] = 'newTag1 newTag2 newTag3'
+        self.update_claim_details['tags'] = 'newTag1,newTag2,newTag3'
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.update_claim_details)
         self.post_request.POST = query_dict
         self.post_request.user = self.user
         self.assertTrue(edit_claim(self.post_request).status_code == 200)
-        self.assertTrue(Claim.objects.filter(id=self.update_claim_details['claim_id'])[0].tags == ' '.join('newTag1 newTag2 newTag3'.split()))
+        self.assertTrue(Claim.objects.filter(id=self.update_claim_details['claim_id'])[0].tags == ','.join('newTag1 newTag2 newTag3'.split()))
 
     def test_edit_claim_valid_with_different_image_src(self):
         self.update_claim_details['image_src'] = self.claim_2.image_src

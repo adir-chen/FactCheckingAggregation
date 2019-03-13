@@ -46,7 +46,7 @@ def build_comment(claim_id, user_id, title, description, url, tags, verdict_date
         title=title,
         description=description,
         url=url,
-        tags=' '.join(tags.split()),
+        tags=','.join(tags.split()),
         verdict_date=datetime.strptime(verdict_date, '%d/%m/%Y'),
         label=label,
         system_label=get_system_label_to_comment(label, user_id),
@@ -63,7 +63,7 @@ def check_if_comment_is_valid(comment_info):
     if 'tags' not in comment_info or not comment_info['tags']:
         comment_info['tags'] = ''
     if not check_if_tags_are_valid(comment_info['tags']):
-        err += 'Incorrect format for tags. Tags should be separated by space'
+        err += 'Incorrect format for tags'
     elif 'claim_id' not in comment_info or not comment_info['claim_id']:
         err += 'Missing value for claim id'
     elif 'user_id' not in comment_info or not comment_info['user_id']:
@@ -378,7 +378,7 @@ def edit_comment(request):
         title=new_comment_fields['comment_title'],
         description=new_comment_fields['comment_description'],
         url=new_comment_fields['comment_reference'],
-        tags=' '.join(new_comment_fields['comment_tags'].split()),
+        tags=','.join(new_comment_fields['comment_tags'].split()),
         verdict_date=datetime.strptime(new_comment_fields['comment_verdict_date'], '%d/%m/%Y'),
         system_label=new_comment_fields['comment_label'])
     claim_id = Comment.objects.filter(id=new_comment_fields['comment_id']).first().claim_id
@@ -398,7 +398,7 @@ def check_comment_new_fields(new_comment_fields):
     if 'comment_tags' not in new_comment_fields or not new_comment_fields['comment_tags']:
         new_comment_fields['comment_tags'] = ''
     if not check_if_tags_are_valid(new_comment_fields['comment_tags']):
-        err += 'Incorrect format for tags. Tags should be separated by space'
+        err += 'Incorrect format for tags'
     elif 'user_id' not in new_comment_fields or not new_comment_fields['user_id']:
         err += 'Missing value for user id'
     elif 'is_superuser' not in new_comment_fields:
@@ -469,7 +469,7 @@ def check_if_delete_comment_is_valid(request):
         err += 'Comment with id ' + str(request.user.id) + ' does not exist'
     elif not check_if_user_exists_by_user_id(request.user.id):
         err += 'User with id ' + str(request.user.id) + ' does not exist'
-    elif len(Comment.objects.filter(id=request.POST.get('comment_id'), user=request.user.id)) == 0:
+    elif not request.user.is_superuser and len(Comment.objects.filter(id=request.POST.get('comment_id'), user=request.user.id)) == 0:
         err += 'Comment with id ' + str(request.POST.get('comment_id')) + ' does not belong to user with id ' + \
                str(request.user.id)
     if len(err) > 0:

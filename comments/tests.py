@@ -35,12 +35,12 @@ class CommentTests(TestCase):
         self.claim_1 = Claim(user_id=self.user_1.id,
                              claim='claim1',
                              category='category1',
-                             tags='tag1, tag2',
+                             tags='tag1,tag2',
                              authenticity_grade=0)
         self.claim_2 = Claim(user_id=self.user_2.id,
                              claim='claim2',
                              category='category2',
-                             tags='tag3, tag4',
+                             tags='tag3,tag4',
                              authenticity_grade=0)
         self.claim_3 = Claim(user_id=self.new_scraper_1.id,
                              claim='claim3',
@@ -50,7 +50,7 @@ class CommentTests(TestCase):
         self.claim_4 = Claim(user_id=self.new_scraper_2.id,
                              claim='claim4',
                              category='category4',
-                             tags='tag4, tag5, tag6',
+                             tags='tag4,tag5,tag6',
                              authenticity_grade=0)
         self.claim_1.save()
         self.claim_2.save()
@@ -70,7 +70,7 @@ class CommentTests(TestCase):
                                  title=self.claim_2.claim,
                                  description='description2',
                                  url='url2',
-                                 tags='tag2, tag3',
+                                 tags='tag2,tag3',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label2')
         self.comment_3 = Comment(claim_id=self.claim_1.id,
@@ -437,8 +437,8 @@ class CommentTests(TestCase):
     def test_check_if_comment_is_valid_with_tags(self):
         self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
         self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
-        self.new_comment_details_user_1['tags'] = 'tag1 tag2'
-        self.new_comment_details_user_2['tags'] = 'tag3 tag4'
+        self.new_comment_details_user_1['tags'] = 'tag1,tag2'
+        self.new_comment_details_user_2['tags'] = 'tag3,tag4'
         self.assertTrue(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
         self.assertTrue(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
 
@@ -447,6 +447,16 @@ class CommentTests(TestCase):
         self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
         self.new_comment_details_user_1['tags'] = 'tag1, tag2'
         self.new_comment_details_user_2['tags'] = 'tag3; tag4'
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+
+        self.new_comment_details_user_1['tags'] = 'tag1,,tag2'
+        self.new_comment_details_user_2['tags'] = 'tag3,tag4, '
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+
+        self.new_comment_details_user_1['tags'] = 'tag1,?tag2'
+        self.new_comment_details_user_2['tags'] = 'tag%,tag4'
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
 

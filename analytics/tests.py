@@ -15,8 +15,6 @@ class Analytics(TestCase):
         pass
 
     def test_view_analytics_valid_user(self):
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
         admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
         self.get_request.user = admin
         self.assertTrue(view_analytics(self.get_request).status_code == 200)
