@@ -45,7 +45,7 @@
             <div class="headlines">
                 <div id="comments" style="max-width: 1150px; padding: 20px 20px; border-radius: 10px; background: #aabfd6; display: flex; flex-wrap: wrap; margin: 0 auto;">
                     {% for comment, user  in user_comments.object_list|slice:"0:3" %}
-                        {% include 'comments/comment.html' with comment=comment user=user request=request only %}
+                        {% include 'comments/comment.html' with comment=comment user_details=user request=request only %}
                     {% endfor %}
                 </div>
             </div>

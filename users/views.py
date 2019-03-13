@@ -1,3 +1,5 @@
+import math
+
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.http import Http404
@@ -286,7 +288,7 @@ def user_page(request, username):
     user = get_user_by_username(username)
     if user is None:
         raise Http404('User with username ' + username + ' does not exist')
-    user_rep = Users_Reputations.objects.filter(user_id=user.id)
+    reputation = Users_Reputations.objects.filter(user_id=user.id)
     claims = Claim.objects.filter(user=user.id)
     comments = Comment.objects.filter(user=user.id)
     user_claims = list(get_users_images_for_claims(claims).items())
@@ -294,15 +296,51 @@ def user_page(request, username):
     paginator = Paginator(user_claims, 3)
     headlines = {}
     for comment in comments:
-        headlines[comment] = User.objects.filter(id=comment.user_id).first()
+        user_img = Users_Images.objects.filter(user_id=comment.user_id)
+        if len(user_img) == 0:
+            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
+            new_user_img.save()
+            user_img = new_user_img
+        else:
+            user_img = user_img.first()
+        user_rep = Users_Reputations.objects.filter(user_id=comment.user_id)
+        if len(user_rep) == 0:
+            new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
+            new_user_rep.save()
+            user_rep = new_user_rep
+        else:
+            user_rep = user_rep.first()
+        headlines[comment] = {'user': User.objects.filter(id=comment.user_id).first(),
+                             'user_img': user_img,
+                             'user_rep': math.ceil(user_rep.user_rep / 20)}
     user_comments = list(headlines.items())
+    user_img, user_rep = None, None
+    if request.user.is_authenticated:
+        user_img = Users_Images.objects.filter(user_id=request.user.id)
+        if len(user_img) == 0:
+            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=request.user.id).first())
+            new_user_img.save()
+            user_img = new_user_img
+        else:
+            user_img = user_img.first()
+        user_img = user_img.user_img
+        user_rep = Users_Reputations.objects.filter(user_id=request.user.id)
+        if len(user_rep) == 0:
+            new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=request.user.id).first())
+            new_user_rep.save()
+            user_rep = new_user_rep
+        else:
+            user_rep = user_rep.first()
+        user_rep = math.ceil(user_rep.user_rep / 20)
     page2 = request.GET.get('page2')
     paginator2 = Paginator(user_comments, 3)
     return render(request, 'users/user_page.html', {
         'user': user,
-        'reputation': user_rep,
+        'reputation': reputation,
         'user_claims': paginator.get_page(page),
         'user_comments': paginator2.get_page(page2),
+        'user_img': user_img,
+        'user_rep': user_rep,
         'scrapers_ids': get_all_scrapers_ids_arr(),
         'true_labels': get_true_labels(username),
         'false_labels': get_false_labels(username),
@@ -319,31 +357,58 @@ def get_user_by_username(username):
 
 # This function return a HTML page for my own profile
 def my_profile_page(request):
-    user_rep = Users_Reputations.objects.filter(user_id=request.user.id)
+    reputation = Users_Reputations.objects.filter(user_id=request.user.id)
     claims = Claim.objects.filter(user=request.user.id)
     comments = Comment.objects.filter(user=request.user.id)
     user_claims = list(get_users_images_for_claims(claims).items())
     page = request.GET.get('page1')
     paginator = Paginator(user_claims, 3)
     headlines = {}
-    '''for claim in claims:
-        user_img = Users_Images.objects.filter(user_id=User.objects.filter(id=claim.user_id).first())
+    for comment in comments:
+        user_img = Users_Images.objects.filter(user_id=comment.user_id)
         if len(user_img) == 0:
-            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=claim.user_id).first())
+            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
             new_user_img.save()
             user_img = new_user_img
         else:
             user_img = user_img.first()
-        user_claims[claim] = user_img.user_img'''
-    for comment in comments:
-        headlines[comment] = User.objects.filter(id=comment.user_id).first()
+        user_rep = Users_Reputations.objects.filter(user_id=comment.user_id)
+        if len(user_rep) == 0:
+            new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
+            new_user_rep.save()
+            user_rep = new_user_rep
+        else:
+            user_rep = user_rep.first()
+        headlines[comment] = {'user': User.objects.filter(id=comment.user_id).first(),
+                              'user_img': user_img,
+                              'user_rep': math.ceil(user_rep.user_rep / 20)}
     user_comments = list(headlines.items())
+    user_img, user_rep = None, None
+    if request.user.is_authenticated:
+        user_img = Users_Images.objects.filter(user_id=request.user.id)
+        if len(user_img) == 0:
+            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=request.user.id).first())
+            new_user_img.save()
+            user_img = new_user_img
+        else:
+            user_img = user_img.first()
+        user_img = user_img.user_img
+        user_rep = Users_Reputations.objects.filter(user_id=request.user.id)
+        if len(user_rep) == 0:
+            new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=request.user.id).first())
+            new_user_rep.save()
+            user_rep = new_user_rep
+        else:
+            user_rep = user_rep.first()
+        user_rep = math.ceil(user_rep.user_rep / 20)
     page2 = request.GET.get('page2')
     paginator2 = Paginator(user_comments, 3)
     return render(request, 'users/my_profile.html', {
-        'reputation': user_rep,
+        'reputation': reputation,
         'user_claims': paginator.get_page(page),
         'user_comments': paginator2.get_page(page2),
+        'user_img': user_img,
+        'user_rep': user_rep,
     })
 
 

@@ -68,7 +68,7 @@
                         <img src="{{ user_img }}">
                     </div>
                     <div class="comment_user_details">
-                        User: <a href="#">{{ request.user.username }}</a><br>
+                        User: <a href="/users/{{ request.user.username }}">{{ request.user.username }}</a><br>
                         {% load static %}
                         {% for i in 'i'|rjust:user_rep %}
                             <img src="{% static 'claims/assets/images/star.png' %}">
