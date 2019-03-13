@@ -1,11 +1,72 @@
 {% extends 'claims/layout.html' %}
 
 {% block page_content %}
-    <div id="logger_page" style="max-width: 1050px; margin: auto; min-height: 750px; padding: 40px 0;">
-        <h5>All users activities on the website:</h5>
+    <div id="logger_page" class="page_wrapper">
         <br>
+        <h4>Export\View logger</h4>
         <div class="claim_box" style="width: 100%; padding: 20px 40px 20px 20px; height: 600px; overflow: auto;">
             {% csrf_token %}
+            <h5>Exporting logger to a csv file:</h5>
+            <form action="{% url 'logger:export_to_csv' %}" method="post" target="_blank">
+                {% csrf_token %}
+                <h6>Choose which actions you want to export (default- all):</h6>
+                 <table class="log_table" style="">
+                     <tr class="log_table">
+                         <td>
+                             <input name="actions_to_export[]" class="actions_to_export[]" value="Adding a new claim" type="checkbox" checked>Adding new claim
+                         </td>
+                         <td>
+                             <input name="actions_to_export[]" class="actions_to_export[]" value="Adding a new comment" type="checkbox" checked>Adding new comment<br>
+                         </td>
+                     </tr>
+                     <tr class="log_table">
+                         <td>
+                             <input name="actions_to_export[]" class="actions_to_export[]" value="Editing a claim" type="checkbox" checked>Editing a claim
+                         </td>
+                         <td>
+                             <input name="actions_to_export[]" class="actions_to_export[]" value="Editing a comment" type="checkbox" checked>Editing a comment<br>
+                         </td>
+                     </tr>
+                     <tr class="log_table">
+                         <td>
+                            <input name="actions_to_export[]" class="actions_to_export[]" value="Deleting a claim" type="checkbox" checked>Deleting a claim
+                         </td>
+                         <td>
+                             <input name="actions_to_export[]" class="actions_to_export[]" value="Deleting a comment" type="checkbox" checked>Deleting a comment<br>
+                         </td>
+                     </tr>
+                     <tr class="log_table">
+                         <td>
+                             <input name="actions_to_export[]" class="actions_to_export[]" value="Reporting a claim as spam" type="checkbox" checked>Reporting a claim as spam<br>
+                         </td>
+                         <td>
+                             <input name="actions_to_export[]" class="actions_to_export[]" value="Up voting a comment" type="checkbox" checked>Up voting a comment
+                         </td>
+                     </tr>
+                     <tr class="log_table">
+                         <td>
+                             <input name="actions_to_export[]" class="actions_to_export[]" value="Sending an email" type="checkbox" checked>Sending an email<br>
+                         </td>
+                         <td>
+                             <input name="actions_to_export[]" class="actions_to_export[]" value="Down voting a comment" type="checkbox" checked>Down voting a comment<br>
+                         </td>
+                     </tr>
+                 </table>
+
+                <h6>Enter starting date:</h6>
+                <input type="date" name="date_start" id="date_start" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}"><br>
+                <h6>Enter ending date:</h6>
+                <input type="date" name="date_end" id="date_end" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}"><br>
+                <br><h6>Logger's Errors:</h6>
+                <input type="radio" id='errors' name="errors" value="with_errors" checked>Export with errors<br>
+                <input type="radio" id='errors' name="errors" value="without_errors">Export without errors<br>
+                <input type="radio" id='errors' name="errors" value="just_errors">Export just errors<br>
+                <button id="export_claims" type="submit" class="btn btn-info" style="margin: 10px 0;">Export logger</button>
+            </form>
+        </div>
+        <br><br>
+        <div class="claim_box" style="width: 100%; padding: 20px 40px 20px 20px; height: 600px; overflow: auto;">
+            <h5>All users activities on the website:</h5>
             <table class="log_table" style="">
               <tr>
                   <th>Date</th>

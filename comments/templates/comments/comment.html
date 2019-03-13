@@ -1,77 +1,86 @@
 {%  load mathfilters %}
 <div style="margin: auto;">
-
-    <div class="claim_box" style="padding: 20px; width: 100%;">
-        <p id="comment_{{ comment.id }}_error_msg" style="color: red; font-size: 12px;" hidden></p>
-        <table id="comment_{{ comment.id }}" style="table-layout: auto; width: 100%;">
-            <tr>
-                <td class="left" style="width: auto;">
-                    <h4 id="comment_{{ comment.id }}_title"><b>{{ comment.title }}</b></h4>
-                    <span id="{{ comment.id }}_title_name" hidden="hidden">Title:<br><input id="{{ comment.id }}_title" value="{{ comment.title }}" type="text" placeholder="{{ comment.title }}" style="width: 90%; margin: 10px;"></span>
-                </td>
-                <td class="right" style="width: 100px;">User: <a href="/users/{{ user_details.user.username }}">{{ user_details.user.username }}</a></td>
-            </tr>
-            <tr>
-                <td class="left">
-                    <p id="comment_{{ comment.id }}_description">{{ comment.description }}</p>
-                    <span id="{{ comment.id }}_description_name" hidden="hidden">Description:<br><textarea id="{{ comment.id }}_description" placeholder="{{ comment.description }}" style="width: 90%; margin: 10px;">{{ comment.description }}</textarea></span><br>
-                    <span id="{{ comment.id }}_tags_name" hidden="hidden">Tags:<br><input id="{{ comment.id }}_tags" value="{{ comment.tags }}" type="text" placeholder="{{ comment.tags }}" style="width: 90%; margin: 10px;"><br></span>
-                </td>
-                <td class="right"><p>
-                    <img style="max-width: 90px; margin-bottom: 20px;" src="{{ user_details.user_img.user_img }}"><br>
-                    {% load static %}
-                    {%  if comment.system_label == 'True' %}
-                        <img src="{% static 'claims/assets/images/TrueLabel.png' %}" >
-                        <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="True" checked><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
-                        <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="False"><span id='comment_{{ comment.id }}_false_label' hidden>False</span><br>
-                        <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="label" hidden='hidden' value="Unknown"><span id='comment_{{ comment.id }}_unknown_label' hidden>Unknown</span>
-                    {% elif comment.system_label == 'False' %}
-                        <img src="{% static 'claims/assets/images/FalseLabel.png' %}" >
-                        <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="True}}"><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
-                        <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="False" checked><span id='comment_{{ comment.id }}_false_label' hidden>False</span><br>
-                        <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="label" hidden='hidden' value="Unknown"><span id='comment_{{ comment.id }}_unknown_label' hidden>Unknown</span>
-                    {% else %}
-                        <img src="{% static 'claims/assets/images/UnknownLabel.png' %}" >
-                        <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" hidden='hidden' value="True}}"><span id='comment_{{ comment.id }}_true_label' hidden>True</span><br>
-                        <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" hidden='hidden' value="False"><span id='comment_{{ comment.id }}_false_label' hidden>False</span><br>
-                        <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="label" hidden='hidden' value="Unknown" checked><span id='comment_{{ comment.id }}_unknown_label' hidden>Unknown</span>
-                    {%  endif %}
-                </p></td>
-            </tr>
-            <tr>
-                <td class="left">
-                    Verdict Date:
-                    <span id="comment_{{ comment.id }}_verdict_date">{{ comment.verdict_date|date:"d/m/Y" }}</span><br>
-                    <input hidden="hidden" id="{{ comment.id }}_verdict_date" type="date" value="{{ comment.verdict_date|date:"Y-m-d" }}" max="{% now "Y-m-d" %}" style="margin: 10px;"><br>
-                    References:
-                    <a target="_blank" id="comment_{{ comment.id }}_reference" href={{ comment.url }}>link to source</a>
-                    <input hidden="hidden" id="{{ comment.id }}_reference" value="{{ comment.url }}" type="text" placeholder="{{ comment.url }}" style="width: 90%; margin: 10px;">
-                </td>
-                <td class="right" style="text-align: center;">
-                    <div style="margin: auto;">
-                        {% if request.user.is_authenticated %}
-                            <button id="{{ comment.id }}_arrow_up" type="submit" class="arrow_up" style="" disabled>▲</button>
-                        {% endif %}
-                        <br>
-                        <span id="{{ comment.id }}_voteCount" style="text-align: center; color: #000;">{{ comment.up_votes.count|sub:comment.down_votes.count }}</span>
-                        <br>
-                        {% if request.user.is_authenticated %}
-                            <button id="{{ comment.id }}_arrow_down" type="submit" class="arrow_down" disabled>▼</button>
-                        {% endif %}
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="left">
-                {% if request.user.is_authenticated and comment.user_id == request.user.id %}
-                    <button id="comment_{{ comment.id }}_edit" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_comment()" style="margin: 10px 0;">Edit your comment</button>
-                    <button id="comment_{{ comment.id }}_delete" type="submit" class="btn btn-danger" style="margin: 10px 0;">Delete</button>
-                    <button id="comment_{{ comment.id }}_save" type="submit" hidden='hidden' class="btn btn-info" style="margin: 10px 0;">Save</button>
+    <div class="comment_box">
+        <div class="comment_header">
+            <div class="comment_user_image">
+                <img src="{{ user_details.user_img.user_img }}">
+            </div>
+            <div class="comment_user_details">
+                User: <a href="#">{{ user_details.user.username }}</a><br>
+                {% load static %}
+                {% for i in 'i'|rjust:user_details.user_rep %}
+                    <img src="{% static 'claims/assets/images/star.png' %}">
+                {% endfor %}
+                <br>
+                Verdict Date: <span id="comment_{{ comment.id }}_verdict_date">{{ comment.verdict_date|date:"d/m/Y" }}</span>
+                <input hidden="hidden" id="comment_{{ comment.id }}_verdict_date_edit" type="date" value="{{ comment.verdict_date|date:"Y-m-d" }}" max="{% now "Y-m-d" %}">
+            </div>
+            <div id="comment_{{ comment.id }}_verdict" style="grid-area: verdict;">
+                {%  if comment.system_label == 'True' %}
+                    <div class="comment_verdict verdict_true"><b>TRUE</b></div>
+                {% elif comment.system_label == 'False' %}
+                    <div class="comment_verdict verdict_false"><b>FALSE</b></div>
+                {% else %}
+                    <div class="comment_verdict verdict_unknown"><b>UNKNOWN</b></div>
+                {%  endif %}
+            </div>
+            <div id="comment_{{ comment.id }}_verdict_edit" style="grid-area: verdict; padding: 20px;" hidden="hidden">
+                <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" value="True"> True<br>
+                <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" value="False"> False<br>
+                <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="label" value="Unknown"> Unknown
+            </div>
+        </div>
+        <hr>
+        <div class="comment_content" id="comment_content_{{ comment.id }}">
+            <div class="comment_body">
+                <h5><b>{{ comment.title }}</b></h5>
+                <p>{{ comment.description }}</p>
+            </div>
+            <div class="comment_voting_area">
+                {% if request.user.is_authenticated %}
+                    <button id="{{ comment.id }}_arrow_up" type="submit" class="arrow_up">▲</button>
+                {% else %}
+                    <button id="{{ comment.id }}_arrow_up" type="submit" class="arrow_up" disabled>▲</button>
                 {% endif %}
-                </td>
-                <td class="right"></td>
-            </tr>
-        </table>
+                <br>
+                <span id="{{ comment.id }}_voteCount" class="vote_count">{{ comment.up_votes.count|sub:comment.down_votes.count }}</span>
+                <br>
+                {% if request.user.is_authenticated %}
+                    <button id="{{ comment.id }}_arrow_down" type="submit" class="arrow_down">▼</button>
+                {% else %}
+                    <button id="{{ comment.id }}_arrow_down" type="submit" class="arrow_down" disabled>▼</button>
+                {% endif %}
+            </div>
+        </div>
+        <div id="comment_content_{{ comment.id }}_edit" hidden="hidden" class="comment_content_edit">
+            Title: <input id="comment_{{ comment.id }}_title" value="{{ comment.title }}" type="text" placeholder="{{ comment.title }}"><br>
+            Description:<br>
+            <textarea id="comment_{{ comment.id }}_description" placeholder="{{ comment.description }}">{{ comment.description }}</textarea>
+        </div>
+        <div class="comment_footer">
+            <div id="comment_{{ comment.id }}_footer">
+                Reference:
+                <a target="_blank" href={{ comment.url }}>link to source</a><br>
+                Tags: {{ comment.tags }}
+                <br><button id="comment_{{ comment.id }}_search_on_twitter" onclick="search_on_twitter_{{ comment.id }}()">Search on twitter</button>
+            </div>
+            <div id="comment_{{ comment.id }}_footer_edit" hidden="hidden">
+                Reference:
+                <input id="comment_{{ comment.id }}_reference" value="{{ comment.url }}" type="text" placeholder="{{ comment.url }}"><br>
+                Tags:
+                <input id="comment_{{ comment.id }}_tags" value="{{ comment.tags }}" type="text" placeholder="{{ comment.tags }}">
+            </div>
+            {% if request.user.is_superuser or request.user.is_authenticated and comment.user_id == request.user.id %}
+                <br>
+                <div class="buttons_row">
+                    <button id="comment_{{ comment.id }}_edit" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_comment_{{ comment.id }}()">Edit your comment</button>
+                    <button id="comment_{{ comment.id }}_cancel" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_comment_{{ comment.id }}_cancel()">Cancel</button>
+                    <button id="comment_{{ comment.id }}_save" type="submit" hidden='hidden' class="btn btn-info">Save</button>
+                    <button id="comment_{{ comment.id }}_delete" type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            {% endif %}
+            <p id="comment_{{ comment.id }}_error_msg" class="action_msg error_msg" hidden></p>
+        </div>
     </div>
 </div>
 
@@ -82,14 +91,17 @@
     let down_count_{{ comment.id }} = {{ comment.down_votes.count }};
     let max_minutes_to_edit_comment_{{ comment.id }} = 5;
     let comment_timestamp_{{ comment.id }} = new Date('{{ comment.timestamp|date:"D, d M Y H:i:s" }}');
-    if (((new Date() - comment_timestamp_{{ comment.id }}) / 60000) <= max_minutes_to_edit_comment_{{ comment.id }}){
+    {% if request.user.is_superuser %}
+        $("#comment_{{ comment.id }}_edit").attr("hidden", false);
+    {% else %}
+        if (((new Date() - comment_timestamp_{{ comment.id }}) / 60000) <= max_minutes_to_edit_comment_{{ comment.id }}){
             $("#comment_{{ comment.id }}_edit").attr("hidden", false);
-    }
-    else{
-        $("#{{ comment.id }}_arrow_up").attr("disabled", false);
-        $("#{{ comment.id }}_arrow_down").attr("disabled", false);
-    }
-
+        }
+        else{
+            $("#{{ comment.id }}_arrow_up").attr("disabled", false);
+            $("#{{ comment.id }}_arrow_down").attr("disabled", false);
+        }
+    {% endif %}
     $(document).ready(function () {
         {% for voted_user in comment.up_votes.all %}
             {% if request.user.id == voted_user.id %}
@@ -104,7 +116,6 @@
             {% endif %}
         {% endfor %}
     });
-
     $("#{{ comment.id }}_arrow_up").click(function(e){
         e.preventDefault();
         $.ajax({
@@ -135,12 +146,11 @@
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
                 document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
+                    'Error: <br>' + err;
                 $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
     });
-
     $("#{{ comment.id }}_arrow_down").click(function(e){
         e.preventDefault();
         $.ajax({
@@ -171,34 +181,47 @@
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
                 document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
+                    'Error: <br>' + err;
                 $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
     });
-
-    function edit_comment() {
-        $("#comment_{{ comment.id }}_title").attr("hidden", true);
-        $("#comment_{{ comment.id }}_description").attr("hidden", true);
+    function edit_comment_{{ comment.id }}() {
         $("#comment_{{ comment.id }}_verdict_date").attr("hidden", true);
-        $("#comment_{{ comment.id }}_reference").attr("hidden", true);
-
-        $("#{{ comment.id }}_title_name").attr("hidden", false);
-        $("#{{ comment.id }}_description_name").attr("hidden", false);
-        $("#{{ comment.id }}_tags_name").attr("hidden", false);
-        $("#{{ comment.id }}_verdict_date").attr("hidden", false);
-        $("#{{ comment.id }}_reference").attr("hidden", false);
-
-        $("#comment_{{ comment.id }}_true_radio").attr("hidden", false);
-        $("#comment_{{ comment.id }}_false_radio").attr("hidden", false);
-        $("#comment_{{ comment.id }}_unknown_radio").attr("hidden", false);
-
-        $("#comment_{{ comment.id }}_true_label").attr("hidden", false);
-        $("#comment_{{ comment.id }}_false_label").attr("hidden", false);
-        $("#comment_{{ comment.id }}_unknown_label").attr("hidden", false);
+        $("#comment_{{ comment.id }}_verdict").attr("hidden", true);
+        $("#comment_content_{{ comment.id }}").attr("hidden", true);
+        $("#comment_{{ comment.id }}_footer").attr("hidden", true);
+        $("#comment_{{ comment.id }}_edit").attr("hidden", true);
+        $("#comment_{{ comment.id }}_delete").attr("hidden", true);
+        $("#comment_{{ comment.id }}_verdict_date_edit").attr("hidden", false);
+        $("#comment_{{ comment.id }}_verdict_edit").attr("hidden", false);
+        $("#comment_content_{{ comment.id }}_edit").attr("hidden", false);
+        $("#comment_{{ comment.id }}_footer_edit").attr("hidden", false);
+        $("#comment_{{ comment.id }}_cancel").attr("hidden", false);
         $("#comment_{{ comment.id }}_save").attr("hidden", false);
+        {%  if comment.system_label == 'True' %}
+            document.getElementById("comment_{{ comment.id }}_true_radio").checked = true;
+        {% elif comment.system_label == 'False' %}
+            document.getElementById("comment_{{ comment.id }}_false_radio").checked = true;
+        {% else %}
+            document.getElementById("comment_{{ comment.id }}_unknown_radio").checked = true;
+        {%  endif %}
     }
-
+    function edit_comment_{{ comment.id }}_cancel() {
+        $("#comment_{{ comment.id }}_verdict_date").attr("hidden", false);
+        $("#comment_{{ comment.id }}_verdict").attr("hidden", false);
+        $("#comment_content_{{ comment.id }}").attr("hidden", false);
+        $("#comment_{{ comment.id }}_footer").attr("hidden", false);
+        $("#comment_{{ comment.id }}_edit").attr("hidden", false);
+        $("#comment_{{ comment.id }}_delete").attr("hidden", false);
+        $("#comment_{{ comment.id }}_verdict_date_edit").attr("hidden", true);
+        $("#comment_{{ comment.id }}_verdict_edit").attr("hidden", true);
+        $("#comment_content_{{ comment.id }}_edit").attr("hidden", true);
+        $("#comment_{{ comment.id }}_footer_edit").attr("hidden", true);
+        $("#comment_{{ comment.id }}_cancel").attr("hidden", true);
+        $("#comment_{{ comment.id }}_save").attr("hidden", true);
+        $("#comment_{{ comment.id }}_error_msg").attr("hidden", true);
+    }
     $("#comment_{{ comment.id }}_save").click(function(e){
         $.ajax({
             type: 'POST',
@@ -206,11 +229,11 @@
             headers: { "X-CSRFToken": getCookie('csrftoken') },
             data: {
                 comment_id: '{{ comment.id }}',
-                comment_title: $("#{{ comment.id }}_title").val(),
-                comment_description: $("#{{ comment.id }}_description").val(),
-                comment_tags: $("#{{ comment.id }}_tags").val(),
-                comment_verdict_date: $("#{{ comment.id }}_verdict_date").val(),
-                comment_reference: $("#{{ comment.id }}_reference").val(),
+                comment_title: $("#comment_{{ comment.id }}_title").val(),
+                comment_description: $("#comment_{{ comment.id }}_description").val(),
+                comment_tags: $("#comment_{{ comment.id }}_tags").val(),
+                comment_verdict_date: $("#comment_{{ comment.id }}_verdict_date_edit").val(),
+                comment_reference: $("#comment_{{ comment.id }}_reference").val(),
                 comment_label: document.querySelector('input[name="label"]:checked').value,
             },
             success: function () {
@@ -219,12 +242,11 @@
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
                 document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
+                'Error: <br>' + err;
                 $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
     });
-
     $("#comment_{{ comment.id }}_delete").click(function(e){
         e.preventDefault();
         $.ajax({
@@ -240,9 +262,19 @@
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
                 document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
+                    'Error: <br>' + err;
                 $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
             }
         });
     });
+    function search_on_twitter_{{ comment.id }}(){
+        let comment_{{ comment.id }}_new_tags = '';
+        let comment_{{ comment.id }}_tags_arr = "{{ comment.tags }}".split(' ');
+        for(let index in comment_{{ comment.id }}_tags_arr){
+            comment_{{ comment.id }}_new_tags += comment_{{ comment.id }}_tags_arr[index] + '+';
+        }
+        comment_{{ comment.id }}_new_tags = comment_{{ comment.id }}_new_tags.substring(0, comment_{{ comment.id }}_new_tags.length - 1);
+        window.open('https://twitter.com/search?q=' + comment_{{ comment.id }}_new_tags, '_blank');
+        {# for google --> 'http://google.com/search?q='#}
+    }
 </script>

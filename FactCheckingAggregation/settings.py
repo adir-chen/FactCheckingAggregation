@@ -27,7 +27,7 @@ SECRET_KEY = '#!#c&ejot$9bc3k%q&ckib!=ki#lk07!$u3ikfehj6!-2^s)02'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['132.72.23.63', 'localhost', '127.0.0.1', '192.168.1.15']
+ALLOWED_HOSTS = ['132.72.23.63', 'localhost', '127.0.0.1', '192.168.1.41']
 
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.open_id.OpenIdAuth',  # for Google authentication
@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'search.apps.SearchConfig',
     'contact_us.apps.ContactUsConfig',
     'logger.apps.LoggerConfig',
+    'analytics.apps.AnalyticsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -149,9 +150,9 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+# USE_TZ = True
 
-
+USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
@@ -169,9 +170,9 @@ NOSE_ARGS = [
     # '--cover-package=contact_us',
     # '--cover-package=logger',
     # '--cover-package=search',
+    # '--cover-package=analytics',
     '--detailed-errors',
     '-s',
     # '--cover-html'
 ]
 
-USE_TZ = False

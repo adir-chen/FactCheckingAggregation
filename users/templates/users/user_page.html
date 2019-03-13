@@ -155,6 +155,7 @@
                 success: function (request) {
                     $("#error_msg_add_true").attr("hidden", true);
                     $("#true_label").val('');
+                    location.href = 'http://{{ request.META.HTTP_HOST }}/users/{{ user.username }}';
                     $("#success_msg_add_true").attr("hidden", false);
                 },
                 error: function (error) {

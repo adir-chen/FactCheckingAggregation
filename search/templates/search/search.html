@@ -2,17 +2,34 @@
 
 {% block page_content %}
     <div class="page_wrapper">
-        <h3>Search Results:</h3>
-        <div id="claim_columns" style="margin-top: 50px;">
-            {% if search_result.items|length > 0 %}
-                {% for claim, imgs in search_result.items %}
+        <h3>Search Results for {{ request.GET.search_keywords }}:</h3>
+        <div id="claim_columns">
+            {% if search_result.object_list|length > 0 %}
+                {% for claim, imgs in search_result.object_list %}
                     {% include 'claims/claimbox.html' with claim=claim icons=imgs %}
                 {% endfor %}
             {% else %}
                 Your search didn't match any claims
             {% endif %}
-
         </div>
+    </div>
+
+    <div class="pagination">
+        <span class="step-links">
+            {% if search_result.has_previous %}
+                <a href="?search_keywords={{ request.GET.search_keywords }}&page=1" class="btn btn-info">&laquo; first</a>
+                <a href="?search_keywords={{ request.GET.search_keywords }}&page={{ search_result.previous_page_number }}" class="btn btn-info">previous</a>
+            {% endif %}
+
+            <span class="current" style="padding: 10px 20px;">
+                Page {{ search_result.number }} of {{ search_result.paginator.num_pages }}
+            </span>
+
+            {% if search_result.has_next %}
+                <a href="?search_keywords={{ request.GET.search_keywords }}&page={{ search_result.next_page_number }}" class="btn btn-info">next</a>
+                <a href="?search_keywords={{ request.GET.search_keywords }}&page={{ search_result.paginator.num_pages }}" class="btn btn-info">last &raquo;</a>
+            {% endif %}
+        </span>
     </div>
 
 {% endblock %}

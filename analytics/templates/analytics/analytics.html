@@ -1,0 +1,101 @@
+{% extends 'claims/layout.html' %}
+
+{% block page_content %}
+    <!--Table and divs that hold the pie charts-->
+    <div id="analytics_page" class="page_wrapper">
+        <h4>WTFact Analytics:</h4>
+        <div>
+            <table class="columns">
+                <tr >
+                    <td><div id="chart_div" class="chart_div"></div></td>
+                </tr>
+                <tr>
+                    <td><div id="chart_div1" class="chart_div"></div></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script ></script>
+    <script>
+        google.charts.load('current', {packages: ['corechart', 'bar']});
+        google.charts.setOnLoadCallback(drawCharts);
+        var loaded_reports1 = {{ reports_monthly }};
+        var loaded_reports2 = {{ reports_days }};
+
+        function getMonthlyViews(reports){
+            {# reports is an array of type int(year), int(month), int(views)#}
+            rows = [['Month', 'Views']];
+
+            for(i=0; i<reports.length; i++){
+                row = reports[i];
+                newRow = ['' + row[1] + '/' + row[0]%1000, row[2]];
+                rows.push(newRow);
+            }
+            return rows;
+        }
+        function getViewsDaysOfWeek(reports){
+            {# reports is an array of type int(day), int(views)#}
+
+            var dict = {
+                0 : 'Sunday',
+                1 : 'Monday',
+                2 : 'Tuesday',
+                3 : 'Wednesday',
+                4 : 'Thursday',
+                5 : 'Friday',
+                6 : 'Saturday'
+            };
+            rows = [['Day', 'Views']];
+
+            for(i=0; i<reports.length; i++){
+                row = reports[i];
+                newRow = [dict[row[0]], row[1]];
+                rows.push(newRow);
+            }
+
+            return rows;
+        }
+        function drawCharts() {
+            var data1 = new google.visualization.arrayToDataTable(getMonthlyViews(loaded_reports1));
+            var data2 = new google.visualization.arrayToDataTable(getViewsDaysOfWeek(loaded_reports2));
+            var options1 = {
+                chart: {
+                    title: 'Title',
+                    subtitle: 'Subtitle'
+                },
+                title: "Views by months (2019)",
+                hAxis: {
+                    title: 'Months'
+                },
+                vAxis: {
+                    title: 'Views'
+                }
+            };
+            var options2 = {
+                chart: {
+                    title: 'Title',
+                    subtitle: 'Subtitle'
+                },
+                title: "Views by days of week (2019)",
+                hAxis: {
+                    title: 'Day Of Week'
+                },
+                vAxis: {
+                    title: 'Views'
+                }
+
+            };
+
+
+            var materialChart =  new google.visualization.ColumnChart(document.getElementById('chart_div'));
+            materialChart.draw(data1, options1);
+            materialChart =  new google.visualization.ColumnChart(document.getElementById('chart_div1'));
+            materialChart.draw(data2, options2);
+        }
+    </script>
+{% endblock %}
+
+{% block claim_head_title %}
+    FactCheckProject | Analytics
+{% endblock %}

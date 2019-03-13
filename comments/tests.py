@@ -1,5 +1,6 @@
 from django.http import HttpRequest, Http404, QueryDict
 from django.test import TestCase
+from django.utils.datastructures import MultiValueDict
 from claims.models import Claim
 from comments.models import Comment
 from comments.views import add_comment, build_comment, check_if_comment_is_valid, convert_date_format, \
@@ -18,37 +19,38 @@ class CommentTests(TestCase):
         self.user_2 = User(username="User2", email='user2@gmail.com')
         self.user_1.save()
         self.user_2.save()
-        self.new_scraper_1 = User(username="newScraper_1")
+        self.new_scraper_1 = User(username="newScraper1")
         self.new_scraper_1.save()
         self.new_scraper_scraper_1 = Scrapers(scraper_name=self.new_scraper_1.username,
                                               scraper_id=self.new_scraper_1)
         self.new_scraper_scraper_1.save()
 
-        self.new_scraper_2 = User(username="newScraper_2")
+        self.new_scraper_2 = User(username="newScraper2")
         self.new_scraper_2.save()
         self.new_scraper_scraper_2 = Scrapers(scraper_name=self.new_scraper_2.username,
                                               scraper_id=self.new_scraper_2)
         self.new_scraper_scraper_2.save()
         self.num_of_saved_users = 4
+        self.num_of_saved_scrapers = 2
         self.claim_1 = Claim(user_id=self.user_1.id,
-                             claim='Sniffing rosemary increases human memory by up to 75 percent',
-                             category='Science',
-                             tags="sniffing human memory",
+                             claim='claim1',
+                             category='category1',
+                             tags='tag1,tag2',
                              authenticity_grade=0)
         self.claim_2 = Claim(user_id=self.user_2.id,
-                             claim='A photograph shows the largest U.S. flag ever made, displayed in front of Hoover Dam',
-                             category='Fauxtography',
-                             tags="photograph U.S. flag",
+                             claim='claim2',
+                             category='category2',
+                             tags='tag3,tag4',
                              authenticity_grade=0)
         self.claim_3 = Claim(user_id=self.new_scraper_1.id,
-                             claim='new_claim_3',
-                             category='Category_3',
-                             tags="tags_3",
+                             claim='claim3',
+                             category='category3',
+                             tags='',
                              authenticity_grade=0)
         self.claim_4 = Claim(user_id=self.new_scraper_2.id,
-                             claim='new_claim_4',
-                             category='Category_4',
-                             tags="tags_4",
+                             claim='claim4',
+                             category='category4',
+                             tags='tag4,tag5,tag6',
                              authenticity_grade=0)
         self.claim_1.save()
         self.claim_2.save()
@@ -60,16 +62,16 @@ class CommentTests(TestCase):
                                  title=self.claim_1.claim,
                                  description='description1',
                                  url='url1',
-                                 tags='',
-                                 verdict_date=str(datetime.date.today() - datetime.timedelta(days=random.randint(0, 10))),
+                                 tags='tag1',
+                                 verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label1')
         self.comment_2 = Comment(claim_id=self.claim_2.id,
                                  user_id=self.user_2.id,
                                  title=self.claim_2.claim,
                                  description='description2',
                                  url='url2',
-                                 tags='',
-                                 verdict_date=str(datetime.date.today() - datetime.timedelta(days=random.randint(0, 10))),
+                                 tags='tag2,tag3',
+                                 verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label2')
         self.comment_3 = Comment(claim_id=self.claim_1.id,
                                  user_id=self.user_2.id,
@@ -77,7 +79,7 @@ class CommentTests(TestCase):
                                  description='description3',
                                  url='url3',
                                  tags='',
-                                 verdict_date=str(datetime.date.today() - datetime.timedelta(days=random.randint(0, 10))),
+                                 verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label3')
         self.comment_4 = Comment(claim_id=self.claim_2.id,
                                  user_id=self.user_1.id,
@@ -85,24 +87,24 @@ class CommentTests(TestCase):
                                  description='description4',
                                  url='url4',
                                  tags='',
-                                 verdict_date=str(datetime.date.today() - datetime.timedelta(days=random.randint(0, 10))),
+                                 verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label4')
         self.comment_5 = Comment(claim_id=self.claim_3.id,
                                  user_id=self.claim_3.user_id,
                                  title=self.claim_3.claim,
-                                 description='description_5',
-                                 url='url_5',
+                                 description='description5',
+                                 url='url5',
                                  tags='',
-                                 verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
-                                 label='label_5')
+                                 verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
+                                 label='label5')
         self.comment_6 = Comment(claim_id=self.claim_4.id,
                                  user_id=self.claim_4.user_id,
                                  title=self.claim_4.claim,
-                                 description='description_6',
-                                 url='url_6',
+                                 description='description6',
+                                 url='url6',
                                  tags='',
-                                 verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
-                                 label='label_6')
+                                 verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
+                                 label='label6')
         self.comment_1.save()
         self.comment_2.save()
         self.comment_5.save()
@@ -112,21 +114,29 @@ class CommentTests(TestCase):
                                            'title': self.comment_4.title,
                                            'description': self.comment_4.description,
                                            'url': self.comment_4.url,
-                                           'verdict_date': self.comment_4.verdict_date,
+                                           'verdict_date': datetime.datetime.strptime(str(self.comment_4.verdict_date), '%Y-%m-%d').strftime('%d/%m/%Y'),
                                            'label': self.comment_4.label}
         self.new_comment_details_user_2 = {'claim_id': self.comment_3.claim_id,
                                            'title': self.comment_3.title,
                                            'description': self.comment_3.description,
                                            'url': self.comment_3.url,
-                                           'verdict_date': self.comment_3.verdict_date,
+                                           'verdict_date': datetime.datetime.strptime(str(self.comment_3.verdict_date), '%Y-%m-%d').strftime('%d/%m/%Y'),
                                            'label': self.comment_3.label}
-        self.post_request = HttpRequest()
-        self.post_request.method = 'POST'
+
         self.update_comment_details = {'comment_title': self.comment_3.title,
                                        'comment_description': self.comment_3.description,
                                        'comment_reference': self.comment_3.url,
-                                       'comment_verdict_date': self.comment_3.verdict_date,
+                                       'comment_verdict_date': datetime.datetime.strptime(str(self.comment_3.verdict_date), '%Y-%m-%d').strftime('%d/%m/%Y'),
                                        'comment_label': 'true'}
+
+        self.csv_fields = MultiValueDict({
+            'fields_to_export[]': ["Title", "Description", "Url", "Category", "Verdict Date", "Tags", "Label", "System Label", "Authenticity Grade"],
+            'scrapers_ids[]': [str(self.new_scraper_1.id), str(self.new_scraper_2.id)],
+            'verdict_date_start': [str(datetime.date.today() - datetime.timedelta(days=20))],
+            'verdict_date_end': [str(datetime.date.today())]})
+
+        self.post_request = HttpRequest()
+        self.post_request.method = 'POST'
 
     def tearDown(self):
         pass
@@ -144,7 +154,7 @@ class CommentTests(TestCase):
         self.assertTrue(new_comment.title == self.comment_4.title)
         self.assertTrue(new_comment.description == self.comment_4.description)
         self.assertTrue(new_comment.url == self.comment_4.url)
-        self.assertTrue(new_comment.verdict_date == datetime.datetime.strptime(self.comment_4.verdict_date, '%Y-%m-%d').date())
+        self.assertTrue(new_comment.verdict_date == self.comment_4.verdict_date)
         self.assertTrue(new_comment.label == self.comment_4.label)
 
     def test_add_comment_by_user_2(self):
@@ -160,7 +170,7 @@ class CommentTests(TestCase):
         self.assertTrue(new_comment.title == self.comment_3.title)
         self.assertTrue(new_comment.description == self.comment_3.description)
         self.assertTrue(new_comment.url == self.comment_3.url)
-        self.assertTrue(new_comment.verdict_date == datetime.datetime.strptime(self.comment_3.verdict_date, '%Y-%m-%d').date())
+        self.assertTrue(new_comment.verdict_date == self.comment_3.verdict_date)
         self.assertTrue(new_comment.label == self.comment_3.label)
 
     def test_add_comment_by_user_not_authenticated(self):
@@ -270,7 +280,7 @@ class CommentTests(TestCase):
                       self.comment_4.description,
                       self.comment_4.url,
                       self.comment_4.tags,
-                      datetime.datetime.strptime(self.comment_4.verdict_date, '%Y-%m-%d').strftime("%d/%m/%Y"),
+                      datetime.datetime.strptime(str(self.comment_4.verdict_date), '%Y-%m-%d').strftime("%d/%m/%Y"),
                       self.comment_4.label)
         self.assertTrue(len(Comment.objects.all()) == len_comments + 1)
         new_comment = Comment.objects.all().order_by('-id').first()
@@ -281,7 +291,7 @@ class CommentTests(TestCase):
         self.assertTrue(new_comment.description == self.comment_4.description)
         self.assertTrue(new_comment.url == self.comment_4.url)
         self.assertTrue(new_comment.tags == self.comment_4.tags)
-        self.assertTrue(new_comment.verdict_date == datetime.datetime.strptime(self.comment_4.verdict_date, '%Y-%m-%d').date())
+        self.assertTrue(new_comment.verdict_date == self.comment_4.verdict_date)
         self.assertTrue(new_comment.label == self.comment_4.label)
 
     def test_build_comment_by_added_user(self):
@@ -295,7 +305,7 @@ class CommentTests(TestCase):
                       self.comment_4.description,
                       self.comment_4.url,
                       self.comment_4.tags,
-                      datetime.datetime.strptime(self.comment_4.verdict_date, '%Y-%m-%d').strftime("%d/%m/%Y"),
+                      datetime.datetime.strptime(str(self.comment_4.verdict_date), '%Y-%m-%d').strftime("%d/%m/%Y"),
                       self.comment_4.label)
         self.assertTrue(len(Comment.objects.all()) == len_comments + 1)
         new_comment = Comment.objects.all().order_by('-id').first()
@@ -306,7 +316,7 @@ class CommentTests(TestCase):
         self.assertTrue(new_comment.description == self.comment_4.description)
         self.assertTrue(new_comment.url == self.comment_4.url)
         self.assertTrue(new_comment.tags == self.comment_4.tags)
-        self.assertTrue(new_comment.verdict_date == datetime.datetime.strptime(self.comment_4.verdict_date, '%Y-%m-%d').date())
+        self.assertTrue(new_comment.verdict_date == self.comment_4.verdict_date)
         self.assertTrue(new_comment.label == self.comment_4.label)
 
     def test_check_if_comment_is_valid(self):
@@ -384,8 +394,69 @@ class CommentTests(TestCase):
     def test_check_if_comment_is_valid_invalid_date_format(self):
         self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
         self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
-        self.new_comment_details_user_1['verdict_date'] = datetime.datetime.strptime(self.comment_1.verdict_date, '%Y-%m-%d').strftime('%m/%d/%y')
-        self.new_comment_details_user_2['verdict_date'] = datetime.datetime.strptime(self.comment_2.verdict_date, '%Y-%m-%d').strftime('%m/%d/%y')
+        self.new_comment_details_user_1['verdict_date'] = datetime.datetime.strptime(str(self.comment_3.verdict_date), '%Y-%m-%d').strftime('%Y/%m/%d')
+        self.new_comment_details_user_2['verdict_date'] = datetime.datetime.strptime(str(self.comment_4.verdict_date), '%Y-%m-%d').strftime('%Y/%d/%m')
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+
+    def test_check_if_comment_is_valid_invalid_date_format_with_invalid_with_hyphen(self):
+        self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
+        self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
+        year = str(random.randint(2000, 2018))
+        month = str(random.randint(1, 12))
+        day = str(random.randint(1, 28))
+        self.new_comment_details_user_1['verdict_date'] = year + '--' + month + '-' + day
+        self.new_comment_details_user_2['verdict_date'] = year + '-' + month + '--' + day
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+
+    def test_check_if_comment_is_valid_invalid_input_for_title(self):
+        self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
+        self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
+        self.new_comment_details_user_1['title'] = 'קלט בשפה שאינה אנגלית'
+        self.new_comment_details_user_2['title'] = 'קלט בשפה שאינה אנגלית'
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+
+    def test_check_if_comment_is_valid_invalid_input_for_category(self):
+        self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
+        self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
+        self.new_comment_details_user_1['description'] = 'المدخلات بلغة غير الإنجليزية'
+        self.new_comment_details_user_2['description'] = 'المدخلات بلغة غير الإنجليزية'
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+
+    def test_check_if_comment_is_valid_invalid_input_for_tags(self):
+        self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
+        self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
+        self.new_comment_details_user_1['tags'] = '输入英语以外的语言 输入英语以外的语言'
+        self.new_comment_details_user_2['tags'] = '输入英语以外的语言 输入英语以外的语言'
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+
+    def test_check_if_comment_is_valid_with_tags(self):
+        self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
+        self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
+        self.new_comment_details_user_1['tags'] = 'tag1,tag2'
+        self.new_comment_details_user_2['tags'] = 'tag3,tag4'
+        self.assertTrue(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+        self.assertTrue(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+
+    def test_check_if_comment_is_valid_with_invalid_format_for_tags(self):
+        self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
+        self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
+        self.new_comment_details_user_1['tags'] = 'tag1, tag2'
+        self.new_comment_details_user_2['tags'] = 'tag3; tag4'
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+
+        self.new_comment_details_user_1['tags'] = 'tag1,,tag2'
+        self.new_comment_details_user_2['tags'] = 'tag3,tag4, '
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+
+        self.new_comment_details_user_1['tags'] = 'tag1,?tag2'
+        self.new_comment_details_user_2['tags'] = 'tag%,tag4'
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
 
@@ -394,7 +465,7 @@ class CommentTests(TestCase):
         self.assertTrue(err == convert_date_format(self.new_comment_details_user_1, 'verdict_date'))
 
     def test_convert_date_format_invalid(self):
-        self.new_comment_details_user_1['verdict_date'] = datetime.datetime.strptime(self.comment_2.verdict_date, '%Y-%m-%d').strftime('%m/%d/%y')
+        self.new_comment_details_user_1['verdict_date'] = datetime.datetime.strptime(str(self.comment_2.verdict_date), '%Y-%m-%d').strftime('%m/%d/%y')
         err = ''
         self.assertFalse(err == convert_date_format(self.new_comment_details_user_1, 'verdict_date'))
 
@@ -434,7 +505,7 @@ class CommentTests(TestCase):
         self.assertTrue(result.first().title == self.comment_1.title)
         self.assertTrue(result.first().description == self.comment_1.description)
         self.assertTrue(result.first().url == self.comment_1.url)
-        self.assertTrue(result.first().verdict_date == datetime.datetime.strptime(self.comment_1.verdict_date, '%Y-%m-%d').date())
+        self.assertTrue(result.first().verdict_date == self.comment_1.verdict_date)
         self.assertTrue(result.first().label == self.comment_1.label)
 
         result = get_all_comments_for_user_id(self.user_2.id)
@@ -444,7 +515,7 @@ class CommentTests(TestCase):
         self.assertTrue(result.first().title == self.comment_2.title)
         self.assertTrue(result.first().description == self.comment_2.description)
         self.assertTrue(result.first().url == self.comment_2.url)
-        self.assertTrue(result.first().verdict_date == datetime.datetime.strptime(self.comment_2.verdict_date, '%Y-%m-%d').date())
+        self.assertTrue(result.first().verdict_date == self.comment_2.verdict_date)
         self.assertTrue(result.first().label == self.comment_2.label)
 
     def test_get_all_comments_for_user_id_after_existing_user_add_comment(self):
@@ -461,7 +532,7 @@ class CommentTests(TestCase):
         self.assertTrue(result.first().title == self.new_comment_details_user_1['title'])
         self.assertTrue(result.first().description == self.new_comment_details_user_1['description'])
         self.assertTrue(result.first().url == self.new_comment_details_user_1['url'])
-        self.assertTrue(result.first().verdict_date == datetime.datetime.strptime(self.new_comment_details_user_1['verdict_date'], '%Y-%m-%d').date())
+        self.assertTrue(result.first().verdict_date == self.comment_4.verdict_date)
         self.assertTrue(result.first().label == self.new_comment_details_user_1['label'])
 
     def test_get_all_comments_for_added_user(self):
@@ -497,7 +568,7 @@ class CommentTests(TestCase):
         self.assertTrue(result_comment_1.first().title == self.comment_1.title)
         self.assertTrue(result_comment_1.first().description == self.comment_1.description)
         self.assertTrue(result_comment_1.first().url == self.comment_1.url)
-        self.assertTrue(result_comment_1.first().verdict_date == datetime.datetime.strptime(self.comment_1.verdict_date, '%Y-%m-%d').date())
+        self.assertTrue(result_comment_1.first().verdict_date == self.comment_1.verdict_date)
         self.assertTrue(result_comment_1.first().label == self.comment_1.label)
 
         result_comment_2 = get_all_comments_for_claim_id(self.claim_2.id)
@@ -507,7 +578,7 @@ class CommentTests(TestCase):
         self.assertTrue(result_comment_2.first().title == self.comment_2.title)
         self.assertTrue(result_comment_2.first().description == self.comment_2.description)
         self.assertTrue(result_comment_2.first().url == self.comment_2.url)
-        self.assertTrue(result_comment_2.first().verdict_date == datetime.datetime.strptime(self.comment_2.verdict_date, '%Y-%m-%d').date())
+        self.assertTrue(result_comment_2.first().verdict_date == self.comment_2.verdict_date)
         self.assertTrue(result_comment_2.first().label == self.comment_2.label)
 
     def test_get_all_comments_for_claim_id_user_added_new_comment(self):
@@ -528,7 +599,7 @@ class CommentTests(TestCase):
         self.assertTrue(result_comment_1[0].title == self.comment_1.title)
         self.assertTrue(result_comment_1[0].description == self.comment_1.description)
         self.assertTrue(result_comment_1[0].url == self.comment_1.url)
-        self.assertTrue(result_comment_1[0].verdict_date == datetime.datetime.strptime(self.comment_1.verdict_date, '%Y-%m-%d').date())
+        self.assertTrue(result_comment_1[0].verdict_date == self.comment_1.verdict_date)
         self.assertTrue(result_comment_1[0].label == self.comment_1.label)
         self.assertTrue(result_comment_1[1].claim_id == comment_4.claim_id)
         self.assertTrue(result_comment_1[1].user_id == comment_4.user_id)
@@ -539,42 +610,280 @@ class CommentTests(TestCase):
         self.assertTrue(result_comment_1[1].label == comment_4.label)
 
     def test_get_all_comments_for_invalid_claim_id(self):
-        result = get_all_comments_for_claim_id(self.num_of_saved_claims + random.randint(1, 10))  # no claim with the given id
+        result = get_all_comments_for_claim_id(self.num_of_saved_claims + random.randint(1, 10))
         self.assertTrue(result is None)
 
-    # def test_export_to_csv(self):
-    #     admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
-    #     csv_field = {
-    #         'fields_to_export[]': ['Title', 'Description', 'Url', 'Category', 'Verdict Date', 'Tags',
-    #                                'Label', 'System Label', 'Authenticity Grade'],
-    #         'scrapers_ids[]': [str(self.new_scraper_1.id), str(self.new_scraper_2.id)],
-    #         'verdict_date_start': str(datetime.date.today() - datetime.timedelta(days=10)),
-    #         'verdict_date_end': str(datetime.date.today())}
-    #     query_dict = QueryDict('', mutable=True)
-    #     query_dict.update(csv_field)
-    #     self.post_request.POST = query_dict
-    #     self.post_request.user = admin
-    #     res = export_to_csv(self.post_request)
-    #     self.assertTrue(res.status_code == 200)
-    #     self.assertEqual(res.content, b'Title,Description,Url,Category,Verdict_Date,Tags,Label\r\nSniffing rosemary increases human memory by up to 75 percent,description1,url1,Science,01/03/2019,sniffing human memory,label1\r\n"A photograph shows the largest U.S. flag ever made, displayed in front of Hoover Dam",description2,url2,Fauxtography,15/02/2019,photograph U.S. flag,label2\r\nSniffing rosemary increases human memory by up to 75 percent,description3,url3,Science,12/02/2019,sniffing human memory,label3\r\n')
-    #
-    # def test_export_to_csv_empty(self):
-    #     from django.contrib.auth import get_user_model
-    #     User = get_user_model()
-    #     admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
-    #     request = HttpRequest()
-    #     request.user = admin
-    #     Comment.objects.all().delete()
-    #     res = export_to_csv(request)
-    #     self.assertTrue(res.status_code == 200)
-    #     print(res.content == b'Title,Description,Url,Category,Verdict_Date,Tags,Label\r\n')
-    #
-    # def test_export_to_csv_not_admin_user(self):
-    #     request = HttpRequest()
-    #     request.user = self.user_1
-    #     self.assertRaises(Http404, export_to_csv, request)
-    #
-    # def test_check_if_csv_fields_are_valid(self):
+    def test_export_to_csv(self):
+        admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.csv_fields)
+        self.post_request.POST = query_dict
+        self.post_request.user = admin
+        res = export_to_csv(self.post_request)
+        self.assertTrue(res.status_code == 200)
+        expected_info = 'Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n'\
+                        'claim3,description5,url5,category3,' + str(self.comment_5.verdict_date) + ',,label5,,0\r\n'\
+                        'claim4,description6,url6,category4,' + str(self.comment_6.verdict_date) + ',,label6,,0\r\n'
+        self.assertEqual(res.content.decode('utf-8'), expected_info)
+
+        Comment.objects.filter(id=self.comment_5.id).update(tags='tag1', system_label='True')
+        Comment.objects.filter(id=self.comment_6.id).update(tags='tag6, tag7', system_label='False')
+        res = export_to_csv(self.post_request)
+        self.assertTrue(res.status_code == 200)
+        expected_info = 'Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n' + \
+                        'claim3,description5,url5,category3,' + str(self.comment_5.verdict_date) + ',tag1,label5,True,0\r\n'\
+                        'claim4,description6,url6,category4,' + str(self.comment_6.verdict_date) + ',"tag6, tag7",label6,False,0\r\n'
+        self.assertEqual(res.content.decode('utf-8'), expected_info)
+
+    def test_export_to_csv_invalid_arg_for_scraper(self):
+        new_scrapers_ids = self.csv_fields.getlist('scrapers_ids[]')
+        new_scrapers_ids.append(str(self.num_of_saved_users + random.randint(1, 10)))
+        self.csv_fields.setlist('scrapers_ids[]', new_scrapers_ids)
+        admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.csv_fields)
+        self.post_request.POST = query_dict
+        self.post_request.user = admin
+        self.assertRaises(Exception, export_to_csv, self.post_request)
+
+    def test_export_to_csv_invalid_arg_for_field(self):
+        import string
+        fields_to_export = self.csv_fields.getlist('fields_to_export[]')
+        fields_to_export.append(''.join(random.choices(string.ascii_uppercase + string.digits, k=random.randint(1, 20))))
+        self.csv_fields.setlist('fields_to_export[]', fields_to_export)
+        admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.csv_fields)
+        self.post_request.POST = query_dict
+        self.post_request.user = admin
+        self.assertRaises(Exception, export_to_csv, self.post_request)
+
+    def test_export_to_csv_missing_args(self):
+        admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
+        for i in range(10):
+            dict_copy = self.csv_fields.copy()
+            args_to_remove = []
+            for j in range(0, (random.randint(1, len(self.csv_fields.keys()) - 1))):
+                args_to_remove.append(list(self.csv_fields.keys())[j])
+            for j in range(len(args_to_remove)):
+                del self.csv_fields[args_to_remove[j]]
+            query_dict = QueryDict('', mutable=True)
+            query_dict.update(self.csv_fields)
+            self.post_request.POST = query_dict
+            self.post_request.user = admin
+            self.assertRaises(Exception, export_to_csv, self.post_request)
+            self.csv_fields = dict_copy.copy()
+
+    def test_export_to_csv_empty(self):
+        admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
+        self.post_request.user = admin
+        Comment.objects.all().delete()
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.csv_fields)
+        self.post_request.POST = query_dict
+        res = export_to_csv(self.post_request)
+        self.assertTrue(res.status_code == 200)
+        self.assertTrue(res.content.decode('utf-8') ==
+                        'Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n')
+
+    def test_export_to_csv_not_authenticated_user(self):
+        from django.contrib.auth.models import AnonymousUser
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.csv_fields)
+        self.post_request.POST = query_dict
+        self.post_request.user = AnonymousUser()
+        self.assertRaises(Http404, export_to_csv, self.post_request)
+
+    def test_export_to_csv_not_admin_user(self):
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.csv_fields)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_1
+        self.assertRaises(Http404, export_to_csv, self.post_request)
+
+    def test_check_if_csv_fields_are_valid(self):
+        self.assertTrue(check_if_csv_fields_are_valid(self.csv_fields)[0])
+
+    def test_check_if_csv_fields_are_valid_with_regular_users(self):
+        self.csv_fields['regular_users'] = 'True'
+        self.assertTrue(check_if_csv_fields_are_valid(self.csv_fields)[0])
+
+    def test_check_if_csv_fields_are_valid_missing_fields_to_export(self):
+        del self.csv_fields['fields_to_export[]']
+        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
+
+    def test_check_if_csv_fields_are_valid_missing_scrapers_ids(self):
+        del self.csv_fields['scrapers_ids[]']
+        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
+
+    def test_check_if_csv_fields_are_valid_missing_verdict_date_start(self):
+        del self.csv_fields['verdict_date_start']
+        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
+
+    def test_check_if_csv_fields_are_valid_missing_verdict_date_end(self):
+        del self.csv_fields['verdict_date_end']
+        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
+
+    def test_check_if_csv_fields_are_valid_invalid_format_verdict_date_start(self):
+        self.csv_fields['verdict_date_start'] = datetime.datetime.strftime(datetime.datetime.now() - datetime.timedelta(days=1),'%d.%m.%Y')
+        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
+        self.csv_fields['verdict_date_start'] = datetime.datetime.strftime(datetime.datetime.now() + datetime.timedelta(days=7),'%d/%m/%Y')
+        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
+        self.csv_fields['verdict_date_start'] = datetime.datetime.strftime(datetime.datetime.now() + datetime.timedelta(days=7),'%d/%m/%y')
+        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
+        self.csv_fields['verdict_date_start'] = datetime.datetime.strftime(datetime.datetime.now() + datetime.timedelta(days=7),'%Y/%m/%d')
+        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
+        year = str(random.randint(2000, 2018))
+        month = str(random.randint(1, 12))
+        day = str(random.randint(1, 28))
+        self.csv_fields['verdict_date_start'] = year + '--' + month + '-' + day
+        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
+        self.csv_fields['verdict_date_start'] = year + '-' + month + '--' + day
+        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
+
+    def test_check_if_csv_fields_are_valid_invalid_format_verdict_date_end(self):
+        self.csv_fields['verdict_date_end'] = datetime.datetime.strftime(datetime.datetime.now() - datetime.timedelta(days=1),'%d.%m.%Y')
+        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
+        self.csv_fields['verdict_date_end'] = datetime.datetime.strftime(datetime.datetime.now() + datetime.timedelta(days=7),'%d/%m/%Y')
+        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
+        self.csv_fields['verdict_date_end'] = datetime.datetime.strftime(datetime.datetime.now() + datetime.timedelta(days=7),'%d/%m/%y')
+        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
+        self.csv_fields['verdict_date_end'] = datetime.datetime.strftime(datetime.datetime.now() + datetime.timedelta(days=7),'%Y/%m/%d')
+        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
+        year = str(random.randint(2000, 2018))
+        month = str(random.randint(1, 12))
+        day = str(random.randint(1, 28))
+        self.csv_fields['verdict_date_end'] = year + '--' + month + '-' + day
+        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
+        self.csv_fields['verdict_date_end'] = year + '-' + month + '--' + day
+        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
+
+    def test_check_if_fields_and_scrapers_lists_valid(self):
+        self.assertTrue(check_if_fields_and_scrapers_lists_valid(self.csv_fields.getlist('fields_to_export[]'),
+                                                                 self.csv_fields.getlist('scrapers_ids[]'))[0])
+
+    def test_check_if_fields_and_scrapers_lists_valid_invalid_field(self):
+        import string
+        new_fields = self.csv_fields.getlist('fields_to_export[]')
+        new_fields.append(''.join(random.choices(string.ascii_uppercase + string.digits, k=random.randint(1, 20))))
+        self.csv_fields.setlist('fields_to_export[]', new_fields)
+        self.assertFalse(check_if_fields_and_scrapers_lists_valid(self.csv_fields.getlist('fields_to_export[]'),
+                                                                  self.csv_fields.getlist('scrapers_ids[]'))[0])
+
+    def test_check_if_fields_and_scrapers_lists_valid_invalid_fields(self):
+        import string
+        new_fields = self.csv_fields.getlist('fields_to_export[]')
+        for i in range(random.randint(1, 10)):
+            new_fields.append(''.join(random.choices(string.ascii_uppercase + string.digits, k=random.randint(1, 20))))
+        self.csv_fields.setlist('fields_to_export[]', new_fields)
+        self.assertFalse(check_if_fields_and_scrapers_lists_valid(self.csv_fields.getlist('fields_to_export[]'),
+                                                                  self.csv_fields.getlist('scrapers_ids[]'))[0])
+
+    def test_check_if_fields_and_scrapers_lists_valid_invalid_scraper_id(self):
+        new_scrapers_ids = [int(scraper_id) for scraper_id in self.csv_fields.getlist('scrapers_ids[]')]
+        new_scrapers_ids.append(self.num_of_saved_users + random.randint(1, 10))
+        self.csv_fields.setlist('scrapers_ids[]', new_scrapers_ids)
+        self.assertFalse(check_if_fields_and_scrapers_lists_valid(self.csv_fields.getlist('fields_to_export[]'),
+                                                                  self.csv_fields.getlist('scrapers_ids[]'))[0])
+
+    def test_check_if_fields_and_scrapers_lists_valid_invalid_scrapers_ids(self):
+        new_scrapers_ids = [int(scraper_id) for scraper_id in self.csv_fields.getlist('scrapers_ids[]')]
+        for i in range(random.randint(1, 10)):
+            new_scrapers_ids.append(self.num_of_saved_users + (i + 1))
+        self.csv_fields.setlist('scrapers_ids[]', new_scrapers_ids)
+        self.assertFalse(check_if_fields_and_scrapers_lists_valid(self.csv_fields.getlist('fields_to_export[]'),
+                                                                  self.csv_fields.getlist('scrapers_ids[]'))[0])
+
+    def test_create_df_for_claims_with_regular_users(self):
+        df_claims = create_df_for_claims(self.csv_fields.getlist('fields_to_export[]'),
+                                         [int(scraper_id) for scraper_id in self.csv_fields.getlist('scrapers_ids[]')],
+                                         True,
+                                         datetime.datetime.strptime(datetime.datetime.strptime(self.csv_fields.get('verdict_date_start'),
+                                                                    '%Y-%m-%d').strftime('%d/%m/%Y'), '%d/%m/%Y').date(),
+                                         datetime.datetime.strptime(datetime.datetime.strptime(self.csv_fields.get('verdict_date_end'),
+                                                                    '%Y-%m-%d').strftime('%d/%m/%Y'), '%d/%m/%Y').date())
+        self.assertTrue(len(df_claims) == self.num_of_saved_comments)
+        for index, row in df_claims.iterrows():
+            if index == 0:
+                self.assertTrue(row['Title'] == self.comment_1.title)
+                self.assertTrue(row['Description'] == self.comment_1.description)
+                self.assertTrue(row['Url'] == self.comment_1.url)
+                self.assertTrue(row['Verdict Date'] == self.comment_1.verdict_date)
+                self.assertTrue(row['Url'] == self.comment_1.url)
+                self.assertTrue(row['Tags'] == self.comment_1.tags)
+                self.assertTrue(row['Label'] == self.comment_1.label)
+                self.assertTrue(row['System Label'] == self.comment_1.system_label)
+            elif index == 1:
+                self.assertTrue(row['Title'] == self.comment_2.title)
+                self.assertTrue(row['Description'] == self.comment_2.description)
+                self.assertTrue(row['Url'] == self.comment_2.url)
+                self.assertTrue(row['Verdict Date'] == self.comment_2.verdict_date)
+                self.assertTrue(row['Url'] == self.comment_2.url)
+                self.assertTrue(row['Tags'] == self.comment_2.tags)
+                self.assertTrue(row['Label'] == self.comment_2.label)
+                self.assertTrue(row['System Label'] == self.comment_2.system_label)
+            elif index == 2:
+                self.assertTrue(row['Title'] == self.comment_5.title)
+                self.assertTrue(row['Description'] == self.comment_5.description)
+                self.assertTrue(row['Url'] == self.comment_5.url)
+                self.assertTrue(row['Verdict Date'] == self.comment_5.verdict_date)
+                self.assertTrue(row['Url'] == self.comment_5.url)
+                self.assertTrue(row['Tags'] == self.comment_5.tags)
+                self.assertTrue(row['Label'] == self.comment_5.label)
+                self.assertTrue(row['System Label'] == self.comment_5.system_label)
+            elif index == 3:
+                self.assertTrue(row['Title'] == self.comment_6.title)
+                self.assertTrue(row['Description'] == self.comment_6.description)
+                self.assertTrue(row['Url'] == self.comment_6.url)
+                self.assertTrue(row['Verdict Date'] == self.comment_6.verdict_date)
+                self.assertTrue(row['Url'] == self.comment_6.url)
+                self.assertTrue(row['Tags'] == self.comment_6.tags)
+                self.assertTrue(row['Label'] == self.comment_6.label)
+                self.assertTrue(row['System Label'] == self.comment_6.system_label)
+
+    def test_create_df_for_claims_without_regular_users(self):
+        df_claims = create_df_for_claims(self.csv_fields.getlist('fields_to_export[]'),
+                                         [int(scraper_id) for scraper_id in self.csv_fields.getlist('scrapers_ids[]')],
+                                         False,
+                                         datetime.datetime.strptime(datetime.datetime.strptime(self.csv_fields.get('verdict_date_start'),
+                                                                    '%Y-%m-%d').strftime('%d/%m/%Y'), '%d/%m/%Y').date(),
+                                         datetime.datetime.strptime(datetime.datetime.strptime(self.csv_fields.get('verdict_date_end'),
+                                                                    '%Y-%m-%d').strftime('%d/%m/%Y'), '%d/%m/%Y').date())
+        self.assertTrue(len(df_claims) == self.num_of_saved_scrapers)
+        for index, row in df_claims.iterrows():
+            if index == 0:
+                self.assertTrue(row['Title'] == self.comment_5.title)
+                self.assertTrue(row['Description'] == self.comment_5.description)
+                self.assertTrue(row['Url'] == self.comment_5.url)
+                self.assertTrue(row['Verdict Date'] == self.comment_5.verdict_date)
+                self.assertTrue(row['Url'] == self.comment_5.url)
+                self.assertTrue(row['Tags'] == self.comment_5.tags)
+                self.assertTrue(row['Label'] == self.comment_5.label)
+                self.assertTrue(row['System Label'] == self.comment_5.system_label)
+            elif index == 1:
+                self.assertTrue(row['Title'] == self.comment_6.title)
+                self.assertTrue(row['Description'] == self.comment_6.description)
+                self.assertTrue(row['Url'] == self.comment_6.url)
+                self.assertTrue(row['Verdict Date'] == self.comment_6.verdict_date)
+                self.assertTrue(row['Url'] == self.comment_6.url)
+                self.assertTrue(row['Tags'] == self.comment_6.tags)
+                self.assertTrue(row['Label'] == self.comment_6.label)
+                self.assertTrue(row['System Label'] == self.comment_6.system_label)
+
+    def test_create_df_for_claims_empty(self):
+        self.csv_fields['verdict_date_start'] = str(datetime.datetime.now().date())
+        df_claims = create_df_for_claims(self.csv_fields.getlist('fields_to_export[]'),
+                                         [int(scraper_id) for scraper_id in self.csv_fields.getlist('scrapers_ids[]')],
+                                         False,
+                                         datetime.datetime.strptime(
+                                             datetime.datetime.strptime(self.csv_fields.get('verdict_date_start'),
+                                                                        '%Y-%m-%d').strftime('%d/%m/%Y'),
+                                             '%d/%m/%Y').date(),
+                                         datetime.datetime.strptime(
+                                             datetime.datetime.strptime(self.csv_fields.get('verdict_date_end'),
+                                                                        '%Y-%m-%d').strftime('%d/%m/%Y'),
+                                             '%d/%m/%Y').date())
+        self.assertTrue(len(df_claims) == 0)
 
     def test_up_vote(self):
         comment_to_vote = {'comment_id': self.comment_2.id}
@@ -582,6 +891,9 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
+        self.assertRaises(Exception, up_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_2.id).update(timestamp=datetime.datetime.now() -
+                                                            datetime.timedelta(minutes=6))
         response = up_vote(self.post_request)
         self.assertTrue(self.comment_2.up_votes.count() == 1)
         self.assertTrue(self.comment_2.down_votes.count() == 0)
@@ -593,6 +905,9 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
+        self.assertRaises(Exception, up_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_2.id).update(timestamp=datetime.datetime.now() -
+                                                            datetime.timedelta(minutes=6))
         up_vote(self.post_request)
         response = up_vote(self.post_request)
         self.assertTrue(self.comment_2.up_votes.count() == 0)
@@ -605,6 +920,10 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
+        self.assertRaises(Exception, down_vote, self.post_request)
+        self.assertRaises(Exception, up_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_2.id).update(timestamp=datetime.datetime.now() -
+                                                            datetime.timedelta(minutes=6))
         down_vote(self.post_request)
         response = up_vote(self.post_request)
         self.assertTrue(self.comment_2.up_votes.count() == 1)
@@ -635,6 +954,9 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_2
+        self.assertRaises(Exception, down_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
+                                                            datetime.timedelta(minutes=6))
         response = down_vote(self.post_request)
         self.assertTrue(self.comment_1.down_votes.count() == 1)
         self.assertTrue(self.comment_1.up_votes.count() == 0)
@@ -646,6 +968,9 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_2
+        self.assertRaises(Exception, down_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
+                                                            datetime.timedelta(minutes=6))
         down_vote(self.post_request)
         response = down_vote(self.post_request)
         self.assertTrue(self.comment_2.down_votes.count() == 0)
@@ -658,6 +983,10 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_2
+        self.assertRaises(Exception, up_vote, self.post_request)
+        self.assertRaises(Exception, down_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
+                                                            datetime.timedelta(minutes=6))
         up_vote(self.post_request)
         response = down_vote(self.post_request)
         self.assertTrue(self.comment_1.up_votes.count() == 0)
@@ -685,6 +1014,9 @@ class CommentTests(TestCase):
     def test_check_if_vote_is_valid(self):
         comment_to_vote = {'comment_id': self.comment_1.id,
                            'user_id': self.user_1.id}
+        self.assertFalse(check_if_vote_is_valid(comment_to_vote)[0])
+        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
+                                                            datetime.timedelta(minutes=6))
         self.assertTrue(check_if_vote_is_valid(comment_to_vote)[0])
 
     def test_check_if_vote_is_valid_missing_user_id(self):
@@ -717,7 +1049,7 @@ class CommentTests(TestCase):
         self.assertTrue(new_comment.title == self.update_comment_details['comment_title'])
         self.assertTrue(new_comment.description == self.update_comment_details['comment_description'])
         self.assertTrue(new_comment.url == self.update_comment_details['comment_reference'])
-        self.assertTrue(new_comment.verdict_date == datetime.datetime.strptime(self.update_comment_details['comment_verdict_date'], '%Y-%m-%d').date())
+        self.assertTrue(new_comment.verdict_date == self.comment_3.verdict_date)
         self.assertTrue(new_comment.system_label == self.update_comment_details['comment_label'])
 
     def test_edit_comment_by_user_not_his_comment(self):
@@ -732,7 +1064,7 @@ class CommentTests(TestCase):
         self.assertTrue(comment.title == self.comment_1.title)
         self.assertTrue(comment.description == self.comment_1.description)
         self.assertTrue(comment.url == self.comment_1.url)
-        self.assertTrue(comment.verdict_date == datetime.datetime.strptime(self.comment_1.verdict_date, '%Y-%m-%d').date())
+        self.assertTrue(comment.verdict_date == self.comment_1.verdict_date)
         self.assertTrue(comment.label == self.comment_1.label)
 
     def test_edit_comment_by_invalid_user_id(self):
@@ -748,7 +1080,7 @@ class CommentTests(TestCase):
         self.assertTrue(comment.title == self.comment_1.title)
         self.assertTrue(comment.description == self.comment_1.description)
         self.assertTrue(comment.url == self.comment_1.url)
-        self.assertTrue(comment.verdict_date == datetime.datetime.strptime(self.comment_1.verdict_date, '%Y-%m-%d').date())
+        self.assertTrue(comment.verdict_date == self.comment_1.verdict_date)
         self.assertTrue(comment.label == self.comment_1.label)
 
     def test_edit_comment_by_invalid_comment_id(self):
@@ -763,7 +1095,7 @@ class CommentTests(TestCase):
         self.assertTrue(comment.title == self.comment_1.title)
         self.assertTrue(comment.description == self.comment_1.description)
         self.assertTrue(comment.url == self.comment_1.url)
-        self.assertTrue(comment.verdict_date == datetime.datetime.strptime(self.comment_1.verdict_date, '%Y-%m-%d').date())
+        self.assertTrue(comment.verdict_date == self.comment_1.verdict_date)
         self.assertTrue(comment.label == self.comment_1.label)
 
     def test_edit_comment_missing_args(self):
@@ -784,66 +1116,107 @@ class CommentTests(TestCase):
     def test_check_comment_new_fields(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
+        self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_missing_user_id(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_invalid_user_id(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.num_of_saved_users + random.randint(1, 10))
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_missing_user_type(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_missing_comment_id(self):
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_invalid_comment_id(self):
         self.update_comment_details['comment_id'] = str(self.num_of_saved_comments + random.randint(1, 10))
         self.update_comment_details['user_id'] = self.user_1.id
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_missing_title(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
         del self.update_comment_details['comment_title']
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_missing_description(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
         del self.update_comment_details['comment_description']
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_missing_reference(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
         del self.update_comment_details['comment_reference']
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_missing_label(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
         del self.update_comment_details['comment_label']
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_comment_not_belong_to_user(self):
         self.update_comment_details['comment_id'] = str(self.comment_2.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_edit_after_five_minutes(self):
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
                                                             datetime.timedelta(minutes=6))
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_check_comment_new_fields_comment_invalid_date_format(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
-        self.update_comment_details['comment_verdict_date'] = datetime.datetime.strptime(self.comment_1.verdict_date, '%Y-%m-%d').strftime('%m/%d/%y')
+        self.update_comment_details['is_superuser'] = False
+        self.update_comment_details['comment_verdict_date'] = datetime.datetime.strptime(str(self.comment_1.verdict_date), '%Y-%m-%d').strftime('%m/%d/%y')
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
     def test_delete_comment_by_user(self):
@@ -941,6 +1314,9 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
+        self.assertRaises(Exception, down_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_3.id).update(timestamp=datetime.datetime.now() -
+                                                            datetime.timedelta(minutes=6))
         down_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
         self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 100)
@@ -954,6 +1330,9 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_2
+        self.assertRaises(Exception, up_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_3.id).update(timestamp=datetime.datetime.now() -
+                                                            datetime.timedelta(minutes=6))
         up_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
         self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 50)
@@ -967,6 +1346,9 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_2
+        self.assertRaises(Exception, up_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
+                                                            datetime.timedelta(minutes=6))
         up_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
         self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 50)
@@ -979,6 +1361,9 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
+        self.assertRaises(Exception, up_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
+                                                            datetime.timedelta(minutes=6))
         down_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
         self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 0)
@@ -992,11 +1377,17 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
+        self.assertRaises(Exception, down_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
+                                                            datetime.timedelta(minutes=6))
         down_vote(self.post_request)
         comment_to_vote['comment_id'] = self.comment_3.id
         query_dict = QueryDict('', mutable=True)
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
+        self.assertRaises(Exception, down_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_3.id).update(timestamp=datetime.datetime.now() -
+                                                            datetime.timedelta(minutes=6))
         down_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
         self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 0)
