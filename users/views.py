@@ -299,9 +299,13 @@ def user_page(request, username):
     page2 = request.GET.get('page2')
     paginator2 = Paginator(user_comments, 3)
     return render(request, 'users/user_page.html', {
+        'user': user,
         'reputation': user_rep,
         'user_claims': paginator.get_page(page),
         'user_comments': paginator2.get_page(page2),
+        'scrapers_ids': get_all_scrapers_ids_arr(),
+        'true_labels': get_true_labels(username),
+        'false_labels': get_false_labels(username),
     })
 
 
@@ -355,3 +359,87 @@ def get_users_images_for_claims(claims):
             user_img = user_img.first()
         headlines[claim] = user_img.user_img
     return headlines
+
+
+# This function returns all true labels of the given scraper
+def get_true_labels(scraper_name):
+    scraper = Scrapers.objects.filter(scraper_name=scraper_name)
+    true_labels = []
+    if len(scraper) > 0:
+        true_labels = scraper.first().true_labels.split(",")
+    return true_labels
+
+
+# This function Adds a true label to the scraper
+def add_true_label(request):
+    if request.method == "POST":
+        info = request.POST.dict()
+        scraper_name = info['scraper']
+        label = info['label']
+        scraper = Scrapers.objects.get(scraper_name=scraper_name)
+        if len(scraper.true_labels) > 0:
+            scraper.true_labels += ','+label
+        else:
+            scraper.true_labels += label
+        scraper.save()
+        return user_page(request,scraper_name)
+    raise Http404("Invalid method")
+
+
+# This function removes the specified true label from the scraper
+def remove_true_label(request):
+    if request.method == "POST":
+        info = request.POST.dict()
+        scraper_name = info['scraper']
+        label = info['label']
+        scraper = Scrapers.objects.get(scraper_name=scraper_name)
+        count = len(scraper.true_labels)
+        scraper.true_labels = scraper.true_labels.replace(label+',', "", 1)
+        new_count = len(scraper.true_labels)
+        if count == new_count:
+            scraper.true_labels = scraper.true_labels.replace(','+label, '', 1)
+        scraper.save()
+        return user_page(request,scraper_name)
+    raise Http404("Invalid method")
+
+
+# This function Adds a false label to the scraper
+def add_false_label(request):
+    if request.method == "POST":
+        info = request.POST.dict()
+        scraper_name = info['scraper']
+        label = info['label']
+        scraper = Scrapers.objects.get(scraper_name=scraper_name)
+        if len(scraper.false_labels) > 0:
+            scraper.false_labels += ','+label
+        else:
+            scraper.false_labels += label
+        scraper.save()
+        return user_page(request, scraper_name)
+    raise Http404("Invalid method")
+
+
+# This function removes the specified false label from the scraper
+def remove_false_label(request):
+    if request.method == "POST":
+        info = request.POST.dict()
+        scraper_name = info['scraper']
+        label = info['label']
+        scraper = Scrapers.objects.get(scraper_name=scraper_name)
+        count = len(scraper.false_labels)
+        scraper.false_labels = scraper.false_labels.replace(label+',', "", 1)
+        new_count = len(scraper.false_labels)
+        if count == new_count:
+            scraper.false_labels = scraper.false_labels.replace(','+label, '', 1)
+        scraper.save()
+        return user_page(request,scraper_name)
+    raise Http404("Invalid method")
+
+
+# This function returns all false labels of the given scraper
+def get_false_labels(scraper_name):
+    scraper = Scrapers.objects.filter(scraper_name=scraper_name)
+    false_labels = []
+    if len(scraper) > 0:
+        false_labels = scraper.first().false_labels.split(",")
+    return false_labels

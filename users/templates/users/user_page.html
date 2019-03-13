@@ -2,7 +2,7 @@
 
 {% block page_content %}
     <div id="my_profile_page" style="max-width: 1000px; margin: auto; height: auto; padding: 40px 0;">
-        <h1>{{ request.user.username }}'s Profile:</h1>
+        <h1>{{ user.username }}'s Profile:</h1>
         <br>
         <div class="claim_box" style="width: 100%; padding: 20px 40px 20px 20px; height: auto;">
             {% csrf_token %}
@@ -68,6 +68,50 @@
                 </span>
             </div>
 
+            {% if user.id in scrapers_ids %}
+                <p id="error_msg" style="color: red; font-size: 12px;" hidden> </p>
+                <p id="success_msg" style="color: dodgerblue; font-size: 12px;" hidden>true label(s) deleted successfully</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; grid-column-gap: 20px;">
+                    <div id="true_labels">
+                        <h5>True Labels:</h5>
+                        {% for true_label in true_labels %}
+                            <label><input type="checkbox" value="value">{{ true_label }}</label><br>
+                        {% endfor %}
+                        <br>
+                        <button id="delete_true" onclick="delete_true_labels()">Delete true label(s)</button>
+                    </div>
+                    <div>
+                        <p id="error_msg_add_true" style="color: red; font-size: 12px;" hidden> </p>
+                        <p id="success_msg_add_true" style="color: dodgerblue; font-size: 12px;" hidden>true label added successfully</p>
+                        <h6>Add true label:</h6>
+                        <input id="true_label" type="text" placeholder="Label's name" style="width: 70%; margin-top: 10px; margin-bottom: 10px;"><br>
+                        <button id="add_true_label_submit" type="submit" class="btn btn-info" style="margin: 10px 0;">Add</button>
+                    </div>
+                </div>
+
+                <br>
+
+                <p id="error_msg_false" style="color: red; font-size: 12px;" hidden> </p>
+                <p id="success_msg_false" style="color: dodgerblue; font-size: 12px;" hidden>false label(s) deleted successfully</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; grid-column-gap: 20px;">
+                    <div id="false_labels">
+                        <h5>False Labels:</h5>
+                        {% for false_label in false_labels %}
+                            <label><input type="checkbox" value="value">{{ false_label }}</label><br>
+                        {% endfor %}
+                        <br>
+                        <button id="delete_false" onclick="delete_false_labels()">Delete false label(s)</button>
+                    </div>
+                        <div>
+                            <p id="error_msg_add_false" style="color: red; font-size: 12px;" hidden> </p>
+                            <p id="success_msg_add_false" style="color: dodgerblue; font-size: 12px;" hidden>false label added successfully</p>
+                            <h6>Add false label:</h6>
+                            <input id="false_label" type="text" placeholder="Label's name" style="width: 70%; margin-top: 10px; margin-bottom: 10px;"><br>
+                            <button id="add_false_label_submit" type="submit" class="btn btn-info" style="margin: 10px 0;">Add</button>
+                        </div>
+                </div>
+            {% endif %}
+
         </div>
     </div>
 
@@ -97,9 +141,150 @@
                 moreComments.style.display = "none";
             }
         }
+        
+        $("#add_true_label_submit").click(function(e){
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'users:add_true_label' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken')},
+                data: {
+                    scraper: '{{ user.username }}',
+                    label: $("#true_label").val(),
+                },
+                success: function (request) {
+                    $("#error_msg_add_true").attr("hidden", true);
+                    $("#true_label").val('');
+                    $("#success_msg_add_true").attr("hidden", false);
+                },
+                error: function (error) {
+                     $("#success_msg_add_true").attr("hidden", true);
+                    let err = error.responseText.split('\n')[1];
+                    document.getElementById("error_msg_add_true").innerHTML =
+                        '* Error:  ' + err.toLowerCase() + ' *';
+                    $("#error_msg_add_true").attr("hidden", false);
+                }
+            });
+        });
+
+        $("#add_false_label_submit").click(function(e){
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'users:add_false_label' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken')},
+                data: {
+                    scraper: '{{ user.username }}',
+                    label: $("#false_label").val(),
+                },
+                success: function (request) {
+                    $("#error_msg_add_false").attr("hidden", true);
+                    $("#false_label").val('');
+                    $("#success_msg_add_false").attr("hidden", false);
+                },
+                error: function (error) {
+                     $("#success_msg_add_false").attr("hidden", true);
+                    let err = error.responseText.split('\n')[1];
+                    document.getElementById("error_msg_add_false").innerHTML =
+                        '* Error:  ' + err.toLowerCase() + ' *';
+                    $("#error_msg_add_false").attr("hidden", false);
+                }
+            });
+        });
+        
+        function delete_true_labels() {
+            var container = document.getElementById("true_labels");
+            var elements = container.getElementsByTagName("input")
+            for (var i = 0, element; element = elements[i++];) {
+                if (element.type === "checkbox" && element.checked == true) {
+                    $.ajax({
+                        type: 'POST',
+                        url: "{% url 'users:remove_true_label' %}",
+                        headers: { "X-CSRFToken": getCookie('csrftoken') },
+                        data: {
+                            scraper: '{{ user.username }}',
+                            label: element.parentElement.innerText
+                        },
+                        success: function (request) {
+                            $("#error_msg").attr("hidden", true);
+                            for (var i = 0, element; element = elements[i++];){
+                                if (element.type === "checkbox" && element.checked == true){
+                                    element.parentElement.remove();
+                                }
+                                if (element.type === "checkbox"){
+                                    element.checked = false;
+                                }
+                            }
+                            $("#success_msg").attr("hidden", false);
+                            //$("html, body").animate({ scrollTop: 0 }, 0);
+                        },
+                        error: function (error) {
+                            $("#success_msg").attr("hidden", true);
+                            let err = error.responseText.split('\n')[1];
+                            document.getElementById("error_msg").innerHTML =
+                            '* Error:  ' + err.toLowerCase() + ' *';
+                            $("#error_msg").attr("hidden", false);
+                            //$("html, body").animate({ scrollTop: 0 }, 0);
+                        }
+                    });
+                }
+            }
+        }
+
+        function delete_false_labels() {
+            var container = document.getElementById("false_labels");
+            var elements = container.getElementsByTagName("input")
+            for (var i = 0, element; element = elements[i++];) {
+                if (element.type === "checkbox" && element.checked == true) {
+                    $.ajax({
+                        type: 'POST',
+                        url: "{% url 'users:remove_false_label' %}",
+                        headers: { "X-CSRFToken": getCookie('csrftoken') },
+                        data: {
+                            scraper: '{{ user.username }}',
+                            label: element.parentElement.innerText
+                        },
+                        success: function (request) {
+                            $("#error_msg_false").attr("hidden", true);
+                            for (var i = 0, element; element = elements[i++];){
+                                if (element.type === "checkbox" && element.checked == true){
+                                    element.parentElement.remove();
+                                }
+                                if (element.type === "checkbox"){
+                                    element.checked = false;
+                                }
+                            }
+                            $("#success_msg_false").attr("hidden", false);
+                            //$("html, body").animate({ scrollTop: 0 }, 0);
+                        },
+                        error: function (error) {
+                            $("#success_msg_false").attr("hidden", true);
+                            let err = error.responseText.split('\n')[1];
+                            document.getElementById("error_msg_false").innerHTML =
+                            '* Error:  ' + err.toLowerCase() + ' *';
+                            $("#error_msg_false").attr("hidden", false);
+                            //$("html, body").animate({ scrollTop: 0 }, 0);
+                        }
+                    });
+                }
+            }
+        }
+
+        function getCookie(c_name) {
+            if (document.cookie.length > 0) {
+                c_start = document.cookie.indexOf(c_name + "=");
+                if (c_start != -1) {
+                    c_start = c_start + c_name.length + 1;
+                    c_end = document.cookie.indexOf(";", c_start);
+                    if (c_end == -1) c_end = document.cookie.length;
+                    return unescape(document.cookie.substring(c_start, c_end));
+                }
+            }
+            return "";
+        }
     </script>
 {% endblock %}
 
 {% block claim_head_title %}
-    FactCheckProject | My Profile
+    FactCheckProject | user_page
 {% endblock %}
