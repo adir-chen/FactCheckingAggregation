@@ -170,7 +170,7 @@ NOSE_ARGS = [
     # '--cover-package=contact_us',
     # '--cover-package=logger',
     # '--cover-package=search',
-    '--cover-package=analytics',
+    # '--cover-package=analytics',
     '--detailed-errors',
     '-s',
     # '--cover-html'
