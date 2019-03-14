@@ -496,6 +496,7 @@ class CommentTests(TestCase):
                 self.assertTrue('True' == get_system_label_to_comment(true_label, scraper.scraper_id.id))
             for false_label in scraper.false_labels.split(','):
                 self.assertTrue('False' == get_system_label_to_comment(false_label, scraper.scraper_id.id))
+            self.assertTrue('Unknown' == get_system_label_to_comment('Unknown', scraper.scraper_id.id))
 
     def test_get_all_comments_for_user_id(self):
         result = get_all_comments_for_user_id(self.user_1.id)
@@ -1156,6 +1157,19 @@ class CommentTests(TestCase):
         self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
 
+    def test_check_comment_new_fields_invalid_format_for_tags(self):
+        invalid_input = 'tag1,'
+        for i in range(random.randint(1, 10)):
+            invalid_input += ','
+        invalid_input += ',tag2'
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = self.user_1.id
+        self.update_comment_details['comment_tags'] = invalid_input
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
     def test_check_comment_new_fields_missing_title(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
@@ -1170,6 +1184,15 @@ class CommentTests(TestCase):
         self.update_comment_details['user_id'] = str(self.user_1.id)
         self.update_comment_details['is_superuser'] = False
         del self.update_comment_details['comment_description']
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_missing_verdict_date(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
+        del self.update_comment_details['comment_verdict_date']
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
         self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
@@ -1215,6 +1238,24 @@ class CommentTests(TestCase):
         self.update_comment_details['user_id'] = str(self.user_1.id)
         self.update_comment_details['is_superuser'] = False
         self.update_comment_details['comment_verdict_date'] = datetime.datetime.strptime(str(self.comment_1.verdict_date), '%Y-%m-%d').strftime('%m/%d/%y')
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_invalid_input_for_title(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['comment_title'] = 'Խոսքի խառնաշփոթի խառնաշփոթություն'
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_invalid_input_for_description(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['comment_description'] = 'Μια κουβέντα από ανοησίες λέξεων'
+        self.update_comment_details['is_superuser'] = False
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
         self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])

@@ -219,6 +219,15 @@ class ClaimTests(TestCase):
         del self.new_claim_details['tags']
         self.assertTrue(check_if_claim_is_valid(self.new_claim_details)[0])
 
+    def test_check_if_claim_is_valid_invalid_format_for_tags(self):
+        invalid_input = 'tag1,'
+        for i in range(random.randint(1, 10)):
+            invalid_input += ' '
+        invalid_input += ',tag2'
+        self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['tags'] = invalid_input
+        self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
+
     def test_check_if_claim_is_valid_missing_img_src(self):
         self.new_claim_details['user_id'] = self.user.id
         del self.new_claim_details['image_src']
@@ -577,16 +586,24 @@ class ClaimTests(TestCase):
         self.assertTrue(logout_view(request).status_code == 200)
 
     def test_add_claim_page(self):
-        request = HttpRequest()
-        request.method = 'GET'
-        response = add_claim_page(request)
+        self.get_request.user = self.user
+        response = add_claim_page(self.get_request)
         self.assertTrue(response.status_code == 200)
 
+    def test_add_claim_page_user_not_authenticated(self):
+        from django.contrib.auth.models import AnonymousUser
+        self.get_request.user = AnonymousUser()
+        self.assertRaises(Http404, add_claim_page, self.get_request)
+
     def test_export_claims_page(self):
-        request = HttpRequest()
-        request.method = 'GET'
-        response = export_claims_page(request)
+        self.get_request.user = self.user
+        response = export_claims_page(self.get_request)
         self.assertTrue(response.status_code == 200)
+
+    def test_export_claims_page_user_not_authenticated(self):
+        from django.contrib.auth.models import AnonymousUser
+        self.get_request.user = AnonymousUser()
+        self.assertRaises(Http404, export_claims_page, self.get_request)
 
     def test_edit_claim_valid_with_different_claim(self):
         self.update_claim_details['claim'] = self.claim_1.claim + '_new'

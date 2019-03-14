@@ -15,27 +15,25 @@ def add_comment(request):
     from claims.views import view_claim, return_get_request_to_user
     if not request.user.is_authenticated or request.method != "POST":
         raise Http404("Permission denied")
-    if request.method == "POST":
-        comment_info = request.POST.copy()
-        comment_info['user_id'] = request.user.id
-        valid_comment, err_msg = check_if_comment_is_valid(comment_info)
-        if not valid_comment:
-            save_log_message(request.user.id, request.user.username,
-                             'Adding a new comment on claim with id ' +
-                             str(request.POST.get("claim_id")) + '. Error: ' + err_msg)
-            raise Exception(err_msg)
-        build_comment(comment_info['claim_id'],
-                      comment_info['user_id'],
-                      comment_info['title'],
-                      comment_info['description'],
-                      comment_info['url'],
-                      comment_info['tags'],
-                      comment_info['verdict_date'],
-                      comment_info['label'])
+    comment_info = request.POST.copy()
+    comment_info['user_id'] = request.user.id
+    valid_comment, err_msg = check_if_comment_is_valid(comment_info)
+    if not valid_comment:
         save_log_message(request.user.id, request.user.username,
-                         'Adding a new comment on claim with id ' + str(request.POST.get("claim_id")), True)
-        return view_claim(return_get_request_to_user(request.user), request.POST.get('claim_id'))
-    raise Http404("Invalid method")
+                         'Adding a new comment on claim with id ' +
+                         str(request.POST.get("claim_id")) + '. Error: ' + err_msg)
+        raise Exception(err_msg)
+    build_comment(comment_info['claim_id'],
+                  comment_info['user_id'],
+                  comment_info['title'],
+                  comment_info['description'],
+                  comment_info['url'],
+                  comment_info['tags'],
+                  comment_info['verdict_date'],
+                  comment_info['label'])
+    save_log_message(request.user.id, request.user.username,
+                     'Adding a new comment on claim with id ' + str(request.POST.get("claim_id")), True)
+    return view_claim(return_get_request_to_user(request.user), request.POST.get('claim_id'))
 
 
 # This function adds a new comment to a claim in the website

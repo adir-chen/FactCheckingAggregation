@@ -5,7 +5,7 @@ from claims.models import Claim
 from comments.models import Comment
 from users.views import check_if_user_exists_by_user_id, get_username_by_user_id, add_all_scrapers, \
     get_all_scrapers_ids, get_all_scrapers_ids_arr, get_random_claims_from_scrapers, add_scraper_guide, add_new_scraper, \
-    check_if_scraper_info_is_valid, update_reputation_for_user
+    check_if_scraper_info_is_valid, update_reputation_for_user, get_true_labels
 import json
 import random
 import datetime
@@ -16,10 +16,10 @@ class UsersTest(TestCase):
         self.user_1 = User(username="User1", email='user1@gmail.com')
         self.user_2 = User(username="User2", email='user2@gmail.com')
         self.user_3 = User(username="User3", email='user3@gmail.com')
-        self.new_scraper = User(username="newScraper")
         self.user_1.save()
         self.user_2.save()
         self.user_3.save()
+        self.new_scraper = User(username="newScraper")
         self.new_scraper.save()
         self.admin = User.objects.create_superuser(username='admin',
                                                    email='admin@gmail.com',
@@ -348,3 +348,12 @@ class UsersTest(TestCase):
         self.assertRaises(Exception, update_reputation_for_user,
                           self.num_of_saved_users + random.randint(1, 10),
                           True, random.randint(1, 20))
+
+    def test_get_true_labels_for_user(self):
+        self.assertTrue(len(get_true_labels(self.user_1.username)) == 0)
+
+    def test_get_true_labels_for_scraper(self):
+        self.scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        true_labels = get_true_labels(self.new_scraper.username)
+        self.assertTrue(len(true_labels) == 1)
+        self.assertTrue(true_labels[0] == 'true')

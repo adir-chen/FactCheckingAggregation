@@ -108,10 +108,9 @@ def check_if_input_format_is_valid(user_input):
     for user_inp in user_input.split(','):
         if not user_inp:
             return False
-        elif not user_inp[0].isdigit() and not user_inp[0].isalpha():
-            return False
-        elif not user_inp[len(user_inp) - 1].isdigit() and not user_inp[len(user_inp) - 1].isalpha():
-            return False
+        for char in user_inp:
+            if not char.isdigit() and not char.isalpha():
+                return False
     return True
 
 
