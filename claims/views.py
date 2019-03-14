@@ -276,12 +276,16 @@ def logout_view(request):
 
 # This function return a HTML page for adding a new claim to the website
 def add_claim_page(request):
-    return render(request, 'claims/add_claim.html')
+    if request.user.is_authenticated:
+        return render(request, 'claims/add_claim.html')
+    raise Http404("Permission denied")
 
 
 # This function return a HTML page for adding a new claim to the website
 def export_claims_page(request):
-    return render(request, 'claims/export_claims.html', {'all_scrapers': Scrapers.objects.all()})
+    if request.user.is_authenticated:
+        return render(request, 'claims/export_claims.html', {'all_scrapers': Scrapers.objects.all()})
+    raise Http404("Permission denied")
 
 
 # This function edits a claim in the website

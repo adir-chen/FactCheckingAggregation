@@ -77,9 +77,9 @@
                         Verdict Date: <input id="{{ claim.id }}_new_comment_date" type="date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}">
                     </div>
                     <div style="grid-area: verdict; padding: 20px;">
-                        <input type="radio" id="{{ claim.id }}_new_comment_true_label" name="label" value="True"> True<br>
-                        <input type="radio" id="{{ claim.id }}_new_comment_false_label" name="label" value="False"> False<br>
-                        <input type="radio" id="{{ claim.id }}_new_comment_unknown_label" name="label" value="Unknown" checked> Unknown
+                        <input type="radio" id="{{ claim.id }}_new_comment_true_label" name="{{ claim.id }}_new_comment_label" value="True"> True<br>
+                        <input type="radio" id="{{ claim.id }}_new_comment_false_label" name="{{ claim.id }}_new_comment_label" value="False"> False<br>
+                        <input type="radio" id="{{ claim.id }}_new_comment_unknown_label" name="{{ claim.id }}_new_comment_label" value="Unknown" checked> Unknown
                     </div>
                 </div>
                 <hr>
@@ -145,7 +145,7 @@
                     url: $("#{{ claim.id }}_new_comment_url").val(),
                     tags: $("#{{ claim.id }}_new_comment_tags").val(),
                     verdict_date: $("#{{ claim.id }}_new_comment_date").val(),
-                    label: document.querySelector('input[name="label"]:checked').value,
+                    label: document.querySelector('input[name="{{ claim.id }}_new_comment_label"]:checked').value,
                 },
                 success: function () {
                     location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';

@@ -25,9 +25,9 @@
                 {%  endif %}
             </div>
             <div id="comment_{{ comment.id }}_verdict_edit" style="grid-area: verdict; padding: 20px;" hidden="hidden">
-                <input type="radio" id='comment_{{ comment.id }}_true_radio' name="label" value="True"> True<br>
-                <input type="radio" id='comment_{{ comment.id }}_false_radio' name="label" value="False"> False<br>
-                <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="label" value="Unknown"> Unknown
+                <input type="radio" id='comment_{{ comment.id }}_true_radio' name="comment_{{ comment.id }}_label" value="True"> True<br>
+                <input type="radio" id='comment_{{ comment.id }}_false_radio' name="comment_{{ comment.id }}_label" value="False"> False<br>
+                <input type="radio" id='comment_{{ comment.id }}_unknown_radio' name="comment_{{ comment.id }}_label" value="Unknown"> Unknown
             </div>
         </div>
         <hr>
@@ -38,17 +38,17 @@
             </div>
             <div class="comment_voting_area">
                 {% if request.user.is_authenticated %}
-                    <button id="{{ comment.id }}_arrow_up" type="submit" class="arrow_up">▲</button>
+                    <button id="{{ comment.id }}_arrow_up" class="arrow_up">▲</button>
                 {% else %}
-                    <button id="{{ comment.id }}_arrow_up" type="submit" class="arrow_up" disabled>▲</button>
+                    <button id="{{ comment.id }}_arrow_up" class="arrow_up" disabled>▲</button>
                 {% endif %}
                 <br>
                 <span id="{{ comment.id }}_voteCount" class="vote_count">{{ comment.up_votes.count|sub:comment.down_votes.count }}</span>
                 <br>
                 {% if request.user.is_authenticated %}
-                    <button id="{{ comment.id }}_arrow_down" type="submit" class="arrow_down">▼</button>
+                    <button id="{{ comment.id }}_arrow_down" class="arrow_down">▼</button>
                 {% else %}
-                    <button id="{{ comment.id }}_arrow_down" type="submit" class="arrow_down" disabled>▼</button>
+                    <button id="{{ comment.id }}_arrow_down" class="arrow_down" disabled>▼</button>
                 {% endif %}
             </div>
         </div>
@@ -234,7 +234,7 @@
                 comment_tags: $("#comment_{{ comment.id }}_tags").val(),
                 comment_verdict_date: $("#comment_{{ comment.id }}_verdict_date_edit").val(),
                 comment_reference: $("#comment_{{ comment.id }}_reference").val(),
-                comment_label: document.querySelector('input[name="label"]:checked').value,
+                comment_label: document.querySelector('input[name="comment_{{ comment.id }}_label"]:checked').value,
             },
             success: function () {
                 location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ comment.claim_id }}';
