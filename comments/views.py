@@ -13,7 +13,7 @@ import csv
 # This function takes care of a request to add a new comment to a claim in the website
 def add_comment(request):
     from claims.views import view_claim
-    if not request.user.is_authenticated:
+    if not request.user.is_authenticated or request.method != "POST":
         raise Http404("Permission denied")
     if request.method == "POST":
         comment_info = request.POST.copy()
@@ -58,11 +58,11 @@ def build_comment(claim_id, user_id, title, description, url, tags, verdict_date
 # This function checks if a given comment is valid, i.e. the comment has all the fields with the correct format.
 # The function returns true in case the comment is valid, otherwise false and an error
 def check_if_comment_is_valid(comment_info):
-    from claims.views import check_if_tags_are_valid, is_english_input
+    from claims.views import check_if_input_format_is_valid, is_english_input
     err = ''
     if 'tags' not in comment_info or not comment_info['tags']:
         comment_info['tags'] = ''
-    if not check_if_tags_are_valid(comment_info['tags']):
+    if not check_if_input_format_is_valid(comment_info['tags']):
         err += 'Incorrect format for tags'
     elif 'claim_id' not in comment_info or not comment_info['claim_id']:
         err += 'Missing value for claim id'
@@ -161,7 +161,7 @@ def get_all_comments_for_claim_id(claim_id):
 
 # This function returns a csv which contains all the details of the claims in the website
 def export_to_csv(request):
-    if not request.user.is_superuser:
+    if not request.user.is_superuser or request.method != "POST":
         save_log_message(request.user.id, request.user.username,
                          'Exporting website claims to a csv. Error: user does not have permissions')
         raise Http404("Permission denied")
@@ -282,7 +282,7 @@ def create_df_for_claims(fields_to_export, scrapers_ids, regular_users, verdict_
 
 # This function increases a comment's vote by 1
 def up_vote(request):
-    if not request.user.is_authenticated:
+    if not request.user.is_authenticated or request.method != "POST":
         raise Http404("Permission denied")
     from claims.views import view_claim
     from users.views import update_reputation_for_user
@@ -311,7 +311,7 @@ def up_vote(request):
 
 # This function decreases a comment's vote by 1
 def down_vote(request):
-    if not request.user.is_authenticated:
+    if not request.user.is_authenticated or request.method != "POST":
         raise Http404("Permission denied")
     from claims.views import view_claim
     from users.views import update_reputation_for_user
@@ -362,7 +362,7 @@ def check_if_vote_is_valid(vote_fields):
 
 # This function edits a comment in the website
 def edit_comment(request):
-    if not request.user.is_authenticated:
+    if not request.user.is_authenticated or request.method != "POST":
         raise Http404("Permission denied")
     from claims.views import view_claim
     new_comment_fields = request.POST.dict()
@@ -392,12 +392,12 @@ def edit_comment(request):
 # i.e. the comment has all the fields with the correct format.
 # The function returns true in case the comment's new fields are valid, otherwise false and an error
 def check_comment_new_fields(new_comment_fields):
-    from claims.views import check_if_tags_are_valid, is_english_input
+    from claims.views import check_if_input_format_is_valid, is_english_input
     err = ''
     max_minutes_to_edit_comment = 5
     if 'comment_tags' not in new_comment_fields or not new_comment_fields['comment_tags']:
         new_comment_fields['comment_tags'] = ''
-    if not check_if_tags_are_valid(new_comment_fields['comment_tags']):
+    if not check_if_input_format_is_valid(new_comment_fields['comment_tags']):
         err += 'Incorrect format for tags'
     elif 'user_id' not in new_comment_fields or not new_comment_fields['user_id']:
         err += 'Missing value for user id'
@@ -438,10 +438,10 @@ def check_comment_new_fields(new_comment_fields):
 
 # This function deletes a comment from the website
 def delete_comment(request):
+    if not request.user.is_authenticated or request.method != "POST":
+        raise Http404("Permission denied")
     from claims.views import view_claim
     from users.views import update_reputation_for_user
-    if not request.user.is_authenticated:
-        raise Http404("Permission denied")
     valid_delete_claim, err_msg = check_if_delete_comment_is_valid(request)
     if not valid_delete_claim:
         save_log_message(request.user.id, request.user.username,

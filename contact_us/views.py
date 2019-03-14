@@ -10,26 +10,26 @@ from ipware import get_client_ip
 
 # This function sends an email from a website user
 def send_email(request):
-    if request.method == "POST":
-        ip = get_client_ip(request)
-        if ip[0] is None:
-            ip = 'Unknown IP Address'
-        else:
-            ip = str(ip[0])
-        mail_info = request.POST.dict()
-        mail_info['ip'] = ip
-        valid_mail, err_msg = check_if_email_is_valid(mail_info)
-        if not valid_mail:
-            save_log_message(request.user.id, request.user.username,
-                             ' failed send an email. Error: ' + err_msg)
-            raise Exception(err_msg)
-        send_mail(mail_info['user_email'] + ': ' + mail_info['subject'],
-                  mail_info['description'],
-                  'wtfactnews@gmail.com',
-                  ['wtfactnews@gmail.com'])
-        save_log_message(request.user.id, request.user.username, 'Sending an email from ip - ' + ip)
-        return contact_us_page(request)
-    raise Http404("Invalid method")
+    if request.method != "POST":
+        raise Http404("Permission denied")
+    ip = get_client_ip(request)
+    if ip[0] is None:
+        ip = 'Unknown IP Address'
+    else:
+        ip = str(ip[0])
+    mail_info = request.POST.dict()
+    mail_info['ip'] = ip
+    valid_mail, err_msg = check_if_email_is_valid(mail_info)
+    if not valid_mail:
+        save_log_message(request.user.id, request.user.username,
+                         ' failed send an email. Error: ' + err_msg)
+        raise Exception(err_msg)
+    send_mail(mail_info['user_email'] + ': ' + mail_info['subject'],
+              mail_info['description'],
+              'wtfactnews@gmail.com',
+              ['wtfactnews@gmail.com'])
+    save_log_message(request.user.id, request.user.username, 'Sending an email from ip - ' + ip)
+    return contact_us_page(request)
 
 
 # This function checks if a given email is valid, i.e. the email has all the fields with the correct format.

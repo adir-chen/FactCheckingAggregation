@@ -10,6 +10,7 @@ from logger.views import save_log_message, check_duplicate_log_for_user
 from users.views import check_if_user_exists_by_user_id
 from .models import Claim
 from django.views.decorators.csrf import ensure_csrf_cookie
+import math
 
 
 # This function adds a new claim to the website, followed with a comment on it
@@ -19,40 +20,40 @@ def add_claim(request):
                 authenticate(request, username=request.POST.get('username'), password=request.POST.get('password')):
             raise Http404("Permission denied")
         request.user = authenticate(request, username=request.POST.get('username'), password=request.POST.get('password'))
-    if request.method == "POST":
-        claim_info = request.POST.dict()
-        claim_info['user_id'] = request.user.id
-        valid_claim, err_msg = check_if_claim_is_valid(claim_info)
-        if not valid_claim:
-            save_log_message(request.user.id, request.user.username,
-                             'Adding a new claim. Error: ' + err_msg)
-            raise Exception(err_msg)
-        claim = Claim(
-            user_id=claim_info['user_id'],
-            claim=claim_info['claim'],
-            category=claim_info['category'],
-            tags=','.join(claim_info['tags'].split()),
-            authenticity_grade=0,
-            image_src=claim_info['image_src']
-        )
-        claim.save()
+    if request.method != "POST":
+        raise Http404("Permission denied")
+    claim_info = request.POST.dict()
+    claim_info['user_id'] = request.user.id
+    valid_claim, err_msg = check_if_claim_is_valid(claim_info)
+    if not valid_claim:
         save_log_message(request.user.id, request.user.username,
-                         'Adding a new claim', True)
-        claim_info['claim_id'] = claim.id
-        request.POST = claim_info
-        if claim_info['add_comment'] == 'true':
-            try:
-                add_comment(request)
-            except Exception as e:
-                claim.delete()
-                save_log_message(request.user.id, request.user.username,
-                                 'Adding a new comment on claim with id ' + str(
-                                     claim.id) + '. Error: ' + str(e) +
-                                 '. This claim has been deleted because ' +
-                                 'the user does not succeed to add a new claim with a comment on it.')
-                raise Exception(e)
-        return view_claim(request, claim.id)
-    raise Http404("Invalid method")
+                         'Adding a new claim. Error: ' + err_msg)
+        raise Exception(err_msg)
+    claim = Claim(
+        user_id=claim_info['user_id'],
+        claim=claim_info['claim'],
+        category=claim_info['category'],
+        tags=','.join(claim_info['tags'].split()),
+        authenticity_grade=0,
+        image_src=claim_info['image_src']
+    )
+    claim.save()
+    save_log_message(request.user.id, request.user.username,
+                     'Adding a new claim', True)
+    claim_info['claim_id'] = claim.id
+    request.POST = claim_info
+    if claim_info['add_comment'] == 'true':
+        try:
+            add_comment(request)
+        except Exception as e:
+            claim.delete()
+            save_log_message(request.user.id, request.user.username,
+                             'Adding a new comment on claim with id ' + str(
+                                 claim.id) + '. Error: ' + str(e) +
+                             '. This claim has been deleted because ' +
+                             'the user does not succeed to add a new claim with a comment on it.')
+            raise Exception(e)
+    return view_claim(request, claim.id)
 
 
 # This function checks if a given claim is valid, i.e. the claim has all the fields with the correct format.
@@ -61,7 +62,7 @@ def check_if_claim_is_valid(claim_info):
     err = ''
     if 'tags' not in claim_info or not claim_info['tags']:
         claim_info['tags'] = ''
-    if not check_if_tags_are_valid(claim_info['tags']):
+    if not check_if_input_format_is_valid(claim_info['tags']):
         err += 'Incorrect format for tags'
     elif 'user_id' not in claim_info:
         err += 'Missing value for user'
@@ -90,7 +91,7 @@ def check_if_claim_is_valid(claim_info):
 
 # This function checks if given claim's tags are valid, i.e. the tags are in the correct format.
 # The function returns true in case the claim's tags are valid, otherwise false
-def check_if_tags_are_valid(tags):
+def check_if_input_format_is_valid(tags):
     import string
     not_allowed_tags = set(string.punctuation)
     not_allowed_tags.remove('\'')
@@ -179,11 +180,22 @@ def get_tags_for_claim(claim_id):
 # This function returns a claim page of a given claim id
 # The function returns the claim page in case the claim is found, otherwise Http404
 def view_claim(request, claim_id):
-    import math
     claim = get_claim_by_id(claim_id)
     if claim is None:
         raise Http404('Claim with id ' + str(claim_id) + ' does not exist')
-    comment_objects = Comment.objects.filter(claim_id=claim_id)
+    elif request.method != "GET":
+        raise Http404("Permission denied")
+    comments = get_users_details_for_comments(Comment.objects.filter(claim_id=claim_id))
+    user_img, user_rep = get_user_img_and_rep(request)
+    return render(request, 'claims/claim.html', {
+        'claim': claim,
+        'comments': comments,
+        'user_img': user_img,
+        'user_rep': user_rep
+    })
+
+
+def get_users_details_for_comments(comment_objects):
     comments = {}
     for comment in comment_objects:
         user_img = Users_Images.objects.filter(user_id=comment.user_id)
@@ -203,6 +215,10 @@ def view_claim(request, claim_id):
         comments[comment] = {'user': User.objects.filter(id=comment.user_id).first(),
                              'user_img': user_img,
                              'user_rep': math.ceil(user_rep.user_rep / 20)}
+        return comments
+
+
+def get_user_img_and_rep(request):
     user_img, user_rep = None, None
     if request.user.is_authenticated:
         user_img = Users_Images.objects.filter(user_id=request.user.id)
@@ -221,17 +237,14 @@ def view_claim(request, claim_id):
         else:
             user_rep = user_rep.first()
         user_rep = math.ceil(user_rep.user_rep / 20)
-    return render(request, 'claims/claim.html', {
-        'claim': claim,
-        'comments': comments,
-        'user_img': user_img,
-        'user_rep': user_rep
-    })
+    return user_img, user_rep
 
 
 # This function returns the home page of the website
 @ensure_csrf_cookie
 def view_home(request):
+    if request.method != "GET":
+        raise Http404("Permission denied")
     from django.core.paginator import Paginator
     claims = list(get_users_images_for_claims(Claim.objects.all().order_by('-id')).items())
     page = request.GET.get('page')
@@ -273,7 +286,7 @@ def export_claims_page(request):
 
 # This function edits a claim in the website
 def edit_claim(request):
-    if not request.user.is_authenticated:
+    if not request.user.is_authenticated or request.method != "POST":
         raise Http404("Permission denied")
     new_claim_fields = request.POST.dict()
     new_claim_fields['user_id'] = request.user.id
@@ -303,7 +316,7 @@ def check_claim_new_fields(new_claim_fields):
     max_minutes_to_edit_claim = 5
     if 'tags' not in new_claim_fields or not new_claim_fields['tags']:
         new_claim_fields['tags'] = ''
-    if not check_if_tags_are_valid(new_claim_fields['tags']):
+    if not check_if_input_format_is_valid(new_claim_fields['tags']):
         err += 'Incorrect format for tags'
     elif 'user_id' not in new_claim_fields or not new_claim_fields['user_id']:
         err += 'Missing value for user id'
@@ -339,7 +352,7 @@ def check_claim_new_fields(new_claim_fields):
 
 # This function deletes a claim from the website
 def delete_claim(request):
-    if not request.user.is_authenticated:
+    if not request.user.is_authenticated or request.method != "POST":
         raise Http404("Permission denied")
     valid_delete_claim, err_msg = check_if_delete_claim_is_valid(request)
     if not valid_delete_claim:
@@ -400,7 +413,7 @@ def about_page(request):
 
 
 def report_spam(request):
-    if not request.user.is_authenticated:
+    if not request.user.is_authenticated or request.method != "POST":
         raise Http404("Permission denied")
     valid_spam_report, err_msg = check_if_spam_report_is_valid(request)
     if not valid_spam_report:

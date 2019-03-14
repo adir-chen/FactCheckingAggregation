@@ -1,5 +1,3 @@
-import math
-
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.http import Http404
@@ -27,10 +25,18 @@ def get_username_by_user_id(user_id):
     return None
 
 
+# This function returns a user by the specified username
+def get_user_by_username(username):
+    result = User.objects.filter(username=username)
+    if len(result) > 0:
+        return result.first()
+    return None
+
+
 # This function adds all the scrapers as users to the website
 def add_all_scrapers(request):
     from claims.views import view_home
-    if not request.user.is_superuser:
+    if not request.user.is_superuser or request.method != 'GET':
         raise Http404("Permission denied")
     try:
         password = User.objects.make_random_password()
@@ -39,7 +45,7 @@ def add_all_scrapers(request):
         scraper_1.save()
         scraper_1_img = Users_Images(user_id=scraper_1, user_img='https://www.snopes.com/content/themes/snopes/dist/images/logo-s-crop-on.svg')
         scraper_1_img.save()
-        scraper_1_rep = Users_Reputations(user_id=scraper_1, user_rep=0)
+        scraper_1_rep = Users_Reputations(user_id=scraper_1)
         scraper_1_rep.save()
         true_labels = ['true', 'probably true', 'partly true', 'correct attribution', 'mostly true']
         false_labels = ['false', 'not true', 'mostly false', 'fiction', 'legend', 'scam', 'miscaptioned']
@@ -53,7 +59,7 @@ def add_all_scrapers(request):
         scraper_2.save()
         scraper_2_img = Users_Images(user_id=scraper_2, user_img='https://www.polygraph.info/Content/responsive/RFE/en-Poly/img/logo.png')
         scraper_2_img.save()
-        scraper_2_rep = Users_Reputations(user_id=scraper_2, user_rep=0)
+        scraper_2_rep = Users_Reputations(user_id=scraper_2)
         scraper_2_rep.save()
         true_labels = ['true', 'partially true', 'likely true']
         false_labels = ['false', 'mostly false', 'highly misleading', 'misleading', 'likely false', 'partially false']
@@ -67,7 +73,7 @@ def add_all_scrapers(request):
         scraper_3.save()
         scraper_3_img = Users_Images(user_id=scraper_3, user_img='https://dn.truthorfiction.com/wp-content/uploads/2018/10/25032229/truth-or-fiction-logo-tagline.png')
         scraper_3_img.save()
-        scraper_3_rep = Users_Reputations(user_id=scraper_3, user_rep=0)
+        scraper_3_rep = Users_Reputations(user_id=scraper_3)
         scraper_3_rep.save()
         true_labels = ['true', 'truth']
         false_labels = ['false', 'not true', 'decontextualized', 'fiction']
@@ -81,7 +87,7 @@ def add_all_scrapers(request):
         scraper_4.save()
         scraper_4_img = Users_Images(user_id=scraper_4, user_img='https://static.politifact.com/images/POLITIFACT_logo_rgb141x25.png')
         scraper_4_img.save()
-        scraper_4_rep = Users_Reputations(user_id=scraper_4, user_rep=0)
+        scraper_4_rep = Users_Reputations(user_id=scraper_4)
         scraper_4_rep.save()
         true_labels = ['true', 'mostly true', 'no flip']
         false_labels = ['false', 'mostly false', 'full flop', 'pants on fire!']
@@ -95,7 +101,7 @@ def add_all_scrapers(request):
         scraper_5.save()
         scraper_5_img = Users_Images(user_id=scraper_5, user_img='https://s3.gossipcop.com/thm/gossipcop/images/horizontal-logo.png')
         scraper_5_img.save()
-        scraper_5_rep = Users_Reputations(user_id=scraper_5, user_rep=0)
+        scraper_5_rep = Users_Reputations(user_id=scraper_5)
         scraper_5_rep.save()
         true_labels = [str(i + 6) for i in range(5)]
         false_labels = [str(i) for i in range(5)]
@@ -109,7 +115,7 @@ def add_all_scrapers(request):
         scraper_6.save()
         scraper_6_img = Users_Images(user_id=scraper_6, user_img='https://climatefeedback.org/wp-content/themes/wordpress-theme/dist/images/Climate_Feedback_logo_s.png')
         scraper_6_img.save()
-        scraper_6_rep = Users_Reputations(user_id=scraper_6, user_rep=0)
+        scraper_6_rep = Users_Reputations(user_id=scraper_6)
         scraper_6_rep.save()
         true_labels = ['true', 'accurate', 'mostly_correct', 'correct']
         false_labels = ['false', 'unsupported', 'incorrect', 'inaccurate', 'misleading', 'flawed_reasoning']
@@ -123,7 +129,7 @@ def add_all_scrapers(request):
         scraper_7.save()
         scraper_7_img = Users_Images(user_id=scraper_7, user_img='http://factscan.ca/test/wp-content/uploads/2015/02/web-logo.png')
         scraper_7_img.save()
-        scraper_7_rep = Users_Reputations(user_id=scraper_7, user_rep=0)
+        scraper_7_rep = Users_Reputations(user_id=scraper_7)
         scraper_7_rep.save()
         true_labels = ['true']
         false_labels = ['false', 'misleading', 'farcical']
@@ -137,10 +143,20 @@ def add_all_scrapers(request):
         scraper_8.save()
         scraper_8_img = Users_Images(user_id=scraper_8, user_img='https://upload.wikimedia.org/wikipedia/en/2/2f/Africa_Check_Website_logo.png')
         scraper_8_img.save()
-        scraper_8_rep = Users_Reputations(user_id=scraper_8, user_rep=0)
+        scraper_8_rep = Users_Reputations(user_id=scraper_8)
         scraper_8_rep.save()
         scraper_8_details = Scrapers(scraper_name=scraper_8.username, scraper_id=scraper_8)
         scraper_8_details.save()
+
+        scraper_9 = User.objects.create_user(username='CNN', password=password)
+        scraper_9.save()
+        scraper_9_img = Users_Images(user_id=scraper_9, user_img='https://cdn.cnn.com/cnn/.e1mo/img/4.0/logos/CNN_logo_400x400.png')
+        scraper_9_img.save()
+        scraper_9_rep = Users_Reputations(user_id=scraper_9)
+        scraper_9_rep.save()
+        scraper_9_details = Scrapers(scraper_name=scraper_9.username,
+                                     scraper_id=scraper_9)
+        scraper_9_details.save()
     except Exception:
         raise Http404("Permission denied - Scrapers already exist")
     return view_home(request)
@@ -165,6 +181,8 @@ def add_all_scrapers(request):
 
 # This function returns all the scrapers' ids
 def get_all_scrapers_ids(request):
+    if request.method != 'GET':
+        raise Http404("Permission denied")
     from django.http import JsonResponse
     scrapers = {}
     result = Scrapers.objects.all()
@@ -184,6 +202,8 @@ def get_all_scrapers_ids_arr():
 
 # This function returns a random claim for each scraper in the system for testing (the scrapers)
 def get_random_claims_from_scrapers(request):
+    if request.method != 'GET':
+        raise Http404("Permission denied")
     from django.http import JsonResponse
     claims = {}
     result = Scrapers.objects.all()
@@ -211,45 +231,50 @@ def add_scraper_guide(request):
 
 # This function add new scraper to the website
 def add_new_scraper(request):
-    if request.user.is_superuser:
-        scraper_info = request.POST.dict()
-        valid_scraper, err_msg = check_if_scraper_info_is_valid(scraper_info)
-        if not valid_scraper:
-            save_log_message(request.user.id, request.user.username,
-                             'Adding a new scraper. Error: ' + err_msg)
-            raise Exception(err_msg)
-        true_labels = scraper_info['scraper_true_labels'].lower().split()
-        if 'true' not in true_labels:
-            true_labels.append('true')
-        false_labels = scraper_info['scraper_false_labels'].lower().split()
-        if 'false' not in false_labels:
-            false_labels.append('false')
-        new_scraper = User.objects.create_user(username=scraper_info['scraper_name'],
-                                               password=scraper_info['scraper_password'])
-        new_scraper.save()
-        new_scraper_img = Users_Images(user_id=new_scraper,
-                                       user_img=scraper_info['scraper_icon'])
-        new_scraper_img.save()
+    if not request.user.is_superuser or request.method != 'POST':
+        raise Http404("Permission denied")
+    scraper_info = request.POST.dict()
+    valid_scraper, err_msg = check_if_scraper_info_is_valid(scraper_info)
+    if not valid_scraper:
+        save_log_message(request.user.id, request.user.username,
+                         'Adding a new scraper. Error: ' + err_msg)
+        raise Exception(err_msg)
+    true_labels = scraper_info['scraper_true_labels'].lower().split()
+    if 'true' not in true_labels:
+        true_labels.append('true')
+    false_labels = scraper_info['scraper_false_labels'].lower().split()
+    if 'false' not in false_labels:
+        false_labels.append('false')
+    new_scraper = User.objects.create_user(username=scraper_info['scraper_name'],
+                                           password=scraper_info['scraper_password'])
+    new_scraper.save()
+    new_scraper_img = Users_Images(user_id=new_scraper,
+                                   user_img=scraper_info['scraper_icon'])
+    new_scraper_img.save()
 
-        new_scraper_rep = Users_Reputations(user_id=new_scraper, user_rep=0)
-        new_scraper_rep.save()
+    new_scraper_rep = Users_Reputations(user_id=new_scraper)
+    new_scraper_rep.save()
 
-        new_scraper_img_details = Scrapers(scraper_name=new_scraper.username,
-                                           scraper_id=new_scraper,
-                                           true_labels=','.join(true_labels),
-                                           false_labels=','.join(false_labels))
-        new_scraper_img_details.save()
-        save_log_message(request.user.id, request.user.username, 'Adding a new scraper', True)
-        return add_scraper_guide(request)
-    raise Http404("Permission denied")
+    new_scraper_img_details = Scrapers(scraper_name=new_scraper.username,
+                                       scraper_id=new_scraper,
+                                       true_labels=','.join(true_labels),
+                                       false_labels=','.join(false_labels))
+    new_scraper_img_details.save()
+    save_log_message(request.user.id, request.user.username, 'Adding a new scraper', True)
+    return add_scraper_guide(request)
 
 
 # This function checks if a given scraper's info is valid, i.e. the info has all the fields with the correct format.
 # The function returns true in case the info is valid, otherwise false and an error
 def check_if_scraper_info_is_valid(scraper_info):
+    from claims.views import check_if_input_format_is_valid, is_english_input
     err = ''
     if 'scraper_name' not in scraper_info or not scraper_info['scraper_name']:
         err += 'Missing value for scraper\'s name'
+    elif not check_if_input_format_is_valid(scraper_info['scraper_true_labels']):
+        err += 'Incorrect format for scraper\'s true labels'
+    elif not check_if_input_format_is_valid(scraper_info['scraper_false_labels']):
+        err += 'Incorrect format for scraper\'s false labels'
     elif 'scraper_password' not in scraper_info or not scraper_info['scraper_password']:
         err += 'Missing value for scraper\'s password'
     elif 'scraper_password_2' not in scraper_info or not scraper_info['scraper_password_2'] \
@@ -257,6 +282,8 @@ def check_if_scraper_info_is_valid(scraper_info):
         err += 'Passwords do not match'
     elif 'scraper_icon' not in scraper_info or not scraper_info['scraper_icon']:
         err += 'Missing value for scraper\'s icon'
+    elif not is_english_input(scraper_info['scraper_name']):
+        err += 'Input should be in the English language'
     elif len(User.objects.filter(username=scraper_info['scraper_name'])) != 0:
         err += 'Scraper ' + scraper_info['scraper_name'] + ' already exists'
     if len(err) > 0:
@@ -283,60 +310,29 @@ def update_reputation_for_user(user_id, earn_points, num_of_points):
     Users_Reputations.objects.filter(user_id=user).update(user_rep=reputation)
 
 
-# This function returns a HTML for user's profile
+# This function returns a HTML for some user's profile
 def user_page(request, username):
     user = get_user_by_username(username)
-    if user is None:
-        raise Http404('User with username ' + username + ' does not exist')
-    reputation = Users_Reputations.objects.filter(user_id=user.id)
+    if request.method != 'GET':
+        raise Http404("Permission denied")
+    elif user is None:
+        raise Http404('User ' + username + ' does not exist')
+    from claims.views import get_users_images_for_claims, get_users_details_for_comments, \
+        get_user_img_and_rep
+    user_claims, user_comments = list(), list()
     claims = Claim.objects.filter(user=user.id)
+    if len(claims) > 0:
+        user_claims = list(get_users_images_for_claims(claims).items())
     comments = Comment.objects.filter(user=user.id)
-    user_claims = list(get_users_images_for_claims(claims).items())
+    if len(comments) > 0:
+        user_comments = list(get_users_details_for_comments(comments).items())
+    user_img, user_rep = get_user_img_and_rep(request)
     page = request.GET.get('page1')
     paginator = Paginator(user_claims, 3)
-    headlines = {}
-    for comment in comments:
-        user_img = Users_Images.objects.filter(user_id=comment.user_id)
-        if len(user_img) == 0:
-            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
-            new_user_img.save()
-            user_img = new_user_img
-        else:
-            user_img = user_img.first()
-        user_rep = Users_Reputations.objects.filter(user_id=comment.user_id)
-        if len(user_rep) == 0:
-            new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
-            new_user_rep.save()
-            user_rep = new_user_rep
-        else:
-            user_rep = user_rep.first()
-        headlines[comment] = {'user': User.objects.filter(id=comment.user_id).first(),
-                             'user_img': user_img,
-                             'user_rep': math.ceil(user_rep.user_rep / 20)}
-    user_comments = list(headlines.items())
-    user_img, user_rep = None, None
-    if request.user.is_authenticated:
-        user_img = Users_Images.objects.filter(user_id=request.user.id)
-        if len(user_img) == 0:
-            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=request.user.id).first())
-            new_user_img.save()
-            user_img = new_user_img
-        else:
-            user_img = user_img.first()
-        user_img = user_img.user_img
-        user_rep = Users_Reputations.objects.filter(user_id=request.user.id)
-        if len(user_rep) == 0:
-            new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=request.user.id).first())
-            new_user_rep.save()
-            user_rep = new_user_rep
-        else:
-            user_rep = user_rep.first()
-        user_rep = math.ceil(user_rep.user_rep / 20)
     page2 = request.GET.get('page2')
     paginator2 = Paginator(user_comments, 3)
     return render(request, 'users/user_page.html', {
         'user': user,
-        'reputation': reputation,
         'user_claims': paginator.get_page(page),
         'user_comments': paginator2.get_page(page2),
         'user_img': user_img,
@@ -347,64 +343,27 @@ def user_page(request, username):
     })
 
 
-# This function returns a user by the specified username
-def get_user_by_username(username):
-    result = User.objects.filter(username=username)
-    if len(result) > 0:
-        return result[0]
-    return None
-
-
-# This function return a HTML page for my own profile
+# This function return a HTML page for user's profile
 def my_profile_page(request):
-    reputation = Users_Reputations.objects.filter(user_id=request.user.id)
+    if request.method != 'GET':
+        raise Http404("Permission denied")
+    elif check_if_user_exists_by_user_id(request.user.id) is None:
+        raise Http404('User with id ' + request.user.id + ' does not exist')
+    from claims.views import get_users_images_for_claims, get_users_details_for_comments, \
+        get_user_img_and_rep
+    user_claims, user_comments = list(), list()
     claims = Claim.objects.filter(user=request.user.id)
+    if len(claims) > 0:
+        user_claims = list(get_users_images_for_claims(claims).items())
     comments = Comment.objects.filter(user=request.user.id)
-    user_claims = list(get_users_images_for_claims(claims).items())
+    if len(comments) > 0:
+        user_comments = list(get_users_details_for_comments(comments).items())
+    user_img, user_rep = get_user_img_and_rep(request)
     page = request.GET.get('page1')
     paginator = Paginator(user_claims, 3)
-    headlines = {}
-    for comment in comments:
-        user_img = Users_Images.objects.filter(user_id=comment.user_id)
-        if len(user_img) == 0:
-            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
-            new_user_img.save()
-            user_img = new_user_img
-        else:
-            user_img = user_img.first()
-        user_rep = Users_Reputations.objects.filter(user_id=comment.user_id)
-        if len(user_rep) == 0:
-            new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
-            new_user_rep.save()
-            user_rep = new_user_rep
-        else:
-            user_rep = user_rep.first()
-        headlines[comment] = {'user': User.objects.filter(id=comment.user_id).first(),
-                              'user_img': user_img,
-                              'user_rep': math.ceil(user_rep.user_rep / 20)}
-    user_comments = list(headlines.items())
-    user_img, user_rep = None, None
-    if request.user.is_authenticated:
-        user_img = Users_Images.objects.filter(user_id=request.user.id)
-        if len(user_img) == 0:
-            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=request.user.id).first())
-            new_user_img.save()
-            user_img = new_user_img
-        else:
-            user_img = user_img.first()
-        user_img = user_img.user_img
-        user_rep = Users_Reputations.objects.filter(user_id=request.user.id)
-        if len(user_rep) == 0:
-            new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=request.user.id).first())
-            new_user_rep.save()
-            user_rep = new_user_rep
-        else:
-            user_rep = user_rep.first()
-        user_rep = math.ceil(user_rep.user_rep / 20)
     page2 = request.GET.get('page2')
     paginator2 = Paginator(user_comments, 3)
     return render(request, 'users/my_profile.html', {
-        'reputation': reputation,
         'user_claims': paginator.get_page(page),
         'user_comments': paginator2.get_page(page2),
         'user_img': user_img,
@@ -412,93 +371,48 @@ def my_profile_page(request):
     })
 
 
-def get_users_images_for_claims(claims):
-    headlines = {}
-    for claim in claims:
-        user_img = Users_Images.objects.filter(user_id=User.objects.filter(id=claim.user_id).first())
-        if len(user_img) == 0:
-            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=claim.user_id).first())
-            new_user_img.save()
-            user_img = new_user_img
-        else:
-            user_img = user_img.first()
-        headlines[claim] = user_img.user_img
-    return headlines
-
-
 # This function returns all true labels of the given scraper
 def get_true_labels(scraper_name):
     scraper = Scrapers.objects.filter(scraper_name=scraper_name)
     true_labels = []
     if len(scraper) > 0:
-        true_labels = scraper.first().true_labels.split(",")
+        true_labels = scraper.first().true_labels.split(',')
     return true_labels
 
 
-# This function Adds a true label to the scraper
-def add_true_label(request):
-    if request.method == "POST":
-        info = request.POST.dict()
-        scraper_name = info['scraper']
-        label = info['label']
-        scraper = Scrapers.objects.get(scraper_name=scraper_name)
-        if len(scraper.true_labels) > 0:
-            scraper.true_labels += ','+label
-        else:
-            scraper.true_labels += label
-        scraper.save()
-        return user_page(request,scraper_name)
-    raise Http404("Invalid method")
+# This function adds a true label to the scraper
+def add_true_label_to_scraper(request):
+    if not request.user.is_superuser or request.method != 'POST':
+        raise Http404("Permission denied")
+    scraper_info = request.POST.dict()
+    valid_scraper_label, err_msg = check_if_scraper_new_label_is_valid(scraper_info, True)
+    if not valid_scraper_label:
+        save_log_message(request.user.id, request.user.username,
+                         'Adding a new label (T) for scraper. Error: ' + err_msg)
+        raise Exception(err_msg)
+    scraper = Scrapers.objects.filter(id=User.objects.filter(scraper_info['scraper_id']).first()).first()
+    Scrapers.objects.filter(id=scraper.id).update(true_labels=scraper.true_labels +
+                                                  ',' + scraper_info['scraper_label'])
+    return user_page(request, scraper.scraper_name)
 
 
-# This function removes the specified true label from the scraper
-def remove_true_label(request):
-    if request.method == "POST":
-        info = request.POST.dict()
-        scraper_name = info['scraper']
-        label = info['label']
-        scraper = Scrapers.objects.get(scraper_name=scraper_name)
-        count = len(scraper.true_labels)
-        scraper.true_labels = scraper.true_labels.replace(label+',', "", 1)
-        new_count = len(scraper.true_labels)
-        if count == new_count:
-            scraper.true_labels = scraper.true_labels.replace(','+label, '', 1)
-        scraper.save()
-        return user_page(request,scraper_name)
-    raise Http404("Invalid method")
-
-
-# This function Adds a false label to the scraper
-def add_false_label(request):
-    if request.method == "POST":
-        info = request.POST.dict()
-        scraper_name = info['scraper']
-        label = info['label']
-        scraper = Scrapers.objects.get(scraper_name=scraper_name)
-        if len(scraper.false_labels) > 0:
-            scraper.false_labels += ','+label
-        else:
-            scraper.false_labels += label
-        scraper.save()
-        return user_page(request, scraper_name)
-    raise Http404("Invalid method")
-
-
-# This function removes the specified false label from the scraper
-def remove_false_label(request):
-    if request.method == "POST":
-        info = request.POST.dict()
-        scraper_name = info['scraper']
-        label = info['label']
-        scraper = Scrapers.objects.get(scraper_name=scraper_name)
-        count = len(scraper.false_labels)
-        scraper.false_labels = scraper.false_labels.replace(label+',', "", 1)
-        new_count = len(scraper.false_labels)
-        if count == new_count:
-            scraper.false_labels = scraper.false_labels.replace(','+label, '', 1)
-        scraper.save()
-        return user_page(request,scraper_name)
-    raise Http404("Invalid method")
+# This function deletes the specified true label from the scraper
+def delete_true_label_from_scraper(request):
+    if not request.user.is_superuser or request.method != 'POST':
+        raise Http404("Permission denied")
+    scraper_info = request.POST.dict()
+    valid_scraper_label, err_msg = check_if_scraper_label_delete_is_valid(scraper_info, True)
+    if not valid_scraper_label:
+        save_log_message(request.user.id, request.user.username,
+                         'Deleting a label (T) from scraper. Error: ' + err_msg)
+        raise Exception(err_msg)
+    scraper = Scrapers.objects.filter(scraper_id=scraper_info['scraper_id']).first()
+    new_scraper_true_labels = []
+    for true_label in scraper.true_labels.split(','):
+        if true_label != scraper_info['scraper_label']:
+            new_scraper_true_labels.append(true_label)
+    Scrapers.objects.filter(id=scraper.id).update(true_labels=','.join(new_scraper_true_labels))
+    return user_page(request, scraper.scraper_name)
 
 
 # This function returns all false labels of the given scraper
@@ -506,5 +420,81 @@ def get_false_labels(scraper_name):
     scraper = Scrapers.objects.filter(scraper_name=scraper_name)
     false_labels = []
     if len(scraper) > 0:
-        false_labels = scraper.first().false_labels.split(",")
+        false_labels = scraper.first().false_labels.split(',')
     return false_labels
+
+
+# This function adds a false label to the scraper
+def add_false_label_to_scraper(request):
+    if not request.user.is_superuser or request.method != 'POST':
+        raise Http404("Permission denied")
+    scraper_info = request.POST.dict()
+    valid_scraper_label, err_msg = check_if_scraper_new_label_is_valid(scraper_info, False)
+    if not valid_scraper_label:
+        save_log_message(request.user.id, request.user.username,
+                         'Adding a new label (F) for scraper. Error: ' + err_msg)
+        raise Exception(err_msg)
+    scraper = Scrapers.objects.filter(id=scraper_info['scraper_id']).first()
+    Scrapers.objects.filter(id=scraper.scraper_id).update(false_labels=scraper.false_labels +
+                                                          ',' + scraper_info['scraper_label'])
+    return user_page(request, scraper.scraper_name)
+
+
+# This function deletes the specified false label from the scraper
+def delete_false_label_from_scraper(request):
+    if not request.user.is_superuser or request.method != 'POST':
+        raise Http404("Permission denied")
+    scraper_info = request.POST.dict()
+    valid_scraper_label, err_msg = check_if_scraper_label_delete_is_valid(scraper_info, False)
+    if not valid_scraper_label:
+        save_log_message(request.user.id, request.user.username,
+                         'Deleting a label (F) from scraper. Error: ' + err_msg)
+        raise Exception(err_msg)
+    scraper = Scrapers.objects.filter(scraper_id=scraper_info['scraper_id']).first()
+    new_scraper_false_labels = []
+    for false_label in scraper.false_labels.split(','):
+        if false_label != scraper_info['scraper_label']:
+            new_scraper_false_labels.append(false_label)
+    Scrapers.objects.filter(id=scraper.scraper_id).update(true_labels=','.join(new_scraper_false_labels))
+    return user_page(request, scraper.scraper_name)
+
+
+# This function checks if a given scraper's info (for adding a new label) is valid,
+# i.e. the info has all the fields with the correct format.
+# The function returns true in case the info is valid, otherwise false and an error
+def check_if_scraper_new_label_is_valid(scraper_info, add_label):
+    from claims.views import check_if_input_format_is_valid, is_english_input
+    err = ''
+    if not check_if_input_format_is_valid(scraper_info['scraper_label']):
+        err += 'Input should be in the English language'
+    elif not is_english_input(scraper_info['scraper_label']):
+        err += 'Incorrect input for scraper\'s label'
+    elif len(Scrapers.objects.filter(id=scraper_info['scraper_id'])) == 0:
+        err += 'Scraper with id' + scraper_info['scraper_id'] + ' does not exist'
+    elif add_label and scraper_info['scraper_label'].lower() in \
+            Scrapers.objects.filter(id=scraper_info['scraper_id']).first().true_labels:
+        err += 'Label' + scraper_info['scraper_label'] + ' already belongs to scraper\'s true labels'
+    elif not add_label and scraper_info['scraper_label'].lower() in \
+            Scrapers.objects.filter(id=scraper_info['scraper_id']).first().false_labels:
+        err += 'Label' + scraper_info['scraper_label'] + ' already belongs to scraper\'s false labels'
+    if len(err) > 0:
+        return False, err
+    return True, err
+
+
+# This function checks if a given scraper's info (for deleting an existing label) is valid,
+# i.e. the info has all the fields with the correct format.
+# The function returns true in case the info is valid, otherwise false and an error
+def check_if_scraper_label_delete_is_valid(scraper_info, add_label):
+    err = ''
+    if len(Scrapers.objects.filter(id=scraper_info['scraper_id'])) == 0:
+        err += 'Scraper with id' + scraper_info['scraper_id'] + ' does not exist'
+    elif add_label and scraper_info['scraper_label'].lower() not in \
+            Scrapers.objects.filter(id=scraper_info['scraper_id']).first().true_labels:
+        err += 'Label' + scraper_info['scraper_label'] + ' does not belong to scraper\'s true labels'
+    elif not add_label and scraper_info['scraper_label'].lower() not in \
+            Scrapers.objects.filter(id=scraper_info['scraper_id']).first().false_labels:
+        err += 'Label' + scraper_info['scraper_label'] + ' does not belong to scraper\'s false labels'
+    if len(err) > 0:
+        return False, err
+    return True, err

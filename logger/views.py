@@ -10,7 +10,7 @@ import csv
 
 # This function returns log page
 def view_log(request):
-    if not request.user.is_superuser:
+    if not request.user.is_superuser or request.method != "GET":
         raise Http404("Permission denied")
     return render(request, 'logger/logger.html', {'logger': Logger.objects.all().order_by('-id')})
 
@@ -33,7 +33,7 @@ def check_duplicate_log_for_user(user_id, action):
 
 # This function returns a csv which contains all the details of the logger in the website
 def export_to_csv(request):
-    if not request.user.is_superuser:
+    if not request.user.is_superuser or request.method != "POST":
         save_log_message(request.user.id, request.user.username,
                          'Exporting website log to a csv. Error: user does not have permissions')
         raise Http404("Permission denied")
