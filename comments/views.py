@@ -12,7 +12,7 @@ import csv
 
 # This function takes care of a request to add a new comment to a claim in the website
 def add_comment(request):
-    from claims.views import view_claim
+    from claims.views import view_claim, return_get_request_to_user
     if not request.user.is_authenticated or request.method != "POST":
         raise Http404("Permission denied")
     if request.method == "POST":
@@ -34,7 +34,7 @@ def add_comment(request):
                       comment_info['label'])
         save_log_message(request.user.id, request.user.username,
                          'Adding a new comment on claim with id ' + str(request.POST.get("claim_id")), True)
-        return view_claim(request, request.POST.get('claim_id'))
+        return view_claim(return_get_request_to_user(request.user), request.POST.get('claim_id'))
     raise Http404("Invalid method")
 
 
@@ -282,6 +282,7 @@ def create_df_for_claims(fields_to_export, scrapers_ids, regular_users, verdict_
 
 # This function increases a comment's vote by 1
 def up_vote(request):
+    from claims.views import return_get_request_to_user
     if not request.user.is_authenticated or request.method != "POST":
         raise Http404("Permission denied")
     from claims.views import view_claim
@@ -306,14 +307,14 @@ def up_vote(request):
     save_log_message(request.user.id, request.user.username, 'Up voting a comment with id '
                      + str(request.POST.get('comment_id')), True)
     update_authenticity_grade(comment.claim_id)
-    return view_claim(request, comment.claim_id)
+    return view_claim(return_get_request_to_user(request.user), comment.claim_id)
 
 
 # This function decreases a comment's vote by 1
 def down_vote(request):
     if not request.user.is_authenticated or request.method != "POST":
         raise Http404("Permission denied")
-    from claims.views import view_claim
+    from claims.views import view_claim, return_get_request_to_user
     from users.views import update_reputation_for_user
     vote_fields = request.POST.dict()
     vote_fields['user_id'] = request.user.id
@@ -335,7 +336,7 @@ def down_vote(request):
     save_log_message(request.user.id, request.user.username,
                      'Down voting a comment with id ' + str(request.POST.get('comment_id')), True)
     update_authenticity_grade(comment.claim_id)
-    return view_claim(request, comment.claim_id)
+    return view_claim(return_get_request_to_user(request.user), comment.claim_id)
 
 
 # This function checks if a given vote for a comment is valid, i.e. the vote has all the fields with the correct format.
@@ -362,6 +363,7 @@ def check_if_vote_is_valid(vote_fields):
 
 # This function edits a comment in the website
 def edit_comment(request):
+    from claims.views import return_get_request_to_user
     if not request.user.is_authenticated or request.method != "POST":
         raise Http404("Permission denied")
     from claims.views import view_claim
@@ -385,7 +387,7 @@ def edit_comment(request):
     update_authenticity_grade(claim_id)
     save_log_message(request.user.id, request.user.username,
                      'Editing a comment with id ' + str(request.POST.get('comment_id')), True)
-    return view_claim(request, claim_id)
+    return view_claim(return_get_request_to_user(request.user), claim_id)
 
 
 # This function checks if the given new fields for a comment are valid,
@@ -438,6 +440,7 @@ def check_comment_new_fields(new_comment_fields):
 
 # This function deletes a comment from the website
 def delete_comment(request):
+    from claims.views import return_get_request_to_user
     if not request.user.is_authenticated or request.method != "POST":
         raise Http404("Permission denied")
     from claims.views import view_claim
@@ -455,7 +458,7 @@ def delete_comment(request):
     save_log_message(request.user.id, request.user.username,
                      'Deleting a comment with id ' + str(request.POST.get('comment_id')), True)
     update_authenticity_grade(claim_id)
-    return view_claim(request, claim_id)
+    return view_claim(return_get_request_to_user(request.user), claim_id)
 
 
 # This function checks if the given fields for deleting a claim are valid,

@@ -6,6 +6,7 @@ from validate_email import validate_email
 from logger.models import Logger
 from logger.views import save_log_message
 from ipware import get_client_ip
+from claims.views import return_get_request_to_user
 
 
 # This function sends an email from a website user
@@ -29,7 +30,7 @@ def send_email(request):
               'wtfactnews@gmail.com',
               ['wtfactnews@gmail.com'])
     save_log_message(request.user.id, request.user.username, 'Sending an email from ip - ' + ip)
-    return contact_us_page(request)
+    return contact_us_page(return_get_request_to_user(request.user))
 
 
 # This function checks if a given email is valid, i.e. the email has all the fields with the correct format.

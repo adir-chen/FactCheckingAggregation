@@ -1,5 +1,5 @@
 from django.contrib.auth import logout, authenticate
-from django.http import Http404
+from django.http import Http404, HttpRequest
 from django.shortcuts import render, get_object_or_404
 from comments.models import Comment
 from comments.views import add_comment
@@ -53,7 +53,7 @@ def add_claim(request):
                              '. This claim has been deleted because ' +
                              'the user does not succeed to add a new claim with a comment on it.')
             raise Exception(e)
-    return view_claim(request, claim.id)
+    return view_claim(return_get_request_to_user(request.user), claim.id)
 
 
 # This function checks if a given claim is valid, i.e. the claim has all the fields with the correct format.
@@ -91,26 +91,26 @@ def check_if_claim_is_valid(claim_info):
 
 # This function checks if given claim's tags are valid, i.e. the tags are in the correct format.
 # The function returns true in case the claim's tags are valid, otherwise false
-def check_if_input_format_is_valid(tags):
+def check_if_input_format_is_valid(user_input):
     import string
-    not_allowed_tags = set(string.punctuation)
-    not_allowed_tags.remove('\'')
-    not_allowed_tags.remove('`')
-    not_allowed_tags.remove('.')
-    if tags == '':
+    not_allowed_input = set(string.punctuation)
+    not_allowed_input.remove('\'')
+    not_allowed_input.remove('`')
+    not_allowed_input.remove('.')
+    if user_input == '':
         return True
-    if not all(tag.isdigit() or
-               tag.isalpha() or
-               tag == ',' or
-               tag.isspace() or
-               tag not in not_allowed_tags for tag in tags):
+    if not all(user_inp.isdigit() or
+               user_inp.isalpha() or
+               user_inp == ',' or
+               user_inp.isspace() or
+               user_inp not in not_allowed_input for user_inp in user_input):
         return False
-    for tag in tags.split(','):
-        if not tag:
+    for user_inp in user_input.split(','):
+        if not user_inp:
             return False
-        elif not tag[0].isdigit() and not tag[0].isalpha():
+        elif not user_inp[0].isdigit() and not user_inp[0].isalpha():
             return False
-        elif not tag[len(tag) - 1].isdigit() and not tag[len(tag) - 1].isalpha():
+        elif not user_inp[len(user_inp) - 1].isdigit() and not user_inp[len(user_inp) - 1].isalpha():
             return False
     return True
 
@@ -215,7 +215,7 @@ def get_users_details_for_comments(comment_objects):
         comments[comment] = {'user': User.objects.filter(id=comment.user_id).first(),
                              'user_img': user_img,
                              'user_rep': math.ceil(user_rep.user_rep / 20)}
-        return comments
+    return comments
 
 
 def get_user_img_and_rep(request):
@@ -304,7 +304,7 @@ def edit_claim(request):
         image_src=new_claim_fields['image_src'])
     save_log_message(request.user.id, request.user.username,
                      'Editing a claim with id ' + str(request.POST.get('claim_id')), True)
-    return view_claim(request, claim.id)
+    return view_claim(return_get_request_to_user(request.user), claim.id)
 
 
 # This function checks if the given new fields for a claim are valid,
@@ -366,7 +366,7 @@ def delete_claim(request):
     Claim.objects.filter(id=request.POST.get('claim_id')).delete()
     save_log_message(request.user.id, request.user.username,
                      'Deleting a claim with id ' + str(request.POST.get('claim_id')), True)
-    return view_home(request)
+    return view_home(return_get_request_to_user(request.user))
 
 
 # This function checks if the given new fields for a claim are valid,
@@ -422,7 +422,8 @@ def report_spam(request):
         raise Exception(err_msg)
     save_log_message(request.user.id, request.user.username,
                      'Reporting a claim with id ' + str(request.POST.get('claim_id')) + ' as spam', True)
-    return view_claim(request, request.POST.get('claim_id'))
+
+    return view_claim(return_get_request_to_user(request.user), request.POST.get('claim_id'))
 
 
 def check_if_spam_report_is_valid(request):
@@ -438,3 +439,12 @@ def check_if_spam_report_is_valid(request):
     if len(err) > 0:
         return False, err
     return True, err
+
+
+def return_get_request_to_user(user):
+    request = HttpRequest()
+    request.user = user
+    request.stats_code = 200
+    request.method = 'GET'
+    return request
+

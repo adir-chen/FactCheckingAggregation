@@ -35,8 +35,8 @@ def get_user_by_username(username):
 
 # This function adds all the scrapers as users to the website
 def add_all_scrapers(request):
-    from claims.views import view_home
-    if not request.user.is_superuser or request.method != 'GET':
+    from claims.views import view_home, return_get_request_to_user
+    if not request.user.is_superuser or request.method != 'POST':
         raise Http404("Permission denied")
     try:
         password = User.objects.make_random_password()
@@ -159,7 +159,7 @@ def add_all_scrapers(request):
         scraper_9_details.save()
     except Exception:
         raise Http404("Permission denied - Scrapers already exist")
-    return view_home(request)
+    return view_home(return_get_request_to_user(request.user))
 
 
 # def update_scrapers_info(request):
@@ -202,7 +202,7 @@ def get_all_scrapers_ids_arr():
 
 # This function returns a random claim for each scraper in the system for testing (the scrapers)
 def get_random_claims_from_scrapers(request):
-    if request.method != 'GET':
+    if not request.user.is_superuser or request.method != 'GET':
         raise Http404("Permission denied")
     from django.http import JsonResponse
     claims = {}
@@ -231,6 +231,7 @@ def add_scraper_guide(request):
 
 # This function add new scraper to the website
 def add_new_scraper(request):
+    from claims.views import return_get_request_to_user
     if not request.user.is_superuser or request.method != 'POST':
         raise Http404("Permission denied")
     scraper_info = request.POST.dict()
@@ -261,7 +262,7 @@ def add_new_scraper(request):
                                        false_labels=','.join(false_labels))
     new_scraper_img_details.save()
     save_log_message(request.user.id, request.user.username, 'Adding a new scraper', True)
-    return add_scraper_guide(request)
+    return add_scraper_guide(return_get_request_to_user(request.user))
 
 
 # This function checks if a given scraper's info is valid, i.e. the info has all the fields with the correct format.
@@ -382,6 +383,7 @@ def get_true_labels(scraper_name):
 
 # This function adds a true label to the scraper
 def add_true_label_to_scraper(request):
+    from claims.views import return_get_request_to_user
     if not request.user.is_superuser or request.method != 'POST':
         raise Http404("Permission denied")
     scraper_info = request.POST.dict()
@@ -393,11 +395,12 @@ def add_true_label_to_scraper(request):
     scraper = Scrapers.objects.filter(id=User.objects.filter(scraper_info['scraper_id']).first()).first()
     Scrapers.objects.filter(id=scraper.id).update(true_labels=scraper.true_labels +
                                                   ',' + scraper_info['scraper_label'])
-    return user_page(request, scraper.scraper_name)
+    return user_page(return_get_request_to_user(request.user), scraper.scraper_name)
 
 
 # This function deletes the specified true label from the scraper
 def delete_true_label_from_scraper(request):
+    from claims.views import return_get_request_to_user
     if not request.user.is_superuser or request.method != 'POST':
         raise Http404("Permission denied")
     scraper_info = request.POST.dict()
@@ -412,7 +415,7 @@ def delete_true_label_from_scraper(request):
         if true_label != scraper_info['scraper_label']:
             new_scraper_true_labels.append(true_label)
     Scrapers.objects.filter(id=scraper.id).update(true_labels=','.join(new_scraper_true_labels))
-    return user_page(request, scraper.scraper_name)
+    return user_page(return_get_request_to_user(request.user), scraper.scraper_name)
 
 
 # This function returns all false labels of the given scraper
@@ -426,6 +429,7 @@ def get_false_labels(scraper_name):
 
 # This function adds a false label to the scraper
 def add_false_label_to_scraper(request):
+    from claims.views import return_get_request_to_user
     if not request.user.is_superuser or request.method != 'POST':
         raise Http404("Permission denied")
     scraper_info = request.POST.dict()
@@ -437,11 +441,12 @@ def add_false_label_to_scraper(request):
     scraper = Scrapers.objects.filter(id=scraper_info['scraper_id']).first()
     Scrapers.objects.filter(id=scraper.scraper_id).update(false_labels=scraper.false_labels +
                                                           ',' + scraper_info['scraper_label'])
-    return user_page(request, scraper.scraper_name)
+    return user_page(return_get_request_to_user(request.user), scraper.scraper_name)
 
 
 # This function deletes the specified false label from the scraper
 def delete_false_label_from_scraper(request):
+    from claims.views import return_get_request_to_user
     if not request.user.is_superuser or request.method != 'POST':
         raise Http404("Permission denied")
     scraper_info = request.POST.dict()
@@ -456,7 +461,7 @@ def delete_false_label_from_scraper(request):
         if false_label != scraper_info['scraper_label']:
             new_scraper_false_labels.append(false_label)
     Scrapers.objects.filter(id=scraper.scraper_id).update(true_labels=','.join(new_scraper_false_labels))
-    return user_page(request, scraper.scraper_name)
+    return user_page(return_get_request_to_user(request.user), scraper.scraper_name)
 
 
 # This function checks if a given scraper's info (for adding a new label) is valid,

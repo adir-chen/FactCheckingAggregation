@@ -44,6 +44,8 @@ class LoggerTest(TestCase):
         self.num_of_saved_logs = 4
         self.post_request = HttpRequest()
         self.post_request.method = 'POST'
+        self.get_request = HttpRequest()
+        self.get_request.method = 'GET'
         self.csv_fields = MultiValueDict({
             'actions_to_export[]': ["Adding a new claim", "Adding a new comment", "Editing a claim", "Editing a comment",
                                     "Deleting a claim", "Deleting a comment", "Reporting a claim as spam",
@@ -57,8 +59,8 @@ class LoggerTest(TestCase):
 
     def test_view_log_valid_user(self):
         admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
-        self.post_request.user = admin
-        self.assertTrue(view_log(self.post_request).status_code == 200)
+        self.get_request.user = admin
+        self.assertTrue(view_log(self.get_request).status_code == 200)
 
     def test_view_log_invalid_user(self):
         self.post_request.user = self.user_1

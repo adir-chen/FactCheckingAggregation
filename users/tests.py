@@ -37,6 +37,8 @@ class UsersTest(TestCase):
         self.num_of_saved_users = 5
         self.post_request = HttpRequest()
         self.post_request.method = 'POST'
+        self.get_request = HttpRequest()
+        self.get_request.method = 'GET'
         password = User.objects.make_random_password()
         self.new_scraper_details = {'scraper_name': 'newScraper_2',
                                     'scraper_password': str(password),
@@ -113,7 +115,8 @@ class UsersTest(TestCase):
         import json
         self.post_request.user = self.admin
         add_all_scrapers(self.post_request)
-        scrapers_ids = json.loads(get_all_scrapers_ids(HttpRequest()).content.decode('utf-8'))
+        self.get_request.user = self.admin
+        scrapers_ids = json.loads(get_all_scrapers_ids(self.get_request).content.decode('utf-8'))
         self.assertTrue(scrapers_ids == {'Snopes': self.num_of_saved_users + 1,
                                          'Polygraph': self.num_of_saved_users + 2,
                                          'TruthOrFiction': self.num_of_saved_users + 3,
@@ -122,12 +125,13 @@ class UsersTest(TestCase):
                                          'ClimateFeedback': self.num_of_saved_users + 6,
                                          'FactScan': self.num_of_saved_users + 7,
                                          'AfricaCheck': self.num_of_saved_users + 8,
+                                         'CNN': self.num_of_saved_users + 9,
                                          })
 
     def test_get_all_scrapers_ids_arr(self):
         self.post_request.user = self.admin
         add_all_scrapers(self.post_request)
-        scrapers_ids = [(i+6) for i in range(8)]
+        scrapers_ids = [(i+6) for i in range(9)]
         self.assertEqual(scrapers_ids, get_all_scrapers_ids_arr())
 
     def test_get_random_claims_from_scrapers_not_many_claims(self):
@@ -155,15 +159,16 @@ class UsersTest(TestCase):
             comment.save()
             scrapers_comments[scrapers_names[i]] = [claim, comment]
         import json
-        scrapers_comments_val = json.loads(get_random_claims_from_scrapers(HttpRequest()).content.decode('utf-8'))
+        self.get_request.user = self.admin
+        scrapers_comments_val = json.loads(get_random_claims_from_scrapers(self.get_request).content.decode('utf-8'))
         for scraper_name, scraper_comment in scrapers_comments_val.items():
             self.assertTrue(scraper_comment == {'title': scrapers_comments[scraper_name][1].title,
-                    'claim': scrapers_comments[scraper_name][0].claim,
-                    'description': scrapers_comments[scraper_name][1].description,
-                    'url': scrapers_comments[scraper_name][1].url,
-                    'verdict_date': str(scrapers_comments[scraper_name][1].verdict_date),
-                    'category': scrapers_comments[scraper_name][0].category,
-                    'label':  scrapers_comments[scraper_name][1].label})
+                                                'claim': scrapers_comments[scraper_name][0].claim,
+                                                'description': scrapers_comments[scraper_name][1].description,
+                                                'url': scrapers_comments[scraper_name][1].url,
+                                                'verdict_date': str(scrapers_comments[scraper_name][1].verdict_date),
+                                                'category': scrapers_comments[scraper_name][0].category,
+                                                'label':  scrapers_comments[scraper_name][1].label})
 
     def test_get_random_claims_from_scrapers_many_claims(self):
         scrapers_comments = {}
@@ -201,7 +206,8 @@ class UsersTest(TestCase):
             comment_2.save()
             comment_1.save()
             scrapers_comments[scrapers_names[i]] = [claim_1, comment_1]
-        scrapers_comments_val = json.loads(get_random_claims_from_scrapers(HttpRequest()).content.decode('utf-8'))
+        self.get_request.user = self.admin
+        scrapers_comments_val = json.loads(get_random_claims_from_scrapers(self.get_request).content.decode('utf-8'))
         for scraper_name, scraper_comment in scrapers_comments_val.items():
             self.assertTrue(scraper_comment == {'title': scrapers_comments[scraper_name][1].title,
                                                 'claim': scrapers_comments[scraper_name][0].claim,
