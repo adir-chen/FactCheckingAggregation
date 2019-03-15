@@ -36,7 +36,7 @@ def get_user_by_username(username):
 # This function adds all the scrapers as users to the website
 def add_all_scrapers(request):
     from claims.views import view_home, return_get_request_to_user
-    if not request.user.is_superuser or request.method != 'POST':
+    if not request.user.is_superuser or request.method != 'GET':
         raise Http404("Permission denied")
     try:
         password = User.objects.make_random_password()
@@ -313,7 +313,11 @@ def update_reputation_for_user(user_id, earn_points, num_of_points):
 
 # This function returns a HTML for some user's profile
 def user_page(request, username):
+    from django.contrib.sessions.models import Session
     user = get_user_by_username(username)
+    decoded_sessions = [s.get_decoded() for s in Session.objects.all()]
+    logged_in_users = [int(s.get('_auth_user_id')) for s in decoded_sessions]
+    logged_in = user.id in logged_in_users
     if request.method != 'GET':
         raise Http404("Permission denied")
     elif user is None:
@@ -327,48 +331,21 @@ def user_page(request, username):
     comments = Comment.objects.filter(user=user.id)
     if len(comments) > 0:
         user_comments = list(get_users_details_for_comments(comments).items())
-    user_img, user_rep = get_user_img_and_rep(request)
+    user_img, user_rep = get_user_img_and_rep(user.id)
     page = request.GET.get('page1')
     paginator = Paginator(user_claims, 3)
     page2 = request.GET.get('page2')
     paginator2 = Paginator(user_comments, 3)
     return render(request, 'users/user_page.html', {
         'user': user,
+        'logged_in': logged_in,
         'user_claims': paginator.get_page(page),
         'user_comments': paginator2.get_page(page2),
         'user_img': user_img,
         'user_rep': user_rep,
         'scrapers_ids': get_all_scrapers_ids_arr(),
         'true_labels': get_true_labels(username),
-        'false_labels': get_false_labels(username),
-    })
-
-
-# This function return a HTML page for user's profile
-def my_profile_page(request):
-    if request.method != 'GET':
-        raise Http404("Permission denied")
-    elif check_if_user_exists_by_user_id(request.user.id) is None:
-        raise Http404('User with id ' + request.user.id + ' does not exist')
-    from claims.views import get_users_images_for_claims, get_users_details_for_comments, \
-        get_user_img_and_rep
-    user_claims, user_comments = list(), list()
-    claims = Claim.objects.filter(user=request.user.id)
-    if len(claims) > 0:
-        user_claims = list(get_users_images_for_claims(claims).items())
-    comments = Comment.objects.filter(user=request.user.id)
-    if len(comments) > 0:
-        user_comments = list(get_users_details_for_comments(comments).items())
-    user_img, user_rep = get_user_img_and_rep(request)
-    page = request.GET.get('page1')
-    paginator = Paginator(user_claims, 3)
-    page2 = request.GET.get('page2')
-    paginator2 = Paginator(user_comments, 3)
-    return render(request, 'users/my_profile.html', {
-        'user_claims': paginator.get_page(page),
-        'user_comments': paginator2.get_page(page2),
-        'user_img': user_img,
-        'user_rep': user_rep,
+        'false_labels': get_false_labels(username)
     })
 
 
@@ -379,6 +356,15 @@ def get_true_labels(scraper_name):
     if len(scraper) > 0:
         true_labels = scraper.first().true_labels.split(',')
     return true_labels
+
+
+# This function returns all false labels of the given scraper
+def get_false_labels(scraper_name):
+    scraper = Scrapers.objects.filter(scraper_name=scraper_name)
+    false_labels = []
+    if len(scraper) > 0:
+        false_labels = scraper.first().false_labels.split(',')
+    return false_labels
 
 
 # This function adds a true label to the scraper
@@ -416,15 +402,6 @@ def delete_true_label_from_scraper(request):
             new_scraper_true_labels.append(true_label)
     Scrapers.objects.filter(id=scraper.id).update(true_labels=','.join(new_scraper_true_labels))
     return user_page(return_get_request_to_user(request.user), scraper.scraper_name)
-
-
-# This function returns all false labels of the given scraper
-def get_false_labels(scraper_name):
-    scraper = Scrapers.objects.filter(scraper_name=scraper_name)
-    false_labels = []
-    if len(scraper) > 0:
-        false_labels = scraper.first().false_labels.split(',')
-    return false_labels
 
 
 # This function adds a false label to the scraper

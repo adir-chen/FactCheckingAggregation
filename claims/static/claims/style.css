@@ -442,7 +442,7 @@ span.authenticity_grade{
 
 div.comment_box {
     background-color: #fff;
-    margin-bottom: 35px;
+    margin: 20px 0;
     border-radius: 7px;
     border: 1px solid #c0c0c0;
     width: 100%;

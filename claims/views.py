@@ -102,15 +102,22 @@ def check_if_input_format_is_valid(user_input):
     if not all(user_inp.isdigit() or
                user_inp.isalpha() or
                user_inp == ',' or
-               user_inp.isspace() or
+               user_inp == '’' or
                user_inp not in not_allowed_input for user_inp in user_input):
         return False
     for user_inp in user_input.split(','):
         if not user_inp:
             return False
+        num_spaces = 0
         for char in user_inp:
-            if not char.isdigit() and not char.isalpha():
-                return False
+            if char.isspace():
+                num_spaces += 1
+                if num_spaces == 2:
+                    return False
+            else:
+                num_spaces = 0
+                if not char.isdigit() and not char.isalpha():
+                    return False
     return True
 
 
@@ -185,7 +192,9 @@ def view_claim(request, claim_id):
     elif request.method != "GET":
         raise Http404("Permission denied")
     comments = get_users_details_for_comments(Comment.objects.filter(claim_id=claim_id))
-    user_img, user_rep = get_user_img_and_rep(request)
+    user_img, user_rep = None, None
+    if request.user.is_authenticated:
+        user_img, user_rep = get_user_img_and_rep(request.user.id)
     return render(request, 'claims/claim.html', {
         'claim': claim,
         'comments': comments,
@@ -217,25 +226,25 @@ def get_users_details_for_comments(comment_objects):
     return comments
 
 
-def get_user_img_and_rep(request):
-    user_img, user_rep = None, None
-    if request.user.is_authenticated:
-        user_img = Users_Images.objects.filter(user_id=request.user.id)
-        if len(user_img) == 0:
-            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=request.user.id).first())
-            new_user_img.save()
-            user_img = new_user_img
-        else:
-            user_img = user_img.first()
-        user_img = user_img.user_img
-        user_rep = Users_Reputations.objects.filter(user_id=request.user.id)
-        if len(user_rep) == 0:
-            new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=request.user.id).first())
-            new_user_rep.save()
-            user_rep = new_user_rep
-        else:
-            user_rep = user_rep.first()
-        user_rep = math.ceil(user_rep.user_rep / 20)
+def get_user_img_and_rep(user_id):
+    # user_img, user_rep = None, None
+    # if request.user.is_authenticated:
+    user_img = Users_Images.objects.filter(user_id=user_id)
+    if len(user_img) == 0:
+        new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=user_id).first())
+        new_user_img.save()
+        user_img = new_user_img
+    else:
+        user_img = user_img.first()
+    user_img = user_img.user_img
+    user_rep = Users_Reputations.objects.filter(user_id=user_id)
+    if len(user_rep) == 0:
+        new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=user_id).first())
+        new_user_rep.save()
+        user_rep = new_user_rep
+    else:
+        user_rep = user_rep.first()
+    user_rep = math.ceil(user_rep.user_rep / 20)
     return user_img, user_rep
 
 
