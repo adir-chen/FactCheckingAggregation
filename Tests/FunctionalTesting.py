@@ -109,7 +109,7 @@ class UITests(StaticLiveServerTestCase):
         about.click()
         self.assertEqual(
             browser.current_url,
-            self.live_server_url + '/users/my_profile'
+            self.live_server_url + '/users/'+self.user1.username
         )
 
     def test_user_see_claim_on_home_page(self):
@@ -174,9 +174,10 @@ class UITests(StaticLiveServerTestCase):
             browser.find_element_by_id('comment_' + str(self.comment_1.id) + '_footer').find_element_by_tag_name('a').get_attribute('href'),
             self.comment_1.url
         )
+        tags = [tag.text for tag in browser.find_elements_by_class_name('tag_link')]
         self.assertEqual(
-            browser.find_element_by_id('comment_' + str(self.comment_1.id) + '_footer').text.split('Tags: ')[1].split('\n')[0],
-            self.comment_1.tags
+            tags,
+            self.comment_1.tags.split(',')
         )
 
     def test_edit_comment(self):
@@ -241,9 +242,10 @@ class UITests(StaticLiveServerTestCase):
             browser.find_element_by_id('comment_' + str(comment_2.id) + '_footer').find_element_by_tag_name('a').get_attribute('href'),
             'http://url3/'
         )
+        tags = [tag.text for tag in browser.find_element_by_id('comment_' + str(comment_2.id) + '_footer').find_elements_by_class_name('tag_link')]
         self.assertEqual(
-            browser.find_element_by_id('comment_' + str(comment_2.id) + '_footer').text.split('Tags: ')[1].split('\n')[0],
-            't5'
+            tags,
+            ['t5']
         )
 
     def test_delete_comment(self):
@@ -427,9 +429,10 @@ class UITests(StaticLiveServerTestCase):
                 'a').get_attribute('href'),
             'http://url2/'
         )
+        tags = [tag.text for tag in browser.find_elements_by_class_name('tag_link')]
         self.assertEqual(
-            browser.find_element_by_class_name('comment_footer').find_element_by_tag_name('div').text.split('Tags: ')[1].split('\n')[0],
-            'tag3,tag4'
+            tags,
+            ['tag3','tag4']
         )
 
     def test_add_new_comment(self):
@@ -485,9 +488,10 @@ class UITests(StaticLiveServerTestCase):
                 'a').get_attribute('href'),
             'http://url2/'
         )
+        tags = [tag.text for tag in browser.find_elements_by_class_name('comment_footer')[1].find_elements_by_class_name('tag_link')]
         self.assertEqual(
-            browser.find_elements_by_class_name('comment_footer')[1].find_element_by_tag_name('div').text.split('Tags: ')[1].split('\n')[0],
-            't3,t4'
+            tags,
+            ['t3', 't4']
         )
 
     def test_add_new_comment_with_missing_args(self):

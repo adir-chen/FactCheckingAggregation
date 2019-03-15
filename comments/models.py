@@ -20,3 +20,6 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.user.username + ' - ' + self.title
+
+    def tags_as_list(self):
+        return self.tags.split(',')
