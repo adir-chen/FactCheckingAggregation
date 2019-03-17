@@ -24,6 +24,7 @@ def add_claim(request):
         raise Http404("Permission denied")
     claim_info = request.POST.dict()
     claim_info['user_id'] = request.user.id
+    claim_info['is_superuser'] = request.user.is_superuser
     valid_claim, err_msg = check_if_claim_is_valid(claim_info)
     if not valid_claim:
         save_log_message(request.user.id, request.user.username,
@@ -82,7 +83,7 @@ def check_if_claim_is_valid(claim_info):
             not is_english_input(claim_info['category']) or \
             not is_english_input(claim_info['tags']):
         err += 'Input should be in the English language'
-    elif post_above_limit(claim_info['user_id']):
+    elif (not claim_info['is_superuser']) and post_above_limit(claim_info['user_id']):
         err += 'You have exceeded the amount limit of adding new claims today'
     if len(err) > 0:
         return False, err
@@ -93,20 +94,18 @@ def check_if_claim_is_valid(claim_info):
 # The function returns true in case the claim's tags are valid, otherwise false
 def check_if_input_format_is_valid(user_input):
     import string
-    not_allowed_input = set(string.punctuation)
-    not_allowed_input.remove('\'')
-    not_allowed_input.remove('`')
-    not_allowed_input.remove('.')
     if user_input == '':
         return True
     if not all(user_inp.isdigit() or
                user_inp.isalpha() or
+               user_inp.isspace() or
                user_inp == ',' or
-               user_inp == '’' or
-               user_inp not in not_allowed_input for user_inp in user_input):
+               user_inp not in string.punctuation for user_inp in user_input):
         return False
     for user_inp in user_input.split(','):
         if not user_inp:
+            return False
+        elif user_inp.strip() != user_inp:
             return False
         num_spaces = 0
         for char in user_inp:
@@ -116,8 +115,8 @@ def check_if_input_format_is_valid(user_input):
                     return False
             else:
                 num_spaces = 0
-                if not char.isdigit() and not char.isalpha():
-                    return False
+                # if not char.isdigit() and not char.isalpha():
+                #     return False
     return True
 
 
@@ -227,8 +226,6 @@ def get_users_details_for_comments(comment_objects):
 
 
 def get_user_img_and_rep(user_id):
-    # user_img, user_rep = None, None
-    # if request.user.is_authenticated:
     user_img = Users_Images.objects.filter(user_id=user_id)
     if len(user_img) == 0:
         new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=user_id).first())

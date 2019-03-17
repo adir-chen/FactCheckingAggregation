@@ -48,7 +48,7 @@ class SystemTesting(TestCase):
                                                'url': 'url3',
                                                'add_comment': 'true',
                                                'verdict_date': datetime.datetime.strptime(str(datetime.date.today() - datetime.timedelta(days=random.randint(0, 10))), '%Y-%m-%d').strftime('%d/%m/%Y'),
-                                               'tags': 'tag4 tag5',
+                                               'tags': 'tag4,tag5',
                                                'category': 'category3',
                                                'label': 'False',
                                                'image_src': 'image3'}
@@ -66,13 +66,13 @@ class SystemTesting(TestCase):
 
         self.update_claim_details = {'claim': 'claim3',
                                      'category': 'newCategory3',
-                                     'tags': 'newTag4 newTag5',
+                                     'tags': 'newTag4,newTag5',
                                      'image_src': 'image_src'}
 
         self.update_comment_details = {'comment_title': 'newCommentTitle',
                                        'comment_description': 'commentDescription',
                                        'comment_reference': 'newCommentUrl',
-                                       'comment_tags': 'newCommentTag1 newCommentTag2',
+                                       'comment_tags': 'newCommentTag1,newCommentTag2',
                                        'comment_verdict_date': self.new_comment_details['verdict_date'],
                                        'comment_label': 'False'}
 

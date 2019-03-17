@@ -138,6 +138,9 @@ class CommentTests(TestCase):
         self.post_request = HttpRequest()
         self.post_request.method = 'POST'
 
+        self.get_request = HttpRequest()
+        self.get_request.method = 'GET'
+
     def tearDown(self):
         pass
 
@@ -484,13 +487,11 @@ class CommentTests(TestCase):
         self.assertTrue('Unknown' == get_system_label_to_comment("Unknown", self.user_1.id))
         from users.views import add_all_scrapers
         from users.models import Scrapers
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
         admin = User.objects.create_superuser(username='admin',
                                               email='admin@gmail.com',
                                               password='admin')
-        self.post_request.user = admin
-        add_all_scrapers(self.post_request)
+        self.get_request.user = admin
+        add_all_scrapers(self.get_request)
         for scraper in Scrapers.objects.all():
             for true_label in scraper.true_labels.split(','):
                 self.assertTrue('True' == get_system_label_to_comment(true_label, scraper.scraper_id.id))
