@@ -57,7 +57,7 @@
             <h3>No verdicts yet.</h3>
         {%  endif %}
         </div>
-        {% if request.user.is_authenticated %}
+        {% if request.user.is_authenticated and request.user.id not in claim.users_commented_ids %}
             <br><hr>
             <h3>Add Comment:</h3>
             <br>
@@ -92,7 +92,7 @@
                     Reference:
                     <input id="{{ claim.id }}_new_comment_url" type="text"><br>
                     Tags:
-                    <input id="{{ claim.id }}_new_comment_tags" type="text"><br>
+                    <input id="{{ claim.id }}_new_comment_tags"  placeholder="Tags (separated by ,). Used for searching purpose." type="text"><br>
                     <p id="add_new_comment" class="action_msg note_msg" >If you want to edit your comment you will be able to do so during the next 5 minutes from the time you added it.</p>
                     <button type="submit" id="{{ claim.id }}_new_comment_save" class="btn btn-info" style="margin: 10px 0;">Add your comment</button>
                     <p id="{{ claim.id }}_new_comment_error_msg" class="action_msg error_msg" hidden></p>

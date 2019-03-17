@@ -60,7 +60,6 @@ body {
 
 .header-tools a{
     color: #fff;
-    padding: 0 7px;
 }
 
 .header-tools a:hover{
@@ -560,6 +559,20 @@ div.comment_footer{
     margin: 10px;
 }
 
+a.tag_link {
+    border: 1px solid #bbb;
+    padding: 3px 6px;
+    border-radius: 3px;
+    background: #fff;
+    text-decoration: none;
+    line-height: 2.3;
+}
+
+a.tag_link:hover{
+    color: #000;
+    border-color: #000;
+}
+
 /*################
     LOGGER
 ################*/
@@ -591,17 +604,4 @@ table.log_table{
     width: 850px;
     margin: 20px;
     border: 1px solid #ccc;
-}
-
-a.tag_link {
-    border: 1px solid #bbb;
-    padding: 3px 6px;
-    border-radius: 3px;
-    background: #fff;
-    text-decoration: none;
-}
-
-a.tag_link:hover{
-    color: #000;
-    border-color: #000;
 }

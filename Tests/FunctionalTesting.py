@@ -121,7 +121,7 @@ class UITests(StaticLiveServerTestCase):
 
     def test_view_claim(self):
         self.browser.get(self.live_server_url)
-        self.browser.find_element_by_class_name('claim_box').find_element_by_tag_name('a').click()
+        self.browser.find_element_by_class_name('claim_box').find_element_by_class_name('btn').click()
         self.assertEqual(
             self.browser.current_url,
             self.live_server_url + '/claim/' + str(self.claim_1.id)
@@ -313,7 +313,7 @@ class UITests(StaticLiveServerTestCase):
         )
 
         # check if claim details are correct
-        browser.find_element_by_class_name('claim_box').find_element_by_tag_name('a').click()
+        browser.find_element_by_class_name('claim_box').find_element_by_class_name('btn').click()
         claim_id = str(browser.current_url).split('/claim/')[1]
 
         self.assertEqual(
@@ -383,7 +383,7 @@ class UITests(StaticLiveServerTestCase):
         )
 
         # check if claim details are correct
-        browser.find_element_by_class_name('claim_box').find_element_by_tag_name('a').click()
+        browser.find_element_by_class_name('claim_box').find_element_by_class_name('btn').click()
         claim_id = str(browser.current_url).split('/claim/')[1]
         self.assertEqual(
             browser.find_element_by_id('claim_page_title').text,
@@ -437,7 +437,7 @@ class UITests(StaticLiveServerTestCase):
 
     def test_add_new_comment(self):
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user2)
-        browser.find_element_by_class_name('claim_box').find_element_by_tag_name('a').click()
+        browser.find_element_by_class_name('claim_box').find_element_by_class_name('btn').click()
         browser.find_element_by_id(str(self.claim_1.id) + '_new_comment_title').send_keys('title2')
         browser.find_element_by_id(str(self.claim_1.id) + '_new_comment_description').send_keys('description2')
         browser.find_element_by_id(str(self.claim_1.id) + '_new_comment_url').send_keys('http://url2/')
@@ -496,7 +496,7 @@ class UITests(StaticLiveServerTestCase):
 
     def test_add_new_comment_with_missing_args(self):
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user2)
-        browser.find_element_by_class_name('claim_box').find_element_by_tag_name('a').click()
+        browser.find_element_by_class_name('claim_box').find_element_by_class_name('btn').click()
         claim_id = str(browser.current_url).split('/claim/')[1]
 
         filled = 0
@@ -517,7 +517,7 @@ class UITests(StaticLiveServerTestCase):
 
     def test_add_two_comment_by_the_same_user(self):
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
-        browser.find_element_by_class_name('claim_box').find_element_by_tag_name('a').click()
+        browser.find_element_by_class_name('claim_box').find_element_by_class_name('btn').click()
         claim_id = str(browser.current_url).split('/claim/')[1]
         browser.find_element_by_id(str(self.claim_1.id) + '_new_comment_title').send_keys('title2')
         browser.find_element_by_id(str(self.claim_1.id) + '_new_comment_description').send_keys('description2')

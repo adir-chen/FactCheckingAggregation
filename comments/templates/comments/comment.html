@@ -60,7 +60,7 @@
         <div class="comment_footer">
             <div id="comment_{{ comment.id }}_footer">
                 Reference:
-                <a target="_blank" href={{ comment.url }}>link to source</a><br><br>
+                <a target="_blank" href={{ comment.url }}>link to source</a><br>
                 Tags:
                 {% for tag in comment.tags_as_list %}
                     <a href="javascript:" onclick="search_on_twitter('{{ tag }}');return false;" class="tag_link">{{ tag }}</a>
