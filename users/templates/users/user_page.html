@@ -50,7 +50,6 @@
                     {% endif %}
                 </span>
             </div>
-            <!--<button style="" onclick="showMoreClaimsFunc()" id="showMoreClaims">Show More</button>-->
         </div>
         <hr>
         <h4>{{ user.username }}'s Comments:</h4>
@@ -81,22 +80,22 @@
             </span>
         </div>
 
-        {% if user.id in scrapers_ids %}
+        {% if user.id in scrapers_ids and request.user.is_superuser %}
             <div class="comment_box" style="padding: 30px;">
-            <p id="error_msg" style="color: red; font-size: 12px;" hidden> </p>
-            <p id="success_msg" style="color: dodgerblue; font-size: 12px;" hidden>true label(s) deleted successfully</p>
             <h5>True Labels:</h5>
             <div style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 20px; max-width: 550px; margin-top: 20px;">
                 <div id="true_labels">
+                    <p id="error_msg_delete_true_label" style="color: red; font-size: 12px;" hidden> </p>
+                    <p id="success_msg_delete_true_label" style="color: dodgerblue; font-size: 12px;" hidden>True label(s) deleted successfully</p>
                     {% for true_label in true_labels %}
-                        <label><input type="checkbox" value="value">{{ true_label }}</label><br>
+                        <label><input name="true_labels[]" class="true_labels[]" type="checkbox" value="{{ true_label }}">{{ true_label }}</label><br>
                     {% endfor %}
                     <br>
-                    <button id="delete_true" class="btn btn-danger" onclick="delete_true_labels()">Delete true label(s)</button>
+                    <button id="delete_true_label_submit" class="btn btn-danger">Delete true label(s)</button>
                 </div>
                 <div>
-                    <p id="error_msg_add_true" style="color: red; font-size: 12px;" hidden> </p>
-                    <p id="success_msg_add_true" style="color: dodgerblue; font-size: 12px;" hidden>true label added successfully</p>
+                    <p id="error_msg_add_true_label" style="color: red; font-size: 12px;" hidden> </p>
+                    <p id="success_msg_add_true_label" style="color: dodgerblue; font-size: 12px;" hidden>True label added successfully</p>
                     <h6>Add true label:</h6>
                     <input id="true_label" type="text" placeholder="Label's name" style="width: 70%; margin-top: 10px; margin-bottom: 10px;"><br>
                     <button id="add_true_label_submit" type="submit" class="btn btn-info" style="margin: 10px 0;">Add</button>
@@ -107,20 +106,20 @@
             <hr>
             <br>
 
-            <p id="error_msg_false" style="color: red; font-size: 12px;" hidden> </p>
-            <p id="success_msg_false" style="color: dodgerblue; font-size: 12px;" hidden>false label(s) deleted successfully</p>
             <h5>False Labels:</h5>
             <div style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 20px; max-width: 550px; margin-top: 20px;">
                 <div id="false_labels">
+                    <p id="error_msg_delete_false_label" style="color: red; font-size: 12px;" hidden> </p>
+                    <p id="success_msg_delete_false_label" style="color: dodgerblue; font-size: 12px;" hidden>False label(s) deleted successfully</p>
                     {% for false_label in false_labels %}
-                        <label><input type="checkbox" value="value">{{ false_label }}</label><br>
+                        <label><input type="checkbox" name="false_labels[]" class="false_labels[]" value="{{ false_label }}">{{ false_label }}</label><br>
                     {% endfor %}
                     <br>
-                    <button id="delete_false" class="btn btn-danger" onclick="delete_false_labels()">Delete false label(s)</button>
+                    <button id="delete_false_label_submit" class="btn btn-danger">Delete false label(s)</button>
                 </div>
                     <div>
-                        <p id="error_msg_add_false" style="color: red; font-size: 12px;" hidden> </p>
-                        <p id="success_msg_add_false" style="color: dodgerblue; font-size: 12px;" hidden>false label added successfully</p>
+                        <p id="error_msg_add_false_label" style="color: red; font-size: 12px;" hidden> </p>
+                        <p id="success_msg_add_false_label" style="color: dodgerblue; font-size: 12px;" hidden>False label added successfully</p>
                         <h6>Add false label:</h6>
                         <input id="false_label" type="text" placeholder="Label's name" style="width: 70%; margin-top: 10px; margin-bottom: 10px;"><br>
                         <button id="add_false_label_submit" type="submit" class="btn btn-info" style="margin: 10px 0;">Add</button>
@@ -131,32 +130,35 @@
     </div>
 
     <script>
-        function showMoreClaimsFunc() {
-            var moreClaims = document.getElementById("more_claims");
-            var btnText = document.getElementById("showMoreClaims");
-
-            if (moreClaims.style.display === "none") {
-                btnText.innerHTML = "Show Less";
-                moreClaims.style.display = "inline";
-            } else {
-                btnText.innerHTML = "Show More";
-                moreClaims.style.display = "none";
-            }
+        if(localStorage.getItem("success_msg_delete_true_label")){
+            $("#success_msg_delete_true_label").attr("hidden", false);
+            localStorage.clear();
+        }
+        else if(localStorage.getItem("success_msg_delete_false_label")){
+            $("#success_msg_delete_false_label").attr("hidden", false);
+            localStorage.clear();
+        }
+        else if(localStorage.getItem("success_msg_add_true_label")){
+            $("#success_msg_add_true_label").attr("hidden", false);
+            localStorage.clear();
+        }
+        else if(localStorage.getItem("success_msg_add_false_label")){
+            $("#success_msg_add_false_label").attr("hidden", false);
+            localStorage.clear();
         }
 
-        function showMoreCommentsFunc() {
-            var moreComments = document.getElementById("more_comments");
-            var btnText = document.getElementById("showMoreComments");
+        function hide_all_msgs(){
+            $("#success_msg_add_true_label").attr("hidden", true);
+            $("#success_msg_delete_true_label").attr("hidden", true);
+            $("#success_msg_add_false_label").attr("hidden", true);
+            $("#success_msg_delete_false_label").attr("hidden", true);
 
-            if (moreComments.style.display === "none") {
-                btnText.innerHTML = "Show Less";
-                moreComments.style.display = "inline";
-            } else {
-                btnText.innerHTML = "Show More";
-                moreComments.style.display = "none";
-            }
+            $("#error_msg_add_true_label").attr("hidden", true);
+            $("#error_msg_delete_true_label").attr("hidden", true);
+            $("#error_msg_add_false_label").attr("hidden", true);
+            $("#error_msg_delete_false_label").attr("hidden", true);
         }
-        
+
         $("#add_true_label_submit").click(function(e){
             e.preventDefault();
             $.ajax({
@@ -168,59 +170,46 @@
                     scraper_label: $("#true_label").val(),
                 },
                 success: function (request) {
-                    $("#error_msg_add_true").attr("hidden", true);
-                    $("#true_label").val('');
-                    location.href = 'http://{{ request.META.HTTP_HOST }}/users/{{ user.username }}';
-                    $("#success_msg_add_true").attr("hidden", false);
+                    localStorage.setItem("success_msg_add_true_label", true);
+                    window.location.reload()
                 },
                 error: function (error) {
-                     $("#success_msg_add_true").attr("hidden", true);
+                    hide_all_msgs();
                     let err = error.responseText.split('\n')[1];
-                    document.getElementById("error_msg_add_true").innerHTML =
-                        '* Error:  ' + err.toLowerCase() + ' *';
-                    $("#error_msg_add_true").attr("hidden", false);
+                    document.getElementById("error_msg_add_true_label").innerHTML =
+                    'Error: <br>' + err;
+                    $("#error_msg_add_true_label").attr("hidden", false);
                 }
             });
         });
 
-        function delete_true_labels() {
-            var container = document.getElementById("true_labels");
-            var elements = container.getElementsByTagName("input")
-            for (var i = 0, element; element = elements[i++];) {
-                if (element.type === "checkbox" && element.checked == true) {
-                    $.ajax({
-                        type: 'POST',
-                        url: "{% url 'users:delete_true_label_from_scraper' %}",
-                        headers: { "X-CSRFToken": getCookie('csrftoken') },
-                        data: {
-                            scraper_id: '{{ user.id }}',
-                            scraper_label: element.parentElement.innerText
-                        },
-                        success: function (request) {
-                            $("#error_msg").attr("hidden", true);
-                            for (var i = 0, element; element = elements[i++];){
-                                if (element.type === "checkbox" && element.checked == true){
-                                    element.parentElement.remove();
-                                }
-                                if (element.type === "checkbox"){
-                                    element.checked = false;
-                                }
-                            }
-                            $("#success_msg").attr("hidden", false);
-                            //$("html, body").animate({ scrollTop: 0 }, 0);
-                        },
-                        error: function (error) {
-                            $("#success_msg").attr("hidden", true);
-                            let err = error.responseText.split('\n')[1];
-                            document.getElementById("error_msg").innerHTML =
-                            '* Error:  ' + err.toLowerCase() + ' *';
-                            $("#error_msg").attr("hidden", false);
-                            //$("html, body").animate({ scrollTop: 0 }, 0);
-                        }
-                    });
+        $("#delete_true_label_submit").click(function(e){
+            e.preventDefault();
+            let true_labels = [];
+            $("#true_labels input:checked").each(function() {
+                true_labels.push($(this).val()); //push each val into the array
+            });
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'users:delete_true_label_from_scraper' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken') },
+                data: {
+                    scraper_id: '{{ user.id }}',
+                    scraper_label: true_labels
+                },
+                success: function (request) {
+                    localStorage.setItem("success_msg_delete_true_label", true);
+                    window.location.reload()
+                },
+                error: function (error) {
+                    hide_all_msgs();
+                    let err = error.responseText.split('\n')[1];
+                    document.getElementById("error_msg_delete_true_label").innerHTML =
+                    'Error: <br>' + err;
+                    $("#error_msg_delete_true_label").attr("hidden", false);
                 }
-            }
-        }
+            });
+        });
 
         $("#add_false_label_submit").click(function(e){
             e.preventDefault();
@@ -233,58 +222,46 @@
                     scraper_label: $("#false_label").val(),
                 },
                 success: function (request) {
-                    $("#error_msg_add_false").attr("hidden", true);
-                    $("#false_label").val('');
-                    $("#success_msg_add_false").attr("hidden", false);
+                    localStorage.setItem("success_msg_add_false_label", true);
+                    window.location.reload();
                 },
                 error: function (error) {
-                     $("#success_msg_add_false").attr("hidden", true);
+                    hide_all_msgs();
                     let err = error.responseText.split('\n')[1];
-                    document.getElementById("error_msg_add_false").innerHTML =
-                        '* Error:  ' + err.toLowerCase() + ' *';
-                    $("#error_msg_add_false").attr("hidden", false);
+                    document.getElementById("error_msg_add_false_label").innerHTML =
+                    'Error: <br>' + err;
+                    $("#error_msg_add_false_label").attr("hidden", false);
                 }
             });
         });
 
-        function delete_false_labels() {
-            var container = document.getElementById("false_labels");
-            var elements = container.getElementsByTagName("input")
-            for (var i = 0, element; element = elements[i++];) {
-                if (element.type === "checkbox" && element.checked == true) {
-                    $.ajax({
-                        type: 'POST',
-                        url: "{% url 'users:delete_false_label_from_scraper' %}",
-                        headers: { "X-CSRFToken": getCookie('csrftoken') },
-                        data: {
-                            scraper_id: '{{ user.id }}',
-                            scraper_label: element.parentElement.innerText
-                        },
-                        success: function (request) {
-                            $("#error_msg_false").attr("hidden", true);
-                            for (var i = 0, element; element = elements[i++];){
-                                if (element.type === "checkbox" && element.checked == true){
-                                    element.parentElement.remove();
-                                }
-                                if (element.type === "checkbox"){
-                                    element.checked = false;
-                                }
-                            }
-                            $("#success_msg_false").attr("hidden", false);
-                            //$("html, body").animate({ scrollTop: 0 }, 0);
-                        },
-                        error: function (error) {
-                            $("#success_msg_false").attr("hidden", true);
-                            let err = error.responseText.split('\n')[1];
-                            document.getElementById("error_msg_false").innerHTML =
-                            '* Error:  ' + err.toLowerCase() + ' *';
-                            $("#error_msg_false").attr("hidden", false);
-                            //$("html, body").animate({ scrollTop: 0 }, 0);
-                        }
-                    });
+        $("#delete_false_label_submit").click(function(e){
+            e.preventDefault();
+            let false_labels = [];
+            $("#false_labels input:checked").each(function() {
+                false_labels.push($(this).val()); //push each val into the array
+            });
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'users:delete_false_label_from_scraper' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken') },
+                data: {
+                    scraper_id: '{{ user.id }}',
+                    scraper_label: false_labels
+                },
+                success: function (request) {
+                    localStorage.setItem("success_msg_delete_false_label", true);
+                    window.location.reload()
+                },
+                error: function (error) {
+                    hide_all_msgs();
+                    let err = error.responseText.split('\n')[1];
+                    document.getElementById("error_msg_delete_false_label").innerHTML =
+                    'Error: <br>' + err;
+                    $("#error_msg_delete_false_label").attr("hidden", false);
                 }
-            }
-        }
+            });
+        });
 
         function getCookie(c_name) {
             if (document.cookie.length > 0) {

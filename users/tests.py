@@ -1,14 +1,19 @@
 from django.http import HttpRequest, QueryDict, Http404
+from django.utils.datastructures import MultiValueDict
 from django.test import TestCase
 from users.models import User, Scrapers, Users_Reputations
 from claims.models import Claim
 from comments.models import Comment
 from users.views import check_if_user_exists_by_user_id, get_username_by_user_id, add_all_scrapers, \
     get_all_scrapers_ids, get_all_scrapers_ids_arr, get_random_claims_from_scrapers, add_scraper_guide, add_new_scraper, \
-    check_if_scraper_info_is_valid, update_reputation_for_user, get_true_labels
+    check_if_scraper_info_is_valid, update_reputation_for_user, user_page, get_true_labels, get_false_labels, \
+    add_true_label_to_scraper, delete_true_label_from_scraper, add_false_label_to_scraper, \
+    delete_false_label_from_scraper, check_if_scraper_new_label_is_valid, \
+    check_if_scraper_label_delete_is_valid, check_if_scraper_labels_already_exist
 import json
 import random
 import datetime
+import string
 
 
 class UsersTest(TestCase):
@@ -46,6 +51,9 @@ class UsersTest(TestCase):
                                     'scraper_icon': 'newScraperIcon',
                                     'scraper_true_labels': '',
                                     'scraper_false_labels': ''}
+        self.new_label_for_scraper = {'scraper_id': self.new_scraper.id}
+        self.delete_label_for_scraper = MultiValueDict({
+            'scraper_id': str(self.new_scraper.id)})
 
     def tearDown(self):
         pass
@@ -67,8 +75,8 @@ class UsersTest(TestCase):
         self.assertTrue(get_username_by_user_id(self.num_of_saved_users + random.randint(1, 10)) is None)
 
     def test_add_all_scrapers(self):
-        self.post_request.user = self.admin
-        add_all_scrapers(self.post_request)
+        self.get_request.user = self.admin
+        add_all_scrapers(self.get_request)
         self.assertTrue(check_if_user_exists_by_user_id(self.num_of_saved_users + 1))
         self.assertTrue(check_if_user_exists_by_user_id(self.num_of_saved_users + 2))
         self.assertTrue(check_if_user_exists_by_user_id(self.num_of_saved_users + 3))
@@ -107,14 +115,14 @@ class UsersTest(TestCase):
         self.assertFalse(get_username_by_user_id(self.num_of_saved_users + 8) == 'AfricaCheck')
 
     def test_add_all_scrapers_twice(self):
-        self.post_request.user = self.admin
-        self.assertTrue(add_all_scrapers(self.post_request).status_code == 200)
-        self.assertRaises(Http404, add_all_scrapers, self.post_request)
+        self.get_request.user = self.admin
+        self.assertTrue(add_all_scrapers(self.get_request).status_code == 200)
+        self.assertRaises(Http404, add_all_scrapers, self.get_request)
 
     def test_get_all_scrapers_ids(self):
         import json
-        self.post_request.user = self.admin
-        add_all_scrapers(self.post_request)
+        self.get_request.user = self.admin
+        self.assertTrue(add_all_scrapers(self.get_request).status_code == 200)
         self.get_request.user = self.admin
         scrapers_ids = json.loads(get_all_scrapers_ids(self.get_request).content.decode('utf-8'))
         self.assertTrue(scrapers_ids == {'Snopes': self.num_of_saved_users + 1,
@@ -128,9 +136,15 @@ class UsersTest(TestCase):
                                          'CNN': self.num_of_saved_users + 9,
                                          })
 
-    def test_get_all_scrapers_ids_arr(self):
+    def test_get_all_scrapers_ids_invalid_request(self):
+        self.get_request.user = self.admin
+        self.assertTrue(add_all_scrapers(self.get_request).status_code == 200)
         self.post_request.user = self.admin
-        add_all_scrapers(self.post_request)
+        self.assertRaises(Http404, get_all_scrapers_ids, self.post_request)
+
+    def test_get_all_scrapers_ids_arr(self):
+        self.get_request.user = self.admin
+        self.assertTrue(add_all_scrapers(self.get_request).status_code == 200)
         scrapers_ids = [(i+6) for i in range(9)]
         self.assertEqual(scrapers_ids, get_all_scrapers_ids_arr())
 
@@ -138,10 +152,10 @@ class UsersTest(TestCase):
         from claims.models import Claim
         from comments.models import Comment
         scrapers_comments = {}
-        self.post_request.user = self.admin
-        add_all_scrapers(self.post_request)
+        self.get_request.user = self.admin
+        add_all_scrapers(self.get_request)
         scrapers_names = ['Snopes', 'Polygraph', 'TruthOrFiction', 'Politifact', 'GossipCop',
-                          'ClimateFeedback', 'FactScan', 'AfricaCheck']
+                          'ClimateFeedback', 'FactScan', 'AfricaCheck', 'CNN']
         for i in range(len(scrapers_names)):
             claim = Claim(user_id=Scrapers.objects.filter(scraper_name=scrapers_names[i])[0].scraper_id.id,
                           claim='Sniffing rosemary increases human memory by up to 75 percent',
@@ -172,8 +186,8 @@ class UsersTest(TestCase):
 
     def test_get_random_claims_from_scrapers_many_claims(self):
         scrapers_comments = {}
-        self.post_request.user = self.admin
-        add_all_scrapers(self.post_request)
+        self.get_request.user = self.admin
+        self.assertTrue(add_all_scrapers(self.get_request).status_code == 200)
         scrapers_names = ['Snopes', 'Polygraph', 'TruthOrFiction', 'Politifact', 'GossipCop',
                           'ClimateFeedback', 'FactScan', 'AfricaCheck']
         for i in range(len(scrapers_names)):
@@ -216,6 +230,18 @@ class UsersTest(TestCase):
                                                 'verdict_date': str(scrapers_comments[scraper_name][1].verdict_date),
                                                 'category': scrapers_comments[scraper_name][0].category,
                                                 'label':  scrapers_comments[scraper_name][1].label})
+
+    def test_get_random_claims_from_scrapers_not_admin_user(self):
+        self.get_request.user = self.admin
+        self.assertTrue(add_all_scrapers(self.get_request).status_code == 200)
+        self.get_request.user = self.user_1
+        self.assertRaises(Http404, get_random_claims_from_scrapers, self.get_request)
+
+    def test_get_random_claims_from_scrapers_invalid_request(self):
+        self.get_request.user = self.admin
+        self.assertTrue(add_all_scrapers(self.get_request).status_code == 200)
+        self.post_request.user = self.user_1
+        self.assertRaises(Http404, get_random_claims_from_scrapers, self.post_request)
 
     def test_add_scraper_guide(self):
         self.assertTrue(add_scraper_guide(HttpRequest()).status_code == 200)
@@ -277,6 +303,26 @@ class UsersTest(TestCase):
         del self.new_scraper_details['scraper_name']
         self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
 
+    def test_check_if_scraper_info_is_valid_invalid_format_scrapers_true_labels(self):
+        self.new_scraper_details['scraper_true_labels'] = 'true, mostly true'
+        self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
+        self.new_scraper_details['scraper_true_labels'] = 'true,,mostly true'
+        self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
+        self.new_scraper_details['scraper_true_labels'] = ',true, mostly true'
+        self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
+        self.new_scraper_details['scraper_true_labels'] = 'true,mostly true,'
+        self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
+
+    def test_check_if_scraper_info_is_valid_invalid_format_scrapers_false_labels(self):
+        self.new_scraper_details['scraper_false_labels'] = 'false, mostly false'
+        self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
+        self.new_scraper_details['scraper_false_labels'] = 'false,,mostly false'
+        self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
+        self.new_scraper_details['scraper_false_labels'] = ',false, mostly false'
+        self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
+        self.new_scraper_details['scraper_false_labels'] = 'false,mostly false,'
+        self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
+
     def test_check_if_scraper_info_is_valid_missing_scraper_password(self):
         del self.new_scraper_details['scraper_password']
         self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
@@ -293,8 +339,20 @@ class UsersTest(TestCase):
         del self.new_scraper_details['scraper_icon']
         self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
 
-    def test_check_if_scraper_info_scraper_name_already_exists(self):
+    def test_check_if_scraper_info_is_valid_scraper_name_already_exists(self):
         self.new_scraper_details['scraper_name'] = 'newScraper'
+        self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
+
+    def test_check_if_scraper_info_is_valid_scraper_name_invalid(self):
+        self.new_scraper_details['scraper_name'] = 'новый'
+        self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
+
+    def test_check_if_scraper_info_is_valid_scraper_true_labels_invalid(self):
+        self.new_scraper_details['scraper_true_labels'] = 'правда'
+        self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
+
+    def test_check_if_scraper_info_is_valid_scraper_false_labels_invalid(self):
+        self.new_scraper_details['scraper_false_labels'] = 'തെറ്റായ'
         self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
 
     def test_update_reputation_for_user_with_reputation_earn_points(self):
@@ -349,11 +407,602 @@ class UsersTest(TestCase):
                           self.num_of_saved_users + random.randint(1, 10),
                           True, random.randint(1, 20))
 
+    def test_user_page_with_claim_and_comment(self):
+        claim = Claim(user_id=self.user_1.id,
+                      claim='claim1',
+                      category='category1',
+                      tags='tag1,tag2,tag3',
+                      authenticity_grade=0)
+        claim.save()
+        comment = Comment(claim_id=claim.id,
+                          user_id=self.user_1.id,
+                          title='title1',
+                          description='description1',
+                          url='url1',
+                          tags='tag1',
+                          verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
+                          label='label1')
+        comment.save()
+        self.get_request.user = self.user_1
+        self.assertTrue(user_page(self.get_request, self.user_1.username).status_code == 200)
+
+    def test_user_page_with_claim_only(self):
+        claim = Claim(user_id=self.user_1.id,
+                      claim='claim1',
+                      category='category1',
+                      tags='tag1,tag2,tag3',
+                      authenticity_grade=0)
+        claim.save()
+        self.get_request.user = self.user_1
+        self.assertTrue(user_page(self.get_request, self.user_1.username).status_code == 200)
+
+    def test_user_page_with_comment_only(self):
+        claim = Claim(user_id=self.user_2.id,
+                      claim='claim1',
+                      category='category1',
+                      tags='tag1,tag2,tag3',
+                      authenticity_grade=0)
+        claim.save()
+        comment = Comment(claim_id=claim.id,
+                          user_id=self.user_1.id,
+                          title='title1',
+                          description='description1',
+                          url='url1',
+                          tags='tag1',
+                          verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
+                          label='label1')
+        comment.save()
+        self.get_request.user = self.user_1
+        self.assertTrue(user_page(self.get_request, self.user_1.username).status_code == 200)
+
+    def test_user_page_invalid_user(self):
+        invalid_username = ''.join(random.choices(string.ascii_letters, k=random.randint(1, 10)))
+        self.get_request.user = self.user_1
+        self.assertRaises(Http404, user_page, self.get_request, invalid_username)
+
+    def test_user_page_invalid_request(self):
+        invalid_username = ''.join(random.choices(string.ascii_letters, k=random.randint(1, 10)))
+        self.post_request.user = self.user_1
+        self.assertRaises(Http404, user_page, self.post_request, invalid_username)
+
     def test_get_true_labels_for_user(self):
         self.assertTrue(len(get_true_labels(self.user_1.username)) == 0)
 
     def test_get_true_labels_for_scraper(self):
-        self.scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
         true_labels = get_true_labels(self.new_scraper.username)
         self.assertTrue(len(true_labels) == 1)
         self.assertTrue(true_labels[0] == 'true')
+        Scrapers.objects.filter(id=scraper.id).update(true_labels='true,mostly true')
+        true_labels = get_true_labels(self.new_scraper.username)
+        self.assertTrue(len(true_labels) == 2)
+        self.assertTrue(true_labels[0] == 'true')
+        self.assertTrue(true_labels[1] == 'mostly true')
+
+    def test_get_false_labels_for_scraper(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        false_labels = get_false_labels(self.new_scraper.username)
+        self.assertTrue(len(false_labels) == 1)
+        self.assertTrue(false_labels[0] == 'false')
+        Scrapers.objects.filter(id=scraper.id).update(false_labels='false,mostly false')
+        false_labels = get_false_labels(self.new_scraper.username)
+        self.assertTrue(len(false_labels) == 2)
+        self.assertTrue(false_labels[0] == 'false')
+        self.assertTrue(false_labels[1] == 'mostly false')
+
+    def test_add_true_label_to_scraper(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['accurate', 'correct', 'mostly correct']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertTrue(add_true_label_to_scraper(self.post_request).status_code == 200)
+
+    def test_add_true_label_to_scraper_by_user_not_admin(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['accurate', 'correct', 'mostly correct']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_1
+        self.assertRaises(Http404, add_true_label_to_scraper, self.post_request)
+
+    def test_add_true_label_to_scraper_invalid_request(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['accurate', 'correct', 'mostly correct']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.get_request.GET = query_dict
+        self.get_request.user = self.admin
+        self.assertRaises(Http404, add_true_label_to_scraper, self.get_request)
+
+    def test_add_true_label_to_scraper_missing_scraper_id(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['accurate', 'correct', 'mostly correct']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        del self.new_label_for_scraper['scraper_id']
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+
+    def test_add_true_label_to_scraper_missing_scraper_label(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+
+    def test_add_true_label_to_scraper_missing_args(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['accurate', 'correct', 'mostly correct']
+        for i in range(10):
+            self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+            dict_copy = self.new_label_for_scraper.copy()
+            args_to_remove = []
+            for j in range(random.randint(1, len(self.new_label_for_scraper.keys()) - 1)):
+                args_to_remove.append(list(self.new_label_for_scraper.keys())[j])
+            for j in range(len(args_to_remove)):
+                del self.new_label_for_scraper[args_to_remove[j]]
+            query_dict = QueryDict('', mutable=True)
+            query_dict.update(self.new_label_for_scraper)
+            self.post_request.POST = query_dict
+            self.post_request.user = self.admin
+            self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+            self.new_label_for_scraper = dict_copy.copy()
+
+    def test_add_true_label_to_scraper_invalid_label(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        self.new_label_for_scraper['scraper_label'] = 'সত্য'
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+
+    def test_add_true_label_to_scraper_invalid_scraper_id(self):
+        self.new_label_for_scraper['scraper_id'] = self.num_of_saved_users + random.randint(1, 10)
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['accurate', 'correct', 'mostly correct']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+
+    def test_add_true_label_to_scraper_label_already_exists(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(true_labels='true,correct,mostly correct')
+        random_label = ['true', 'correct', 'mostly correct']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+
+    def test_delete_true_label_from_scraper(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(true_labels='true,correct,mostly correct')
+        labels_to_delete = ['correct', 'mostly correct']
+        self.delete_label_for_scraper.setlist('scraper_label[]', labels_to_delete)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.delete_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertTrue(delete_true_label_from_scraper(self.post_request).status_code == 200)
+        for label in labels_to_delete:
+            self.assertTrue(label != scraper_label for scraper_label in Scrapers.objects.filter(id=scraper.id).first().true_labels)
+
+    def test_delete_true_label_from_scraper_by_user_not_admin(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(true_labels='true,correct,mostly correct')
+        labels_to_delete = ['correct', 'mostly correct']
+        self.delete_label_for_scraper.setlist('scraper_label[]', labels_to_delete)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.delete_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_1
+        self.assertRaises(Http404, add_true_label_to_scraper, self.post_request)
+
+    def test_delete_true_label_from_scraper_invalid_request(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(true_labels='true,correct,mostly correct')
+        labels_to_delete = ['correct', 'mostly correct']
+        self.delete_label_for_scraper.setlist('scraper_label[]', labels_to_delete)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.delete_label_for_scraper)
+        self.get_request.GET = query_dict
+        self.get_request.user = self.admin
+        self.assertRaises(Http404, delete_true_label_from_scraper, self.get_request)
+
+    def test_delete_true_label_from_scraper_missing_scraper_id(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(true_labels='true,correct,mostly correct')
+        del self.delete_label_for_scraper['scraper_id']
+        labels_to_delete = ['correct', 'mostly correct']
+        self.delete_label_for_scraper.setlist('scraper_label[]', labels_to_delete)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.delete_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, delete_true_label_from_scraper, self.post_request)
+
+    def test_delete_true_label_from_scraper_missing_scraper_label(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.delete_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, delete_true_label_from_scraper, self.post_request)
+
+    def test_delete_true_label_from_scraper_missing_args(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(true_labels='true,correct,mostly correct')
+        labels_to_delete = ['correct', 'mostly correct']
+        for i in range(10):
+            self.delete_label_for_scraper.setlist('scraper_label[]', labels_to_delete)
+            dict_copy = self.delete_label_for_scraper.copy()
+            args_to_remove = []
+            for j in range(random.randint(1, len(self.delete_label_for_scraper.keys()) - 1)):
+                args_to_remove.append(list(self.delete_label_for_scraper.keys())[j])
+            for j in range(len(args_to_remove)):
+                del self.delete_label_for_scraper[args_to_remove[j]]
+            query_dict = QueryDict('', mutable=True)
+            query_dict.update(self.delete_label_for_scraper)
+            self.post_request.POST = query_dict
+            self.post_request.user = self.admin
+            self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+            self.delete_label_for_scraper = dict_copy.copy()
+
+    def test_delete_true_label_from_scraper_invalid_label(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        self.delete_label_for_scraper['scraper_label'] = 'সত্য'
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.delete_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, delete_true_label_from_scraper, self.post_request)
+
+    def test_delete_true_label_from_scraper_invalid_scraper_id(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(true_labels='true,correct,mostly correct')
+        self.delete_label_for_scraper['scraper_id'] = self.num_of_saved_users + random.randint(1, 10)
+        labels_to_delete = ['correct', 'mostly correct']
+        self.delete_label_for_scraper.setlist('scraper_label[]', labels_to_delete)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.delete_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, delete_true_label_from_scraper, self.post_request)
+
+    def test_delete_true_label_from_scraper_label_does_not_exist(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(true_labels='true,correct,mostly correct')
+        invalid_labels = ['accurate', 'not correct']
+        self.delete_label_for_scraper.setlist('scraper_label[]', invalid_labels)
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.delete_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, delete_true_label_from_scraper, self.post_request)
+
+    def test_add_false_label_to_scraper(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['not accurate', 'not correct', 'mostly fake']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertTrue(add_false_label_to_scraper(self.post_request).status_code == 200)
+
+    def test_add_false_label_to_scraper_by_user_not_admin(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['not accurate', 'not correct', 'mostly fake']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_1
+        self.assertRaises(Http404, add_false_label_to_scraper, self.post_request)
+
+    def test_add_false_label_to_scraper_invalid_request(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['not accurate', 'not correct', 'mostly fake']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.get_request.GET = query_dict
+        self.get_request.user = self.admin
+        self.assertRaises(Http404, add_false_label_to_scraper, self.get_request)
+
+    def test_add_false_label_to_scraper_missing_scraper_id(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['not accurate', 'not correct', 'mostly fake']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        del self.new_label_for_scraper['scraper_id']
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, add_false_label_to_scraper, self.post_request)
+
+    def test_add_false_label_to_scraper_missing_scraper_label(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, add_false_label_to_scraper, self.post_request)
+
+    def test_add_false_label_to_scraper_missing_args(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['not accurate', 'not correct', 'mostly fake']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        for i in range(10):
+            dict_copy = self.new_label_for_scraper.copy()
+            args_to_remove = []
+            for j in range(random.randint(1, len(self.new_label_for_scraper.keys()) - 1)):
+                args_to_remove.append(list(self.new_label_for_scraper.keys())[j])
+            for j in range(len(args_to_remove)):
+                del self.new_label_for_scraper[args_to_remove[j]]
+            query_dict = QueryDict('', mutable=True)
+            query_dict.update(self.new_label_for_scraper)
+            self.post_request.POST = query_dict
+            self.post_request.user = self.admin
+            self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+            self.new_label_for_scraper = dict_copy.copy()
+
+    def test_add_false_label_to_scraper_invalid_label(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        self.new_label_for_scraper['scraper_label'] = 'সত্য'
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, add_false_label_to_scraper, self.post_request)
+
+    def test_add_false_label_to_scraper_invalid_scraper_id(self):
+        self.new_label_for_scraper['scraper_id'] = self.num_of_saved_users + random.randint(1, 10)
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['not accurate', 'not correct', 'mostly fake']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+
+    def test_add_false_label_to_scraper_label_already_exists(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(false_labels='false,not correct,mostly fake')
+        random_label = ['false', 'not correct', 'mostly fake']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, add_false_label_to_scraper, self.post_request)
+
+    def test_delete_false_label_from_scraper(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(false_labels='false,not correct,mostly fake')
+        false_labels = ['false', 'mostly fake']
+        self.delete_label_for_scraper.setlist('scraper_label[]', false_labels)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.delete_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertTrue(delete_false_label_from_scraper(self.post_request).status_code == 200)
+        self.assertTrue(self.new_label_for_scraper['scraper_label'] != label for label in Scrapers.objects.filter(id=scraper.id).first().false_labels)
+
+    def test_delete_false_label_from_scraper_by_user_not_admin(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(false_labels='false,not correct,mostly fake')
+        false_labels = ['false', 'mostly fake']
+        self.delete_label_for_scraper.setlist('scraper_label[]', false_labels)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.delete_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_1
+        self.assertRaises(Http404, delete_false_label_from_scraper, self.post_request)
+
+    def test_delete_false_label_from_scraper_invalid_request(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(false_labels='false,not correct,mostly fake')
+        false_labels = ['false', 'mostly fake']
+        self.delete_label_for_scraper.setlist('scraper_label[]', false_labels)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.delete_label_for_scraper)
+        self.get_request.GET = query_dict
+        self.get_request.user = self.admin
+        self.assertRaises(Http404, delete_false_label_from_scraper, self.get_request)
+
+    def test_delete_false_label_from_scraper_missing_scraper_id(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(false_labels='false,not correct,mostly fake')
+        del self.delete_label_for_scraper['scraper_id']
+        false_labels = ['false', 'mostly fake']
+        self.delete_label_for_scraper.setlist('scraper_label[]', false_labels)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.delete_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, delete_false_label_from_scraper, self.post_request)
+
+    def test_delete_false_label_from_scraper_missing_scraper_label(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        query_dict = QueryDict('', mutable=True)
+        Scrapers.objects.filter(id=scraper.id).update(false_labels='false,not correct,mostly fake')
+        query_dict.update(self.delete_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, delete_false_label_from_scraper, self.post_request)
+
+    def test_delete_false_label_from_scraper_missing_args(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(false_labels='false,not correct,mostly fake')
+        false_labels = ['false', 'mostly fake']
+        for i in range(10):
+            self.delete_label_for_scraper.setlist('scraper_label[]', false_labels)
+            dict_copy = self.delete_label_for_scraper.copy()
+            args_to_remove = []
+            for j in range(random.randint(1, len(self.delete_label_for_scraper.keys()) - 1)):
+                args_to_remove.append(list(self.delete_label_for_scraper.keys())[j])
+            for j in range(len(args_to_remove)):
+                del self.delete_label_for_scraper[args_to_remove[j]]
+            query_dict = QueryDict('', mutable=True)
+            query_dict.update(self.delete_label_for_scraper)
+            self.post_request.POST = query_dict
+            self.post_request.user = self.admin
+            self.assertRaises(Exception, delete_false_label_from_scraper, self.post_request)
+            self.delete_label_for_scraper = dict_copy.copy()
+
+    def test_delete_false_label_from_scraper_invalid_label(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        self.delete_label_for_scraper['scraper_label'] = 'সত্য'
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.delete_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, delete_false_label_from_scraper, self.post_request)
+
+    def test_delete_false_label_from_scraper_invalid_scraper_id(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(false_labels='false,not correct,mostly fake')
+        self.delete_label_for_scraper['scraper_id'] = self.num_of_saved_users + random.randint(1, 10)
+        false_labels = ['false', 'mostly fake']
+        self.delete_label_for_scraper.setlist('scraper_label[]', false_labels)
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.delete_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, delete_false_label_from_scraper, self.post_request)
+
+    def test_delete_false_label_from_scraper_label_does_not_exist(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(false_labels='false,not correct,mostly fake')
+        invalid_labels = ['accurate', 'correct', str(random.randint(1, 2))]
+        self.delete_label_for_scraper.setlist('scraper_label[]', invalid_labels)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.delete_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, delete_false_label_from_scraper, self.post_request)
+
+    def test_check_if_scraper_new_label_is_valid_true_label_valid(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['accurate', 'correct', 'mostly correct']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        self.assertTrue(check_if_scraper_new_label_is_valid(self.new_label_for_scraper, True)[0])
+
+    def test_check_if_scraper_new_label_is_valid_true_label_invalid_label(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['صحيح', 'ճիշտ', 'सत्य']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        self.assertFalse(check_if_scraper_new_label_is_valid(self.new_label_for_scraper, True)[0])
+
+    def test_check_if_scraper_new_label_is_valid_true_label_invalid_scraper_id(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['accurate', 'correct', 'mostly correct']
+        self.new_label_for_scraper['scraper_id'] = self.num_of_saved_users + random.randint(1, 10)
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        self.assertFalse(check_if_scraper_new_label_is_valid(self.new_label_for_scraper, True)[0])
+
+    def test_check_if_scraper_new_label_is_valid_true_label_already_exists(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(true_labels='true,correct,mostly correct')
+        random_label = ['true', 'correct', 'mostly correct']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        self.assertFalse(check_if_scraper_new_label_is_valid(self.new_label_for_scraper, True)[0])
+
+    def test_check_if_scraper_new_label_is_valid_false_label_valid(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['fiction', 'not correct', 'mostly fake']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        self.assertTrue(check_if_scraper_new_label_is_valid(self.new_label_for_scraper, False)[0])
+
+    def test_check_if_scraper_new_label_is_valid_false_label_invalid_label(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['মিথ্যা', 'गलत', '假']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        self.assertFalse(check_if_scraper_new_label_is_valid(self.new_label_for_scraper, False)[0])
+
+    def test_check_if_scraper_new_label_is_valid_false_label_invalid_scraper_id(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        random_label = ['fiction', 'not correct', 'mostly fake']
+        self.new_label_for_scraper['scraper_id'] = self.num_of_saved_users + random.randint(1, 10)
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        self.assertFalse(check_if_scraper_new_label_is_valid(self.new_label_for_scraper, False)[0])
+
+    def test_check_if_scraper_new_label_is_valid_false_label_already_exists(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(false_labels='false,not correct,mostly fake')
+        random_label = ['false', 'not correct', 'mostly fake']
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        self.assertFalse(check_if_scraper_new_label_is_valid(self.new_label_for_scraper, False)[0])
+
+    def test_check_if_scraper_label_delete_is_valid_true_label_valid(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(true_labels='true,correct,mostly correct')
+        random_label = ['true', 'correct', 'mostly correct']
+        self.new_label_for_scraper['scraper_label[]'] = random_label[random.randint(0, 2)]
+        self.assertTrue(check_if_scraper_label_delete_is_valid(self.new_label_for_scraper)[0])
+
+    def test_check_if_scraper_label_delete_is_valid_true_label_invalid_scraper_id(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(true_labels='true,correct,mostly correct')
+        random_label = ['accurate', 'correct', 'mostly correct']
+        self.new_label_for_scraper['scraper_id'] = self.num_of_saved_users + random.randint(1, 10)
+        self.new_label_for_scraper['scraper_label[]'] = random_label[random.randint(0, 2)]
+        self.assertFalse(check_if_scraper_label_delete_is_valid(self.new_label_for_scraper)[0])
+
+    def test_check_if_scraper_label_delete_is_valid_false_label_invalid_scraper_id(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(false_labels='false,not correct,mostly fake')
+        random_label = ['false', 'not correct', 'mostly fake']
+        self.new_label_for_scraper['scraper_id'] = self.num_of_saved_users + random.randint(1, 10)
+        self.new_label_for_scraper['scraper_label'] = random_label[random.randint(0, 2)]
+        self.assertFalse(check_if_scraper_label_delete_is_valid(self.new_label_for_scraper)[0])
+
+    def test_check_if_scraper_labels_already_exist_true_labels_exist(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(true_labels='true,correct,mostly correct')
+        true_labels = ['true', 'correct']
+        self.assertTrue(check_if_scraper_labels_already_exist(self.new_scraper.id,
+                                                              true_labels,
+                                                              True)[0])
+
+    def test_check_if_scraper_labels_already_exist_true_labels_do_not_exist(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(true_labels='true,correct,mostly correct')
+        true_labels = ['accurate', str(random.randint(5, 10))]
+        self.assertFalse(check_if_scraper_labels_already_exist(self.new_scraper.id,
+                                                               true_labels,
+                                                               True)[0])
+
+    def test_check_if_scraper_labels_already_exist_false_labels_exist(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(false_labels='false,not correct,mostly fake')
+        false_labels = ['false', 'mostly fake']
+        self.assertTrue(check_if_scraper_labels_already_exist(self.new_scraper.id,
+                                                              false_labels,
+                                                              False)[0])
+
+    def test_check_if_scraper_labels_already_exist_false_labels_do_not_exist(self):
+        scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
+        Scrapers.objects.filter(id=scraper.id).update(false_labels='false,not correct,mostly fake')
+        false_labels = ['fiction', 'fake']
+        self.assertFalse(check_if_scraper_labels_already_exist(self.new_scraper.id,
+                                                               false_labels,
+                                                               False)[0])

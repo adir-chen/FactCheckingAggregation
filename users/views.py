@@ -283,7 +283,9 @@ def check_if_scraper_info_is_valid(scraper_info):
         err += 'Passwords do not match'
     elif 'scraper_icon' not in scraper_info or not scraper_info['scraper_icon']:
         err += 'Missing value for scraper\'s icon'
-    elif not is_english_input(scraper_info['scraper_name']):
+    elif not is_english_input(scraper_info['scraper_name']) \
+            or not is_english_input(scraper_info['scraper_true_labels']) \
+            or not is_english_input(scraper_info['scraper_false_labels']):
         err += 'Input should be in the English language'
     elif len(User.objects.filter(username=scraper_info['scraper_name'])) != 0:
         err += 'Scraper ' + scraper_info['scraper_name'] + ' already exists'
@@ -314,14 +316,14 @@ def update_reputation_for_user(user_id, earn_points, num_of_points):
 # This function returns a HTML for some user's profile
 def user_page(request, username):
     from django.contrib.sessions.models import Session
+    if request.method != 'GET':
+        raise Http404("Permission denied")
     user = get_user_by_username(username)
+    if user is None:
+        raise Http404('User ' + username + ' does not exist')
     decoded_sessions = [s.get_decoded() for s in Session.objects.all()]
     logged_in_users = [int(s.get('_auth_user_id')) for s in decoded_sessions]
     logged_in = user.id in logged_in_users
-    if request.method != 'GET':
-        raise Http404("Permission denied")
-    elif user is None:
-        raise Http404('User ' + username + ' does not exist')
     from claims.views import get_users_images_for_claims, get_users_details_for_comments, \
         get_user_img_and_rep
     user_claims, user_comments = list(), list()
@@ -378,7 +380,7 @@ def add_true_label_to_scraper(request):
         save_log_message(request.user.id, request.user.username,
                          'Adding a new label (T) for scraper. Error: ' + err_msg)
         raise Exception(err_msg)
-    scraper = Scrapers.objects.filter(id=User.objects.filter(scraper_info['scraper_id']).first()).first()
+    scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
     Scrapers.objects.filter(id=scraper.id).update(true_labels=scraper.true_labels +
                                                   ',' + scraper_info['scraper_label'])
     return user_page(return_get_request_to_user(request.user), scraper.scraper_name)
@@ -390,15 +392,21 @@ def delete_true_label_from_scraper(request):
     if not request.user.is_superuser or request.method != 'POST':
         raise Http404("Permission denied")
     scraper_info = request.POST.dict()
-    valid_scraper_label, err_msg = check_if_scraper_label_delete_is_valid(scraper_info, True)
+    valid_scraper_label, err_msg = check_if_scraper_label_delete_is_valid(scraper_info)
     if not valid_scraper_label:
         save_log_message(request.user.id, request.user.username,
                          'Deleting a label (T) from scraper. Error: ' + err_msg)
         raise Exception(err_msg)
-    scraper = Scrapers.objects.filter(scraper_id=scraper_info['scraper_id']).first()
+    true_labels = request.POST.getlist('scraper_label[]')
+    valid_true_labels, err_msg = check_if_scraper_labels_already_exist(scraper_info['scraper_id'], true_labels, True)
+    if not valid_true_labels:
+        save_log_message(request.user.id, request.user.username,
+                         'Deleting a label (T) from scraper. Error: ' + err_msg)
+        raise Exception(err_msg)
+    scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
     new_scraper_true_labels = []
     for true_label in scraper.true_labels.split(','):
-        if true_label != scraper_info['scraper_label']:
+        if true_label not in true_labels:
             new_scraper_true_labels.append(true_label)
     Scrapers.objects.filter(id=scraper.id).update(true_labels=','.join(new_scraper_true_labels))
     return user_page(return_get_request_to_user(request.user), scraper.scraper_name)
@@ -415,9 +423,9 @@ def add_false_label_to_scraper(request):
         save_log_message(request.user.id, request.user.username,
                          'Adding a new label (F) for scraper. Error: ' + err_msg)
         raise Exception(err_msg)
-    scraper = Scrapers.objects.filter(id=scraper_info['scraper_id']).first()
-    Scrapers.objects.filter(id=scraper.scraper_id).update(false_labels=scraper.false_labels +
-                                                          ',' + scraper_info['scraper_label'])
+    scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
+    Scrapers.objects.filter(id=scraper.id).update(false_labels=scraper.false_labels +
+                                                               ',' + scraper_info['scraper_label'])
     return user_page(return_get_request_to_user(request.user), scraper.scraper_name)
 
 
@@ -427,17 +435,23 @@ def delete_false_label_from_scraper(request):
     if not request.user.is_superuser or request.method != 'POST':
         raise Http404("Permission denied")
     scraper_info = request.POST.dict()
-    valid_scraper_label, err_msg = check_if_scraper_label_delete_is_valid(scraper_info, False)
+    valid_scraper_label, err_msg = check_if_scraper_label_delete_is_valid(scraper_info)
     if not valid_scraper_label:
         save_log_message(request.user.id, request.user.username,
                          'Deleting a label (F) from scraper. Error: ' + err_msg)
         raise Exception(err_msg)
-    scraper = Scrapers.objects.filter(scraper_id=scraper_info['scraper_id']).first()
+    false_labels = request.POST.getlist('scraper_label[]')
+    valid_false_labels, err_msg = check_if_scraper_labels_already_exist(scraper_info['scraper_id'], false_labels, False)
+    if not valid_false_labels:
+        save_log_message(request.user.id, request.user.username,
+                         'Deleting a label (F) from scraper. Error: ' + err_msg)
+        raise Exception(err_msg)
+    scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
     new_scraper_false_labels = []
     for false_label in scraper.false_labels.split(','):
-        if false_label != scraper_info['scraper_label']:
+        if false_label not in false_labels:
             new_scraper_false_labels.append(false_label)
-    Scrapers.objects.filter(id=scraper.scraper_id).update(true_labels=','.join(new_scraper_false_labels))
+    Scrapers.objects.filter(id=scraper.id).update(false_labels=','.join(new_scraper_false_labels))
     return user_page(return_get_request_to_user(request.user), scraper.scraper_name)
 
 
@@ -445,20 +459,22 @@ def delete_false_label_from_scraper(request):
 # i.e. the info has all the fields with the correct format.
 # The function returns true in case the info is valid, otherwise false and an error
 def check_if_scraper_new_label_is_valid(scraper_info, add_label):
-    from claims.views import check_if_input_format_is_valid, is_english_input
+    from claims.views import is_english_input
     err = ''
-    if not check_if_input_format_is_valid(scraper_info['scraper_label']):
-        err += 'Input should be in the English language'
+    if 'scraper_id' not in scraper_info or not scraper_info['scraper_id']:
+        err += 'Missing value for scraper id'
+    elif 'scraper_label' not in scraper_info or not scraper_info['scraper_label']:
+        err += 'Missing value for scraper label(s)'
     elif not is_english_input(scraper_info['scraper_label']):
-        err += 'Incorrect input for scraper\'s label'
-    elif len(Scrapers.objects.filter(id=scraper_info['scraper_id'])) == 0:
-        err += 'Scraper with id' + scraper_info['scraper_id'] + ' does not exist'
-    elif add_label and scraper_info['scraper_label'].lower() in \
-            Scrapers.objects.filter(id=scraper_info['scraper_id']).first().true_labels:
-        err += 'Label' + scraper_info['scraper_label'] + ' already belongs to scraper\'s true labels'
-    elif not add_label and scraper_info['scraper_label'].lower() in \
-            Scrapers.objects.filter(id=scraper_info['scraper_id']).first().false_labels:
-        err += 'Label' + scraper_info['scraper_label'] + ' already belongs to scraper\'s false labels'
+        err += 'Input should be in the English language'
+    elif len(User.objects.filter(id=scraper_info['scraper_id'])) == 0:
+        err += 'Scraper with id ' + str(scraper_info['scraper_id']) + ' does not exist'
+    elif add_label and any(scraper_info['scraper_label'].lower() == label
+                           for label in Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first().true_labels.split(',')):
+        err += 'Label ' + scraper_info['scraper_label'] + ' already belongs to scraper\'s true labels'
+    elif not add_label and any(scraper_info['scraper_label'].lower() == label
+                               for label in Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first().false_labels.split(',')):
+        err += 'Label ' + scraper_info['scraper_label'] + ' already belongs to scraper\'s false labels'
     if len(err) > 0:
         return False, err
     return True, err
@@ -467,16 +483,34 @@ def check_if_scraper_new_label_is_valid(scraper_info, add_label):
 # This function checks if a given scraper's info (for deleting an existing label) is valid,
 # i.e. the info has all the fields with the correct format.
 # The function returns true in case the info is valid, otherwise false and an error
-def check_if_scraper_label_delete_is_valid(scraper_info, add_label):
+def check_if_scraper_label_delete_is_valid(scraper_info):
     err = ''
-    if len(Scrapers.objects.filter(id=scraper_info['scraper_id'])) == 0:
-        err += 'Scraper with id' + scraper_info['scraper_id'] + ' does not exist'
-    elif add_label and scraper_info['scraper_label'].lower() not in \
-            Scrapers.objects.filter(id=scraper_info['scraper_id']).first().true_labels:
-        err += 'Label' + scraper_info['scraper_label'] + ' does not belong to scraper\'s true labels'
-    elif not add_label and scraper_info['scraper_label'].lower() not in \
-            Scrapers.objects.filter(id=scraper_info['scraper_id']).first().false_labels:
-        err += 'Label' + scraper_info['scraper_label'] + ' does not belong to scraper\'s false labels'
+    if 'scraper_id' not in scraper_info or not scraper_info['scraper_id']:
+        err += 'Missing value for scraper\'s id'
+    elif 'scraper_label[]' not in scraper_info or not scraper_info['scraper_label[]']:
+        err += 'Missing value for scraper\'s label(s)'
+    elif len(User.objects.filter(id=scraper_info['scraper_id'])) == 0:
+        err += 'Scraper with id ' + str(scraper_info['scraper_id']) + ' does not exist'
     if len(err) > 0:
         return False, err
     return True, err
+
+
+# The function checks if all labels in labels_list are in scraper's labels
+# The function returns true in case all all labels in labels_list are in scraper's labels, otherwise false and an error
+def check_if_scraper_labels_already_exist(scraper_id, labels_list, label):
+    err = ''
+    if label:  # true label case
+        scraper_true_labels_list = Scrapers.objects.filter(
+            scraper_id=User.objects.filter(id=scraper_id).first()).first().true_labels.split(',')
+        if not all(true_label in scraper_true_labels_list for true_label in labels_list):
+            err += 'Label(s) does not(do not) belong to scraper\'s true labels'
+    else:  # false label case
+        scraper_false_labels_list = Scrapers.objects.filter(
+            scraper_id=User.objects.filter(id=scraper_id).first()).first().false_labels.split(',')
+        if not all(false_label in scraper_false_labels_list for false_label in labels_list):
+            err += 'Label(s) does not(do not) belong to scraper\'s false labels'
+    if len(err) > 0:
+        return False, err
+    return True, err
+

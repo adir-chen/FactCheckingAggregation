@@ -507,18 +507,16 @@ class ClaimTests(TestCase):
         comments_with_details = get_users_details_for_comments(Comment.objects.all())
         self.assertTrue(len(comments_with_details) == 0)
 
-    def test_get_user_img_and_rep_for_not_authenticated_user(self):
-        from django.contrib.auth.models import AnonymousUser
-        self.get_request.user = AnonymousUser()
-        user_img, user_rep = get_user_img_and_rep(self.get_request)
-        self.assertTrue(user_img is None)
-        self.assertTrue(user_rep is None)
+    def test_get_user_img_and_rep_for_existing_user(self):
+        user_img, user_rep = get_user_img_and_rep(self.user.id)
+        self.assertTrue(user_img == self.user_image.user_img)
+        self.assertTrue(user_rep == math.ceil(self.user_rep.user_rep / 20))
 
     def test_get_user_img_and_rep_for_new_user(self):
         user_2 = User(username='User2', email='user2@gmail.com')
         user_2.save()
         self.get_request.user = user_2
-        user_img, user_rep = get_user_img_and_rep(self.get_request)
+        user_img, user_rep = get_user_img_and_rep(user_2.id)
 
         self.assertTrue(user_img == Users_Images.objects.filter(user_id=user_2).first().user_img)
         self.assertTrue(user_rep == math.ceil((Users_Reputations.objects.filter(user_id=user_2).first().user_rep) / 20))

@@ -225,6 +225,11 @@
             });
         });
 
+        function search_on_twitter(tag){
+            window.open('https://twitter.com/search?q=' + tag, '_blank');
+            {# for google --> 'http://google.com/search?q='#}
+        }
+
         function getCookie(c_name) {
             if (document.cookie.length > 0) {
                 c_start = document.cookie.indexOf(c_name + "=");
@@ -236,10 +241,6 @@
                 }
             }
             return "";
-        }
-        function search_on_twitter(tag){
-            window.open('https://twitter.com/search?q=' + tag, '_blank');
-            {# for google --> 'http://google.com/search?q='#}
         }
     </script>
 {% endblock %}

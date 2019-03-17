@@ -40,8 +40,8 @@
 
             </ul>
             <h5>Step 2 (here):</h5>
-            <p id="error_msg" style="color: red; font-size: 12px;" hidden> </p>
             <p id="success_msg" style="color: dodgerblue; font-size: 12px;" hidden>Your scraper has been added successfully</p>
+            <p id="error_msg" style="color: red; font-size: 12px;" hidden> </p>
             <input id="scraper_name" type="text" placeholder="Scraper's name" style="width: 50%; margin: 10px;"><br>
             <input id="scraper_password" type="password" placeholder="Scraper's password" style="width: 50%; margin: 10px;"><br>
             <input id="scraper_password_2" type="password" placeholder="Enter scraper's password again" style="width: 50%; margin: 10px;"><br>
@@ -54,52 +54,51 @@
     </div>
 
     <script>
-    $("#add_scraper_submit").click(function(e){
-        e.preventDefault();
-        $.ajax({
-            type: 'POST',
-            url: "{% url 'users:add_new_scraper' %}",
-            headers: { "X-CSRFToken": getCookie('csrftoken')},
-            data: {
-                scraper_name: $("#scraper_name").val(),
-                scraper_password: $("#scraper_password").val(),
-                scraper_password_2: $("#scraper_password_2").val(),
-                scraper_icon: $("#scraper_icon").val(),
-                scraper_true_labels:  $("#scraper_true_labels").val(),
-                scraper_false_labels:  $("#scraper_false_labels").val(),
-            },
-            success: function (request) {
-                $("#error_msg").attr("hidden", true);
-                $("#scraper_name").val('');
-                $("#scraper_icon").val('');
-                $("#scraper_password").val('');
-                $("#scraper_password_2").val('');
-                $("#scraper_true_labels").val('');
-                $("#scraper_false_labels").val('');
-                $("#success_msg").attr("hidden", false);
-            },
-            error: function (error) {
-                 $("#success_msg").attr("hidden", true);
-                let err = error.responseText.split('\n')[1];
-                document.getElementById("error_msg").innerHTML =
-                    '* Error:  ' + err.toLowerCase() + ' *';
-                $("#error_msg").attr("hidden", false);
-            }
-        });
-    });
-
-    function getCookie(c_name) {
-        if (document.cookie.length > 0) {
-            c_start = document.cookie.indexOf(c_name + "=");
-            if (c_start != -1) {
-                c_start = c_start + c_name.length + 1;
-                c_end = document.cookie.indexOf(";", c_start);
-                if (c_end == -1) c_end = document.cookie.length;
-                return unescape(document.cookie.substring(c_start, c_end));
-            }
+        if(localStorage.getItem("success_msg")){
+            $("#success_msg").attr("hidden", false);
+            localStorage.clear();
         }
-        return "";
-    }
+
+        $("#add_scraper_submit").click(function(e){
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'users:add_new_scraper' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken')},
+                data: {
+                    scraper_name: $("#scraper_name").val(),
+                    scraper_password: $("#scraper_password").val(),
+                    scraper_password_2: $("#scraper_password_2").val(),
+                    scraper_icon: $("#scraper_icon").val(),
+                    scraper_true_labels:  $("#scraper_true_labels").val(),
+                    scraper_false_labels:  $("#scraper_false_labels").val(),
+                },
+                success: function (request) {
+                    localStorage.setItem("success_msg", true);
+                    window.location.reload()
+                },
+                error: function (error) {
+                    $("#success_msg").attr("hidden", true);
+                    let err = error.responseText.split('\n')[1];
+                    document.getElementById("error_msg").innerHTML =
+                    'Error: <br>' + err;
+                    $("#error_msg").attr("hidden", false);
+                }
+            });
+        });
+
+        function getCookie(c_name) {
+            if (document.cookie.length > 0) {
+                c_start = document.cookie.indexOf(c_name + "=");
+                if (c_start != -1) {
+                    c_start = c_start + c_name.length + 1;
+                    c_end = document.cookie.indexOf(";", c_start);
+                    if (c_end == -1) c_end = document.cookie.length;
+                    return unescape(document.cookie.substring(c_start, c_end));
+                }
+            }
+            return "";
+        }
 </script>
 {% endblock %}
 
