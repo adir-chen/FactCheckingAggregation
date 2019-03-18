@@ -39,6 +39,7 @@
                     <a href="/logout" style="font-size: 14px;">Sign Out</a>
                 {% else %}
                     <p>Welcome guest.</p>
+                    <h6><i>Want to share with us information?</i></h6>
                     <p>
                         <ul>
                             <li><img src="{% static 'claims/assets/images/google_icon.png' %}" style="padding: 0; margin: 0;"><a href="{% url 'social:begin' 'google-oauth2' %}">Sign in with Google</a></li>

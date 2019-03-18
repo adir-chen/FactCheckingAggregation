@@ -182,13 +182,13 @@ class UITests(StaticLiveServerTestCase):
 
     def test_edit_comment(self):
         comment_2 = Comment(claim_id=self.claim_1.id,
-                                 user_id=self.user2.id,
-                                 title='title2',
-                                 description='description2',
-                                 url='http://url2/',
-                                 verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
-                                 system_label='True',
-                                 tags='t3,t4')
+                            user_id=self.user2.id,
+                            title='title2',
+                            description='description2',
+                            url='http://url2/',
+                            verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
+                            system_label='True',
+                            tags='t3,t4')
         comment_2.save()
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user2)
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
@@ -220,6 +220,7 @@ class UITests(StaticLiveServerTestCase):
         browser.find_element_by_id('comment_' + str(comment_2.id) + '_verdict_date_edit').send_keys(year)
         browser.find_elements_by_name('comment_' + str(comment_2.id) + '_label')[1].click()  # False
         browser.find_element_by_id('comment_' + str(comment_2.id) + '_save').click()
+        time.sleep(2)
         browser.get(browser.current_url)
 
         self.assertEqual(
@@ -512,21 +513,7 @@ class UITests(StaticLiveServerTestCase):
         browser.find_element_by_id(str(self.claim_1.id) + '_new_comment_save').click()
         time.sleep(2)   # wait 2 second for page to show the error
         self.assertTrue(
-            'Error' in browser.find_element_by_id(claim_id + '_new_comment_error_msg').text
-        )
-
-    def test_add_two_comment_by_the_same_user(self):
-        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
-        browser.find_element_by_class_name('claim_box').find_element_by_class_name('btn').click()
-        claim_id = str(browser.current_url).split('/claim/')[1]
-        browser.find_element_by_id(str(self.claim_1.id) + '_new_comment_title').send_keys('title2')
-        browser.find_element_by_id(str(self.claim_1.id) + '_new_comment_description').send_keys('description2')
-        browser.find_element_by_id(str(self.claim_1.id) + '_new_comment_url').send_keys('http://url2/')
-        browser.find_element_by_id(str(self.claim_1.id) + '_new_comment_tags').send_keys('t3,t4')
-        browser.find_element_by_id(str(self.claim_1.id) + '_new_comment_save').click()
-        time.sleep(2)   # wait 2 second for page to show the error
-        self.assertTrue(
-            'Error' in browser.find_element_by_id(claim_id + '_new_comment_error_msg').text
+            'Error' in browser.find_element_by_id('error_msg_' + claim_id + '_new_comment').text
         )
 
     def test_add_new_claim_with_missing_args(self):
@@ -549,7 +536,7 @@ class UITests(StaticLiveServerTestCase):
         browser.find_element_by_id('submit_claim').click()
         time.sleep(2)  # wait 2 second for page to show the error
         self.assertTrue(
-            'Error' in browser.find_element_by_id('add_new_claim_error_msg').text
+            'Error' in browser.find_element_by_id('error_msg_add_new_claim').text
         )
 
     def test_add_new_claim_with_comment_missing_args(self):
@@ -567,14 +554,16 @@ class UITests(StaticLiveServerTestCase):
         filled = 0
         if random.randint(0, 10) > 5:
             browser.find_element_by_id('title').send_keys('title2')
+            filled += 1
         if random.randint(0, 10) > 5:
             browser.find_element_by_id('description').send_keys('description2')
+            filled += 1
         if filled < 2 and random.randint(0, 10) > 5:
             browser.find_element_by_id('url').send_keys('http://url2/')
         browser.find_element_by_id('submit_claim').click()
         time.sleep(2)  # wait 2 second for page to show the error
         self.assertTrue(
-            'Error' in browser.find_element_by_id('add_new_claim_error_msg').text
+            'Error' in browser.find_element_by_id('error_msg_add_new_claim').text
         )
 
     def test_vote_up_comment(self):
@@ -678,7 +667,7 @@ class UITests(StaticLiveServerTestCase):
             browser.find_elements_by_class_name('arrow_down')[1].click()
         time.sleep(2)  # wait 2 second for vote_count to update
         self.assertTrue(
-            'Error' in browser.find_element_by_id('comment_' + str(comment_2.id) + '_error_msg').text
+            'Error' in browser.find_element_by_id('error_msg_' + str(comment_2.id) + '_comment_vote').text
         )
 
     def test_search_by_tags(self):

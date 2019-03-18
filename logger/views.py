@@ -8,7 +8,7 @@ import operator
 import csv
 
 
-# This function returns log page
+# This function returns a HTML for the log page
 def view_log(request):
     if not request.user.is_superuser or request.method != "GET":
         raise Http404("Permission denied")
@@ -27,6 +27,7 @@ def save_log_message(user_id, username, action, result=False):
     log.save()
 
 
+# This function checks for a duplicate log (action) of a given user's id
 def check_duplicate_log_for_user(user_id, action):
     return len(Logger.objects.filter(user_id=user_id, action__icontains=action)) > 0
 
@@ -103,7 +104,7 @@ def check_if_actions_list_valid(actions_to_export):
     return True, ''
 
 
-# This function creates a df which contains all the details of the claims in the website
+# This function creates a df which contains all the details of the logger in the website
 def create_df_for_logger(actions_to_export, error, date_start, date_end):
     import pandas as pd
     df_logger = pd.DataFrame(columns=['Date', 'User Id', 'Username', 'Action', 'Result'])

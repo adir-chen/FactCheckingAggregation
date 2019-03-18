@@ -36,7 +36,10 @@
                 <h5><b>{{ comment.title }}</b></h5>
                 <p>{{ comment.description }}</p>
             </div>
+            <p id="success_msg_{{ comment.id }}_comment_vote" class="action_msg note_msg" hidden>Your vote has been accepted successfully</p>
+            <p id="error_msg_{{ comment.id }}_comment_vote" class="action_msg error_msg" hidden></p>
             <div class="comment_voting_area">
+
                 {% if request.user.is_authenticated %}
                     <button id="{{ comment.id }}_arrow_up" class="arrow_up">▲</button>
                 {% else %}
@@ -61,10 +64,12 @@
             <div id="comment_{{ comment.id }}_footer">
                 Reference:
                 <a target="_blank" href={{ comment.url }}>link to source</a><br>
-                Tags:
-                {% for tag in comment.tags_as_list %}
-                    <a href="javascript:" onclick="search_on_twitter('{{ tag }}');return false;" class="tag_link">{{ tag }}</a>
-                {% endfor %}
+                {% if comment.tags %}
+                    Tags:
+                    {% for tag in comment.tags_as_list %}
+                            <a href="javascript:" onclick="search_on_twitter('{{ tag }}');return false;" class="tag_link">{{ tag }}</a>
+                    {% endfor %}
+                {% endif %}
             </div>
             <div id="comment_{{ comment.id }}_footer_edit" hidden="hidden">
                 Reference:
@@ -75,13 +80,14 @@
             {% if request.user.is_superuser or request.user.is_authenticated and comment.user_id == request.user.id %}
                 <br>
                 <div class="buttons_row">
+                    <p id="success_msg_{{ comment.id }}_comment_edit" class="action_msg note_msg" hidden>Comment was edited successfully</p>
+                    <p id="error_msg_{{ comment.id }}_comment_edit" class="action_msg error_msg" hidden></p>
                     <button id="comment_{{ comment.id }}_edit" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_comment_{{ comment.id }}()">Edit your comment</button>
                     <button id="comment_{{ comment.id }}_cancel" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_comment_{{ comment.id }}_cancel()">Cancel</button>
                     <button id="comment_{{ comment.id }}_save" type="submit" hidden='hidden' class="btn btn-info">Save</button>
                     <button id="comment_{{ comment.id }}_delete" type="submit" class="btn btn-danger">Delete</button>
                 </div>
             {% endif %}
-            <p id="comment_{{ comment.id }}_error_msg" class="action_msg error_msg" hidden></p>
         </div>
     </div>
 </div>
@@ -104,6 +110,24 @@
             $("#{{ comment.id }}_arrow_down").attr("disabled", false);
         }
     {% endif %}
+
+    if(localStorage.getItem("success_msg_{{ comment.id }}_comment_edit")){
+        $("#success_msg_{{ comment.id }}_comment_edit").attr("hidden", false);
+        localStorage.clear();
+    }
+    else if(localStorage.getItem("success_msg_{{ comment.id }}_comment_vote")){
+        $("#success_msg_{{ comment.id }}_comment_vote").attr("hidden", false);
+        localStorage.clear();
+    }
+
+    function hide_all_msgs(){
+        $("#success_msg_{{ comment.id }}_comment_vote").attr("hidden", true);
+        $("#success_msg_{{ comment.id }}comment_edit").attr("hidden", true);
+
+        $("#error_msg_{{ comment.id }}_comment_vote").attr("hidden", true);
+        $("#error_msg_{{ comment.id }}comment_edit").attr("hidden", true);
+    }
+
     $(document).ready(function () {
         {% for voted_user in comment.up_votes.all %}
             {% if request.user.id == voted_user.id %}
@@ -146,10 +170,11 @@
                 $("#{{ comment.id }}_voteCount").text(up_count_{{ comment.id }}-down_count_{{ comment.id }});
             },
             error: function (error) {
+                hide_all_msgs();
                 let err = error.responseText.split('\n')[1];
-                document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
+                document.getElementById("error_msg_{{ comment.id }}_comment_vote").innerHTML =
                     'Error: <br>' + err;
-                $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
+                $("#error_msg_{{ comment.id }}_comment_vote").attr("hidden", false);
             }
         });
     });
@@ -181,10 +206,11 @@
                 $("#{{ comment.id }}_voteCount").text(up_count_{{ comment.id }}-down_count_{{ comment.id }});
             },
             error: function (error) {
+                hide_all_msgs();
                 let err = error.responseText.split('\n')[1];
-                document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
+                document.getElementById("error_msg_{{ comment.id }}_comment_vote").innerHTML =
                     'Error: <br>' + err;
-                $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
+                $("#error_msg_{{ comment.id }}_comment_vote").attr("hidden", false);
             }
         });
     });
@@ -239,13 +265,16 @@
                 comment_label: document.querySelector('input[name="comment_{{ comment.id }}_label"]:checked').value,
             },
             success: function () {
-                location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ comment.claim_id }}';
+                {#location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ comment.claim_id }}';#}
+                localStorage.setItem("success_msg_{{ comment.id }}_comment_edit", true);
+                window.location.reload();
             },
             error: function (error) {
+                hide_all_msgs();
                 let err = error.responseText.split('\n')[1];
-                document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
+                document.getElementById("error_msg_{{ comment.id }}_comment_edit").innerHTML =
                 'Error: <br>' + err;
-                $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
+                $("#error_msg_{{ comment.id }}_comment_edit").attr("hidden", false);
             }
         });
     });
@@ -259,13 +288,14 @@
                 comment_id: '{{ comment.id }}',
             },
             success: function (page) {
-                location.href =  'http://{{ request.META.HTTP_HOST }}/claim/{{ comment.claim_id }}';
+                window.location.reload();
+                {#location.href =  'http://{{ request.META.HTTP_HOST }}/claim/{{ comment.claim_id }}';#}
             },
             error: function (error) {
                 let err = error.responseText.split('\n')[1];
-                document.getElementById("comment_{{ comment.id }}_error_msg").innerHTML =
+                document.getElementById("error_msg_{{ comment.id }}_comment_edit").innerHTML =
                     'Error: <br>' + err;
-                $("#comment_{{ comment.id }}_error_msg").attr("hidden", false);
+                $("#error_msg_{{ comment.id }}_comment_edit").attr("hidden", false);
             }
         });
     });

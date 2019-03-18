@@ -199,23 +199,28 @@ class ClaimTests(TestCase):
 
     def test_check_if_claim_is_valid(self):
         self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['is_superuser'] = False
         self.assertTrue(check_if_claim_is_valid(self.new_claim_details))
 
     def test_check_if_claim_is_valid_missing_user_id(self):
+        self.new_claim_details['is_superuser'] = False
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_missing_claim(self):
         self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['is_superuser'] = False
         del self.new_claim_details['claim']
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_missing_category(self):
         self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['is_superuser'] = False
         del self.new_claim_details['category']
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_missing_tags(self):
         self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['is_superuser'] = False
         del self.new_claim_details['tags']
         self.assertTrue(check_if_claim_is_valid(self.new_claim_details)[0])
 
@@ -226,39 +231,47 @@ class ClaimTests(TestCase):
         invalid_input += ',tag2'
         self.new_claim_details['user_id'] = self.user.id
         self.new_claim_details['tags'] = invalid_input
+        self.new_claim_details['is_superuser'] = False
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_missing_img_src(self):
         self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['is_superuser'] = False
         del self.new_claim_details['image_src']
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_missing_add_comment(self):
         self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['is_superuser'] = False
         del self.new_claim_details['add_comment']
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_existing_claim(self):
         self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['is_superuser'] = False
         self.new_claim_details['claim'] = self.claim_1.claim
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_invalid_user_id(self):
         self.new_claim_details['user_id'] = self.num_of_saved_users + random.randint(1, 10)
+        self.new_claim_details['is_superuser'] = False
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_invalid_input_for_claim(self):
         self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['is_superuser'] = False
         self.new_claim_details['claim'] = 'קלט בשפה שאינה אנגלית'
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_invalid_input_for_category(self):
         self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['is_superuser'] = False
         self.new_claim_details['category'] = 'المدخلات بلغة غير الإنجليزية'
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_invalid_input_for_tags(self):
         self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['is_superuser'] = False
         self.new_claim_details['category'] = '输入英语以外的语言 输入英语以外的语言'
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
@@ -271,6 +284,7 @@ class ClaimTests(TestCase):
             self.post_request.user = self.user
             add_claim(self.post_request)
         self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['is_superuser'] = False
         self.new_claim_details['claim'] = 'claim_10'
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 

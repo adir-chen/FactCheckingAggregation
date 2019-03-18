@@ -71,7 +71,7 @@ def check_if_claim_is_valid(claim_info):
         err += 'Missing value for claim'
     elif 'category' not in claim_info or not claim_info['category']:
         err += 'Missing value for category'
-    elif 'image_src' not in claim_info:
+    elif 'image_src' not in claim_info or not claim_info['image_src']:
         err += 'Missing value for image source'
     elif 'add_comment' not in claim_info:
         err += 'Missing value for adding a comment option'
@@ -133,7 +133,7 @@ def is_english_input(user_input):
 
 
 # This function checks if a given user posted new claims above the maximum limit (per day).
-# The function returns true in case the user exceeded the maximum limit, otherwise false and an error
+# The function returns true in case the user exceeded the maximum limit, otherwise false
 def post_above_limit(user_id):
     limit = 10
     from datetime import datetime
@@ -202,6 +202,7 @@ def view_claim(request, claim_id):
     })
 
 
+# This function returns for each comment the user's image and user's reputation for the user that posted the comment
 def get_users_details_for_comments(comment_objects):
     comments = {}
     for comment in comment_objects:
@@ -225,6 +226,7 @@ def get_users_details_for_comments(comment_objects):
     return comments
 
 
+# This function returns user's image and user's reputation for a given user's id
 def get_user_img_and_rep(user_id):
     user_img = Users_Images.objects.filter(user_id=user_id)
     if len(user_img) == 0:
@@ -421,6 +423,7 @@ def about_page(request):
     return render(request, 'claims/about.html')
 
 
+# This function reports a claim as spam
 def report_spam(request):
     if not request.user.is_authenticated or request.method != "POST":
         raise Http404("Permission denied")
@@ -435,6 +438,9 @@ def report_spam(request):
     return view_claim(return_get_request_to_user(request.user), request.POST.get('claim_id'))
 
 
+# This function checks if the given fields for reporting a claim as spam are valid,
+# i.e. the fields are with the correct format.
+# The function returns true in case the fields are valid, otherwise false and an error
 def check_if_spam_report_is_valid(request):
     err = ''
     if not request.POST.get('claim_id'):
@@ -444,12 +450,13 @@ def check_if_spam_report_is_valid(request):
     elif not check_if_user_exists_by_user_id(request.user.id):
         err += 'User ' + str(request.user.id) + ' does not exist'
     elif check_duplicate_log_for_user(request.user.id, 'Reporting a claim with id ' + str(request.POST.get('claim_id')) + ' as spam'):
-        err += 'User already reported claim with id ' + str(request.POST.get('claim_id')) + ' as spam'
+        err += 'You already reported claim as spam'
     if len(err) > 0:
         return False, err
     return True, err
 
 
+# This function returns a new GET request for a user
 def return_get_request_to_user(user):
     request = HttpRequest()
     request.user = user

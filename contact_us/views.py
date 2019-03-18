@@ -57,6 +57,6 @@ def check_for_spam(ip):
     return len(Logger.objects.filter(date__date=datetime.today(), action__icontains=ip)) >= 5
 
 
-# This function return an HTML page for sending a new email
+# This function return an HTML page for contact us
 def contact_us_page(request):
     return render(request, 'contact_us/contact_us.html')

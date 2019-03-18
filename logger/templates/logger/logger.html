@@ -82,9 +82,9 @@
                         <td>{{ log.username }}</td>
                         <td>{{ log.action }}</td>
                         {% if log.result %}
-                            <td>Success</td>
+                            <td style="color: dodgerblue;">Success</td>
                         {% else %}
-                            <td>Failure</td>
+                            <td style="color: red;">Failure</td>
                         {% endif %}
                     </tr>
                 {% endfor %}

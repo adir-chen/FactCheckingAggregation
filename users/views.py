@@ -17,7 +17,7 @@ def check_if_user_exists_by_user_id(user_id):
     return False
 
 
-# This function returns the username id for a given user's id
+# This function returns the username for a given user's id (in case the user exists), otherwise none
 def get_username_by_user_id(user_id):
     result = User.objects.filter(id=user_id)
     if len(result) > 0:
@@ -25,7 +25,7 @@ def get_username_by_user_id(user_id):
     return None
 
 
-# This function returns a user by the specified username
+# This function returns the user object for a given username (in case the username exists), otherwise none
 def get_user_by_username(username):
     result = User.objects.filter(username=username)
     if len(result) > 0:
@@ -75,8 +75,9 @@ def add_all_scrapers(request):
         scraper_3_img.save()
         scraper_3_rep = Users_Reputations(user_id=scraper_3)
         scraper_3_rep.save()
-        true_labels = ['true', 'truth']
-        false_labels = ['false', 'not true', 'decontextualized', 'fiction']
+        true_labels = ['true', 'truth', 'truth!', 'mostly truth!', 'authorship confirmed!', 'correct attribution!', 'correctly attributed!']
+        false_labels = ['false', 'not true', 'fiction', 'fiction!', 'mostly fiction!', 'reported fiction!',
+                        'incorrect attribution!', 'misleading!', 'misattributed', 'decontextualized']
         scraper_3_details = Scrapers(scraper_name=scraper_3.username,
                                      scraper_id=scraper_3,
                                      true_labels=','.join(true_labels),
@@ -265,7 +266,8 @@ def add_new_scraper(request):
     return add_scraper_guide(return_get_request_to_user(request.user))
 
 
-# This function checks if a given scraper's info is valid, i.e. the info has all the fields with the correct format.
+# This function checks if a given scraper's info is valid (for adding a new scraper),
+# i.e. the info has all the fields with the correct format.
 # The function returns true in case the info is valid, otherwise false and an error
 def check_if_scraper_info_is_valid(scraper_info):
     from claims.views import check_if_input_format_is_valid, is_english_input
@@ -313,7 +315,7 @@ def update_reputation_for_user(user_id, earn_points, num_of_points):
     Users_Reputations.objects.filter(user_id=user).update(user_rep=reputation)
 
 
-# This function returns a HTML for some user's profile
+# This function returns a HTML for a user's profile
 def user_page(request, username):
     from django.contrib.sessions.models import Session
     if request.method != 'GET':

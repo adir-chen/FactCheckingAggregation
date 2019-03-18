@@ -2,7 +2,6 @@
 {% load social_widgets %}
 {% block page_content %}
     <div class="page_wrapper">
-        <p id="claim_{{ claim.id }}_error_msg" class="action_msg error_msg" hidden></p>
         <h1 id="claim_page_title" style="margin-bottom: 30px;">{{ claim.claim }}</h1>
         <div id="claim_page_title_wrapper" class="claim_page_title_wrapper">
             <img id="img_src_{{ claim.id }}" src="{{ claim.image_src }}">
@@ -18,7 +17,10 @@
                         <h5>Category: {{ claim.category }}</h5>
                     </div>
             </div>
-
+            <p id="success_msg_{{ claim.id }}_claim_edit" class="action_msg note_msg" hidden>Claim was edited successfully</p>
+            <p id="error_msg_{{ claim.id }}_claim_edit" class="action_msg error_msg" hidden></p>
+            <p id="success_msg_{{ claim.id }}_claim_report_spam" class="action_msg note_msg" hidden>Claim was reported as spam successfully</p>
+            <p id="error_msg_{{ claim.id }}_claim_report_spam" class="action_msg error_msg" hidden></p>
         <div id="claim_edit" hidden="hidden" class="claim_edit">
             Claim: <input id="{{ claim.id }}_claim" value="{{ claim.claim }}" type="text" placeholder="{{ claim.claim }}" class="claim_edit"><br>
             Category: <input id="{{ claim.id }}_category" value="{{ claim.category }}" type="text" placeholder="{{ claim.category }}" class="claim_edit"><br>
@@ -84,6 +86,8 @@
                 </div>
                 <hr>
                 <div class="comment_content_edit">
+                    <p id="success_msg_{{ claim.id }}_new_comment" class="action_msg error_msg" hidden>Comment was added successfully</p>
+                    <p id="error_msg_{{ claim.id }}_new_comment" class="action_msg error_msg" hidden></p>
                     Title: <input id="{{ claim.id }}_new_comment_title" type="text"><br>
                     Description:<br>
                     <textarea id="{{ claim.id }}_new_comment_description"></textarea>
@@ -92,10 +96,9 @@
                     Reference:
                     <input id="{{ claim.id }}_new_comment_url" type="text"><br>
                     Tags:
-                    <input id="{{ claim.id }}_new_comment_tags"  placeholder="Tags (separated by ,). Used for searching purpose." type="text"><br>
+                    <input id="{{ claim.id }}_new_comment_tags"  placeholder="Tags (separated by comma). Used for searching purpose." type="text"><br>
                     <p id="add_new_comment" class="action_msg note_msg" >If you want to edit your comment you will be able to do so during the next 5 minutes from the time you added it.</p>
                     <button type="submit" id="{{ claim.id }}_new_comment_save" class="btn btn-info" style="margin: 10px 0;">Add your comment</button>
-                    <p id="{{ claim.id }}_new_comment_error_msg" class="action_msg error_msg" hidden></p>
                 </div>
             </div>
         {% endif %}
@@ -110,7 +113,33 @@
                 $("#{{ claim.id }}_claim_edit").attr("hidden", false);
             }
         {% endif %}
+
+        if(localStorage.getItem("success_msg_{{ claim.id }}_claim_edit")){
+            $("#success_msg_{{ claim.id }}_claim_edit").attr("hidden", false);
+            localStorage.clear();
+        }
+        else if(localStorage.getItem("success_msg_{{ claim.id }}_claim_report_spam")){
+            $("#success_msg_{{ claim.id }}_claim_report_spam").attr("hidden", false);
+            localStorage.clear();
+        }
+        else if(localStorage.getItem("success_msg_{{ claim.id }}_new_comment")){
+            $("#success_msg_{{ claim.id }}_new_comment").attr("hidden", false);
+            localStorage.clear();
+        }
+
+
+        function hide_all_msgs(){
+            $("#success_msg_{{ claim.id }}_claim_edit").attr("hidden", true);
+            $("#success_msg_{{ claim.id }}_claim_report_spam").attr("hidden", true);
+            $("#success_msg_{{ claim.id }}_new_comment").attr("hidden", true);
+
+            $("#error_msg_{{ claim.id }}_claim_edit").attr("hidden", true);
+            $("#error_msg_{{ claim.id }}_claim_report_spam").attr("hidden", true);
+            $("#error_msg_{{ claim.id }}_new_comment").attr("hidden", true);
+        }
+
         function edit_claim() {
+            hide_all_msgs();
             $("#claim_page_title_wrapper").attr("hidden", true);
             $("#claim_edit").attr("hidden", false);
             $("#{{ claim.id }}_claim_cancel").attr("hidden", false);
@@ -122,6 +151,7 @@
         }
 
         function edit_claim_cancel() {
+            hide_all_msgs();
             $("#claim_page_title_wrapper").attr("hidden", false);
             $("#claim_edit").attr("hidden", true);
             $("#{{ claim.id }}_claim_cancel").attr("hidden", true);
@@ -130,7 +160,6 @@
             $("#{{ claim.id }}_claim_delete").attr("hidden", false);
             $("#{{ claim.id }}_claim_report_spam").attr("hidden", false);
             $("#{{ claim.id }}_claim_twitter_share").attr("hidden", false);
-            $("#claim_{{ claim.id }}_error_msg").attr("hidden", true);
         }
 
         $("#{{ claim.id }}_new_comment_save").click(function(){
@@ -148,13 +177,16 @@
                     label: document.querySelector('input[name="{{ claim.id }}_new_comment_label"]:checked').value,
                 },
                 success: function () {
-                    location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';
+                    localStorage.setItem("success_msg_{{ claim.id }}_new_comment", true);
+                    window.location.reload();
+                    {#location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';#}
                 },
                 error: function (error) {
+                    hide_all_msgs();
                     let err = error.responseText.split('\n')[1];
-                    document.getElementById("{{ claim.id }}_new_comment_error_msg").innerHTML =
+                    document.getElementById("error_msg_{{ claim.id }}_new_comment").innerHTML =
                     'Error: <br>' + err;
-                     $("#{{ claim.id }}_new_comment_error_msg").attr("hidden", false);
+                    $("#error_msg_{{ claim.id }}_new_comment").attr("hidden", false);
                 }
             });
         });
@@ -172,13 +204,16 @@
                     image_src: $("#{{ claim.id }}_image_src").val(),
                 },
                 success: function () {
-                    location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';
+                    localStorage.setItem("success_msg_{{ claim.id }}_claim_edit", true);
+                    window.location.reload();
+                    {#location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';#}
                 },
                 error: function (error) {
+                    hide_all_msgs();
                     let err = error.responseText.split('\n')[1];
-                    document.getElementById("claim_{{ claim.id }}_error_msg").innerHTML =
+                    document.getElementById("error_msg_{{ claim.id }}_claim_edit").innerHTML =
                     'Error: <br>' + err;
-                     $("#claim_{{ claim.id }}_error_msg").attr("hidden", false);
+                    $("#error_msg_{{ claim.id }}_claim_edit").attr("hidden", false);
                 }
             });
         });
@@ -196,10 +231,12 @@
                     location.href = 'http://{{ request.META.HTTP_HOST }}';
                 },
                 error: function (error) {
+                    hide_all_msgs();
+                    window.location.reload();
                     let err = error.responseText.split('\n')[1];
-                    document.getElementById("#claim_{{ claim.id }}_error_msg").innerHTML =
+                    document.getElementById("error_msg_{{ claim.id }}_claim_edit").innerHTML =
                     'Error: <br>' + err;
-                    $("#claim_{{ claim.id }}_error_msg").attr("hidden", false);
+                    $("#error_msg_{{ claim.id }}_claim_edit").attr("hidden", false);
                 }
             });
         });
@@ -214,13 +251,16 @@
                     claim_id: '{{ claim.id }}',
                 },
                 success: function () {
-                    location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';
+                    localStorage.setItem("success_msg_{{ claim.id }}_claim_report_spam", true);
+                    window.location.reload();
+                    {#location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';#}
                 },
                 error: function (error) {
+                    hide_all_msgs();
                     let err = error.responseText.split('\n')[1];
-                    document.getElementById("#claim_{{ claim.id }}_error_msg").innerHTML =
+                    document.getElementById("error_msg_{{ claim.id }}_claim_report_spam").innerHTML =
                     'Error: <br>' + err;
-                    $("#claim_{{ claim.id }}_error_msg").attr("hidden", false);
+                    $("#error_msg_{{ claim.id }}_claim_report_spam").attr("hidden", false);
                 }
             });
         });
