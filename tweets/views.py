@@ -21,11 +21,12 @@ def download_tweets_for_claims(request):
     if not request.user.is_superuser or request.method != "POST" or 'csv_file' not in request.FILES:
         raise Http404("Permission denied")
     tweets = request.FILES['csv_file'].read().decode('utf-8')
-    for tweet in tweets.split('\n')[1:]:
-        tweet_fields = tweet.split(',')
-        claim = get_object_or_404(Claim, id=tweet_fields[0])
-        if claim:
-            build_tweet(claim.id, request.user.id, tweet_fields[1], tweet_fields[2], tweet_fields[3])
+    for tweet in tweets.split('\n'):
+        if tweet:
+            tweet_fields = tweet.split(',')
+            claim = get_object_or_404(Claim, id=tweet_fields[0])
+            if claim:
+                build_tweet(claim.id, request.user.id, tweet_fields[1], tweet_fields[2], tweet_fields[3])
 
 
 # This function adds a new tweet to a claim in the website
@@ -35,7 +36,7 @@ def build_tweet(claim_id, user_id, tweet_link, author, author_rank):
         user_id=user_id,
         tweet_link=tweet_link,
         author=author,
-        author_rank=author_rank * 100
+        author_rank=int(float(author_rank) * 100)
     )
     tweet.save()
 
@@ -146,8 +147,8 @@ def delete_tweet(request):
 # The function returns true in case the given fields are valid, otherwise false and an error
 def check_if_delete_tweet_is_valid(request):
     err = ''
-    if not request.POST.get('comment_id'):
-        err += 'Missing value for claim id'
+    if not request.POST.get('tweet_id'):
+        err += 'Missing value for tweet id'
     elif len(Tweet.objects.filter(id=request.POST.get('tweet_id'))) == 0:
         err += 'Tweet with id ' + str(request.user.id) + ' does not exist'
     elif not check_if_user_exists_by_user_id(request.user.id):
