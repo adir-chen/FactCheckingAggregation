@@ -415,13 +415,13 @@ span.authenticity_grade{
     margin: 10px;
 }
 
-.twitter-share-button{
+.twitter-share-btn{
     background: #fff;
     border: 1px solid #3a9fcd;
     color: #3a9fcd;
 }
 
-.twitter-share-button:hover{
+.twitter-share-btn:hover{
     border: 1px solid #000;
 }
 
