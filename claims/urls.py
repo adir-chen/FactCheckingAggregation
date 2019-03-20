@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 
 app_name = "claims"
-urlpatterns =[
+urlpatterns = [
     path('', views.view_home, name='home_page'),
     path('add_claim', views.add_claim, name='add_claim'),
     # view_claim should have: data="claim_id:#"
@@ -13,5 +13,5 @@ urlpatterns =[
     path('edit_claim', views.edit_claim, name='edit_claim'),
     path('delete_claim', views.delete_claim, name='delete_claim'),
     path('about', views.about_page, name='about'),
-    path('report_spam', views.report_spam, name='report_spam')
+    path('report_spam', views.report_spam, name='report_spam'),
 ]

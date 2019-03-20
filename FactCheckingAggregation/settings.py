@@ -50,6 +50,7 @@ LOGIN_REDIRECT_URL = '/'
 INSTALLED_APPS = [
     'claims.apps.ClaimsConfig',
     'comments.apps.CommentsConfig',
+    'tweets.apps.TweetsConfig',
     'users.apps.UsersConfig',
     'search.apps.SearchConfig',
     'contact_us.apps.ContactUsConfig',

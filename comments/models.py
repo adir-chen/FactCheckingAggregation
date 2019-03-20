@@ -14,8 +14,8 @@ class Comment(models.Model):
     verdict_date = models.DateField()
     label = models.CharField(max_length=50)
     system_label = models.CharField(max_length=10)
-    up_votes = models.ManyToManyField(User, related_name='up_votes', blank=True)
-    down_votes = models.ManyToManyField(User, related_name='down_votes', blank=True)
+    up_votes = models.ManyToManyField(User, related_name='%(class)s_up_votes', blank=True)
+    down_votes = models.ManyToManyField(User, related_name='%(class)s_down_votes', blank=True)
     timestamp = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
@@ -23,3 +23,6 @@ class Comment(models.Model):
 
     def tags_as_list(self):
         return self.tags.split(',')
+
+
+
