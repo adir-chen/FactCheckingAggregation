@@ -23,7 +23,7 @@ def download_tweets_for_claims(request):
     tweets = request.FILES['csv_file'].read().decode('utf-8')
     for tweet in tweets.split('\n')[1:]:
         tweet_fields = tweet.split(',')
-        claim = get_object_or_404(Claim, claim=tweet_fields[0])
+        claim = get_object_or_404(Claim, id=tweet_fields[0])
         if claim:
             build_tweet(claim.id, request.user.id, tweet_fields[1], tweet_fields[2], tweet_fields[3])
 

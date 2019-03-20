@@ -240,11 +240,12 @@ def create_df_for_claims(fields_to_export, scrapers_ids, regular_users, verdict_
     from claims.views import get_category_for_claim
     import pandas as pd
     df_claims = pd.DataFrame(columns=['User Id', 'Claim', 'Title', 'Description', 'Url', 'Category', 'Verdict Date', 'Tags', 'Label', 'System Label', 'Authenticity Grade'])
-    users_ids, claims, titles, descriptions, urls, categories, verdict_dates, tags, labels, \
-        system_labels, authenticity_grades = ([] for i in range(11))
+    users_ids, claims_ids, claims, titles, descriptions, urls, categories, verdict_dates, tags, labels, \
+        system_labels, authenticity_grades = ([] for i in range(12))
     for comment in Comment.objects.all():
         claim = Claim.objects.filter(id=comment.claim_id).first()
         users_ids.append(comment.user_id)
+        claims_ids.append(claim.id)
         claims.append(claim.claim)
         titles.append(comment.title)
         descriptions.append(comment.description)
@@ -256,6 +257,7 @@ def create_df_for_claims(fields_to_export, scrapers_ids, regular_users, verdict_
         system_labels.append(comment.system_label)
         authenticity_grades.append(claim.authenticity_grade)
     df_claims['User Id'] = users_ids
+    df_claims['Claim Id'] = claims_ids
     df_claims['Claim'] = claims
     df_claims['Title'] = titles
     df_claims['Description'] = descriptions
@@ -274,6 +276,7 @@ def create_df_for_claims(fields_to_export, scrapers_ids, regular_users, verdict_
         df_claims = df_claims[~df_claims['User Id'].isin(scrapers_to_delete)]
     df_claims = df_claims[(df_claims['Verdict Date'] >= verdict_date_start) &
                           (df_claims['Verdict Date'] <= verdict_date_end)]
+    fields_to_export.insert(0, 'Claim Id')
     df_claims = df_claims[fields_to_export]
     return df_claims
 
