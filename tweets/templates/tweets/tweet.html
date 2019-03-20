@@ -6,7 +6,7 @@
             <img src="{{ user_details.user_img.user_img }}">
         </div>
         <div class="comment_user_details">
-            User: <a href="">TAP</a><br>
+            User: <a href="/users/{{ user_details.user.username }}">{{ user_details.user.username }}</a><br>
             {% for i in 'i'|rjust:user_details.user_rep %}
                 <img src="{% static 'claims/assets/images/star.png' %}">
             {% endfor %}
@@ -15,12 +15,18 @@
     </div>
     <div style="grid-area: tweet-emb; padding: 10px;">
         <blockquote class="twitter-tweet" data-lang="en">
-            <a href="https://twitter.com/realDonaldTrump/status/1108335293671845888"></a>
+            <a href="{{ tweet.tweet_link }}"></a>
         </blockquote>
     </div>
     <div style="grid-area: tweet-verdict; padding-top: 20px;">
         TAP ranked author loyalty:<br><br><br>
-        <span class="verdict_false" style="padding: 20px; border-radius: 7px;"><b>25%</b></span>
+        {% if tweet.author_rank >= 50 %}
+            <span class="verdict_true" style="padding: 20px; border-radius: 7px;">
+        {% else %}
+            <span class="verdict_false" style="padding: 20px; border-radius: 7px;">
+        {% endif %}
+            <b>{{ tweet.author_rank }}</b>
+        </span>
     </div>
     <div style="grid-area: tweet-voting; text-align: center; padding-top: 70px; margin-right: 20px;">
         {% if request.user.is_authenticated %}
@@ -29,7 +35,7 @@
             <button id="tweet_{{ tweet.id }}_arrow_up" class="arrow_up" disabled>▲</button>
         {% endif %}
         <br>
-        <span id="tweet_{{ tweet.id }}_voteCount" class="vote_count">0</span>
+        <span id="tweet_{{ tweet.id }}_voteCount" class="vote_count">{{ tweet.up_votes.count|sub:tweet.down_votes.count }}</span>
         <br>
         {% if request.user.is_authenticated %}
             <button id="tweet_{{ tweet.id }}_arrow_down" class="arrow_down">▼</button>
@@ -40,9 +46,9 @@
     <div style="grid-area: tweet-btn-row; padding: 20px; background: #f5f5f5; border-radius: 0 0 7px 7px;">
         <p id="success_msg_{{ tweet.id }}_tweet_edit" class="action_msg note_msg" hidden>Tweet was edited successfully</p>
         <p id="error_msg_{{ tweet.id }}_tweet_edit" class="action_msg error_msg" hidden></p>
-        <button id="tweet_{{ tweet.id }}_edit" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_tweet_{{ tweet.id }}()">Edit Tweet</button>
-        <button id="tweet_{{ tweet.id }}_cancel" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_tweet_{{ tweet.id }}_cancel()">Cancel</button>
-        <button id="tweet_{{ tweet.id }}_save" type="submit" hidden='hidden' class="btn btn-info">Save</button>
+{#        <button id="tweet_{{ tweet.id }}_edit" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_tweet_{{ tweet.id }}()">Edit Tweet</button>#}
+{#        <button id="tweet_{{ tweet.id }}_cancel" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_tweet_{{ tweet.id }}_cancel()">Cancel</button>#}
+{#        <button id="tweet_{{ tweet.id }}_save" type="submit" hidden='hidden' class="btn btn-info">Save</button>#}
         <button id="tweet_{{ tweet.id }}_delete" type="submit" class="btn btn-danger">Delete</button>
     </div>
 </div>
@@ -169,40 +175,40 @@
             }
         });
     });
-    function edit_tweet_{{ tweet.id }}() {
-        $("#tweet_{{ tweet.id }}_edit").attr("hidden", true);
-        $("#tweet_{{ tweet.id }}_delete").attr("hidden", true);
-        $("#tweet_{{ tweet.id }}_cancel").attr("hidden", false);
-        $("#tweet_{{ tweet.id }}_save").attr("hidden", false);
-    }
-    function edit_tweet_{{ tweet.id }}_cancel() {
-        $("#tweet_{{ tweet.id }}_edit").attr("hidden", false);
-        $("#tweet_{{ tweet.id }}_delete").attr("hidden", false);
-        $("#tweet_{{ tweet.id }}_cancel").attr("hidden", true);
-        $("#tweet_{{ tweet.id }}_save").attr("hidden", true);
-        $("#tweet_{{ tweet.id }}_error_msg").attr("hidden", true);
-    }
-    $("#tweet_{{ tweet.id }}_save").click(function(e){
-        $.ajax({
-            type: 'POST',
-            url: "{% url 'tweets:edit_tweet' %}",
-            headers: { "X-CSRFToken": getCookie('csrftoken') },
-            data: {
-                tweet_id: '{{ tweet.id }}',
-            },
-            success: function () {
-                localStorage.setItem("success_msg_{{ tweet.id }}_tweet_edit", true);
-                window.location.reload();
-            },
-            error: function (error) {
-                hide_all_msgs();
-                let err = error.responseText.split('\n')[1];
-                document.getElementById("error_msg_{{ tweet.id }}_tweet_edit").innerHTML =
-                'Error: <br>' + err;
-                $("#error_msg_{{ tweet.id }}_tweet_edit").attr("hidden", false);
-            }
-        });
-    });
+    {#function edit_tweet_{{ tweet.id }}() {#}
+    {#    $("#tweet_{{ tweet.id }}_edit").attr("hidden", true);#}
+    {#    $("#tweet_{{ tweet.id }}_delete").attr("hidden", true);#}
+    {#    $("#tweet_{{ tweet.id }}_cancel").attr("hidden", false);#}
+    {#    $("#tweet_{{ tweet.id }}_save").attr("hidden", false);#}
+    {# }#}
+    {#function edit_tweet_{{ tweet.id }}_cancel() {#}
+    {#    $("#tweet_{{ tweet.id }}_edit").attr("hidden", false);#}
+    {#    $("#tweet_{{ tweet.id }}_delete").attr("hidden", false);#}
+    {#    $("#tweet_{{ tweet.id }}_cancel").attr("hidden", true);#}
+    {#    $("#tweet_{{ tweet.id }}_save").attr("hidden", true);#}
+    {#    $("#tweet_{{ tweet.id }}_error_msg").attr("hidden", true);#}
+    {# }#}
+    {#$("#tweet_{{ tweet.id }}_save").click(function(e){#}
+    {#    $.ajax({#}
+    {#        type: 'POST',#}
+    {#        url: "{% url 'tweets:edit_tweet' %}",#}
+    {#        headers: { "X-CSRFToken": getCookie('csrftoken') },#}
+    {#        data: {#}
+    {#            tweet_id: '{{ tweet.id }}',#}
+    {#        },#}
+    {#        success: function () {#}
+    {#            localStorage.setItem("success_msg_{{ tweet.id }}_tweet_edit", true);#}
+    {#            window.location.reload();#}
+    {#        },#}
+    {#        error: function (error) {#}
+    {#            hide_all_msgs();#}
+    {#            let err = error.responseText.split('\n')[1];#}
+    {#            document.getElementById("error_msg_{{ tweet.id }}_tweet_edit").innerHTML =#}
+    {#            'Error: <br>' + err;#}
+    {#            $("#error_msg_{{ tweet.id }}_tweet_edit").attr("hidden", false);#}
+    {#        }#}
+    {#    });#}
+    {# });#}
     $("#tweet_{{ tweet.id }}_delete").click(function(e){
         e.preventDefault();
         $.ajax({

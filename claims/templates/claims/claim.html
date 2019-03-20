@@ -47,15 +47,17 @@
             <a id="{{ claim.id }}_claim_whatsApp_share" class="btn whatsApp-share-button" href="whatsapp://send?text={{ request.META.HTTP_HOST }}{{ request.path }}%20"
             data-size="large"><img src="{% static 'claims/assets/images/whatsApp_icon.png' %}"> Share claim on WhatsApp</a>
         {% endif %}
+        {% if tweets %}
         <hr><br>
         <div id="tweets">
             <h3>Related tweets:</h3>
             <br>
-            {% for tweet, user_details  in tweet.items %}
-                {% include 'comments/tweet.html' with tweet=tweet user_details=user_details request=request only %}
+            {% for tweet, user_details  in tweets.items %}
+                {% include 'tweets/tweet.html' with tweet=tweet user_details=user_details request=request only %}
             {% endfor %}
         </div>
         <br>
+        {% endif %}
         <hr><br>
         <div id="comments">
         {% if comments %}

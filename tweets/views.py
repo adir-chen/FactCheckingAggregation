@@ -126,7 +126,7 @@ def delete_tweet(request):
         raise Http404("Permission denied")
     from claims.views import view_claim
     from users.views import update_reputation_for_user
-    valid_delete_tweet, err_msg = check_if_delete_comment_is_valid(request)
+    valid_delete_tweet, err_msg = check_if_delete_tweet_is_valid(request)
     if not valid_delete_tweet:
         save_log_message(request.user.id, request.user.username,
                          'Deleting a tweet. Error: ' + err_msg)
@@ -144,7 +144,7 @@ def delete_tweet(request):
 # This function checks if the given fields for deleting a tweet are valid,
 # i.e. the request has all the fields with the correct format.
 # The function returns true in case the given fields are valid, otherwise false and an error
-def check_if_delete_comment_is_valid(request):
+def check_if_delete_tweet_is_valid(request):
     err = ''
     if not request.POST.get('comment_id'):
         err += 'Missing value for claim id'
