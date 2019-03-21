@@ -27,7 +27,6 @@
             Tags: <input id="{{ claim.id }}_tags" value="{{ claim.tags }}" type="text" placeholder="{{ claim.tags }}" class="claim_edit"><br>
             Image Url: <input id="{{ claim.id }}_image_src" value="{{ claim.image_src }}" type="text" placeholder="{{ claim.image_src }}" class="claim_edit">
         </div>
-
         <br>
         {% if request.user.is_authenticated %}
             <div class="buttons_row">
@@ -58,7 +57,46 @@
         </div>
         <br>
         {% endif %}
-        <hr><br>
+
+        {% if request.user.is_authenticated and request.user.id not in claim.users_tweeted_ids %}
+            <hr><br>
+            <h3>Add Tweet:</h3>
+            <br>
+            <div class="tweet_box">
+                <div style="grid-area: tweet-user;">
+                    <div class="comment_user_image">
+                        {% load static %}
+                        <img src="{{ user_img }}">
+                    </div>
+                    <div class="comment_user_details">
+                        User: <a href="/users/{{ request.user.username }}">{{ request.user.username }}</a><br>
+                        {% for i in 'i'|rjust:user_rep %}
+                            <img src="{% static 'claims/assets/images/star.png' %}">
+                        {% endfor %}
+                    </div>
+
+                </div>
+                <div id="tweet_content" class="tweet_content_edit">
+                    <div class="tweet_emb" style="padding: 20px;">
+                        Tweet URL:<br>
+                        <input id="{{ claim.id }}_new_tweet_link" type="text">
+                    </div>
+                    <div class="tweet_verdict" style="padding: 20px;">
+                        Author Name:<br>
+                        <input id="{{ claim.id }}_new_tweet_author" type="text">
+                        <br>
+                        Author Loyalty Rank:<br>
+                        <input id="{{ claim.id }}_new_tweet_author_rank" type="text">
+                    </div>
+                </div>
+                <div class="tweet_btn_row">
+                    <p id="success_msg_{{ claim.id }}_new_tweet" class="action_msg error_msg" hidden>Tweet was added successfully</p>
+                    <p id="error_msg_{{ claim.id }}_new_tweet" class="action_msg error_msg" hidden></p>
+                    <button id="{{ claim.id }}_new_tweet_save" type="submit" class="btn btn-info">Add Tweet</button>
+                </div>
+            </div>
+        {% endif %}
+        <br><hr><br>
         <div id="comments">
         {% if comments %}
             <h3>Users' verdicts:</h3>
@@ -144,10 +182,12 @@
             $("#success_msg_{{ claim.id }}_claim_edit").attr("hidden", true);
             $("#success_msg_{{ claim.id }}_claim_report_spam").attr("hidden", true);
             $("#success_msg_{{ claim.id }}_new_comment").attr("hidden", true);
+            $("#success_msg_{{ claim.id }}_new_tweet").attr("hidden", true);
 
             $("#error_msg_{{ claim.id }}_claim_edit").attr("hidden", true);
             $("#error_msg_{{ claim.id }}_claim_report_spam").attr("hidden", true);
             $("#error_msg_{{ claim.id }}_new_comment").attr("hidden", true);
+            $("#error_msg_{{ claim.id }}_new_tweet").attr("hidden", true);
         }
 
         function edit_claim() {
@@ -202,6 +242,32 @@
                 }
             });
         });
+
+        {#$("#{{ claim.id }}_new_tweet_save").click(function(){#}
+        {#    $.ajax({#}
+        {#        type: 'POST',#}
+        {#        url: "{% url 'tweets:add_tweet' %}",#}
+        {#        headers: { "X-CSRFToken": getCookie('csrftoken') },#}
+        {#        data: {#}
+        {#            claim_id: '{{ claim.id }}',#}
+        {#            tweet_link: $("#{{ claim.id }}_new_tweet_link").val(),#}
+        {#            author: $("#{{ claim.id }}_new_tweet_author").val(),#}
+        {#            author_rank: $("#{{ claim.id }}_new_tweet_author_rank").val(),#}
+        {#        },#}
+        {#        success: function () {#}
+        {#            localStorage.setItem("success_msg_{{ claim.id }}_new_tweet", true);#}
+        {#            window.location.reload();#}
+                    {#location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';#}
+        {#        },#}
+        {#        error: function (error) {#}
+        {#            hide_all_msgs();#}
+        {#            let err = error.responseText.split('\n')[1];#}
+        {#            document.getElementById("error_msg_{{ claim.id }}_new_tweet").innerHTML =#}
+        {#            'Error: <br>' + err;#}
+        {#            $("#error_msg_{{ claim.id }}_new_tweet").attr("hidden", false);#}
+        {#        }#}
+        {#    });#}
+        {# });#}
 
         $("#{{ claim.id }}_claim_save").click(function(){
             $.ajax({

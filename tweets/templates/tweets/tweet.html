@@ -1,5 +1,5 @@
 {%  load mathfilters %}
-<div style="border: 1px solid #3a9fcd; background: #fff; border-radius: 7px; display: grid; grid-template-areas: 'tweet-user tweet-emb tweet-verdict tweet-voting' 'tweet-btn-row tweet-btn-row tweet-btn-row tweet-btn-row'; grid-template-columns: 150px auto 150px 100px; margin: 20px 0;">
+<div class="tweet_box">
     <div style="grid-area: tweet-user;">
         <div class="comment_user_image">
             {% load static %}
@@ -13,42 +13,57 @@
         </div>
 
     </div>
-    <div style="grid-area: tweet-emb; padding: 10px;">
-        <blockquote class="twitter-tweet" data-lang="en">
-            <a href="{{ tweet.tweet_link }}"></a>
-        </blockquote>
+    <div id="tweet_{{ tweet.id }}_content" class="tweet_content">
+        <div class="tweet_emb">
+            <blockquote class="twitter-tweet" data-lang="en">
+                <a href="{{ tweet.tweet_link }}"></a>
+            </blockquote>
+        </div>
+        <div class="tweet_verdict">
+            {{ user_details.user.username }} ranked {{ tweet.author }}'s loyalty:<br><br><br>
+            {% if tweet.author_rank >= 50 %}
+                <span class="author_rank verdict_true">
+            {% else %}
+                <span class="author_rank verdict_false">
+            {% endif %}
+                <b>{{ tweet.author_rank }}</b>
+            </span>
+        </div>
+        <div class="tweet_voting">
+            {% if request.user.is_authenticated %}
+                <button id="tweet_{{ tweet.id }}_arrow_up" class="arrow_up">▲</button>
+            {% else %}
+                <button id="tweet_{{ tweet.id }}_arrow_up" class="arrow_up" disabled>▲</button>
+            {% endif %}
+            <br>
+            <span id="tweet_{{ tweet.id }}_voteCount" class="vote_count">{{ tweet.up_votes.count|sub:tweet.down_votes.count }}</span>
+            <br>
+            {% if request.user.is_authenticated %}
+                <button id="tweet_{{ tweet.id }}_arrow_down" class="arrow_down">▼</button>
+            {% else %}
+                <button id="tweet_{{ tweet.id }}_arrow_down" class="arrow_down" disabled>▼</button>
+            {% endif %}
+        </div>
     </div>
-    <div style="grid-area: tweet-verdict; padding-top: 20px;">
-        TAP ranked author loyalty:<br><br><br>
-        {% if tweet.author_rank >= 50 %}
-            <span class="verdict_true" style="padding: 20px; border-radius: 7px;">
-        {% else %}
-            <span class="verdict_false" style="padding: 20px; border-radius: 7px;">
-        {% endif %}
-            <b>{{ tweet.author_rank }}</b>
-        </span>
+    <div id="tweet_{{ tweet.id }}_content_edit" class="tweet_content_edit" hidden="hidden">
+        <div class="tweet_emb" style="padding: 20px;">
+            Tweet URL:<br>
+            <input id="tweet_{{ tweet.id }}_link" value="{{ tweet.tweet_link }}" type="text" placeholder="{{ tweet.tweet_link }}">
+        </div>
+        <div class="tweet_verdict" style="padding: 20px;">
+            Author Name:<br>
+            <input id="tweet_{{ tweet.id }}_author" value="{{ tweet.author }}" type="text" placeholder="{{ tweet.author }}">
+            <br>
+            Author Loyalty Rank:<br>
+            <input id="tweet_{{ tweet.id }}_author_rank" value="{{ tweet.author_rank }}" type="text" placeholder="{{ tweet.author_rank }}">
+        </div>
     </div>
-    <div style="grid-area: tweet-voting; text-align: center; padding-top: 70px; margin-right: 20px;">
-        {% if request.user.is_authenticated %}
-            <button id="tweet_{{ tweet.id }}_arrow_up" class="arrow_up">▲</button>
-        {% else %}
-            <button id="tweet_{{ tweet.id }}_arrow_up" class="arrow_up" disabled>▲</button>
-        {% endif %}
-        <br>
-        <span id="tweet_{{ tweet.id }}_voteCount" class="vote_count">{{ tweet.up_votes.count|sub:tweet.down_votes.count }}</span>
-        <br>
-        {% if request.user.is_authenticated %}
-            <button id="tweet_{{ tweet.id }}_arrow_down" class="arrow_down">▼</button>
-        {% else %}
-            <button id="tweet_{{ tweet.id }}_arrow_down" class="arrow_down" disabled>▼</button>
-        {% endif %}
-    </div>
-    <div style="grid-area: tweet-btn-row; padding: 20px; background: #f5f5f5; border-radius: 0 0 7px 7px;">
+    <div class="tweet_btn_row">
         <p id="success_msg_{{ tweet.id }}_tweet_edit" class="action_msg note_msg" hidden>Tweet was edited successfully</p>
         <p id="error_msg_{{ tweet.id }}_tweet_edit" class="action_msg error_msg" hidden></p>
-{#        <button id="tweet_{{ tweet.id }}_edit" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_tweet_{{ tweet.id }}()">Edit Tweet</button>#}
-{#        <button id="tweet_{{ tweet.id }}_cancel" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_tweet_{{ tweet.id }}_cancel()">Cancel</button>#}
-{#        <button id="tweet_{{ tweet.id }}_save" type="submit" hidden='hidden' class="btn btn-info">Save</button>#}
+        <button id="tweet_{{ tweet.id }}_edit" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_tweet_{{ tweet.id }}()">Edit Tweet</button>
+        <button id="tweet_{{ tweet.id }}_cancel" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_tweet_{{ tweet.id }}_cancel()">Cancel</button>
+        <button id="tweet_{{ tweet.id }}_save" type="submit" hidden='hidden' class="btn btn-info">Save</button>
         <button id="tweet_{{ tweet.id }}_delete" type="submit" class="btn btn-danger">Delete</button>
     </div>
 </div>
@@ -175,19 +190,25 @@
             }
         });
     });
-    {#function edit_tweet_{{ tweet.id }}() {#}
-    {#    $("#tweet_{{ tweet.id }}_edit").attr("hidden", true);#}
-    {#    $("#tweet_{{ tweet.id }}_delete").attr("hidden", true);#}
-    {#    $("#tweet_{{ tweet.id }}_cancel").attr("hidden", false);#}
-    {#    $("#tweet_{{ tweet.id }}_save").attr("hidden", false);#}
-    {# }#}
-    {#function edit_tweet_{{ tweet.id }}_cancel() {#}
-    {#    $("#tweet_{{ tweet.id }}_edit").attr("hidden", false);#}
-    {#    $("#tweet_{{ tweet.id }}_delete").attr("hidden", false);#}
-    {#    $("#tweet_{{ tweet.id }}_cancel").attr("hidden", true);#}
-    {#    $("#tweet_{{ tweet.id }}_save").attr("hidden", true);#}
-    {#    $("#tweet_{{ tweet.id }}_error_msg").attr("hidden", true);#}
-    {# }#}
+    function edit_tweet_{{ tweet.id }}() {
+        $("#tweet_{{ tweet.id }}_content").attr("hidden", true);
+        $("#tweet_{{ tweet.id }}_content_edit").attr("hidden", false);
+
+        $("#tweet_{{ tweet.id }}_edit").attr("hidden", true);
+        $("#tweet_{{ tweet.id }}_delete").attr("hidden", true);
+        $("#tweet_{{ tweet.id }}_cancel").attr("hidden", false);
+        $("#tweet_{{ tweet.id }}_save").attr("hidden", false);
+     }
+    function edit_tweet_{{ tweet.id }}_cancel() {
+        $("#tweet_{{ tweet.id }}_content").attr("hidden", false);
+        $("#tweet_{{ tweet.id }}_content_edit").attr("hidden", true);
+
+        $("#tweet_{{ tweet.id }}_edit").attr("hidden", false);
+        $("#tweet_{{ tweet.id }}_delete").attr("hidden", false);
+        $("#tweet_{{ tweet.id }}_cancel").attr("hidden", true);
+        $("#tweet_{{ tweet.id }}_save").attr("hidden", true);
+        $("#tweet_{{ tweet.id }}_error_msg").attr("hidden", true);
+     }
     {#$("#tweet_{{ tweet.id }}_save").click(function(e){#}
     {#    $.ajax({#}
     {#        type: 'POST',#}
@@ -195,6 +216,9 @@
     {#        headers: { "X-CSRFToken": getCookie('csrftoken') },#}
     {#        data: {#}
     {#            tweet_id: '{{ tweet.id }}',#}
+    {#            tweet_link: $("#tweet_{{ tweet.id }}_link").val(),#}
+    {#            author: $("#tweet_{{ tweet.id }}_author").val(),#}
+    {#            author_rank: $("#tweet_{{ tweet.id }}_author_rank").val(),#}
     {#        },#}
     {#        success: function () {#}
     {#            localStorage.setItem("success_msg_{{ tweet.id }}_tweet_edit", true);#}
@@ -209,6 +233,7 @@
     {#        }#}
     {#    });#}
     {# });#}
+
     $("#tweet_{{ tweet.id }}_delete").click(function(e){
         e.preventDefault();
         $.ajax({

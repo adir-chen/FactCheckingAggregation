@@ -21,3 +21,10 @@ class Claim(models.Model):
         for comment in Comment.objects.filter(claim_id=self.id):
             user_ids.append(comment.user_id)
         return user_ids
+
+    def users_tweeted_ids(self):
+        from tweets.models import Tweet
+        user_ids = []
+        for tweet in Tweet.objects.filter(claim_id=self.id):
+            user_ids.append(tweet.user_id)
+        return user_ids
