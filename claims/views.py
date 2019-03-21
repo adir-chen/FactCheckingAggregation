@@ -5,6 +5,7 @@ from comments.models import Comment
 from comments.views import add_comment
 from django.contrib.auth.models import User
 from logger.models import Logger
+from tweets.models import Tweet
 from users.models import Users_Images, Scrapers, Users_Reputations
 from logger.views import save_log_message, check_duplicate_log_for_user
 from users.views import check_if_user_exists_by_user_id
@@ -191,12 +192,14 @@ def view_claim(request, claim_id):
     elif request.method != "GET":
         raise Http404("Permission denied")
     comments = get_users_details_for_comments(Comment.objects.filter(claim_id=claim_id))
+    tweets = get_users_details_for_comments(Tweet.objects.filter(claim_id=claim_id))
     user_img, user_rep = None, None
     if request.user.is_authenticated:
         user_img, user_rep = get_user_img_and_rep(request.user.id)
     return render(request, 'claims/claim.html', {
         'claim': claim,
         'comments': comments,
+        'tweets': tweets,
         'user_img': user_img,
         'user_rep': user_rep
     })

@@ -41,13 +41,24 @@
             </div>
         {% endif %}
         {% load static %}
-            <a id="{{ claim.id }}_claim_twitter_share" class="btn twitter-share-button" href="https://twitter.com/intent/tweet?text=http://{{ request.META.HTTP_HOST }}{{ request.path }}%20"
-            target="_blank" data-size="large"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"> Share claim on Twitter</a>
-            {% if 'Android' in request.META.HTTP_USER_AGENT %}
-                <a id="{{ claim.id }}_claim_whatsApp_share" class="btn whatsApp-share-button" href="whatsapp://send?text={{ request.META.HTTP_HOST }}{{ request.path }}%20"
-                data-size="large"><img src="{% static 'claims/assets/images/whatsApp_icon.png' %}"> Share claim on WhatsApp</a>
-            {% endif %}
-            <hr><br>
+        <a id="{{ claim.id }}_claim_twitter_share" class="btn twitter-share-btn" href="https://twitter.com/intent/tweet?text=http://{{ request.META.HTTP_HOST }}{{ request.path }}%20"
+        target="_blank" data-size="large"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"> Share claim on Twitter</a>
+        {% if 'Android' in request.META.HTTP_USER_AGENT %}
+            <a id="{{ claim.id }}_claim_whatsApp_share" class="btn whatsApp-share-button" href="whatsapp://send?text={{ request.META.HTTP_HOST }}{{ request.path }}%20"
+            data-size="large"><img src="{% static 'claims/assets/images/whatsApp_icon.png' %}"> Share claim on WhatsApp</a>
+        {% endif %}
+        {% if tweets %}
+        <hr><br>
+        <div id="tweets">
+            <h3>Related tweets:</h3>
+            <br>
+            {% for tweet, user_details  in tweets.items %}
+                {% include 'tweets/tweet.html' with tweet=tweet user_details=user_details request=request only %}
+            {% endfor %}
+        </div>
+        <br>
+        {% endif %}
+        <hr><br>
         <div id="comments">
         {% if comments %}
             <h3>Users' verdicts:</h3>
@@ -104,6 +115,7 @@
         {% endif %}
         </div>
     </div>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
     <script>
         let claim_timestamp = new Date('{{ claim.timestamp|date:"D, d M Y H:i:s" }}');
         {% if request.user.is_superuser %}
