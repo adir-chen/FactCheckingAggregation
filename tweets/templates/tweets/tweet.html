@@ -199,6 +199,7 @@
         $("#tweet_{{ tweet.id }}_cancel").attr("hidden", false);
         $("#tweet_{{ tweet.id }}_save").attr("hidden", false);
      }
+
     function edit_tweet_{{ tweet.id }}_cancel() {
         $("#tweet_{{ tweet.id }}_content").attr("hidden", false);
         $("#tweet_{{ tweet.id }}_content_edit").attr("hidden", true);
@@ -209,30 +210,31 @@
         $("#tweet_{{ tweet.id }}_save").attr("hidden", true);
         $("#tweet_{{ tweet.id }}_error_msg").attr("hidden", true);
      }
-    {#$("#tweet_{{ tweet.id }}_save").click(function(e){#}
-    {#    $.ajax({#}
-    {#        type: 'POST',#}
-    {#        url: "{% url 'tweets:edit_tweet' %}",#}
-    {#        headers: { "X-CSRFToken": getCookie('csrftoken') },#}
-    {#        data: {#}
-    {#            tweet_id: '{{ tweet.id }}',#}
-    {#            tweet_link: $("#tweet_{{ tweet.id }}_link").val(),#}
-    {#            author: $("#tweet_{{ tweet.id }}_author").val(),#}
-    {#            author_rank: $("#tweet_{{ tweet.id }}_author_rank").val(),#}
-    {#        },#}
-    {#        success: function () {#}
-    {#            localStorage.setItem("success_msg_{{ tweet.id }}_tweet_edit", true);#}
-    {#            window.location.reload();#}
-    {#        },#}
-    {#        error: function (error) {#}
-    {#            hide_all_msgs();#}
-    {#            let err = error.responseText.split('\n')[1];#}
-    {#            document.getElementById("error_msg_{{ tweet.id }}_tweet_edit").innerHTML =#}
-    {#            'Error: <br>' + err;#}
-    {#            $("#error_msg_{{ tweet.id }}_tweet_edit").attr("hidden", false);#}
-    {#        }#}
-    {#    });#}
-    {# });#}
+
+    $("#tweet_{{ tweet.id }}_save").click(function(e){
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'tweets:edit_tweet' %}",
+            headers: { "X-CSRFToken": getCookie('csrftoken') },
+            data: {
+                tweet_id: '{{ tweet.id }}',
+                tweet_link: $("#tweet_{{ tweet.id }}_link").val(),
+                author: $("#tweet_{{ tweet.id }}_author").val(),
+                author_rank: $("#tweet_{{ tweet.id }}_author_rank").val(),
+            },
+            success: function () {
+                localStorage.setItem("success_msg_{{ tweet.id }}_tweet_edit", true);
+                window.location.reload();
+            },
+            error: function (error) {
+                hide_all_msgs();
+                let err = error.responseText.split('\n')[1];
+                document.getElementById("error_msg_{{ tweet.id }}_tweet_edit").innerHTML =
+                'Error: <br>' + err;
+                $("#error_msg_{{ tweet.id }}_tweet_edit").attr("hidden", false);
+            }
+        });
+     });
 
     $("#tweet_{{ tweet.id }}_delete").click(function(e){
         e.preventDefault();
