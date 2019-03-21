@@ -57,7 +57,18 @@
         </div>
         <br>
         {% endif %}
-
+        <br><hr><br>
+        <div id="comments">
+        {% if comments %}
+            <h3>Users' verdicts:</h3>
+            <br>
+            {% for comment, user_details  in comments.items %}
+                {% include 'comments/comment.html' with comment=comment user_details=user_details request=request only %}
+            {% endfor %}
+        {% else %}
+            <h3>No verdicts yet.</h3>
+        {%  endif %}
+        </div>
         {% if request.user.is_authenticated and request.user.id not in claim.users_tweeted_ids %}
             <hr><br>
             <h3>Add Tweet:</h3>
@@ -86,7 +97,7 @@
                         <input id="{{ claim.id }}_new_tweet_author" type="text">
                         <br>
                         Author Loyalty Rank:<br>
-                        <input id="{{ claim.id }}_new_tweet_author_rank" type="text">
+                        <input id="{{ claim.id }}_new_tweet_author_rank" type="number" min="1" max="100">
                     </div>
                 </div>
                 <div class="tweet_btn_row">
@@ -96,18 +107,6 @@
                 </div>
             </div>
         {% endif %}
-        <br><hr><br>
-        <div id="comments">
-        {% if comments %}
-            <h3>Users' verdicts:</h3>
-            <br>
-            {% for comment, user_details  in comments.items %}
-                {% include 'comments/comment.html' with comment=comment user_details=user_details request=request only %}
-            {% endfor %}
-        {% else %}
-            <h3>No verdicts yet.</h3>
-        {%  endif %}
-        </div>
         {% if request.user.is_authenticated and request.user.id not in claim.users_commented_ids %}
             <br><hr>
             <h3>Add Comment:</h3>
@@ -231,7 +230,6 @@
                 success: function () {
                     localStorage.setItem("success_msg_{{ claim.id }}_new_comment", true);
                     window.location.reload();
-                    {#location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';#}
                 },
                 error: function (error) {
                     hide_all_msgs();
@@ -284,7 +282,6 @@
                 success: function () {
                     localStorage.setItem("success_msg_{{ claim.id }}_claim_edit", true);
                     window.location.reload();
-                    {#location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';#}
                 },
                 error: function (error) {
                     hide_all_msgs();
@@ -331,7 +328,6 @@
                 success: function () {
                     localStorage.setItem("success_msg_{{ claim.id }}_claim_report_spam", true);
                     window.location.reload();
-                    {#location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';#}
                 },
                 error: function (error) {
                     hide_all_msgs();

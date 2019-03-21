@@ -26,10 +26,22 @@ def add_tweet(request):
                 tweet_info['user_id'],
                 tweet_info['tweet_link'],
                 tweet_info['author'],
-                tweet_info['author_rank'])
+                int(tweet_info['author_rank']))
     save_log_message(request.user.id, request.user.username,
                      'Adding a new tweet on claim with id ' + str(request.POST.get("claim_id")), True)
     return view_claim(return_get_request_to_user(request.user), request.POST.get('claim_id'))
+
+
+# This function adds a new tweet to a claim in the website
+def build_tweet(claim_id, user_id, tweet_link, author, author_rank):
+    tweet = Tweet(
+        claim_id=claim_id,
+        user_id=user_id,
+        tweet_link=tweet_link,
+        author=author,
+        author_rank=author_rank
+    )
+    tweet.save()
 
 
 # This function checks if a given tweet is valid, i.e. the tweet has all the fields with the correct format.
@@ -48,51 +60,21 @@ def check_if_tweet_is_valid(tweet_info):
         err += 'Missing value for author'
     elif 'author_rank' not in tweet_info or not tweet_info['author_rank']:
         err += 'Missing value for author rank'
+    elif not tweet_info['author_rank'].isdigit():
+        err += 'Incorrect format for author rank (integer)'
+    elif not (1 <= int(tweet_info['author_rank']) <= 100):
+        err += 'Author rank should be between 1 - 100'
     elif len(Claim.objects.filter(id=tweet_info['claim_id'])) == 0:
         err += 'Claim ' + str(tweet_info['claim_id']) + 'does not exist'
     elif not check_if_user_exists_by_user_id(tweet_info['user_id']):
         err += 'User with id ' + str(tweet_info['user_id']) + ' does not exist'
-    elif len(Tweet.objects.filter(claim_id=tweet_info['claim_id'], user_id=tweet_info['user_id'])) > 0:
-        err += 'You can only comment once on a claim'
+    elif not tweet_info['is_superuser'] and len(Tweet.objects.filter(claim_id=tweet_info['claim_id'], user_id=tweet_info['user_id'])) > 0:
+        err += 'You can only tweet once on a claim'
     elif not is_english_input(tweet_info['author']):
         err += 'Input should be in the English language'
     if len(err) > 0:
         return False, err
     return True, err
-
-
-def download_tweets_page(request):
-    return render(request, 'tweets/post_csv.html')
-
-
-def download_tweets_for_claims(request):
-    if not request.user.is_authenticated:  # TAP user
-        if not request.POST.get('username') or not request.POST.get('password') or not \
-                authenticate(request, username=request.POST.get('username'), password=request.POST.get('password')):
-            raise Http404("Permission denied")
-        request.user = authenticate(request, username=request.POST.get('username'), password=request.POST.get('password'))
-    if not request.user.is_superuser or request.method != "POST" or 'csv_file' not in request.FILES:
-        raise Http404("Permission denied")
-    tweets = request.FILES['csv_file'].read().decode('utf-8')
-    for tweet in tweets.split('\n')[1:]:
-        if tweet:
-            tweet_fields = tweet.split(',')
-            claim = get_object_or_404(Claim, id=tweet_fields[0])
-            if claim:
-                build_tweet(claim.id, request.user.id, tweet_fields[1], tweet_fields[2], int(float(tweet_fields[3]) * 100))
-    return view_home(return_get_request_to_user(request.user))
-
-
-# This function adds a new tweet to a claim in the website
-def build_tweet(claim_id, user_id, tweet_link, author, author_rank):
-    tweet = Tweet(
-        claim_id=claim_id,
-        user_id=user_id,
-        tweet_link=tweet_link,
-        author=author,
-        author_rank=author_rank
-    )
-    tweet.save()
 
 
 # This function increases a tweet's vote by 1
@@ -206,8 +188,6 @@ def check_tweet_new_fields(new_tweet_fields):
         err += 'Missing value for user id'
     elif 'is_superuser' not in new_tweet_fields:
         err += 'Missing value for user type'
-    elif 'claim_id' not in new_tweet_fields or not new_tweet_fields['claim_id']:
-        err += 'Missing value for claim id'
     elif 'tweet_id' not in new_tweet_fields or not new_tweet_fields['tweet_id']:
         err += 'Missing value for tweet id'
     elif 'tweet_link' not in new_tweet_fields or not new_tweet_fields['tweet_link']:
@@ -216,18 +196,20 @@ def check_tweet_new_fields(new_tweet_fields):
         err += 'Missing value for tweet author'
     elif 'author_rank' not in new_tweet_fields or not new_tweet_fields['author_rank']:
         err += 'Missing value for author rank'
+    elif not new_tweet_fields['author_rank'].isdigit():
+        err += 'Incorrect format for author rank (integer)'
+    elif not (1 <= int(new_tweet_fields['author_rank']) <= 100):
+        err += 'Author rank should be between 1 - 100'
     elif not check_if_user_exists_by_user_id(new_tweet_fields['user_id']):
         err += 'User with id ' + str(new_tweet_fields['user_id']) + ' does not exist'
     elif len(Tweet.objects.filter(id=new_tweet_fields['tweet_id'])) == 0:
         err += 'Tweet with id ' + str(new_tweet_fields['tweet_id']) + ' does not exist'
-    elif len(Claim.objects.filter(id=new_tweet_fields['claim_id'])) == 0:
-        err += 'Claim with id ' + str(new_tweet_fields['claim_id']) + ' does not exist'
     elif (not new_tweet_fields['is_superuser']) and len(Tweet.objects.filter(id=new_tweet_fields['tweet_id'], user_id=new_tweet_fields['user_id'])) == 0:
         err += 'Tweet with id ' + str(new_tweet_fields['tweet_id']) + ' does not belong to user with id ' + \
                str(new_tweet_fields['user_id'])
     elif (not new_tweet_fields['is_superuser']) and (timezone.now() - Tweet.objects.filter(id=new_tweet_fields['tweet_id']).first().timestamp).total_seconds() \
             / 60 > max_minutes_to_edit_tweet:
-        err += 'You can no longer edit your comment'
+        err += 'You can no longer edit your tweet'
     elif not is_english_input(new_tweet_fields['author']):
         err += 'Input should be in the English language'
     if len(err) > 0:
@@ -273,3 +255,29 @@ def check_if_delete_tweet_is_valid(request):
     if len(err) > 0:
         return False, err
     return True, err
+
+
+# This function returns a HTML for posting new tweets
+def post_tweets_page(request):
+    if not request.user.is_superuser or request.method != "GET":
+        raise Http404("Permission denied")
+    return render(request, 'tweets/post_tweets.html')
+
+
+# This function saves all the user's tweets (from the request) in the system
+def download_tweets_for_claims(request):
+    if not request.user.is_authenticated:  # TAP user
+        if not request.POST.get('username') or not request.POST.get('password') or not \
+                authenticate(request, username=request.POST.get('username'), password=request.POST.get('password')):
+            raise Http404("Permission denied")
+        request.user = authenticate(request, username=request.POST.get('username'), password=request.POST.get('password'))
+    if not request.user.is_superuser or request.method != "POST" or 'csv_file' not in request.FILES:
+        raise Http404("Permission denied")
+    tweets = request.FILES['csv_file'].read().decode('utf-8')
+    for tweet in tweets.split('\n')[1:]:
+        if tweet:
+            tweet_fields = tweet.split(',')
+            claim = get_object_or_404(Claim, id=tweet_fields[0])
+            if claim:
+                build_tweet(claim.id, request.user.id, tweet_fields[1], tweet_fields[2], int(float(tweet_fields[3]) * 100))
+    return view_home(return_get_request_to_user(request.user))

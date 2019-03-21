@@ -188,12 +188,6 @@ class CommentTests(TestCase):
         self.post_request.user = guest
         self.assertRaises(Exception, add_comment, self.post_request)
 
-    def test_add_comment_get_request(self):
-        self.post_request.method = 'GET'
-        self.post_request.POST = self.new_comment_details_user_1
-        self.post_request.user = self.user_1
-        self.assertRaises(Http404, add_comment, self.post_request)
-
     def test_add_comment_missing_claim_id(self):
         del self.new_comment_details_user_1['claim_id']
         self.post_request.POST = self.new_comment_details_user_1

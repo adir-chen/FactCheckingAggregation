@@ -3,7 +3,7 @@ from . import views
 
 app_name = "tweets"
 urlpatterns = [
-    path('download_tweets_page', views.download_tweets_page, name='download_tweets_page'),
+    path('post_tweets_page', views.post_tweets_page, name='post_tweets_page'),
     path('download_tweets_for_claims', views.download_tweets_for_claims, name='download_tweets_for_claims'),
     path('up_vote', views.up_vote, name='up_vote'),
     path('down_vote', views.down_vote, name='down_vote'),
