@@ -275,6 +275,13 @@ class CommentTests(TestCase):
             self.assertTrue(len(Comment.objects.filter(claim_id=self.claim_1.id)) == len_comments)
             self.new_comment_details_user_1 = dict_copy.copy()
 
+    def test_add_comment_invalid_request(self):
+        len_comments = len(Comment.objects.filter(claim_id=self.claim_2.id))
+        self.get_request.POST = self.new_comment_details_user_1
+        self.get_request.user = self.user_1
+        self.assertRaises(Http404, add_comment, self.get_request)
+        self.assertTrue(len(Comment.objects.filter(claim_id=self.claim_2.id)) == len_comments)
+
     def test_build_comment_by_user(self):
         len_comments = len(Comment.objects.all())
         build_comment(self.comment_4.claim_id,
@@ -623,18 +630,17 @@ class CommentTests(TestCase):
         self.post_request.user = admin
         res = export_to_csv(self.post_request)
         self.assertTrue(res.status_code == 200)
-        expected_info = 'Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n'\
-                        'claim3,description5,url5,category3,' + str(self.comment_5.verdict_date) + ',,label5,,0\r\n'\
-                        'claim4,description6,url6,category4,' + str(self.comment_6.verdict_date) + ',,label6,,0\r\n'
+        expected_info = 'Claim Id,Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n' +\
+                        str(self.comment_5.claim.id) + ',claim3,description5,url5,category3,' + str(self.comment_5.verdict_date) + ',,label5,,0\r\n' +\
+                        str(self.comment_6.claim.id) + ',claim4,description6,url6,category4,' + str(self.comment_6.verdict_date) + ',,label6,,0\r\n'
         self.assertEqual(res.content.decode('utf-8'), expected_info)
-
         Comment.objects.filter(id=self.comment_5.id).update(tags='tag1', system_label='True')
         Comment.objects.filter(id=self.comment_6.id).update(tags='tag6, tag7', system_label='False')
         res = export_to_csv(self.post_request)
         self.assertTrue(res.status_code == 200)
-        expected_info = 'Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n' + \
-                        'claim3,description5,url5,category3,' + str(self.comment_5.verdict_date) + ',tag1,label5,True,0\r\n'\
-                        'claim4,description6,url6,category4,' + str(self.comment_6.verdict_date) + ',"tag6, tag7",label6,False,0\r\n'
+        expected_info = 'Claim Id,Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n'  + \
+                        str(self.comment_5.claim.id) + ',claim3,description5,url5,category3,' + str(self.comment_5.verdict_date) + ',tag1,label5,True,0\r\n' + \
+                        str(self.comment_6.claim.id) + ',claim4,description6,url6,category4,' + str(self.comment_6.verdict_date) + ',"tag6, tag7",label6,False,0\r\n'
         self.assertEqual(res.content.decode('utf-8'), expected_info)
 
     def test_export_to_csv_invalid_arg_for_scraper(self):
@@ -686,7 +692,7 @@ class CommentTests(TestCase):
         res = export_to_csv(self.post_request)
         self.assertTrue(res.status_code == 200)
         self.assertTrue(res.content.decode('utf-8') ==
-                        'Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n')
+                        'Claim Id,Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n')
 
     def test_export_to_csv_not_authenticated_user(self):
         from django.contrib.auth.models import AnonymousUser
@@ -948,7 +954,15 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = user
-        self.assertRaises(Exception, down_vote, self.post_request)
+        self.assertRaises(Exception, up_vote, self.post_request)
+
+    def test_up_vote_invalid_request(self):
+        comment_to_vote = {'comment_id': self.comment_2.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(comment_to_vote)
+        self.get_request.POST = query_dict
+        self.get_request.user = self.user_1
+        self.assertRaises(Exception, up_vote, self.get_request)
 
     def test_down_vote(self):
         comment_to_vote = {'comment_id': self.comment_1.id}
@@ -1013,6 +1027,14 @@ class CommentTests(TestCase):
         self.post_request.user = user
         self.assertRaises(Exception, down_vote, self.post_request)
 
+    def test_down_vote_invalid_request(self):
+        comment_to_vote = {'comment_id': self.comment_1.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(comment_to_vote)
+        self.get_request.POST = query_dict
+        self.get_request.user = self.user_1
+        self.assertRaises(Exception, down_vote, self.get_request)
+
     def test_check_if_vote_is_valid(self):
         comment_to_vote = {'comment_id': self.comment_1.id,
                            'user_id': self.user_1.id}
@@ -1025,7 +1047,7 @@ class CommentTests(TestCase):
         comment_to_vote = {'comment_id': self.comment_1.id}
         self.assertFalse(check_if_vote_is_valid(comment_to_vote)[0])
 
-    def test_check_if_vote_is_valid_missing_invalid_user_id(self):
+    def test_check_if_vote_is_valid_invalid_user_id(self):
         comment_to_vote = {'comment_id': self.comment_1.id,
                            'user_id': self.num_of_saved_users + random.randint(1, 10)}
         self.assertFalse(check_if_vote_is_valid(comment_to_vote)[0])
@@ -1034,7 +1056,7 @@ class CommentTests(TestCase):
         comment_to_vote = {'user_id': self.user_1.id}
         self.assertFalse(check_if_vote_is_valid(comment_to_vote)[0])
 
-    def test_check_if_vote_is_valid_missing_invalid_comment_id(self):
+    def test_check_if_vote_is_valid_invalid_comment_id(self):
         comment_to_vote = {'comment_id': self.num_of_saved_comments + random.randint(1, 10),
                            'user_id': self.user_1.id}
         self.assertFalse(check_if_vote_is_valid(comment_to_vote)[0])
@@ -1114,6 +1136,15 @@ class CommentTests(TestCase):
             self.post_request.user = self.user_1
             self.assertRaises(Exception, edit_comment, self.post_request)
             self.update_comment_details = dict_copy.copy()
+
+    def test_edit_comment_invalid_request(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.comment_1.user_id)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.update_comment_details)
+        self.get_request.POST = query_dict
+        self.get_request.user = self.user_1
+        self.assertRaises(Http404, edit_comment, self.get_request)
 
     def test_check_comment_new_fields(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
@@ -1302,6 +1333,14 @@ class CommentTests(TestCase):
         self.post_request.user = self.user_1
         len_comments = len(Comment.objects.all())
         self.assertRaises(Exception, delete_comment, self.post_request)
+        self.assertTrue(len(Comment.objects.all()) == len_comments)
+
+    def test_delete_comment_invalid_request(self):
+        comment_to_delete = {'comment_id': self.comment_1.id}
+        self.get_request.POST = comment_to_delete
+        self.get_request.user = self.user_1
+        len_comments = len(Comment.objects.all())
+        self.assertRaises(Http404, delete_comment, self.get_request)
         self.assertTrue(len(Comment.objects.all()) == len_comments)
 
     def test_check_if_delete_comment_is_valid(self):
