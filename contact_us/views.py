@@ -23,7 +23,7 @@ def send_email(request):
     valid_mail, err_msg = check_if_email_is_valid(mail_info)
     if not valid_mail:
         save_log_message(request.user.id, request.user.username,
-                         ' failed send an email. Error: ' + err_msg)
+                         'Sending an email from ip - ' + ip + '. Error: ' + err_msg)
         raise Exception(err_msg)
     send_mail(mail_info['user_email'] + ': ' + mail_info['subject'],
               mail_info['description'],
