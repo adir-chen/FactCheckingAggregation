@@ -80,6 +80,35 @@
             </span>
         </div>
 
+        <hr>
+        <h4>{{ user.username }}'s published Tweets:</h4>
+        <div class="headlines">
+            <div id="tweets" style="width: 100%; padding: 20px; border-radius: 10px; background: #aabfd6; margin: 0 auto;">
+                {% for tweet, user  in user_tweets.object_list|slice:"0:3" %}
+                    Attached Tweet at {{ tweet.timestamp }} to claim: <a href="/claim/{{ tweet.claim_id }}">{{ tweet.claim.claim }}</a>
+                    {% include 'tweets/tweet.html' with tweet=tweet user_details=user request=request only %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="pagination">
+            <span class="step-links">
+                {% if user_tweets.has_previous %}
+                    <a href="?page2=1" class="btn btn-info">&laquo; first</a>
+                    <a href="?page2={{ user_tweets.previous_page_number }}" class="btn btn-info">previous</a>
+                {% endif %}
+
+                <span class="current" style="padding: 10px 20px;">
+                    Page {{ user_tweets.number }} of {{ user_tweets.paginator.num_pages }}
+                </span>
+
+                {% if user_tweets.has_next %}
+                    <a href="?page2={{ user_tweets.next_page_number }}" class="btn btn-info">next</a>
+                    <a href="?page2={{ user_tweets.paginator.num_pages }}" class="btn btn-info">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+
         {% if user.id in scrapers_ids and request.user.is_superuser %}
             <div class="comment_box" style="padding: 30px;">
             <h5>True Labels:</h5>

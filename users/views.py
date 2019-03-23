@@ -5,6 +5,7 @@ from django.shortcuts import render
 from claims.models import Claim
 from comments.models import Comment
 from logger.views import save_log_message
+from tweets.models import Tweet
 from users.models import Users_Images, Scrapers
 from users.models import Users_Reputations
 
@@ -328,23 +329,29 @@ def user_page(request, username):
     logged_in = user.id in logged_in_users
     from claims.views import get_users_images_for_claims, get_users_details_for_comments, \
         get_user_img_and_rep
-    user_claims, user_comments = list(), list()
+    user_claims, user_comments, user_tweets = list(), list(), list()
     claims = Claim.objects.filter(user=user.id)
     if len(claims) > 0:
         user_claims = list(get_users_images_for_claims(claims).items())
     comments = Comment.objects.filter(user=user.id)
     if len(comments) > 0:
         user_comments = list(get_users_details_for_comments(comments).items())
+    tweets = Tweet.objects.filter(user=user.id)
+    if len(tweets) > 0:
+        user_tweets = list(get_users_details_for_comments(tweets).items())
     user_img, user_rep = get_user_img_and_rep(user.id)
     page = request.GET.get('page1')
     paginator = Paginator(user_claims, 3)
     page2 = request.GET.get('page2')
     paginator2 = Paginator(user_comments, 3)
+    page3 = request.GET.get('page3')
+    paginator3 = Paginator(user_tweets, 3)
     return render(request, 'users/user_page.html', {
         'user': user,
         'logged_in': logged_in,
         'user_claims': paginator.get_page(page),
         'user_comments': paginator2.get_page(page2),
+        'user_tweets': paginator3.get_page(page3),
         'user_img': user_img,
         'user_rep': user_rep,
         'scrapers_ids': get_all_scrapers_ids_arr(),
