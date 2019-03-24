@@ -184,6 +184,8 @@ def edit_tweet(request):
 def check_tweet_new_fields(new_tweet_fields):
     err = ''
     max_minutes_to_edit_tweet = 5
+    # if 'label' not in new_tweet_fields or not new_tweet_fields['label']:
+    #     new_tweet_fields['label'] = ''
     if 'user_id' not in new_tweet_fields or not new_tweet_fields['user_id']:
         err += 'Missing value for user id'
     elif 'is_superuser' not in new_tweet_fields:
@@ -281,3 +283,48 @@ def download_tweets_for_claims(request):
             if claim:
                 build_tweet(claim.id, request.user.id, tweet_fields[1], tweet_fields[2], int(float(tweet_fields[3]) * 100))
     return view_home(return_get_request_to_user(request.user))
+
+
+# This function sets user's label (True, False or Unknown) to a tweet according to his claim
+def set_user_label_to_tweet(request):
+    if not request.user.is_authenticated or request.method != "POST":
+        raise Http404("Permission denied")
+    tweet_info = request.POST.dict()
+    tweet_info['user_id'] = request.user.id
+    tweet_info['is_superuser'] = request.user.is_superuser
+    valid_tweet_label, err_msg = check_if_tweet_label_is_valid(tweet_info)
+    if not valid_tweet_label:
+        save_log_message(request.user.id, request.user.username,
+                         'Labeling a tweet on claim with id ' +
+                         str(request.POST.get("claim_id")) + '. Error: ' + err_msg)
+        raise Exception(err_msg)
+    Tweet.objects.filter(id=tweet_info['tweet_id']).update(label=tweet_info['label'])
+    save_log_message(request.user.id, request.user.username,
+                     'Labeling a tweet on claim with id ' + str(request.POST.get("claim_id")), True)
+    return view_claim(return_get_request_to_user(request.user), request.POST.get('claim_id'))
+
+
+# This function checks if a given label for a tweet is valid,
+# i.e. the tweet's label has all the fields with the correct format.
+# The function returns true in case the tweet's label is valid, otherwise false and an error
+def check_if_tweet_label_is_valid(tweet_info):
+    err = ''
+    if 'claim_id' not in tweet_info or not tweet_info['claim_id']:
+        err += 'Missing value for claim id'
+    elif 'user_id' not in tweet_info or not tweet_info['user_id']:
+        err += 'Missing value for user id'
+    elif 'is_superuser' not in tweet_info:
+        err += 'Missing value for user type'
+    elif 'tweet_id' not in tweet_info or not tweet_info['tweet_id']:
+        err += 'Missing value for tweet id'
+    elif 'label' not in tweet_info or not tweet_info['label']:
+        err += 'Missing value for label'
+    elif len(Claim.objects.filter(id=tweet_info['claim_id'])) == 0:
+        err += 'Claim ' + str(tweet_info['claim_id']) + 'does not exist'
+    elif not check_if_user_exists_by_user_id(tweet_info['user_id']):
+        err += 'User with id ' + str(tweet_info['user_id']) + ' does not exist'
+    elif not tweet_info['is_superuser'] and len(Claim.objects.filter(id=tweet_info['claim_id'], user_id=tweet_info['user_id'])) == 0:
+        err += 'Claim with id ' + str(tweet_info['claim_id']) + ' does not belong to user with id ' + str(tweet_info['user_id'])
+    if len(err) > 0:
+        return False, err
+    return True, err
