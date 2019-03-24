@@ -11,4 +11,5 @@ urlpatterns = [
     path('post_tweets_page', views.post_tweets_page, name='post_tweets_page'),
     path('download_tweets_for_claims', views.download_tweets_for_claims, name='download_tweets_for_claims'),
     path('set_user_label_to_tweet', views.set_user_label_to_tweet, name='set_user_label_to_tweet'),
+    path('export_to_csv', views.export_to_csv, name='export_to_csv'),
 ]

@@ -298,6 +298,13 @@ def export_claims_page(request):
     raise Http404("Permission denied")
 
 
+# This function return a HTML page for adding a new claim to the website
+def export_tweets_page(request):
+    if request.user.is_authenticated:
+        return render(request, 'tweets/export_tweets.html')
+    raise Http404("Permission denied")
+
+
 # This function edits a claim in the website
 def edit_claim(request):
     if not request.user.is_authenticated or request.method != "POST":
