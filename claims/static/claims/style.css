@@ -619,11 +619,6 @@ span.author_rank{
     border-radius: 7px;
 }
 
-.tweet_box input{
-    width: 100%;
-    margin: 10px 0;
-}
-
 div.tweet_content{
     grid-area: tweet-content;
     display: grid;
@@ -640,6 +635,11 @@ div.tweet_content_edit{
         'tweet-emb'
         'tweet-verdict';
     grid-template-columns: auto;
+}
+
+.tweet_content_edit input{
+    width: 100%;
+    margin: 10px 0;
 }
 
 @media (min-width: 800px) {
