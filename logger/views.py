@@ -36,13 +36,13 @@ def check_duplicate_log_for_user(user_id, action):
 def export_to_csv(request):
     if not request.user.is_superuser or request.method != "POST":
         save_log_message(request.user.id, request.user.username,
-                         'Exporting website log to a csv. Error: user does not have permissions')
+                         'Exporting website logger to a csv. Error: user does not have permissions')
         raise Http404("Permission denied")
     csv_fields = request.POST.dict()
     valid_csv_fields, err_msg = check_if_csv_fields_are_valid(csv_fields)
     if not valid_csv_fields:
         save_log_message(request.user.id, request.user.username,
-                         'Exporting website claims to a csv. Error: ' + err_msg)
+                         'Exporting website logger to a csv. Error: ' + err_msg)
         raise Exception(err_msg)
     actions_to_export = request.POST.getlist('actions_to_export[]')
     date_start = datetime.strptime(csv_fields['date_start'], '%d/%m/%Y').date()
@@ -94,9 +94,11 @@ def check_if_csv_fields_are_valid(csv_fields):
 # The function returns true in case they are valid, otherwise false and an error
 def check_if_actions_list_valid(actions_to_export):
     err = ''
-    valid_actions_to_export = ["Adding a new claim", "Adding a new comment", "Editing a claim", "Editing a comment",
-                               "Deleting a claim", "Deleting a comment", "Reporting a claim as spam",
-                               "Up voting a comment", "Sending an email", "Down voting a comment"]
+    valid_actions_to_export = ["Adding a new claim", "Adding a new comment", "Adding a new tweet",
+                               "Editing a claim", "Editing a comment", "Editing a tweet",
+                               "Deleting a claim", "Deleting a comment", "Deleting a tweet",
+                               "Reporting a claim as spam", "Up voting a comment", "Down voting a comment",
+                               "Sending an email", "Up voting a tweet", "Down voting a tweet"]
     for action in actions_to_export:
         if action not in valid_actions_to_export:
             err += 'Action ' + str(action) + ' is not valid'

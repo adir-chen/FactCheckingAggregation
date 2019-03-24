@@ -1,12 +1,14 @@
 from django.contrib.auth import authenticate
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
 from claims.models import Claim
 from claims.views import view_home, view_claim, is_english_input, return_get_request_to_user
 from logger.views import save_log_message
 from tweets.models import Tweet
+from datetime import datetime
 from users.views import check_if_user_exists_by_user_id
+import csv
 
 
 # This function takes care of a request to add a new tweet to a claim in the website
@@ -329,3 +331,100 @@ def check_if_tweet_label_is_valid(tweet_info):
     if len(err) > 0:
         return False, err
     return True, err
+
+
+# This function returns a csv which contains all the details of the tweets in the website
+def export_to_csv(request):
+    if not request.user.is_superuser or request.method != "POST":
+        save_log_message(request.user.id, request.user.username,
+                         'Exporting website tweets to a csv. Error: user does not have permissions')
+        raise Http404("Permission denied")
+    csv_fields = request.POST.dict()
+    valid_csv_fields, err_msg = check_if_csv_fields_are_valid(csv_fields)
+    if not valid_csv_fields:
+        save_log_message(request.user.id, request.user.username,
+                         'Exporting website tweets to a csv. Error: ' + err_msg)
+        raise Exception(err_msg)
+    fields_to_export = request.POST.getlist('fields_to_export[]')
+    date_start = datetime.strptime(csv_fields['date_start'], '%d/%m/%Y').date()
+    date_end = datetime.strptime(csv_fields['date_end'], '%d/%m/%Y').date()
+    valid_fields_list, err_msg = check_if_fields_list_valid(fields_to_export)
+    if not valid_fields_list:
+        save_log_message(request.user.id, request.user.username,
+                         'Exporting website tweets to a csv. Error: ' + err_msg)
+        raise Exception(err_msg)
+    df_tweets = create_df_for_tweets(fields_to_export, date_start, date_end)
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="tweets.csv"'
+    writer = csv.writer(response)
+    writer.writerow(fields_to_export)
+    for index, row in df_tweets.iterrows():
+        tweet_info = []
+        for col in df_tweets:
+            tweet_info.append(row[col])
+        writer.writerow(tweet_info)
+    save_log_message(request.user.id, request.user.username,
+                     'Exporting website tweets to a csv', True)
+    return response
+
+
+# This function checks if given csv fields are valid,
+# i.e. the csv fields have all the fields with the correct format.
+# The function returns true in case csv fields are valid, otherwise false and an error
+def check_if_csv_fields_are_valid(csv_fields):
+    from comments.views import convert_date_format
+    err = ''
+    if 'fields_to_export[]' not in csv_fields:
+        err += 'Missing values for fields'
+    elif 'date_start' not in csv_fields:
+        err += 'Missing value for date start'
+    elif 'date_end' not in csv_fields:
+        err += 'Missing value for date end'
+    else:
+        err = convert_date_format(csv_fields, 'date_start')
+        if len(err) == 0:
+            err = convert_date_format(csv_fields, 'date_end')
+    if len(err) > 0:
+        return False, err
+    return True, err
+
+
+# This function checks if exported fields are valid.
+# The function returns true in case they are valid, otherwise false and an error
+def check_if_fields_list_valid(fields_to_export):
+    err = ''
+    valid_fields_to_export = ["Claim", "Tweet Link", "Author", "Author Rank", "Label"]
+    for field in fields_to_export:
+        if field not in valid_fields_to_export:
+            err += 'Field ' + str(field) + ' is not valid'
+            return False, err
+    return True, ''
+
+
+# This function creates a df which contains all the details of the tweets in the website
+def create_df_for_tweets(fields_to_export, date_start, date_end):
+    import pandas as pd
+    df_tweets = pd.DataFrame(columns=['User Id', 'Claim', 'Tweet Link', 'Author', 'Author Rank', 'Label'])
+    users_ids, claims_ids, claims, tweets_links, authors, authors_ranks, labels, dates= ([] for i in range(8))
+    for tweet in Tweet.objects.all():
+        users_ids.append(tweet.user_id)
+        claims_ids.append(tweet.claim.id)
+        claims.append(tweet.claim.claim)
+        tweets_links.append(tweet.tweet_link)
+        authors.append(tweet.author)
+        authors_ranks.append(tweet.author_rank)
+        labels.append(tweet.label)
+        dates.append(tweet.timestamp.date())
+    df_tweets['User Id'] = users_ids
+    df_tweets['Claim Id'] = claims_ids
+    df_tweets['Claim'] = claims
+    df_tweets['Tweet Link'] = tweets_links
+    df_tweets['Author'] = authors
+    df_tweets['Author Rank'] = authors_ranks
+    df_tweets['Label'] = labels
+    df_tweets['Date'] = dates
+    df_tweets = df_tweets[(df_tweets['Date'] >= date_start) &
+                          (df_tweets['Date'] <= date_end)]
+    fields_to_export.insert(0, 'Claim Id')
+    df_tweets = df_tweets[fields_to_export]
+    return df_tweets

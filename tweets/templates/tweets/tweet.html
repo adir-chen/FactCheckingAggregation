@@ -77,7 +77,7 @@
     </div>
     <div class="tweet_btn_row">
         <p id="success_msg_{{ tweet.id }}_tweet_edit" class="action_msg note_msg" hidden>Tweet was edited successfully</p>
-        <p id="success_msg_{{ tweet.id }}_tweet_edit_label" class="action_msg note_msg" hidden>Tweet's label was edited successfully</p>
+        <p id="success_msg_{{ tweet.id }}_tweet_edit_label" class="action_msg note_msg" hidden>Tweet label was edited successfully</p>
         <p id="error_msg_{{ tweet.id }}_tweet_edit" class="action_msg error_msg" hidden></p>
         <button id="tweet_{{ tweet.id }}_edit_label" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_tweet_{{ tweet.id }}_label()">Edit Label</button>
         <button id="tweet_{{ tweet.id }}_edit" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_tweet_{{ tweet.id }}()">Edit Tweet</button>
@@ -126,6 +126,7 @@
     function hide_all_msgs(){
         $("#success_msg_{{ tweet.id }}_tweet_vote").attr("hidden", true);
         $("#success_msg_{{ tweet.id }}tweet_edit").attr("hidden", true);
+        $("#success_msg_{{ tweet.id }}_tweet_edit_label").attr("hidden", true);
 
         $("#error_msg_{{ tweet.id }}_tweet_vote").attr("hidden", true);
         $("#error_msg_{{ tweet.id }}tweet_edit").attr("hidden", true);

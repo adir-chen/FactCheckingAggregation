@@ -194,7 +194,8 @@ def export_to_csv(request):
     return response
 
 
-# This function checks if given csv fields are valid, i.e. the csv fields have all the fields with the correct format.
+# This function checks if given csv fields are valid,
+# i.e. the csv fields have all the fields with the correct format.
 # The function returns true in case csv fields are valid, otherwise false and an error
 def check_if_csv_fields_are_valid(csv_fields):
     err = ''
@@ -217,12 +218,13 @@ def check_if_csv_fields_are_valid(csv_fields):
     return True, err
 
 
-# This function checks if exported fields and list of scrapers' ids are valid,
+# This function checks if exported fields and list of scrapers' ids are valid.
 # The function returns true in case they are valid, otherwise false and an error
 def check_if_fields_and_scrapers_lists_valid(fields_to_export, scrapers_ids):
     from users.models import Scrapers
     err = ''
-    valid_fields_to_export = ['Title', 'Description', 'Url', 'Category', 'Verdict Date', 'Tags', 'Label', 'System Label', 'Authenticity Grade']
+    valid_fields_to_export = ['Title', 'Description', 'Url', 'Category', 'Verdict Date', 'Tags',
+                              'Label', 'System Label', 'Authenticity Grade']
     for field in fields_to_export:
         if field not in valid_fields_to_export:
             err += 'Field ' + str(field) + ' is not valid'
