@@ -657,16 +657,16 @@ div.tweet_content_edit{
 
     div.tweet_content_edit{
         grid-template-areas: 'tweet-emb tweet-verdict';
-        grid-template-columns: auto 200px;
+        grid-template-columns: auto 250px;
     }
 
     div.tweet_voting{
-        padding-top: 70px;
+        padding: 20px 0;
         margin-right: 20px;
     }
 
     div.tweet_verdict{
-        padding: 20px 0 0 0;
+        padding: 20px 0 40px 0;
     }
 }
 

@@ -292,16 +292,17 @@ def set_user_label_to_tweet(request):
     tweet_info = request.POST.dict()
     tweet_info['user_id'] = request.user.id
     tweet_info['is_superuser'] = request.user.is_superuser
+    tweet_info['claim_id'] = Tweet.objects.filter(id=tweet_info['tweet_id']).first().claim_id
     valid_tweet_label, err_msg = check_if_tweet_label_is_valid(tweet_info)
     if not valid_tweet_label:
         save_log_message(request.user.id, request.user.username,
                          'Labeling a tweet on claim with id ' +
-                         str(request.POST.get("claim_id")) + '. Error: ' + err_msg)
+                         str(tweet_info['claim_id']) + '. Error: ' + err_msg)
         raise Exception(err_msg)
     Tweet.objects.filter(id=tweet_info['tweet_id']).update(label=tweet_info['label'])
     save_log_message(request.user.id, request.user.username,
-                     'Labeling a tweet on claim with id ' + str(request.POST.get("claim_id")), True)
-    return view_claim(return_get_request_to_user(request.user), request.POST.get('claim_id'))
+                     'Labeling a tweet on claim with id ' + str(tweet_info['claim_id']), True)
+    return view_claim(return_get_request_to_user(request.user), tweet_info['claim_id'])
 
 
 # This function checks if a given label for a tweet is valid,
