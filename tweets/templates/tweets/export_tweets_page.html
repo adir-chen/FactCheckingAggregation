@@ -2,7 +2,7 @@
 
 {% block page_content %}
     <div class="page_wrapper">
-        <h3>Exporting claims to a csv file:</h3><br>
+        <h3>Exporting tweets to a csv file:</h3><br>
         <div class="new_comment claim_box" style="width: 100%; padding: 20px 40px 20px 20px;">
             <form action="{% url 'tweets:export_to_csv' %}" method="post" target="_blank">
                 {% csrf_token %}

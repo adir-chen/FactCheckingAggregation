@@ -1,5 +1,5 @@
 from django.contrib.auth import logout, authenticate
-from django.http import Http404, HttpRequest
+from django.http import Http404, HttpRequest, QueryDict
 from django.shortcuts import render, get_object_or_404
 from comments.models import Comment
 from comments.views import add_comment
@@ -116,8 +116,6 @@ def check_if_input_format_is_valid(user_input):
                     return False
             else:
                 num_spaces = 0
-                # if not char.isdigit() and not char.isalpha():
-                #     return False
     return True
 
 
@@ -141,168 +139,6 @@ def post_above_limit(user_id):
     return len(Logger.objects.filter(date__date=datetime.today(),
                                      user_id=user_id,
                                      action__icontains='Adding a new claim')) >= limit
-
-
-# This function returns all the claims in the website
-def get_all_claims():
-    return Claim.objects.all()
-
-
-# This function returns the newest claims in the website (up to 20 claims)
-def get_newest_claims():
-    result = Claim.objects.all().order_by('-id')
-    if len(result) < 20:
-        return result
-    return result[0:20]
-
-
-# This function returns a claim of a given claim's id
-# The function returns the claim in case it is found, otherwise None
-def get_claim_by_id(claim_id):
-    result = Claim.objects.filter(id=claim_id)
-    if len(result) > 0:
-        return result[0]
-    return None
-
-
-# This function returns the category for a given claim's id
-# The function returns claim's category in case it is found, otherwise None
-def get_category_for_claim(claim_id):
-    result = Claim.objects.filter(id=claim_id)
-    if len(result) > 0:
-        return result[0].category
-    return None
-
-
-# This function returns the tags for a given claim's id
-# The function returns claim's tags in case they are found, otherwise None
-def get_tags_for_claim(claim_id):
-    result = Claim.objects.filter(id=claim_id)
-    if len(result) > 0:
-        return result[0].tags
-    return None
-
-
-# This function returns a claim page of a given claim id
-# The function returns the claim page in case the claim is found, otherwise Http404
-def view_claim(request, claim_id):
-    claim = get_claim_by_id(claim_id)
-    if claim is None:
-        raise Http404('Claim with id ' + str(claim_id) + ' does not exist')
-    elif request.method != "GET":
-        raise Http404("Permission denied")
-    comments = get_users_details_for_comments(Comment.objects.filter(claim_id=claim_id))
-    tweets = get_users_details_for_comments(Tweet.objects.filter(claim_id=claim_id))
-    user_img, user_rep = None, None
-    if request.user.is_authenticated:
-        user_img, user_rep = get_user_img_and_rep(request.user.id)
-    return render(request, 'claims/claim.html', {
-        'claim': claim,
-        'comments': comments,
-        'tweets': tweets,
-        'user_img': user_img,
-        'user_rep': user_rep
-    })
-
-
-# This function returns for each comment the user's image and user's reputation for the user that posted the comment
-def get_users_details_for_comments(comment_objects):
-    comments = {}
-    for comment in comment_objects:
-        user_img = Users_Images.objects.filter(user_id=comment.user_id)
-        if len(user_img) == 0:
-            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
-            new_user_img.save()
-            user_img = new_user_img
-        else:
-            user_img = user_img.first()
-        user_rep = Users_Reputations.objects.filter(user_id=comment.user_id)
-        if len(user_rep) == 0:
-            new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
-            new_user_rep.save()
-            user_rep = new_user_rep
-        else:
-            user_rep = user_rep.first()
-        comments[comment] = {'user': User.objects.filter(id=comment.user_id).first(),
-                             'user_img': user_img,
-                             'user_rep': math.ceil(user_rep.user_rep / 20)}
-    return comments
-
-
-# This function returns user's image and user's reputation for a given user's id
-def get_user_img_and_rep(user_id):
-    user_img = Users_Images.objects.filter(user_id=user_id)
-    if len(user_img) == 0:
-        new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=user_id).first())
-        new_user_img.save()
-        user_img = new_user_img
-    else:
-        user_img = user_img.first()
-    user_img = user_img.user_img
-    user_rep = Users_Reputations.objects.filter(user_id=user_id)
-    if len(user_rep) == 0:
-        new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=user_id).first())
-        new_user_rep.save()
-        user_rep = new_user_rep
-    else:
-        user_rep = user_rep.first()
-    user_rep = math.ceil(user_rep.user_rep / 20)
-    return user_img, user_rep
-
-
-# This function returns the home page of the website
-@ensure_csrf_cookie
-def view_home(request):
-    if request.method != "GET":
-        raise Http404("Permission denied")
-    from django.core.paginator import Paginator
-    claims = list(get_users_images_for_claims(Claim.objects.all().order_by('-id')).items())
-    page = request.GET.get('page')
-    paginator = Paginator(claims, 7)
-    return render(request, 'claims/index.html', {'claims': paginator.get_page(page)})
-
-
-# This function returns a dict with pairs of (claim, user_image)
-# where user_image is a link to user's profile image who posts the claim
-def get_users_images_for_claims(claims):
-    headlines = {}
-    for claim in claims:
-        user_img = Users_Images.objects.filter(user_id=User.objects.filter(id=claim.user_id).first())
-        if len(user_img) == 0:
-            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=claim.user_id).first())
-            new_user_img.save()
-            user_img = new_user_img
-        else:
-            user_img = user_img.first()
-        headlines[claim] = user_img.user_img
-    return headlines
-
-
-# This function disconnects the user from the website
-def logout_view(request):
-    logout(request)
-    return view_home(request)
-
-
-# This function return a HTML page for adding a new claim to the website
-def add_claim_page(request):
-    if request.user.is_authenticated:
-        return render(request, 'claims/add_claim.html')
-    raise Http404("Permission denied")
-
-
-# This function return a HTML page for adding a new claim to the website
-def export_claims_page(request):
-    if request.user.is_authenticated:
-        return render(request, 'claims/export_claims.html', {'all_scrapers': Scrapers.objects.all()})
-    raise Http404("Permission denied")
-
-
-# This function return a HTML page for adding a new claim to the website
-def export_tweets_page(request):
-    if request.user.is_authenticated:
-        return render(request, 'tweets/export_tweets.html')
-    raise Http404("Permission denied")
 
 
 # This function edits a claim in the website
@@ -411,31 +247,6 @@ def check_if_delete_claim_is_valid(request):
     return True, err
 
 
-# This function returns 400 error page
-def handler_400(request):
-    return render(request, 'claims/400.html', status=400)
-
-
-# This function returns 403 error page
-def handler_403(request):
-    return render(request, 'claims/403.html', status=403)
-
-
-# This function returns 404 error page
-def handler_404(request):
-    return render(request, 'claims/404.html', status=404)
-
-
-# This function returns 500 error page
-def handler_500(request):
-    return render(request, 'claims/500.html', status=500)
-
-
-# This function returns about page
-def about_page(request):
-    return render(request, 'claims/about.html')
-
-
 # This function reports a claim as spam
 def report_spam(request):
     if not request.user.is_authenticated or request.method != "POST":
@@ -469,6 +280,37 @@ def check_if_spam_report_is_valid(request):
     return True, err
 
 
+# This function saves all the user's claims (from the request) in the system
+def download_claims(request):
+    if not request.user.is_superuser or request.method != "POST" or 'csv_file' not in request.FILES:
+        raise Http404("Permission denied")
+    claims = request.FILES['csv_file'].read().decode('utf-8')
+    if [header.lower().strip().replace(u'\ufeff', '') for header in claims.split('\n')[0].split(',')] != \
+            ['claim', 'category', 'tags', 'image_src', 'add_comment',
+             'title', 'description', 'url', 'verdict_date', 'label']:
+        raise Http404("Permission denied")
+    for claim in claims.split('\n')[1:]:
+        if claim:
+            claim_fields = claim.split(',')
+            claim_info = {'claim': claim_fields[0],
+                          'category': claim_fields[1],
+                          'tags': claim_fields[2],
+                          'image_src': claim_fields[3],
+                          'add_comment': claim_fields[4],
+                          'title': claim_fields[5],
+                          'description': claim_fields[6],
+                          'url': claim_fields[7],
+                          'verdict_date': claim_fields[8],
+                          'label': claim_fields[9]}
+            post_request = HttpRequest()
+            post_request.method = 'POST'
+            post_request.user = request.user
+            query_dict = QueryDict('', mutable=True)
+            query_dict.update(claim_info)
+            add_claim(post_request)
+    return view_home(return_get_request_to_user(request.user))
+
+
 # This function returns a new GET request for a user
 def return_get_request_to_user(user):
     request = HttpRequest()
@@ -476,3 +318,190 @@ def return_get_request_to_user(user):
     request.stats_code = 200
     request.method = 'GET'
     return request
+
+
+# This function returns the home page of the website
+@ensure_csrf_cookie
+def view_home(request):
+    if request.method != "GET":
+        raise Http404("Permission denied")
+    from django.core.paginator import Paginator
+    claims = list(get_users_images_for_claims(Claim.objects.all().order_by('-id')).items())
+    page = request.GET.get('page')
+    paginator = Paginator(claims, 7)
+    return render(request, 'claims/index.html', {'claims': paginator.get_page(page)})
+
+
+# This function returns a dict with pairs of (claim, user_image)
+# where user_image is a link to user's profile image who posts the claim
+def get_users_images_for_claims(claims):
+    headlines = {}
+    for claim in claims:
+        user_img = Users_Images.objects.filter(user_id=User.objects.filter(id=claim.user_id).first())
+        if len(user_img) == 0:
+            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=claim.user_id).first())
+            new_user_img.save()
+            user_img = new_user_img
+        else:
+            user_img = user_img.first()
+        headlines[claim] = user_img.user_img
+    return headlines
+
+
+# This function returns a claim page of a given claim id
+# The function returns the claim page in case the claim is found, otherwise Http404
+def view_claim(request, claim_id):
+    claim = get_claim_by_id(claim_id)
+    if claim is None:
+        raise Http404('Claim with id ' + str(claim_id) + ' does not exist')
+    elif request.method != "GET":
+        raise Http404("Permission denied")
+    comments = get_users_details_for_comments(Comment.objects.filter(claim_id=claim_id))
+    tweets = get_users_details_for_comments(Tweet.objects.filter(claim_id=claim_id))
+    user_img, user_rep = None, None
+    if request.user.is_authenticated:
+        user_img, user_rep = get_user_img_and_rep(request.user.id)
+    return render(request, 'claims/claim.html', {
+        'claim': claim,
+        'comments': comments,
+        'tweets': tweets,
+        'user_img': user_img,
+        'user_rep': user_rep
+    })
+
+
+# This function returns for each comment the user's image and user's reputation for the user that posted the comment
+def get_users_details_for_comments(comment_objects):
+    comments = {}
+    for comment in comment_objects:
+        user_img = Users_Images.objects.filter(user_id=comment.user_id)
+        if len(user_img) == 0:
+            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
+            new_user_img.save()
+            user_img = new_user_img
+        else:
+            user_img = user_img.first()
+        user_rep = Users_Reputations.objects.filter(user_id=comment.user_id)
+        if len(user_rep) == 0:
+            new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
+            new_user_rep.save()
+            user_rep = new_user_rep
+        else:
+            user_rep = user_rep.first()
+        comments[comment] = {'user': User.objects.filter(id=comment.user_id).first(),
+                             'user_img': user_img,
+                             'user_rep': math.ceil(user_rep.user_rep / 20)}
+    return comments
+
+
+# This function returns user's image and user's reputation for a given user's id
+def get_user_img_and_rep(user_id):
+    user_img = Users_Images.objects.filter(user_id=user_id)
+    if len(user_img) == 0:
+        new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=user_id).first())
+        new_user_img.save()
+        user_img = new_user_img
+    else:
+        user_img = user_img.first()
+    user_img = user_img.user_img
+    user_rep = Users_Reputations.objects.filter(user_id=user_id)
+    if len(user_rep) == 0:
+        new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=user_id).first())
+        new_user_rep.save()
+        user_rep = new_user_rep
+    else:
+        user_rep = user_rep.first()
+    user_rep = math.ceil(user_rep.user_rep / 20)
+    return user_img, user_rep
+
+
+# This function returns all the claims in the website
+def get_all_claims():
+    return Claim.objects.all()
+
+
+# This function returns the newest claims in the website (up to 20 claims)
+def get_newest_claims():
+    result = Claim.objects.all().order_by('-id')
+    if len(result) < 20:
+        return result
+    return result[0:20]
+
+
+# This function returns a claim of a given claim's id
+# The function returns the claim in case it is found, otherwise None
+def get_claim_by_id(claim_id):
+    result = Claim.objects.filter(id=claim_id)
+    if len(result) > 0:
+        return result[0]
+    return None
+
+
+# This function returns the category for a given claim's id
+# The function returns claim's category in case it is found, otherwise None
+def get_category_for_claim(claim_id):
+    result = Claim.objects.filter(id=claim_id)
+    if len(result) > 0:
+        return result[0].category
+    return None
+
+
+# This function returns the tags for a given claim's id
+# The function returns claim's tags in case they are found, otherwise None
+def get_tags_for_claim(claim_id):
+    result = Claim.objects.filter(id=claim_id)
+    if len(result) > 0:
+        return result[0].tags
+    return None
+
+
+# This function disconnects the user from the website
+def logout_view(request):
+    logout(request)
+    return view_home(request)
+
+
+# This function return a HTML page for adding a new claim to the website
+def add_claim_page(request):
+    if not request.user.is_authenticated or request.method != 'GET':
+        raise Http404("Permission denied")
+    return render(request, 'claims/add_claim.html')
+
+
+# This function return a HTML page for adding a new claim to the website
+def export_claims_page(request):
+    if not request.user.is_authenticated or request.method != 'GET':
+        raise Http404("Permission denied")
+    return render(request, 'claims/export_claims.html', {'all_scrapers': Scrapers.objects.all()})
+
+
+# This function return a HTML page for posting new claims\tweets to the website
+def post_claims_tweets_page(request):
+    if not request.user.is_authenticated or request.method != 'GET':
+        raise Http404("Permission denied")
+    return render(request, 'claims/post_claims_tweets.html')
+
+
+# This function returns about page
+def about_page(request):
+    return render(request, 'claims/about.html')
+
+
+# This function returns 400 error page
+def handler_400(request):
+    return render(request, 'claims/400.html', status=400)
+
+
+# This function returns 403 error page
+def handler_403(request):
+    return render(request, 'claims/403.html', status=403)
+
+
+# This function returns 404 error page
+def handler_404(request):
+    return render(request, 'claims/404.html', status=404)
+
+
+# This function returns 500 error page
+def handler_500(request):
+    return render(request, 'claims/500.html', status=500)

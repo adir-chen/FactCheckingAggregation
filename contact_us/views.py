@@ -9,6 +9,11 @@ from ipware import get_client_ip
 from claims.views import return_get_request_to_user
 
 
+# This function return an HTML page for contact us
+def contact_us_page(request):
+    return render(request, 'contact_us/contact_us.html')
+
+
 # This function sends an email from a website user
 def send_email(request):
     if request.method != "POST":
@@ -56,7 +61,3 @@ def check_if_email_is_valid(email_info):
 def check_for_spam(ip):
     return len(Logger.objects.filter(date__date=datetime.today(), action__icontains=ip)) >= 5
 
-
-# This function return an HTML page for contact us
-def contact_us_page(request):
-    return render(request, 'contact_us/contact_us.html')
