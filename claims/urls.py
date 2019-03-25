@@ -7,6 +7,7 @@ urlpatterns = [
     path('edit_claim', views.edit_claim, name='edit_claim'),
     path('delete_claim', views.delete_claim, name='delete_claim'),
     path('report_spam', views.report_spam, name='report_spam'),
+    path('download_claims', views.download_claims, name='download_claims'),
     path('', views.view_home, name='home_page'),
     path('claim/<int:claim_id>', views.view_claim, name='view_claim'),
     path('logout', views.logout_view, name='logout_view'),

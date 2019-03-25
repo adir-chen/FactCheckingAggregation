@@ -472,7 +472,7 @@ def export_claims_page(request):
 def post_claims_tweets_page(request):
     if not request.user.is_authenticated or request.method != 'GET':
         raise Http404("Permission denied")
-    return render(request, 'claims/post_claims_tweets.html')
+    return render(request, 'claims/import_claims_tweets.html')
 
 
 # This function returns about page
