@@ -35,7 +35,7 @@ def add_claim(request):
         user_id=claim_info['user_id'],
         claim=claim_info['claim'],
         category=claim_info['category'],
-        tags=','.join(claim_info['tags'].split()),
+        tags=','.join(claim_info['tags'].split(',')),
         authenticity_grade=0,
         image_src=claim_info['image_src']
     )
@@ -68,6 +68,8 @@ def check_if_claim_is_valid(claim_info):
         err += 'Incorrect format for tags'
     elif 'user_id' not in claim_info:
         err += 'Missing value for user'
+    elif 'is_superuser' not in claim_info:
+        err += 'Missing value for user type'
     elif 'claim' not in claim_info or not claim_info['claim']:
         err += 'Missing value for claim'
     elif 'category' not in claim_info or not claim_info['category']:
@@ -282,42 +284,33 @@ def check_if_spam_report_is_valid(request):
 
 # This function saves all the user's claims (from the request) in the system
 def download_claims(request):
+    import csv
     if not request.user.is_superuser or request.method != "POST" or 'csv_file' not in request.FILES:
         raise Http404("Permission denied")
     claims = request.FILES['csv_file'].read().decode('utf-8')
-    if [header.lower().strip().replace(u'\ufeff', '') for header in claims.split('\n')[0].split(',')] != \
+    if [header.lower().strip() for header in claims.split('\n')[0].split(',')] != \
             ['claim', 'category', 'tags', 'image_src', 'add_comment',
              'title', 'description', 'url', 'verdict_date', 'label']:
         raise Http404("Permission denied")
-    for claim in claims.split('\n')[1:]:
-        if claim:
-            claim_fields = claim.split(',')
-            claim_info = {'claim': claim_fields[0],
-                          'category': claim_fields[1],
-                          'tags': claim_fields[2],
-                          'image_src': claim_fields[3],
-                          'add_comment': claim_fields[4],
-                          'title': claim_fields[5],
-                          'description': claim_fields[6],
-                          'url': claim_fields[7],
-                          'verdict_date': claim_fields[8],
-                          'label': claim_fields[9]}
-            post_request = HttpRequest()
-            post_request.method = 'POST'
-            post_request.user = request.user
-            query_dict = QueryDict('', mutable=True)
-            query_dict.update(claim_info)
-            add_claim(post_request)
+    for claim in csv.DictReader(claims.splitlines()):
+        claim_info = {'claim': claim['claim'],
+                      'category': claim['category'],
+                      'tags': claim['tags'],
+                      'image_src': claim['image_src'],
+                      'add_comment': claim['add_comment'],
+                      'title': claim['title'],
+                      'description': claim['description'],
+                      'url': claim['url'],
+                      'verdict_date': claim['verdict_date'],
+                      'label': claim['label']}
+        post_request = HttpRequest()
+        post_request.method = 'POST'
+        post_request.user = request.user
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(claim_info)
+        post_request.POST = query_dict
+        add_claim(post_request)
     return view_home(return_get_request_to_user(request.user))
-
-
-# This function returns a new GET request for a user
-def return_get_request_to_user(user):
-    request = HttpRequest()
-    request.user = user
-    request.stats_code = 200
-    request.method = 'GET'
-    return request
 
 
 # This function returns the home page of the website
@@ -505,3 +498,13 @@ def handler_404(request):
 # This function returns 500 error page
 def handler_500(request):
     return render(request, 'claims/500.html', status=500)
+
+
+# This function returns a new GET request for a user
+def return_get_request_to_user(user):
+    request = HttpRequest()
+    request.user = user
+    request.stats_code = 200
+    request.method = 'GET'
+    return request
+
