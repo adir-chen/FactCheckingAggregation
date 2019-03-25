@@ -1,5 +1,5 @@
 {%  load mathfilters %}
-<div class="comment_box">
+<div id="tweet_box_{{ tweet.id }}" class="comment_box">
     <div class="comment_header">
         <div class="comment_user_image">
             <img src="{{ user_details.user_img.user_img }}">
@@ -37,7 +37,7 @@
             </blockquote>
         </div>
         <div class="tweet_verdict">
-            {{ user_details.user.username }} ranked {{ tweet.author }}'s loyalty:<br><br><br>
+            {{ user_details.user.username }} ranked <span id="{{ tweet.id }}_author_name" style="font-style: italic;">{{ tweet.author }}</span>'s loyalty:<br><br><br>
             {% if tweet.author_rank >= 50 %}
                 <span class="author_rank verdict_true">
             {% else %}
@@ -75,17 +75,26 @@
             <input id="tweet_{{ tweet.id }}_author_rank" value="{{ tweet.author_rank }}" type="text" placeholder="{{ tweet.author_rank }}">
         </div>
     </div>
-    <div class="tweet_btn_row">
-        <p id="success_msg_{{ tweet.id }}_tweet_edit" class="action_msg note_msg" hidden>Tweet was edited successfully</p>
-        <p id="success_msg_{{ tweet.id }}_tweet_edit_label" class="action_msg note_msg" hidden>Tweet label was edited successfully</p>
-        <p id="error_msg_{{ tweet.id }}_tweet_edit" class="action_msg error_msg" hidden></p>
-        <button id="tweet_{{ tweet.id }}_edit_label" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_tweet_{{ tweet.id }}_label()">Edit Label</button>
-        <button id="tweet_{{ tweet.id }}_edit" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_tweet_{{ tweet.id }}()">Edit Tweet</button>
-        <button id="tweet_{{ tweet.id }}_cancel" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_tweet_{{ tweet.id }}_cancel()">Cancel</button>
-        <button id="tweet_{{ tweet.id }}_save" type="submit" hidden='hidden' class="btn btn-info">Save</button>
-        <button id="tweet_{{ tweet.id }}_save_label" type="submit" hidden='hidden' class="btn btn-info">Save Label</button>
-        <button id="tweet_{{ tweet.id }}_delete" type="submit" class="btn btn-danger">Delete</button>
-    </div>
+    {% if request.user.is_authenticated %}
+        {% if tweet.claim.user_id == request.user.id or tweet.user_id == request.user.id %}
+        <div class="tweet_btn_row">
+            <p id="success_msg_{{ tweet.id }}_tweet_edit" class="action_msg note_msg" hidden>Tweet was edited successfully</p>
+            <p id="success_msg_{{ tweet.id }}_tweet_edit_label" class="action_msg note_msg" hidden>Tweet label was edited successfully</p>
+            <p id="error_msg_{{ tweet.id }}_tweet_edit" class="action_msg error_msg" hidden></p>
+            <p id="error_msg_{{ tweet.id }}_tweet_vote" class="action_msg error_msg" hidden></p>
+            <button id="tweet_{{ tweet.id }}_cancel" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_tweet_{{ tweet.id }}_cancel()">Cancel</button>
+            {% if tweet.claim.user_id == request.user.id or request.user.is_superuser %}
+                <button id="tweet_{{ tweet.id }}_edit_label" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_tweet_{{ tweet.id }}_label()">Edit Label</button>
+                <button id="tweet_{{ tweet.id }}_save_label" type="submit" hidden='hidden' class="btn btn-info">Save Label</button>
+            {% endif %}
+            {% if tweet.user_id == request.user.id or request.user.is_superuser %}
+                <button id="tweet_{{ tweet.id }}_edit" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_tweet_{{ tweet.id }}()">Edit Tweet</button>
+                <button id="tweet_{{ tweet.id }}_save" type="submit" hidden='hidden' class="btn btn-info">Save</button>
+                <button id="tweet_{{ tweet.id }}_delete" type="submit" class="btn btn-danger">Delete</button>
+            {% endif %}
+        </div>
+        {% endif %}
+    {% endif %}
 </div>
 
 <script>

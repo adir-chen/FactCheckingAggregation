@@ -9,6 +9,7 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium.webdriver.common.keys import Keys
 from claims.models import Claim
 from comments.models import Comment
+from tweets.models import Tweet
 
 
 def authenticated_browser(browser, client, live_server_url, user):
@@ -49,6 +50,17 @@ class UITests(StaticLiveServerTestCase):
         self.browser = webdriver.Chrome('Tests/chromedriver.exe')
         self.browser.implicitly_wait(10)
         self.client = Client()
+
+    def add_tweet(self, user_id):
+        tweet_1 = Tweet(claim_id=self.claim_1.id,
+                        user_id=user_id,
+                        tweet_link='http://url1/',
+                        author='author1',
+                        author_rank=50,
+                        label='True')
+        tweet_1.save()
+        time.sleep(1)
+        return tweet_1
 
     def tearDown(self):
         self.browser.close()
@@ -147,7 +159,8 @@ class UITests(StaticLiveServerTestCase):
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
         self.assertEqual(
-            browser.find_element_by_class_name('comment_user_image').find_element_by_tag_name('img').get_attribute('src'),
+            browser.find_element_by_class_name('comment_user_image').find_element_by_tag_name('img').get_attribute(
+                'src'),
             self.live_server_url + '/static/claims/assets/images/profile_default_image.jpg'
         )
         self.assertEqual(
@@ -171,13 +184,43 @@ class UITests(StaticLiveServerTestCase):
             self.comment_1.description
         )
         self.assertEqual(
-            browser.find_element_by_id('comment_' + str(self.comment_1.id) + '_footer').find_element_by_tag_name('a').get_attribute('href'),
+            browser.find_element_by_id('comment_' + str(self.comment_1.id) + '_footer').find_element_by_tag_name(
+                'a').get_attribute('href'),
             self.comment_1.url
         )
         tags = [tag.text for tag in browser.find_elements_by_class_name('tag_link')]
         self.assertEqual(
             tags,
             self.comment_1.tags.split(',')
+        )
+
+    def test_view_tweet(self):
+        tweet_1 = self.add_tweet(self.claim_1.user_id)
+        self.browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        self.assertEqual(
+            self.browser.find_element_by_id('tweet_box_' + str(tweet_1.id)).find_element_by_class_name('comment_user_image').find_element_by_tag_name('img').get_attribute('src'),
+            self.live_server_url + '/static/claims/assets/images/profile_default_image.jpg'
+        )
+        self.assertEqual(
+            self.browser.find_element_by_id('tweet_box_' + str(tweet_1.id)).find_element_by_class_name('comment_user_details').find_element_by_tag_name('a').text,
+            self.user1.username
+        )
+        self.assertEqual(
+            self.browser.find_element_by_id('tweet_box_' + str(tweet_1.id)).find_element_by_class_name('comment_verdict').text,
+            tweet_1.label.upper()
+        )
+        self.assertEqual(
+            self.browser.find_element_by_id('tweet_box_' + str(tweet_1.id)).find_element_by_class_name('twitter-tweet').find_element_by_tag_name('a').get_attribute('href'),
+            tweet_1.tweet_link
+        )
+        self.assertEqual(
+            self.browser.find_element_by_id(str(tweet_1.id) + '_author_name').text,
+            tweet_1.author
+        )
+        self.assertEqual(
+            self.browser.find_element_by_id('tweet_box_' + str(tweet_1.id)).find_element_by_class_name(
+                'author_rank').text,
+            str(tweet_1.author_rank) + '%'
         )
 
     def test_edit_comment(self):
@@ -249,6 +292,92 @@ class UITests(StaticLiveServerTestCase):
             ['t5']
         )
 
+    def test_edit_tweet_by_tweet_publisher(self):
+        tweet_1 = self.add_tweet(self.user2.id)
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user2)
+        browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        browser.find_element_by_id('tweet_' + str(tweet_1.id) + '_edit').click()
+
+        browser.find_element_by_id('tweet_' + str(tweet_1.id) + '_link').clear()
+        browser.find_element_by_id('tweet_' + str(tweet_1.id) + '_author').clear()
+        browser.find_element_by_id('tweet_' + str(tweet_1.id) + '_author_rank').clear()
+
+        browser.find_element_by_id('tweet_' + str(tweet_1.id) + '_link').send_keys('http://url2/')
+        browser.find_element_by_id('tweet_' + str(tweet_1.id) + '_author').send_keys('author2')
+        browser.find_element_by_id('tweet_' + str(tweet_1.id) + '_author_rank').send_keys('20')
+        browser.find_element_by_id('tweet_' + str(tweet_1.id) + '_save').click()
+        time.sleep(2)
+        browser.get(browser.current_url)
+        self.assertEqual(
+            browser.find_element_by_id('tweet_box_' + str(tweet_1.id)).find_element_by_class_name(
+                'comment_user_image').find_element_by_tag_name('img').get_attribute('src'),
+            self.live_server_url + '/static/claims/assets/images/profile_default_image.jpg'
+        )
+        self.assertEqual(
+            browser.find_element_by_id('tweet_box_' + str(tweet_1.id)).find_element_by_class_name(
+                'comment_user_details').find_element_by_tag_name('a').text,
+            'User2'
+        )
+        self.assertEqual(
+            browser.find_element_by_id('tweet_box_' + str(tweet_1.id)).find_element_by_class_name(
+                'comment_verdict').text,
+            'TRUE'
+        )
+        self.assertEqual(
+            browser.find_element_by_id('tweet_box_' + str(tweet_1.id)).find_element_by_class_name(
+                'twitter-tweet').find_element_by_tag_name('a').get_attribute('href'),
+            'http://url2/'
+        )
+        self.assertEqual(
+            browser.find_element_by_id(str(tweet_1.id) + '_author_name').text,
+            'author2'
+        )
+        self.assertEqual(
+            browser.find_element_by_id('tweet_box_' + str(tweet_1.id)).find_element_by_class_name(
+                'author_rank').text,
+            '20%'
+        )
+
+    def test_edit_tweet_label_by_claim_publisher(self):
+        tweet_1 = self.add_tweet(self.user2.id)
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.claim_1.user)
+        browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        browser.find_element_by_id('tweet_' + str(tweet_1.id) + '_edit_label').click()
+        browser.find_elements_by_name('tweet_' + str(tweet_1.id) + '_label')[1].click()  # False
+        browser.find_element_by_id('tweet_' + str(tweet_1.id) + '_save_label').click()
+        time.sleep(2)
+        browser.get(browser.current_url)
+
+        self.assertEqual(
+            browser.find_element_by_id('tweet_box_' + str(tweet_1.id)).find_element_by_class_name(
+                'comment_user_image').find_element_by_tag_name('img').get_attribute('src'),
+            self.live_server_url + '/static/claims/assets/images/profile_default_image.jpg'
+        )
+        self.assertEqual(
+            browser.find_element_by_id('tweet_box_' + str(tweet_1.id)).find_element_by_class_name(
+                'comment_user_details').find_element_by_tag_name('a').text,
+            'User2'
+        )
+        self.assertEqual(
+            browser.find_element_by_id('tweet_box_' + str(tweet_1.id)).find_element_by_class_name(
+                'comment_verdict').text,
+            'FALSE'
+        )
+        self.assertEqual(
+            browser.find_element_by_id('tweet_box_' + str(tweet_1.id)).find_element_by_class_name(
+                'twitter-tweet').find_element_by_tag_name('a').get_attribute('href'),
+            'http://url1/'
+        )
+        self.assertEqual(
+            browser.find_element_by_id(str(tweet_1.id) + '_author_name').text,
+            'author1'
+        )
+        self.assertEqual(
+            browser.find_element_by_id('tweet_box_' + str(tweet_1.id)).find_element_by_class_name(
+                'author_rank').text,
+            '50%'
+        )
+
     def test_delete_comment(self):
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
@@ -258,6 +387,18 @@ class UITests(StaticLiveServerTestCase):
         self.assertEqual(
             len(browser.find_elements_by_class_name('comment_box')),
             1   # only add comment form remains
+        )
+
+    def test_delete_tweet(self):
+        tweet_1 = self.add_tweet(self.user2.id)
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user2)
+        browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        browser.find_element_by_id('tweet_' + str(tweet_1.id) + '_delete').click()
+        time.sleep(2)  # wait for tweet to be deleted
+        browser.get(self.browser.current_url)
+        self.assertEqual(
+            len(browser.find_elements_by_id('tweet_box_' + str(tweet_1.id))),
+            0
         )
 
     def test_delete_claim(self):
@@ -279,6 +420,30 @@ class UITests(StaticLiveServerTestCase):
             0
         )
 
+    def test_user_cannot_edit_other_users_tweets(self):
+        tweet_1 = self.add_tweet(self.user1.id)
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user2)
+        browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        self.assertEqual(
+            len(browser.find_elements_by_id('tweet_' + str(tweet_1.id) + '_edit')),
+            0
+        )
+
+    def test_only_claim_owner_can_edit_tweets_labels(self):
+        tweet_1 = self.add_tweet(self.user2.id)
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user2)
+        browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        self.assertEqual(
+            len(browser.find_elements_by_id('tweet_' + str(tweet_1.id) + '_edit_label')),
+            0
+        )
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.claim_1.user)
+        browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        self.assertEqual(
+            len(browser.find_elements_by_id('tweet_' + str(tweet_1.id) + '_edit_label')),
+            1
+        )
+
     def test_user_cannot_delete_other_users_comment(self):
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user2)
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
@@ -287,11 +452,27 @@ class UITests(StaticLiveServerTestCase):
             0
         )
 
+    def test_user_cannot_delete_other_users_tweets(self):
+        tweet_1 = self.add_tweet(self.user1.id)
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user2)
+        browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        self.assertEqual(
+            len(browser.find_elements_by_id('tweet_' + str(tweet_1.id) + '_delete')),
+            0
+        )
+
     def test_guest_cannot_view_add_comment_form(self):
         self.browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
         self.assertEqual(
             len(self.browser.find_elements_by_class_name('comment_box')),
             1
+        )
+
+    def test_guest_cannot_view_add_tweet_form(self):
+        self.browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        self.assertEqual(
+            len(self.browser.find_elements_by_class_name('tweet_box')),
+            0
         )
 
     def test_add_new_claim(self):
@@ -516,6 +697,27 @@ class UITests(StaticLiveServerTestCase):
             'Error' in browser.find_element_by_id('error_msg_' + claim_id + '_new_comment').text
         )
 
+    def test_add_new_tweet_with_missing_args(self):
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user2)
+        browser.find_element_by_class_name('claim_box').find_element_by_class_name('btn').click()
+        claim_id = str(browser.current_url).split('/claim/')[1]
+
+        filled = 0
+        if random.randint(0, 10) > 5:
+            browser.find_element_by_id(str(self.claim_1.id) + '_new_tweet_link').send_keys('http://url1/')
+            filled += 1
+        if random.randint(0, 10) > 5:
+            browser.find_element_by_id(str(self.claim_1.id) + '_new_tweet_author').send_keys('author1')
+            filled += 1
+        if filled < 2 and random.randint(0, 10) > 5:
+            browser.find_element_by_id(str(self.claim_1.id) + '_new_tweet_author_rank').send_keys('75')
+            filled += 1
+        browser.find_element_by_id(str(self.claim_1.id) + '_new_tweet_save').click()
+        time.sleep(2)   # wait 2 second for page to show the error
+        self.assertTrue(
+            'Error' in browser.find_element_by_id('error_msg_' + claim_id + '_new_tweet').text
+        )
+
     def test_add_new_claim_with_missing_args(self):
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
         browser.get(self.live_server_url + '/add_claim_page')
@@ -614,7 +816,7 @@ class UITests(StaticLiveServerTestCase):
             vote_count
         )
 
-    def test_vote_up_then_down(self):
+    def test_vote_up_then_down_commnet(self):
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
         vote_count = int(browser.find_element_by_class_name('vote_count').text)
@@ -627,7 +829,7 @@ class UITests(StaticLiveServerTestCase):
             vote_count - 1
         )
 
-    def test_vote_down_then_up(self):
+    def test_vote_down_then_up_comment(self):
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
         vote_count = int(browser.find_element_by_class_name('vote_count').text)
@@ -637,6 +839,110 @@ class UITests(StaticLiveServerTestCase):
         time.sleep(2)  # wait 2 second for vote_count to update
         self.assertEqual(
             int(browser.find_element_by_class_name('vote_count').text),
+            vote_count + 1
+        )
+
+    def test_vote_up_tweet(self):
+        tweet_1 = self.add_tweet(self.user1.id)
+        Tweet.objects.filter(id=tweet_1.id).update(
+            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=6))
+        time.sleep(2)  # wait 2 second for time to update
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
+        browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        tweet_box = browser.find_element_by_id('tweet_box_' + str(tweet_1.id))
+        vote_count = int(tweet_box.find_element_by_class_name('vote_count').text)
+        tweet_box.find_element_by_class_name('arrow_up').click()
+        time.sleep(2)  # wait 2 second for vote_count to update
+        self.assertEqual(
+            int(tweet_box.find_element_by_class_name('vote_count').text),
+            vote_count + 1
+        )
+
+    def test_vote_up_tweet_twice(self):
+        tweet_1 = self.add_tweet(self.user1.id)
+        Tweet.objects.filter(id=tweet_1.id).update(
+            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=6))
+        time.sleep(2)  # wait 2 second for time to update
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
+        browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        tweet_box = browser.find_element_by_id('tweet_box_' + str(tweet_1.id))
+        vote_count = int(tweet_box.find_element_by_class_name('vote_count').text)
+        tweet_box.find_element_by_class_name('arrow_up').click()
+        time.sleep(2)  # wait 2 second for vote_count to update
+        tweet_box.find_element_by_class_name('arrow_up').click()
+        time.sleep(2)  # wait 2 second for vote_count to update
+        self.assertEqual(
+            int(tweet_box.find_element_by_class_name('vote_count').text),
+            vote_count
+        )
+
+    def test_vote_down_tweet(self):
+        tweet_1 = self.add_tweet(self.user1.id)
+        Tweet.objects.filter(id=tweet_1.id).update(
+            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=6))
+        time.sleep(2)  # wait 2 second for time to update
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
+        browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        tweet_box = browser.find_element_by_id('tweet_box_' + str(tweet_1.id))
+        vote_count = int(tweet_box.find_element_by_class_name('vote_count').text)
+        tweet_box.find_element_by_class_name('arrow_down').click()
+        time.sleep(2)  # wait 2 second for vote_count to update
+        self.assertEqual(
+            int(tweet_box.find_element_by_class_name('vote_count').text),
+            vote_count - 1
+        )
+
+    def test_vote_down_tweet_twice(self):
+        tweet_1 = self.add_tweet(self.user1.id)
+        Tweet.objects.filter(id=tweet_1.id).update(
+            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=6))
+        time.sleep(2)  # wait 2 second for time to update
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
+        browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        tweet_box = browser.find_element_by_id('tweet_box_' + str(tweet_1.id))
+        vote_count = int(tweet_box.find_element_by_class_name('vote_count').text)
+        tweet_box.find_element_by_class_name('arrow_down').click()
+        time.sleep(2)  # wait 2 second for vote_count to update
+        tweet_box.find_element_by_class_name('arrow_down').click()
+        time.sleep(2)  # wait 2 second for vote_count to update
+        self.assertEqual(
+            int(tweet_box.find_element_by_class_name('vote_count').text),
+            vote_count
+        )
+
+    def test_vote_up_then_down_tweet(self):
+        tweet_1 = self.add_tweet(self.user1.id)
+        Tweet.objects.filter(id=tweet_1.id).update(
+            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=6))
+        time.sleep(2)  # wait 2 second for time to update
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
+        browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        tweet_box = browser.find_element_by_id('tweet_box_' + str(tweet_1.id))
+        vote_count = int(tweet_box.find_element_by_class_name('vote_count').text)
+        tweet_box.find_element_by_class_name('arrow_up').click()
+        time.sleep(2)  # wait 2 second for vote_count to update
+        tweet_box.find_element_by_class_name('arrow_down').click()
+        time.sleep(2)  # wait 2 second for vote_count to update
+        self.assertEqual(
+            int(tweet_box.find_element_by_class_name('vote_count').text),
+            vote_count - 1
+        )
+
+    def test_vote_down_then_up_tweet(self):
+        tweet_1 = self.add_tweet(self.user1.id)
+        Tweet.objects.filter(id=tweet_1.id).update(
+            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=6))
+        time.sleep(2)  # wait 2 second for time to update
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
+        browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        tweet_box = browser.find_element_by_id('tweet_box_' + str(tweet_1.id))
+        vote_count = int(tweet_box.find_element_by_class_name('vote_count').text)
+        tweet_box.find_element_by_class_name('arrow_down').click()
+        time.sleep(2)  # wait 2 second for vote_count to update
+        tweet_box.find_element_by_class_name('arrow_up').click()
+        time.sleep(2)  # wait 2 second for vote_count to update
+        self.assertEqual(
+            int(tweet_box.find_element_by_class_name('vote_count').text),
             vote_count + 1
         )
 
@@ -668,6 +974,20 @@ class UITests(StaticLiveServerTestCase):
         time.sleep(2)  # wait 2 second for vote_count to update
         self.assertTrue(
             'Error' in browser.find_element_by_id('error_msg_' + str(comment_2.id) + '_comment_vote').text
+        )
+
+    def test_user_cannot_vote_for_new_tweet(self):
+        tweet_1 = self.add_tweet(self.user1.id)
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
+        browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        tweet_box = browser.find_element_by_id('tweet_box_' + str(tweet_1.id))
+        if random.randint(0, 10) > 5:
+            tweet_box.find_element_by_class_name('arrow_up').click()
+        else:
+            tweet_box.find_element_by_class_name('arrow_down').click()
+        time.sleep(2)  # wait 2 second for vote_count to update
+        self.assertTrue(
+            'Error' in browser.find_element_by_id('error_msg_' + str(tweet_1.id) + '_tweet_vote').text
         )
 
     def test_search_by_tags(self):
