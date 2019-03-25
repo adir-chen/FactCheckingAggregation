@@ -44,7 +44,7 @@ def build_comment(claim_id, user_id, title, description, url, tags, verdict_date
         title=title,
         description=description,
         url=url,
-        tags=','.join(tags.split()),
+        tags=','.join(tags.split(',')),
         verdict_date=datetime.strptime(verdict_date, '%d/%m/%Y'),
         label=label,
         system_label=get_system_label_to_comment(label, user_id),

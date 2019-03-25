@@ -268,17 +268,16 @@ def set_user_label_to_tweet(request):
     tweet_info = request.POST.dict()
     tweet_info['user_id'] = request.user.id
     tweet_info['is_superuser'] = request.user.is_superuser
-    tweet_info['claim_id'] = Tweet.objects.filter(id=tweet_info['tweet_id']).first().claim_id
     valid_tweet_label, err_msg = check_if_tweet_label_is_valid(tweet_info)
     if not valid_tweet_label:
         save_log_message(request.user.id, request.user.username,
-                         'Labeling a tweet on claim with id ' +
-                         str(tweet_info['claim_id']) + '. Error: ' + err_msg)
+                         'Labeling a tweet. Error: ' + err_msg)
         raise Exception(err_msg)
+    claim_id = Tweet.objects.filter(id=tweet_info['tweet_id']).first().claim.id
     Tweet.objects.filter(id=tweet_info['tweet_id']).update(label=tweet_info['label'])
     save_log_message(request.user.id, request.user.username,
-                     'Labeling a tweet on claim with id ' + str(tweet_info['claim_id']), True)
-    return view_claim(return_get_request_to_user(request.user), tweet_info['claim_id'])
+                     'Labeling a tweet on claim with id ' + str(claim_id), True)
+    return view_claim(return_get_request_to_user(request.user), claim_id)
 
 
 # This function checks if a given label for a tweet is valid,
@@ -286,9 +285,7 @@ def set_user_label_to_tweet(request):
 # The function returns true in case the tweet's label is valid, otherwise false and an error
 def check_if_tweet_label_is_valid(tweet_info):
     err = ''
-    if 'claim_id' not in tweet_info or not tweet_info['claim_id']:
-        err += 'Missing value for claim id'
-    elif 'user_id' not in tweet_info or not tweet_info['user_id']:
+    if 'user_id' not in tweet_info or not tweet_info['user_id']:
         err += 'Missing value for user id'
     elif 'is_superuser' not in tweet_info:
         err += 'Missing value for user type'
@@ -296,12 +293,16 @@ def check_if_tweet_label_is_valid(tweet_info):
         err += 'Missing value for tweet id'
     elif 'label' not in tweet_info or not tweet_info['label']:
         err += 'Missing value for label'
-    elif len(Claim.objects.filter(id=tweet_info['claim_id'])) == 0:
-        err += 'Claim ' + str(tweet_info['claim_id']) + 'does not exist'
+    elif len(Tweet.objects.filter(id=tweet_info['tweet_id'])) == 0:
+        err += 'Tweet with id ' + str(tweet_info['tweet_id']) + 'does not exist'
+    elif len(Claim.objects.filter(id=Tweet.objects.filter(id=tweet_info['tweet_id']).first().claim_id)) == 0:
+        err += 'Claim with id' + str(Tweet.objects.filter(id=tweet_info['tweet_id']).first().claim_id) + \
+               'does not exist'
     elif not check_if_user_exists_by_user_id(tweet_info['user_id']):
         err += 'User with id ' + str(tweet_info['user_id']) + ' does not exist'
-    elif not tweet_info['is_superuser'] and len(Claim.objects.filter(id=tweet_info['claim_id'], user_id=tweet_info['user_id'])) == 0:
-        err += 'Claim with id ' + str(tweet_info['claim_id']) + ' does not belong to user with id ' + str(tweet_info['user_id'])
+    elif not tweet_info['is_superuser'] and len(Claim.objects.filter(id=Tweet.objects.filter(id=tweet_info['tweet_id']).first().claim.id, user_id=tweet_info['user_id'])) == 0:
+        err += 'Claim with id ' + str(Tweet.objects.filter(id=tweet_info['tweet_id']).first().claim.id) + \
+               ' does not belong to user with id ' + str(tweet_info['user_id'])
     if len(err) > 0:
         return False, err
     return True, err
@@ -421,7 +422,7 @@ def download_tweets_for_claims(request):
     if not request.user.is_superuser or request.method != "POST" or 'csv_file' not in request.FILES:
         raise Http404("Permission denied")
     tweets = request.FILES['csv_file'].read().decode('utf-8')
-    if [header.lower().strip().replace(u'\ufeff', '') for header in tweets.split('\n')[0].split(',')] != \
+    if [header.lower().strip() for header in tweets.split('\n')[0].split(',')] != \
             ['claim id', 'tweet link', 'author', 'author rank']:
         raise Http404("Permission denied")
     for tweet in tweets.split('\n')[1:]:
