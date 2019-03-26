@@ -190,7 +190,7 @@
         $("#topClaims").click(function (e){
             $.ajax({
                 type: 'POST',
-                url: "{% url 'analytics:view_N_top_claims' %}",
+                url: "{% url 'analytics:view_top_n_claims' %}",
                 headers: { "X-CSRFToken": getCookie('csrftoken') },
                 data: {
                     start_date: $("#claims_start_date").val(),

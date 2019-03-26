@@ -48,13 +48,12 @@ def view_top_n_claims(request):
         claim = get_claim_by_id(claim_id)
         if claim is None:
             continue
-        results.append([claim_id, claim, views])
+        results.append([claim, views])
 
     for report in results:
         reports_json.append({
-            'claim_id': report[0],
-            'claim': get_claim_as_json(report[1]),
-            'views': report[2]
+            'claim': get_claim_as_json(report[0]),
+            'views': report[1]
         })
     return JsonResponse({
         'reports': reports_json
