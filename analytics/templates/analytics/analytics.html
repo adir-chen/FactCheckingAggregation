@@ -4,43 +4,32 @@
     <!--Table and divs that hold the pie charts-->
     <div id="analytics_page" class="page_wrapper">
         <h4>WTFact Analytics:</h4>
-        <div>
-            <table class="columns">
-                <tr>
-                    <td>
-                        <div style="border: 2px solid lightblue; padding: 10px">
-                            <div id="chart_div" class="chart_div"></div>
-                            <h6>Change months:</h6>
-                            <div>
-                                from <input type="month" id="custom_start_date" value="2019-01">
-                                to <input type="month" id="custom_end_date" value="{{ current_date }}">
-                                <button id="custom_button">Set</button>
-                                <button id="reset_button" style="float: right">Reset</button>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div style="border: 2px solid lightblue; padding: 10px">
-                            <div id="chart_div1" class="chart_div"></div>
-                            <h6>Change Month:</h6>
-                            <div>
-                                <input type="month" id="custom_start_date2" value="2019-01">
-                                <button id="custom_button2">Set</button>
-                                <button id="reset_button2" style="float: right">Reset</button>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div style="border: 2px solid lightblue; padding: 10px">
-                            <button id="topClaims" >click</button>
-                        </div>
-                    </td>
-                </tr>
-            </table>
+        <div style="border: 2px solid lightblue; padding: 20px; border-radius: 7px; margin: 10px;">
+            <div id="chart_div" class="chart_div"></div>
+            <h6>Change months:</h6>
+            <div>
+                from <input type="month" id="custom_start_date" value="2019-01" max="{% now "Y-m" %}">
+                to <input type="month" id="custom_end_date" value="{{ current_date }}" max="{% now "Y-m" %}">
+                <button id="custom_button" class="btn btn-info">Set</button>
+                <button id="reset_button" class="btn btn-info" style="float: right">Reset</button>
+            </div>
+        </div>
+        <div style="border: 2px solid lightblue; padding: 20px; border-radius: 7px; margin: 10px;">
+            <div id="chart_div1" class="chart_div"></div>
+            <h6>Change Month:</h6>
+            <div>
+                <input type="month" id="custom_start_date2" value="2019-01" max="{% now "Y-m" %}">
+                <button id="custom_button2" class="btn btn-info">Set</button>
+                <button id="reset_button2" style="float: right" class="btn btn-info">Reset</button>
+            </div>
+        </div>
+        <div style="border: 2px solid lightblue; padding: 20px; border-radius: 7px; margin: 10px;">
+            <h5>Show top Claims:</h5>
+            Number of claims: <input id="num_of_claims" type="number" min="1" max="10" value="5"><br><br>
+            from <input type="date" id="claims_start_date" value="2019-01-01" max="{% now "Y-m-d" %}">
+            to <input type="date" id="claims_end_date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}">
+            <br><br>
+            <button id="topClaims" class="btn btn-info">click</button>
         </div>
     </div>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -154,6 +143,7 @@
                 url: "{% url 'analytics:view_analytics_customized' %}",
                 headers: { "X-CSRFToken": getCookie('csrftoken') },
                 data: {
+                    dimensions: 'ga:year, ga:month',
                     start_date: start_date,
                     end_date: end_date
                 },
@@ -174,9 +164,10 @@
             end_date = end_date + '-' + new Date(end_date.substring(0,4), end_date.substring(5,8), 0).getDate()
             $.ajax({
                 type: 'POST',
-                url: "{% url 'analytics:view_analytics_customized_days' %}",
+                url: "{% url 'analytics:view_analytics_customized' %}",
                 headers: { "X-CSRFToken": getCookie('csrftoken') },
                 data: {
+                    dimensions: 'ga:year, ga:month, ga:day',
                     start_date: start_date,
                     end_date: end_date
                 },
@@ -202,9 +193,9 @@
                 url: "{% url 'analytics:view_N_top_claims' %}",
                 headers: { "X-CSRFToken": getCookie('csrftoken') },
                 data: {
-                    start_date: '01-01-2018',
-                    end_date: 'today',
-                    n: 5
+                    start_date: $("#claims_start_date").val(),
+                    end_date: $("#claims_end_date").val(),
+                    n: $("#num_of_claims").val(),
                 },
                 success: function (response) {
 
