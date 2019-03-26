@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.http import HttpRequest, Http404
 from django.test import TestCase
-from analytics.views import view_analytics
+from analytics.views import view_analytics_default
 
 
 class Analytics(TestCase):
@@ -17,8 +17,8 @@ class Analytics(TestCase):
     def test_view_analytics_valid_user(self):
         admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
         self.get_request.user = admin
-        self.assertTrue(view_analytics(self.get_request).status_code == 200)
+        self.assertTrue(view_analytics_default(self.get_request).status_code == 200)
 
     def test_view_analytics_invalid_user(self):
         self.get_request.user = self.user_1
-        self.assertRaises(Http404, view_analytics, self.get_request)
+        self.assertRaises(Http404, view_analytics_default, self.get_request)

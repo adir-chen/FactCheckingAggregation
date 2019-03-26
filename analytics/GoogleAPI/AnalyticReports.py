@@ -56,7 +56,7 @@ def get_first_profile_id(service):
     return None
 
 
-def get_results(service, profile_id, start_date, end_date, metrics, dimensions):
+def get_results(service, profile_id, start_date, end_date, metrics, dimensions, sort):
     # Use the Analytics Service Object to query the Core Reporting API
     # for the number of sessions within the past seven days.
     return service.data().ga().get(
@@ -64,9 +64,10 @@ def get_results(service, profile_id, start_date, end_date, metrics, dimensions):
         start_date=start_date,
         end_date=end_date,
         metrics=metrics,
-        dimensions=dimensions).execute()
+        dimensions=dimensions,
+        sort=sort).execute()
 
-def getReport(start_date, end_date ,metrics ,dimensions):
+def getReport(start_date, end_date ,metrics ,dimensions, sort=None):
     # Define the auth scopes to request.
     scope = 'https://www.googleapis.com/auth/analytics.readonly'
     key_file_location = 'analytics\GoogleAPI\client_secrets.json'
@@ -80,7 +81,7 @@ def getReport(start_date, end_date ,metrics ,dimensions):
         key_file_location=key_file_location)
 
     profile_id = get_first_profile_id(service)
-    return get_results(service, profile_id, start_date, end_date, metrics, dimensions)
+    return get_results(service, profile_id, start_date, end_date, metrics, dimensions, sort)
 
 def getReport_DaysOfWeek(start_date, end_date):
     metrics = 'ga:pageviews '
@@ -103,14 +104,6 @@ def getReport_Countries(start_date, end_date):
     dimensions = 'ga:country'
     reports = getReport(start_date,end_date,metrics,dimensions)
 
-    # table = []
-    # for row in reports.get('rows'):
-    #     newRow = []
-    #     for cell in row:
-    #         newRow.append(int(cell))
-    #
-    #     table.append(newRow)
-
     return reports.get('rows')
 
 
@@ -128,8 +121,35 @@ def getReport_viewsByMonth(start_date, end_date):
 
     return table
 
+def getReport_viewsByDays(start_date, end_date):
+    metrics = 'ga:pageviews '
+    dimensions = 'ga:year, ga:month, ga:day'
+    reports = getReport(start_date,end_date,metrics,dimensions)
+    table = []
+    for row in reports.get('rows'):
+        newRow = []
+        for cell in row:
+            newRow.append(int(cell))
+
+        table.append(newRow)
+
+    return table
+
+def getReport_NMostViewdCalims(start_date, end_date):
+    metrics = 'ga:pageViews'
+    dimensions = 'ga:pagePath'
+    sort = '-ga:pageViews'
+    reports = getReport(start_date,end_date,metrics,dimensions,sort)
+    table = []
+    for row in reports.get('rows'):
+        # newRow = []
+        if row[0][1:6] == 'claim' :
+            table.append([int(row[0][7:]), int(row[1])])
+
+    return table
+
 def main():
-    print (getReport_Countries( start_date = '2019-01-01', end_date = 'today'))
+    print (getReport_NMostViewdCalims(5,start_date ='2019-01-01', end_date ='today'))
 
 
 if __name__ == '__main__':
