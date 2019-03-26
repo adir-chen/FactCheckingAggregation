@@ -1,5 +1,4 @@
 """A simple example of how to access the Google Analytics API."""
-
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -22,16 +21,13 @@ def get_service(api_name, api_version, scopes, key_file_location):
 
     # Build the service object.
     service = build(api_name, api_version, credentials=credentials)
-
     return service
 
 
 def get_first_profile_id(service):
     # Use the Analytics service object to get the first profile id.
-
     # Get a list of all Google Analytics accounts for this user
     accounts = service.management().accounts().list().execute()
-
     if accounts.get('items'):
         # Get the first Google Analytics account.
         account = accounts.get('items')[0].get('id')
@@ -52,11 +48,10 @@ def get_first_profile_id(service):
             if profiles.get('items'):
                 # return the first view (profile) id.
                 return profiles.get('items')[0].get('id')
-
     return None
 
 
-def get_results(service, profile_id, start_date, end_date, metrics, dimensions, sort):
+def get_results(service, profile_id, start_date, end_date, metrics, dimensions, sort, filters):
     # Use the Analytics Service Object to query the Core Reporting API
     # for the number of sessions within the past seven days.
     return service.data().ga().get(
@@ -65,9 +60,11 @@ def get_results(service, profile_id, start_date, end_date, metrics, dimensions, 
         end_date=end_date,
         metrics=metrics,
         dimensions=dimensions,
+        filters=filters,
         sort=sort).execute()
 
-def getReport(start_date, end_date ,metrics ,dimensions, sort=None):
+
+def get_report(start_date, end_date, metrics, dimensions, sort=None, filters=None):
     # Define the auth scopes to request.
     scope = 'https://www.googleapis.com/auth/analytics.readonly'
     key_file_location = 'analytics\GoogleAPI\client_secrets.json'
@@ -81,76 +78,40 @@ def getReport(start_date, end_date ,metrics ,dimensions, sort=None):
         key_file_location=key_file_location)
 
     profile_id = get_first_profile_id(service)
-    return get_results(service, profile_id, start_date, end_date, metrics, dimensions, sort)
-
-def getReport_DaysOfWeek(start_date, end_date):
-    metrics = 'ga:pageviews '
-    dimensions = 'ga:dayOfWeek'
-    reports = getReport(start_date,end_date,metrics,dimensions)
-
-    table = []
-    for row in reports.get('rows'):
-        newRow = []
-        for cell in row:
-            newRow.append(int(cell))
-
-        table.append(newRow)
-
-    return table
+    return get_results(service, profile_id, start_date, end_date, metrics, dimensions, sort, filters)
 
 
-def getReport_Countries(start_date, end_date):
-    metrics = 'ga:pageviews '
+def get_report_countries(start_date, end_date):
+    metrics = 'ga:pageviews'
     dimensions = 'ga:country'
-    reports = getReport(start_date,end_date,metrics,dimensions)
-
+    reports = get_report(start_date, end_date, metrics, dimensions)
     return reports.get('rows')
 
 
-def getReport_viewsByMonth(start_date, end_date):
-    metrics = 'ga:pageviews '
-    dimensions = 'ga:year, ga:month'
-    reports = getReport(start_date,end_date,metrics,dimensions)
+def get_report_view_by_time(start_date, end_date, dimensions):
+    metrics = 'ga:pageviews'
+    reports = get_report(start_date, end_date, metrics, dimensions)
     table = []
     for row in reports.get('rows'):
-        newRow = []
+        new_row = []
         for cell in row:
-            newRow.append(int(cell))
-
-        table.append(newRow)
-
+            new_row.append(int(cell))
+        table.append(new_row)
     return table
 
-def getReport_viewsByDays(start_date, end_date):
-    metrics = 'ga:pageviews '
-    dimensions = 'ga:year, ga:month, ga:day'
-    reports = getReport(start_date,end_date,metrics,dimensions)
-    table = []
-    for row in reports.get('rows'):
-        newRow = []
-        for cell in row:
-            newRow.append(int(cell))
 
-        table.append(newRow)
-
-    return table
-
-def getReport_NMostViewdCalims(start_date, end_date):
+def get_report_top_n_claims(num_of_claims, start_date, end_date):
+    from heapq import nlargest
     metrics = 'ga:pageViews'
     dimensions = 'ga:pagePath'
     sort = '-ga:pageViews'
-    reports = getReport(start_date,end_date,metrics,dimensions,sort)
-    table = []
+    filters = 'ga:pagePath=~/claim/'
+    reports = get_report(start_date, end_date, metrics, dimensions, sort, filters)
+    claims_with_num_views = {}
     for row in reports.get('rows'):
-        # newRow = []
-        if row[0][1:6] == 'claim' :
-            table.append([int(row[0][7:]), int(row[1])])
-
-    return table
-
-def main():
-    print (getReport_NMostViewdCalims(5,start_date ='2019-01-01', end_date ='today'))
-
-
-if __name__ == '__main__':
-    main()
+        claim_id_arr = row[0].split('/')
+        claims_with_num_views[int(claim_id_arr[len(claim_id_arr) - 1])] = int(row[1])
+    top_n_claims = []
+    for claim_id in nlargest(num_of_claims, claims_with_num_views, key=claims_with_num_views.get):
+        top_n_claims.append([claim_id, claims_with_num_views[claim_id]])
+    return top_n_claims
