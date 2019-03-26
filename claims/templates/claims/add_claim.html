@@ -2,39 +2,49 @@
 
 {% block page_content %}
     <div class="page_wrapper">
-        <h3>Add New Claim:</h3>
+        <h3>Add new claim:</h3>
         <br>
         <div class="new_comment claim_box" style="width: 100%; padding: 20px 40px 20px 20px;">
-            <p id="add_new_claim_error_msg" style="color: red; font-size: 12px;" hidden> </p>
-            <p id="add_new_claim_success_msg" style="color: dodgerblue; font-size: 12px;" hidden>Your claim has been added successfully.<br>
+            <p id="success_msg_add_new_claim" class="action_msg note_msg" hidden>Your claim has been added successfully.<br>
                 If you want to edit your claim/comment you will be able to do so during the next 5 minutes.</p>
-                <h5>Claim Details:</h5>
-                <input id="claim" type="text" placeholder="Claim" style="width: 100%; margin: 10px;"><br>
-                <input id="category" type="text" placeholder="Category" style="width: 100%; margin: 10px;"><br>
-                <input id="tags" type="text" placeholder="Tags (separated by space). Used for searching purpose." style="width: 100%; margin: 10px;"><br>
-                <input id="image_src" type="text" placeholder="Image Url" style="width: 100%; margin: 10px;"><br>
-                <br>
-                <input id='add_comment' type="checkbox" onclick='enable_comment()'>Add your comment on this claim<br><br>
-                <h5>Comment Details (Source Information):</h5>
-                <p>
-                    The claim will be submitted along with your comment containing your verdict on it (True/False/Unknown).<br>
-                    Other Users will be able to comment their on verdicts.
-                </p>
-                <input id="title" type="text" placeholder="Title" readonly style="width: 100%; margin: 10px;"><br>
-                <textarea id="description" placeholder="Description" readonly style="width: 100%; margin: 10px;"></textarea><br>
-                <input id="url" type="text" placeholder="Website url" readonly style="width: 100%; margin: 10px;"><br>
-                <p style="width: 100%; margin: 10px;">Verdict Date (according to source website):</p>
-                <input type="date" id="verdict_date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}" readonly style="width: 100%; margin: 10px;">
-                <p style="width: 100%; margin: 10px;">Label:</p>
-                <div style="margin: 10px;">
-                    <input type="radio" name="label" class="label" value="True" disabled>True<br>
-                    <input type="radio" name="label" class="label" value="False" disabled>False<br>
-                    <input type="radio" name="label" class="label" value="Unknown" disabled>Unknown<br>
-                </div>
-                <button id="submit_claim" type="submit" class="btn btn-info" style="margin: 10px 0;">Add Claim</button>
+            <p id="error_msg_add_new_claim" class="action_msg error_msg" hidden> </p>
+            <h5>Claim Details:</h5>
+            <input id="claim" type="text" placeholder="Claim" style="width: 100%; margin: 10px;"><br>
+            <input id="category" type="text" placeholder="Category" style="width: 100%; margin: 10px;"><br>
+            <input id="tags" type="text" placeholder="Tags (separated by comma). Used for searching purpose." style="width: 100%; margin: 10px;"><br>
+            <input id="image_src" type="text" placeholder="Image Url" style="width: 100%; margin: 10px;"><br>
+            <br>
+            <input id='add_comment' type="checkbox" onclick='enable_comment()'>Add your comment on this claim<br><br>
+            <h5>Comment Details (Source Information):</h5>
+            <p>
+                The claim will be submitted along with your comment containing your verdict on it (True/False/Unknown).<br>
+                Other Users will be able to comment their on verdicts.
+            </p>
+            <input id="title" type="text" placeholder="Title" readonly style="width: 100%; margin: 10px;"><br>
+            <textarea id="description" placeholder="Description" readonly style="width: 100%; margin: 10px;"></textarea><br>
+            <input id="url" type="text" placeholder="Website url" readonly style="width: 100%; margin: 10px;"><br>
+            <p style="width: 100%; margin: 10px;">Verdict Date (according to source website):</p>
+            <input type="date" id="verdict_date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}" readonly style="width: 100%; margin: 10px;">
+            <p style="width: 100%; margin: 10px;">Label:</p>
+            <div style="margin: 10px;">
+                <input type="radio" name="label" class="label" value="True" disabled>True<br>
+                <input type="radio" name="label" class="label" value="False" disabled>False<br>
+                <input type="radio" name="label" class="label" value="Unknown" disabled>Unknown<br>
+            </div>
+            <button id="submit_claim" type="submit" class="btn btn-info" style="margin: 10px 0;">Add Claim</button>
         </div>
     </div>
     <script>
+        if(localStorage.getItem("success_msg_add_new_claim")){
+            $("#success_msg_add_new_claim").attr("hidden", false);
+            localStorage.clear();
+        }
+
+        function hide_all_msgs(){
+            $("#success_msg_add_new_claim").attr("hidden", true);
+            $("#error_msg_add_new_claim").attr("hidden", true);
+        }
+
         $("#submit_claim").click(function(e){
             e.preventDefault();
             $.ajax({
@@ -54,25 +64,17 @@
                     label: $(".label:checked").val()
                 },
                 success: function (request) {
-                    $("#add_new_claim_error_msg").attr("hidden", true);
-                    $("#claim").val('');
-                    $("#category").val('');
-                    $("#tags").val('');
-                    $("#image_src").val('');
-                    $("#title").val('');
-                    $("#description").val('');
-                    $("#url").val('');
-                    $("#verdict_date").val('');
-                    $("#add_new_claim_success_msg").attr("hidden", false);
-                    $("html, body").animate({ scrollTop: 0 }, 0);
+                    localStorage.setItem("success_msg_add_new_claim", true);
+                    $("html, body").animate({ scrollTop: 200 }, 0);
+                    window.location.reload();
                 },
                 error: function (error) {
-                    $("#add_new_claim_success_msg").attr("hidden", true);
+                    hide_all_msgs();
                     let err = error.responseText.split('\n')[1];
-                    document.getElementById("add_new_claim_error_msg").innerHTML =
+                    document.getElementById("error_msg_add_new_claim").innerHTML =
                     'Error: <br>' + err;
-                    $("#add_new_claim_error_msg").attr("hidden", false);
-                    $("html, body").animate({ scrollTop: 0 }, 0);
+                    $("#error_msg_add_new_claim").attr("hidden", false);
+                    $("html, body").animate({ scrollTop: 200 }, 0);
                 }
             });
         });

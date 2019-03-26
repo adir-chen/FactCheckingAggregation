@@ -27,7 +27,7 @@ SECRET_KEY = '#!#c&ejot$9bc3k%q&ckib!=ki#lk07!$u3ikfehj6!-2^s)02'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['132.72.23.63', 'localhost', '127.0.0.1', '192.168.1.41']
+ALLOWED_HOSTS = ['132.72.23.63', 'localhost', '127.0.0.1', '192.168.1.41', '132.72.66.116']
 
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.open_id.OpenIdAuth',  # for Google authentication
@@ -50,6 +50,7 @@ LOGIN_REDIRECT_URL = '/'
 INSTALLED_APPS = [
     'claims.apps.ClaimsConfig',
     'comments.apps.CommentsConfig',
+    'tweets.apps.TweetsConfig',
     'users.apps.UsersConfig',
     'search.apps.SearchConfig',
     'contact_us.apps.ContactUsConfig',
@@ -167,6 +168,7 @@ NOSE_ARGS = [
     # '--cover-package=users',
     # '--cover-package=claims',
     # '--cover-package=comments',
+    # '--cover-package=tweets',
     # '--cover-package=contact_us',
     # '--cover-package=logger',
     # '--cover-package=search',

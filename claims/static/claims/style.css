@@ -60,7 +60,6 @@ body {
 
 .header-tools a{
     color: #fff;
-    padding: 0 7px;
 }
 
 .header-tools a:hover{
@@ -416,13 +415,13 @@ span.authenticity_grade{
     margin: 10px;
 }
 
-.twitter-share-button{
+.twitter-share-btn{
     background: #fff;
     border: 1px solid #3a9fcd;
     color: #3a9fcd;
 }
 
-.twitter-share-button:hover{
+.twitter-share-btn:hover{
     border: 1px solid #000;
 }
 
@@ -442,7 +441,7 @@ span.authenticity_grade{
 
 div.comment_box {
     background-color: #fff;
-    margin-bottom: 35px;
+    margin: 20px 0;
     border-radius: 7px;
     border: 1px solid #c0c0c0;
     width: 100%;
@@ -558,6 +557,117 @@ div.comment_footer{
 .comment_footer input,textarea{
     width: 100%;
     margin: 10px;
+}
+
+a.tag_link {
+    border: 1px solid #bbb;
+    padding: 3px 6px;
+    border-radius: 3px;
+    background: #fff;
+    text-decoration: none;
+    line-height: 2.3;
+}
+
+a.tag_link:hover{
+    color: #000;
+    border-color: #000;
+}
+
+/*################
+    TWEETS
+################*/
+
+div.tweet_box{
+    border: 1px solid #3a9fcd;
+    background: #fff;
+    border-radius: 7px;
+    display: grid;
+    grid-template-areas:
+        'tweet-user'
+        'tweet-content'
+        'tweet-btn-row';
+    grid-template-columns: auto;
+    margin: 20px 0;
+}
+
+div.tweet_emb{
+    grid-area: tweet-emb;
+    padding: 10px;
+    max-width: 85vw;
+}
+
+div.tweet_verdict{
+    grid-area: tweet-verdict;
+    padding: 20px 0 30px 20px;
+    max-width: 180px;
+}
+
+div.tweet_voting{
+    grid-area: tweet-voting;
+    text-align: center;
+}
+
+div.tweet_btn_row{
+    grid-area: tweet-btn-row;
+    padding: 20px;
+    background: #f5f5f5;
+    border-radius: 0 0 7px 7px;
+}
+
+span.author_rank{
+    padding: 20px;
+    border-radius: 7px;
+}
+
+div.tweet_content{
+    grid-area: tweet-content;
+    display: grid;
+    grid-template-areas:
+        'tweet-emb tweet-emb tweet-emb'
+        'tweet-verdict tweet-voting .';
+    grid-template-columns: auto 100px auto;
+}
+
+div.tweet_content_edit{
+    grid-area: tweet-content;
+    display: grid;
+    grid-template-areas:
+        'tweet-emb'
+        'tweet-verdict';
+    grid-template-columns: auto;
+}
+
+.tweet_content_edit input{
+    width: 100%;
+    margin: 10px 0;
+}
+
+@media (min-width: 800px) {
+    div.tweet_box{
+        grid-template-areas:
+                'tweet-user tweet-content'
+                'tweet-btn-row tweet-btn-row';
+        grid-template-columns: 150px auto;
+    }
+
+    div.tweet_content{
+        grid-template-areas: 'tweet-emb tweet-verdict tweet-voting';
+        grid-template-columns: auto 150px 100px;
+    }
+
+    div.tweet_content_edit{
+        grid-template-areas: 'tweet-emb tweet-verdict';
+        grid-template-columns: auto 250px;
+    }
+
+    div.tweet_voting{
+        padding: 20px 0;
+        margin-right: 20px;
+    }
+
+    div.tweet_verdict{
+        padding: 20px 0 40px 0;
+    }
 }
 
 /*################

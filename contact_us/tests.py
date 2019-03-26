@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.http import HttpRequest, QueryDict
 from django.test import TestCase
-from contact_us.views import send_email, check_if_email_is_valid, check_for_spam, contact_us_page
+from contact_us.views import contact_us_page, send_email, check_if_email_is_valid, check_for_spam
 import random
 import string
 
@@ -18,6 +18,9 @@ class ContactUsTest(TestCase):
 
     def tearDown(self):
         pass
+
+    def test_contact_us_page(self):
+        self.assertTrue(contact_us_page(self.post_request).status_code == 200)
 
     def test_send_email(self):
         query_dict = QueryDict('', mutable=True)
@@ -134,6 +137,3 @@ class ContactUsTest(TestCase):
             self.assertFalse(check_for_spam(ip))
             send_email(self.post_request)
         self.assertTrue(check_for_spam(ip))
-
-    def test_contact_us_page(self):
-        self.assertTrue(contact_us_page(self.post_request).status_code == 200)

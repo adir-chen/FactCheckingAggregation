@@ -6,8 +6,8 @@
         <br>
         <div class="claim_box page_box">
             {% csrf_token %}
-            <p id="error_msg" class="action_msg error_msg" hidden> </p>
-            <p id="success_msg" class="action_msg note_msg" hidden>Your message has been sent successfully </p>
+            <p id="error_msg_send_email" class="action_msg error_msg" hidden> </p>
+            <p id="success_msg_send_email" class="action_msg note_msg" hidden>Your email has been sent successfully </p>
             <h5>Mail Details:</h5>
             <input id="user_email" type="text" placeholder="Your e-mail" style="width: 50%;"><br>
             <input id="subject" type="text" placeholder="Subject" style="width: 50%;"><br>
@@ -19,45 +19,48 @@
     </div>
 
     <script>
-    $("#submit_email").click(function(e){
-        {#e.preventDefault();#}
-        $.ajax({
-            type: 'POST',
-            url: "{% url 'contact_us:send_email' %}",
-            headers: { "X-CSRFToken": getCookie('csrftoken')},
-            data: {
-                user_email: $("#user_email").val(),
-                subject: $("#subject").val(),
-                description: $("#description").val()
-            },
-            success: function (request) {
-                $("#user_email").val('');
-                $("#subject").val('');
-                $("#description").val('');
-                $("#success_msg").attr("hidden", false);
-
-            },
-            error: function (error) {
-                let err = error.responseText.split('\n')[1];
-                document.getElementById("error_msg").innerHTML =
-                    'Error: <br>' + err;
-                $("#error_msg").attr("hidden", false);
-            }
-        });
-    });
-
-    function getCookie(c_name) {
-        if (document.cookie.length > 0) {
-            c_start = document.cookie.indexOf(c_name + "=");
-            if (c_start != -1) {
-                c_start = c_start + c_name.length + 1;
-                c_end = document.cookie.indexOf(";", c_start);
-                if (c_end == -1) c_end = document.cookie.length;
-                return unescape(document.cookie.substring(c_start, c_end));
-            }
+        if(localStorage.getItem("success_msg_send_email")){
+            $("#success_msg_send_email").attr("hidden", false);
+            localStorage.clear();
         }
-        return "";
-    }
+        $("#submit_email").click(function(e){
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'contact_us:send_email' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken')},
+                data: {
+                    user_email: $("#user_email").val(),
+                    subject: $("#subject").val(),
+                    description: $("#description").val()
+                },
+                success: function (request) {
+                    localStorage.setItem("success_msg_send_email", true);
+                    window.location.reload()
+
+                },
+                error: function (error) {
+                    $("#success_msg_send_email").attr("hidden", true);
+                    let err = error.responseText.split('\n')[1];
+                    document.getElementById("error_msg_send_email").innerHTML =
+                        'Error: <br>' + err;
+                    $("#error_msg_send_email").attr("hidden", false);
+                }
+            });
+        });
+
+        function getCookie(c_name) {
+            if (document.cookie.length > 0) {
+                c_start = document.cookie.indexOf(c_name + "=");
+                if (c_start != -1) {
+                    c_start = c_start + c_name.length + 1;
+                    c_end = document.cookie.indexOf(";", c_start);
+                    if (c_end == -1) c_end = document.cookie.length;
+                    return unescape(document.cookie.substring(c_start, c_end));
+                }
+            }
+            return "";
+        }
 </script>
 {% endblock %}
 

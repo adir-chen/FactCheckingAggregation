@@ -4,10 +4,11 @@ from django.utils.datastructures import MultiValueDict
 from claims.models import Claim
 from comments.models import Comment
 from comments.views import add_comment, build_comment, check_if_comment_is_valid, convert_date_format, \
-    is_valid_verdict_date, get_system_label_to_comment, get_all_comments_for_user_id, get_all_comments_for_claim_id, \
-    export_to_csv, check_if_csv_fields_are_valid, create_df_for_claims, check_if_fields_and_scrapers_lists_valid,\
-    up_vote, down_vote, check_if_vote_is_valid, edit_comment, check_comment_new_fields, delete_comment, \
-    check_if_delete_comment_is_valid, update_authenticity_grade
+    is_valid_verdict_date, get_system_label_to_comment, edit_comment, check_comment_new_fields, \
+    delete_comment, check_if_delete_comment_is_valid, up_vote, down_vote, check_if_vote_is_valid, \
+    export_to_csv, check_if_csv_fields_are_valid, check_if_fields_and_scrapers_lists_valid, \
+    create_df_for_claims, get_all_comments_for_user_id, get_all_comments_for_claim_id, \
+    update_authenticity_grade
 from users.models import User, Scrapers
 import datetime
 import random
@@ -138,6 +139,9 @@ class CommentTests(TestCase):
         self.post_request = HttpRequest()
         self.post_request.method = 'POST'
 
+        self.get_request = HttpRequest()
+        self.get_request.method = 'GET'
+
     def tearDown(self):
         pass
 
@@ -184,12 +188,6 @@ class CommentTests(TestCase):
         self.post_request.POST = self.new_comment_details_user_1
         self.post_request.user = guest
         self.assertRaises(Exception, add_comment, self.post_request)
-
-    def test_add_comment_get_request(self):
-        self.post_request.method = 'GET'
-        self.post_request.POST = self.new_comment_details_user_1
-        self.post_request.user = self.user_1
-        self.assertRaises(Http404, add_comment, self.post_request)
 
     def test_add_comment_missing_claim_id(self):
         del self.new_comment_details_user_1['claim_id']
@@ -271,6 +269,13 @@ class CommentTests(TestCase):
             self.assertRaises(Exception, add_comment, self.post_request)
             self.assertTrue(len(Comment.objects.filter(claim_id=self.claim_1.id)) == len_comments)
             self.new_comment_details_user_1 = dict_copy.copy()
+
+    def test_add_comment_invalid_request(self):
+        len_comments = len(Comment.objects.filter(claim_id=self.claim_2.id))
+        self.get_request.POST = self.new_comment_details_user_1
+        self.get_request.user = self.user_1
+        self.assertRaises(Http404, add_comment, self.get_request)
+        self.assertTrue(len(Comment.objects.filter(claim_id=self.claim_2.id)) == len_comments)
 
     def test_build_comment_by_user(self):
         len_comments = len(Comment.objects.all())
@@ -484,134 +489,496 @@ class CommentTests(TestCase):
         self.assertTrue('Unknown' == get_system_label_to_comment("Unknown", self.user_1.id))
         from users.views import add_all_scrapers
         from users.models import Scrapers
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
         admin = User.objects.create_superuser(username='admin',
                                               email='admin@gmail.com',
                                               password='admin')
-        self.post_request.user = admin
-        add_all_scrapers(self.post_request)
+        self.get_request.user = admin
+        add_all_scrapers(self.get_request)
         for scraper in Scrapers.objects.all():
             for true_label in scraper.true_labels.split(','):
                 self.assertTrue('True' == get_system_label_to_comment(true_label, scraper.scraper_id.id))
             for false_label in scraper.false_labels.split(','):
                 self.assertTrue('False' == get_system_label_to_comment(false_label, scraper.scraper_id.id))
+            self.assertTrue('Unknown' == get_system_label_to_comment('Unknown', scraper.scraper_id.id))
 
-    def test_get_all_comments_for_user_id(self):
-        result = get_all_comments_for_user_id(self.user_1.id)
-        self.assertTrue(len(result) == 1)
-        self.assertTrue(result.first().claim_id == self.comment_1.claim_id)
-        self.assertTrue(result.first().user_id == self.comment_1.user_id)
-        self.assertTrue(result.first().title == self.comment_1.title)
-        self.assertTrue(result.first().description == self.comment_1.description)
-        self.assertTrue(result.first().url == self.comment_1.url)
-        self.assertTrue(result.first().verdict_date == self.comment_1.verdict_date)
-        self.assertTrue(result.first().label == self.comment_1.label)
-
-        result = get_all_comments_for_user_id(self.user_2.id)
-        self.assertTrue(len(result) == 1)
-        self.assertTrue(result.first().claim_id == self.comment_2.claim_id)
-        self.assertTrue(result.first().user_id == self.comment_2.user_id)
-        self.assertTrue(result.first().title == self.comment_2.title)
-        self.assertTrue(result.first().description == self.comment_2.description)
-        self.assertTrue(result.first().url == self.comment_2.url)
-        self.assertTrue(result.first().verdict_date == self.comment_2.verdict_date)
-        self.assertTrue(result.first().label == self.comment_2.label)
-
-    def test_get_all_comments_for_user_id_after_existing_user_add_comment(self):
-        result = get_all_comments_for_user_id(self.user_1.id)
-        len_user_comments = len(result)
-        self.assertTrue(len_user_comments == 1)
-        self.post_request.POST = self.new_comment_details_user_1
+    def test_edit_comment(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.comment_1.user_id)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.update_comment_details)
+        self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        add_comment(self.post_request)
-        result = get_all_comments_for_user_id(self.user_1.id).order_by('-id')
-        self.assertTrue(len(result) == len_user_comments + 1)
-        self.assertTrue(result.first().claim_id == self.new_comment_details_user_1['claim_id'])
-        self.assertTrue(result.first().user_id == self.user_1.id)
-        self.assertTrue(result.first().title == self.new_comment_details_user_1['title'])
-        self.assertTrue(result.first().description == self.new_comment_details_user_1['description'])
-        self.assertTrue(result.first().url == self.new_comment_details_user_1['url'])
-        self.assertTrue(result.first().verdict_date == self.comment_4.verdict_date)
-        self.assertTrue(result.first().label == self.new_comment_details_user_1['label'])
+        self.assertTrue(edit_comment(self.post_request).status_code == 200)
+        new_comment = Comment.objects.filter(id=self.comment_1.id).first()
+        self.assertTrue(new_comment.title == self.update_comment_details['comment_title'])
+        self.assertTrue(new_comment.description == self.update_comment_details['comment_description'])
+        self.assertTrue(new_comment.url == self.update_comment_details['comment_reference'])
+        self.assertTrue(new_comment.verdict_date == self.comment_3.verdict_date)
+        self.assertTrue(new_comment.system_label == self.update_comment_details['comment_label'])
 
-    def test_get_all_comments_for_added_user(self):
-        user_3 = User(username="User3", email='user3@gmail.com')
-        user_3.save()
-        comment_4 = Comment(claim_id=self.claim_1.id,
-                            user_id=user_3.id,
-                            title=self.claim_1.claim,
-                            description='description4',
-                            url='url1',
-                            verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
-                            label='label1')
-        comment_4.save()
-        result = get_all_comments_for_user_id(user_3.id)
-        self.assertTrue(len(result) == 1)
-        self.assertTrue(result.first().claim_id == comment_4.claim_id)
-        self.assertTrue(result.first().user_id == comment_4.user_id)
-        self.assertTrue(result.first().title == comment_4.title)
-        self.assertTrue(result.first().description == comment_4.description)
-        self.assertTrue(result.first().url == comment_4.url)
-        self.assertTrue(result.first().verdict_date == comment_4.verdict_date)
-        self.assertTrue(result.first().label == comment_4.label)
+    def test_edit_comment_by_user_not_his_comment(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_2.id)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.update_comment_details)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_2
+        self.assertRaises(Exception, edit_comment, self.post_request)
+        comment = Comment.objects.filter(id=self.comment_1.id).first()
+        self.assertTrue(comment.title == self.comment_1.title)
+        self.assertTrue(comment.description == self.comment_1.description)
+        self.assertTrue(comment.url == self.comment_1.url)
+        self.assertTrue(comment.verdict_date == self.comment_1.verdict_date)
+        self.assertTrue(comment.label == self.comment_1.label)
 
-    def test_get_all_comments_for_invalid_user_id(self):
-        result = get_all_comments_for_user_id(self.num_of_saved_users + random.randint(1, 10))
-        self.assertTrue(result is None)
+    def test_edit_comment_by_invalid_user_id(self):
+        user = User(id=self.num_of_saved_users + random.randint(1, 10), email='user@gmail.com')
+        self.update_comment_details['user_id'] = user.id
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.update_comment_details)
+        self.post_request.POST = query_dict
+        self.post_request.user = user
+        self.assertRaises(Exception, edit_comment, self.post_request)
+        comment = Comment.objects.filter(id=self.comment_1.id).first()
+        self.assertTrue(comment.title == self.comment_1.title)
+        self.assertTrue(comment.description == self.comment_1.description)
+        self.assertTrue(comment.url == self.comment_1.url)
+        self.assertTrue(comment.verdict_date == self.comment_1.verdict_date)
+        self.assertTrue(comment.label == self.comment_1.label)
 
-    def test_get_all_comments_for_claim_id(self):
-        result_comment_1 = get_all_comments_for_claim_id(self.claim_1.id)
-        self.assertTrue(len(result_comment_1) == 1)
-        self.assertTrue(result_comment_1.first().claim_id == self.claim_1.id)
-        self.assertTrue(result_comment_1.first().user_id == self.comment_1.user_id)
-        self.assertTrue(result_comment_1.first().title == self.comment_1.title)
-        self.assertTrue(result_comment_1.first().description == self.comment_1.description)
-        self.assertTrue(result_comment_1.first().url == self.comment_1.url)
-        self.assertTrue(result_comment_1.first().verdict_date == self.comment_1.verdict_date)
-        self.assertTrue(result_comment_1.first().label == self.comment_1.label)
+    def test_edit_comment_by_invalid_comment_id(self):
+        self.update_comment_details['comment_id'] = self.num_of_saved_comments + random.randint(1, 10)
+        self.update_comment_details['user_id'] = str(self.comment_1.user_id)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.update_comment_details)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_1
+        self.assertRaises(Exception, edit_comment, self.post_request)
+        comment = Comment.objects.filter(id=self.comment_1.id).first()
+        self.assertTrue(comment.title == self.comment_1.title)
+        self.assertTrue(comment.description == self.comment_1.description)
+        self.assertTrue(comment.url == self.comment_1.url)
+        self.assertTrue(comment.verdict_date == self.comment_1.verdict_date)
+        self.assertTrue(comment.label == self.comment_1.label)
 
-        result_comment_2 = get_all_comments_for_claim_id(self.claim_2.id)
-        self.assertTrue(len(result_comment_2) == 1)
-        self.assertTrue(result_comment_2.first().claim_id == self.claim_2.id)
-        self.assertTrue(result_comment_2.first().user_id == self.comment_2.user_id)
-        self.assertTrue(result_comment_2.first().title == self.comment_2.title)
-        self.assertTrue(result_comment_2.first().description == self.comment_2.description)
-        self.assertTrue(result_comment_2.first().url == self.comment_2.url)
-        self.assertTrue(result_comment_2.first().verdict_date == self.comment_2.verdict_date)
-        self.assertTrue(result_comment_2.first().label == self.comment_2.label)
+    def test_edit_comment_missing_args(self):
+        for i in range(10):
+            dict_copy = self.update_comment_details.copy()
+            args_to_remove = []
+            for j in range(0, (random.randint(1, len(self.update_comment_details.keys()) - 1))):
+                args_to_remove.append(list(self.update_comment_details.keys())[j])
+            for j in range(len(args_to_remove)):
+                del self.update_comment_details[args_to_remove[j]]
+            query_dict = QueryDict('', mutable=True)
+            query_dict.update(self.update_comment_details)
+            self.post_request.POST = query_dict
+            self.post_request.user = self.user_1
+            self.assertRaises(Exception, edit_comment, self.post_request)
+            self.update_comment_details = dict_copy.copy()
 
-    def test_get_all_comments_for_claim_id_user_added_new_comment(self):
-        user_3 = User(username="User3", email='user3@gmail.com')
-        user_3.save()
-        comment_4 = Comment(claim_id=self.claim_1.id,
-                            user_id=user_3.id,
-                            title=self.claim_1.claim,
-                            description='description4',
-                            url='url1',
-                            verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
-                            label='label1')
-        comment_4.save()
-        result_comment_1 = get_all_comments_for_claim_id(self.claim_1.id)
-        self.assertTrue(len(result_comment_1) == 2)
-        self.assertTrue(result_comment_1[0].claim_id == self.claim_1.id)
-        self.assertTrue(result_comment_1[0].user_id == self.comment_1.user_id)
-        self.assertTrue(result_comment_1[0].title == self.comment_1.title)
-        self.assertTrue(result_comment_1[0].description == self.comment_1.description)
-        self.assertTrue(result_comment_1[0].url == self.comment_1.url)
-        self.assertTrue(result_comment_1[0].verdict_date == self.comment_1.verdict_date)
-        self.assertTrue(result_comment_1[0].label == self.comment_1.label)
-        self.assertTrue(result_comment_1[1].claim_id == comment_4.claim_id)
-        self.assertTrue(result_comment_1[1].user_id == comment_4.user_id)
-        self.assertTrue(result_comment_1[1].title == comment_4.title)
-        self.assertTrue(result_comment_1[1].description == comment_4.description)
-        self.assertTrue(result_comment_1[1].url == comment_4.url)
-        self.assertTrue(result_comment_1[1].verdict_date == comment_4.verdict_date)
-        self.assertTrue(result_comment_1[1].label == comment_4.label)
+    def test_edit_comment_invalid_request(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.comment_1.user_id)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.update_comment_details)
+        self.get_request.POST = query_dict
+        self.get_request.user = self.user_1
+        self.assertRaises(Http404, edit_comment, self.get_request)
 
-    def test_get_all_comments_for_invalid_claim_id(self):
-        result = get_all_comments_for_claim_id(self.num_of_saved_claims + random.randint(1, 10))
-        self.assertTrue(result is None)
+    def test_check_comment_new_fields(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
+        self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_missing_user_id(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_invalid_user_id(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.num_of_saved_users + random.randint(1, 10))
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_missing_user_type(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_missing_comment_id(self):
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_invalid_comment_id(self):
+        self.update_comment_details['comment_id'] = str(self.num_of_saved_comments + random.randint(1, 10))
+        self.update_comment_details['user_id'] = self.user_1.id
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_invalid_format_for_tags(self):
+        invalid_input = 'tag1,'
+        for i in range(random.randint(1, 10)):
+            invalid_input += ','
+        invalid_input += ',tag2'
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = self.user_1.id
+        self.update_comment_details['comment_tags'] = invalid_input
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_missing_title(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
+        del self.update_comment_details['comment_title']
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_missing_description(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
+        del self.update_comment_details['comment_description']
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_missing_verdict_date(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
+        del self.update_comment_details['comment_verdict_date']
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_missing_reference(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
+        del self.update_comment_details['comment_reference']
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_missing_label(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
+        del self.update_comment_details['comment_label']
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_comment_not_belong_to_user(self):
+        self.update_comment_details['comment_id'] = str(self.comment_2.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_edit_after_five_minutes(self):
+        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
+                                                            datetime.timedelta(minutes=6))
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_comment_invalid_date_format(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
+        self.update_comment_details['comment_verdict_date'] = datetime.datetime.strptime(str(self.comment_1.verdict_date), '%Y-%m-%d').strftime('%m/%d/%y')
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_invalid_input_for_title(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['comment_title'] = 'Խոսքի խառնաշփոթի խառնաշփոթություն'
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_invalid_input_for_description(self):
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['comment_description'] = 'Μια κουβέντα από ανοησίες λέξεων'
+        self.update_comment_details['is_superuser'] = False
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_delete_comment_by_user(self):
+        comment_to_delete = {'comment_id': self.comment_1.id}
+        self.post_request.POST = comment_to_delete
+        self.post_request.user = self.user_1
+        len_comments = len(Comment.objects.all())
+        response = delete_comment(self.post_request)
+        self.assertTrue(len(Comment.objects.all()) == len_comments - 1)
+        self.assertTrue(response.status_code == 200)
+
+    def test_delete_comment_by_user_not_his_comment(self):
+        comment_to_delete = {'comment_id': self.comment_2.id}
+        self.post_request.POST = comment_to_delete
+        self.post_request.user = self.user_1
+        len_comments = len(Comment.objects.all())
+        self.assertRaises(Exception, delete_comment, self.post_request)
+        self.assertTrue(len(Comment.objects.all()) == len_comments)
+
+    def test_delete_comment_by_invalid_user(self):
+        user = User(id=self.num_of_saved_users + random.randint(1, 10), email='user@gmail.com')
+        comment_to_delete = {'comment_id': self.comment_1.id}
+        self.post_request.POST = comment_to_delete
+        self.post_request.user = user
+        len_comments = len(Comment.objects.all())
+        self.assertRaises(Exception, delete_comment, self.post_request)
+        self.assertTrue(len(Comment.objects.all()) == len_comments)
+
+    def test_delete_comment_by_not_authenticated_user(self):
+        from django.contrib.auth.models import AnonymousUser
+        comment_to_delete = {'comment_id': self.comment_1.id}
+        self.post_request.POST = comment_to_delete
+        self.post_request.user = AnonymousUser()
+        len_comments = len(Comment.objects.all())
+        self.assertRaises(Http404, delete_comment, self.post_request)
+        self.assertTrue(len(Comment.objects.all()) == len_comments)
+
+    def test_delete_comment_by_invalid_comment_id(self):
+        comment_to_delete = {'comment_id': self.num_of_saved_comments + random.randint(1, 10)}
+        self.post_request.POST = comment_to_delete
+        self.post_request.user = self.user_1
+        len_comments = len(Comment.objects.all())
+        self.assertRaises(Exception, delete_comment, self.post_request)
+        self.assertTrue(len(Comment.objects.all()) == len_comments)
+
+    def test_delete_comment_invalid_request(self):
+        comment_to_delete = {'comment_id': self.comment_1.id}
+        self.get_request.POST = comment_to_delete
+        self.get_request.user = self.user_1
+        len_comments = len(Comment.objects.all())
+        self.assertRaises(Http404, delete_comment, self.get_request)
+        self.assertTrue(len(Comment.objects.all()) == len_comments)
+
+    def test_check_if_delete_comment_is_valid(self):
+        comment_to_delete = {'comment_id': self.comment_1.id}
+        self.post_request.POST = comment_to_delete
+        self.post_request.user = self.user_1
+        self.assertTrue(check_if_delete_comment_is_valid(self.post_request)[0])
+
+    def test_check_if_delete_comment_is_valid_missing_comment_id(self):
+        self.post_request.user = self.user_1
+        self.assertFalse(check_if_delete_comment_is_valid(self.post_request)[0])
+
+    def test_check_if_delete_comment_is_valid_invalid_comment_id(self):
+        comment_to_delete = {'comment_id': self.num_of_saved_comments + random.randint(1, 10)}
+        self.post_request.POST = comment_to_delete
+        self.post_request.user = self.user_1
+        self.assertFalse(check_if_delete_comment_is_valid(self.post_request)[0])
+
+    def test_check_if_delete_comment_is_valid_invalid_user_id(self):
+        user = User(id=self.num_of_saved_users + random.randint(1, 10), email='user@gmail.com')
+        comment_to_delete = {'comment_id':  self.comment_1.id}
+        self.post_request.POST = comment_to_delete
+        self.post_request.user = user
+        self.assertFalse(check_if_delete_comment_is_valid(self.post_request)[0])
+
+    def test_check_if_delete_comment_is_valid_another_user(self):
+        comment_to_delete = {'comment_id':  self.comment_1.id}
+        self.post_request.POST = comment_to_delete
+        self.post_request.user = self.user_2
+        self.assertFalse(check_if_delete_comment_is_valid(self.post_request)[0])
+
+    def test_up_vote(self):
+        comment_to_vote = {'comment_id': self.comment_2.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(comment_to_vote)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_1
+        self.assertRaises(Exception, up_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_2.id).update(timestamp=datetime.datetime.now() -
+                                                                      datetime.timedelta(minutes=6))
+        response = up_vote(self.post_request)
+        self.assertTrue(self.comment_2.up_votes.count() == 1)
+        self.assertTrue(self.comment_2.down_votes.count() == 0)
+        self.assertTrue(response.status_code == 200)
+
+    def test_up_vote_twice(self):
+        comment_to_vote = {'comment_id': self.comment_2.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(comment_to_vote)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_1
+        self.assertRaises(Exception, up_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_2.id).update(timestamp=datetime.datetime.now() -
+                                                                      datetime.timedelta(minutes=6))
+        up_vote(self.post_request)
+        response = up_vote(self.post_request)
+        self.assertTrue(self.comment_2.up_votes.count() == 0)
+        self.assertTrue(self.comment_2.down_votes.count() == 0)
+        self.assertTrue(response.status_code == 200)
+
+    def test_up_vote_after_down_vote(self):
+        comment_to_vote = {'comment_id': self.comment_2.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(comment_to_vote)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_1
+        self.assertRaises(Exception, down_vote, self.post_request)
+        self.assertRaises(Exception, up_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_2.id).update(timestamp=datetime.datetime.now() -
+                                                                      datetime.timedelta(minutes=6))
+        down_vote(self.post_request)
+        response = up_vote(self.post_request)
+        self.assertTrue(self.comment_2.up_votes.count() == 1)
+        self.assertTrue(self.comment_2.down_votes.count() == 0)
+        self.assertTrue(response.status_code == 200)
+
+    def test_up_vote_user_not_authenticated(self):
+        from django.contrib.auth.models import AnonymousUser
+        comment_to_vote = {'comment_id': self.comment_2.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(comment_to_vote)
+        self.post_request.POST = query_dict
+        self.post_request.user = AnonymousUser()
+        self.assertRaises(Http404, up_vote, self.post_request)
+
+    def test_up_vote_invalid_user(self):
+        user = User(id=self.num_of_saved_users + random.randint(1, 10), email="user@gmail.com")
+        comment_to_vote = {'comment_id': self.comment_1.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(comment_to_vote)
+        self.post_request.POST = query_dict
+        self.post_request.user = user
+        self.assertRaises(Exception, up_vote, self.post_request)
+
+    def test_up_vote_invalid_request(self):
+        comment_to_vote = {'comment_id': self.comment_2.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(comment_to_vote)
+        self.get_request.POST = query_dict
+        self.get_request.user = self.user_1
+        self.assertRaises(Exception, up_vote, self.get_request)
+
+    def test_down_vote(self):
+        comment_to_vote = {'comment_id': self.comment_1.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(comment_to_vote)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_2
+        self.assertRaises(Exception, down_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
+                                                                      datetime.timedelta(minutes=6))
+        response = down_vote(self.post_request)
+        self.assertTrue(self.comment_1.down_votes.count() == 1)
+        self.assertTrue(self.comment_1.up_votes.count() == 0)
+        self.assertTrue(response.status_code == 200)
+
+    def test_down_vote_twice(self):
+        comment_to_vote = {'comment_id': self.comment_1.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(comment_to_vote)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_2
+        self.assertRaises(Exception, down_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
+                                                                      datetime.timedelta(minutes=6))
+        down_vote(self.post_request)
+        response = down_vote(self.post_request)
+        self.assertTrue(self.comment_2.down_votes.count() == 0)
+        self.assertTrue(self.comment_2.down_votes.count() == 0)
+        self.assertTrue(response.status_code == 200)
+
+    def test_down_vote_after_up_vote(self):
+        comment_to_vote = {'comment_id': self.comment_1.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(comment_to_vote)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_2
+        self.assertRaises(Exception, up_vote, self.post_request)
+        self.assertRaises(Exception, down_vote, self.post_request)
+        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
+                                                                      datetime.timedelta(minutes=6))
+        up_vote(self.post_request)
+        response = down_vote(self.post_request)
+        self.assertTrue(self.comment_1.up_votes.count() == 0)
+        self.assertTrue(self.comment_1.down_votes.count() == 1)
+        self.assertTrue(response.status_code == 200)
+
+    def test_down_vote_user_not_authenticated(self):
+        from django.contrib.auth.models import AnonymousUser
+        comment_to_vote = {'comment_id': self.comment_1.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(comment_to_vote)
+        self.post_request.POST = query_dict
+        self.post_request.user = AnonymousUser()
+        self.assertRaises(Http404, down_vote, self.post_request)
+
+    def test_down_vote_invalid_user(self):
+        user = User(id=self.num_of_saved_users + random.randint(1, 10), email="user@gmail.com")
+        comment_to_vote = {'comment_id': self.comment_1.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(comment_to_vote)
+        self.post_request.POST = query_dict
+        self.post_request.user = user
+        self.assertRaises(Exception, down_vote, self.post_request)
+
+    def test_down_vote_invalid_request(self):
+        comment_to_vote = {'comment_id': self.comment_1.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(comment_to_vote)
+        self.get_request.POST = query_dict
+        self.get_request.user = self.user_1
+        self.assertRaises(Exception, down_vote, self.get_request)
+
+    def test_check_if_vote_is_valid(self):
+        comment_to_vote = {'comment_id': self.comment_1.id,
+                           'user_id': self.user_1.id}
+        self.assertFalse(check_if_vote_is_valid(comment_to_vote)[0])
+        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
+                                                                      datetime.timedelta(minutes=6))
+        self.assertTrue(check_if_vote_is_valid(comment_to_vote)[0])
+
+    def test_check_if_vote_is_valid_missing_user_id(self):
+        comment_to_vote = {'comment_id': self.comment_1.id}
+        self.assertFalse(check_if_vote_is_valid(comment_to_vote)[0])
+
+    def test_check_if_vote_is_valid_invalid_user_id(self):
+        comment_to_vote = {'comment_id': self.comment_1.id,
+                           'user_id': self.num_of_saved_users + random.randint(1, 10)}
+        self.assertFalse(check_if_vote_is_valid(comment_to_vote)[0])
+
+    def test_check_if_vote_is_valid_missing_comment_id(self):
+        comment_to_vote = {'user_id': self.user_1.id}
+        self.assertFalse(check_if_vote_is_valid(comment_to_vote)[0])
+
+    def test_check_if_vote_is_valid_invalid_comment_id(self):
+        comment_to_vote = {'comment_id': self.num_of_saved_comments + random.randint(1, 10),
+                           'user_id': self.user_1.id}
+        self.assertFalse(check_if_vote_is_valid(comment_to_vote)[0])
 
     def test_export_to_csv(self):
         admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
@@ -621,18 +988,17 @@ class CommentTests(TestCase):
         self.post_request.user = admin
         res = export_to_csv(self.post_request)
         self.assertTrue(res.status_code == 200)
-        expected_info = 'Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n'\
-                        'claim3,description5,url5,category3,' + str(self.comment_5.verdict_date) + ',,label5,,0\r\n'\
-                        'claim4,description6,url6,category4,' + str(self.comment_6.verdict_date) + ',,label6,,0\r\n'
+        expected_info = 'Claim Id,Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n' +\
+                        str(self.comment_5.claim.id) + ',claim3,description5,url5,category3,' + str(self.comment_5.verdict_date) + ',,label5,,0\r\n' +\
+                        str(self.comment_6.claim.id) + ',claim4,description6,url6,category4,' + str(self.comment_6.verdict_date) + ',,label6,,0\r\n'
         self.assertEqual(res.content.decode('utf-8'), expected_info)
-
         Comment.objects.filter(id=self.comment_5.id).update(tags='tag1', system_label='True')
         Comment.objects.filter(id=self.comment_6.id).update(tags='tag6, tag7', system_label='False')
         res = export_to_csv(self.post_request)
         self.assertTrue(res.status_code == 200)
-        expected_info = 'Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n' + \
-                        'claim3,description5,url5,category3,' + str(self.comment_5.verdict_date) + ',tag1,label5,True,0\r\n'\
-                        'claim4,description6,url6,category4,' + str(self.comment_6.verdict_date) + ',"tag6, tag7",label6,False,0\r\n'
+        expected_info = 'Claim Id,Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n'  + \
+                        str(self.comment_5.claim.id) + ',claim3,description5,url5,category3,' + str(self.comment_5.verdict_date) + ',tag1,label5,True,0\r\n' + \
+                        str(self.comment_6.claim.id) + ',claim4,description6,url6,category4,' + str(self.comment_6.verdict_date) + ',"tag6, tag7",label6,False,0\r\n'
         self.assertEqual(res.content.decode('utf-8'), expected_info)
 
     def test_export_to_csv_invalid_arg_for_scraper(self):
@@ -684,7 +1050,7 @@ class CommentTests(TestCase):
         res = export_to_csv(self.post_request)
         self.assertTrue(res.status_code == 200)
         self.assertTrue(res.content.decode('utf-8') ==
-                        'Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n')
+                        'Claim Id,Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n')
 
     def test_export_to_csv_not_authenticated_user(self):
         from django.contrib.auth.models import AnonymousUser
@@ -885,411 +1251,121 @@ class CommentTests(TestCase):
                                              '%d/%m/%Y').date())
         self.assertTrue(len(df_claims) == 0)
 
-    def test_up_vote(self):
-        comment_to_vote = {'comment_id': self.comment_2.id}
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(comment_to_vote)
-        self.post_request.POST = query_dict
+    def test_get_all_comments_for_user_id(self):
+        result = get_all_comments_for_user_id(self.user_1.id)
+        self.assertTrue(len(result) == 1)
+        self.assertTrue(result.first().claim_id == self.comment_1.claim_id)
+        self.assertTrue(result.first().user_id == self.comment_1.user_id)
+        self.assertTrue(result.first().title == self.comment_1.title)
+        self.assertTrue(result.first().description == self.comment_1.description)
+        self.assertTrue(result.first().url == self.comment_1.url)
+        self.assertTrue(result.first().verdict_date == self.comment_1.verdict_date)
+        self.assertTrue(result.first().label == self.comment_1.label)
+
+        result = get_all_comments_for_user_id(self.user_2.id)
+        self.assertTrue(len(result) == 1)
+        self.assertTrue(result.first().claim_id == self.comment_2.claim_id)
+        self.assertTrue(result.first().user_id == self.comment_2.user_id)
+        self.assertTrue(result.first().title == self.comment_2.title)
+        self.assertTrue(result.first().description == self.comment_2.description)
+        self.assertTrue(result.first().url == self.comment_2.url)
+        self.assertTrue(result.first().verdict_date == self.comment_2.verdict_date)
+        self.assertTrue(result.first().label == self.comment_2.label)
+
+    def test_get_all_comments_for_user_id_after_existing_user_add_comment(self):
+        result = get_all_comments_for_user_id(self.user_1.id)
+        len_user_comments = len(result)
+        self.assertTrue(len_user_comments == 1)
+        self.post_request.POST = self.new_comment_details_user_1
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, up_vote, self.post_request)
-        Comment.objects.filter(id=self.comment_2.id).update(timestamp=datetime.datetime.now() -
-                                                            datetime.timedelta(minutes=6))
-        response = up_vote(self.post_request)
-        self.assertTrue(self.comment_2.up_votes.count() == 1)
-        self.assertTrue(self.comment_2.down_votes.count() == 0)
-        self.assertTrue(response.status_code == 200)
+        add_comment(self.post_request)
+        result = get_all_comments_for_user_id(self.user_1.id).order_by('-id')
+        self.assertTrue(len(result) == len_user_comments + 1)
+        self.assertTrue(result.first().claim_id == self.new_comment_details_user_1['claim_id'])
+        self.assertTrue(result.first().user_id == self.user_1.id)
+        self.assertTrue(result.first().title == self.new_comment_details_user_1['title'])
+        self.assertTrue(result.first().description == self.new_comment_details_user_1['description'])
+        self.assertTrue(result.first().url == self.new_comment_details_user_1['url'])
+        self.assertTrue(result.first().verdict_date == self.comment_4.verdict_date)
+        self.assertTrue(result.first().label == self.new_comment_details_user_1['label'])
 
-    def test_up_vote_twice(self):
-        comment_to_vote = {'comment_id': self.comment_2.id}
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(comment_to_vote)
-        self.post_request.POST = query_dict
-        self.post_request.user = self.user_1
-        self.assertRaises(Exception, up_vote, self.post_request)
-        Comment.objects.filter(id=self.comment_2.id).update(timestamp=datetime.datetime.now() -
-                                                            datetime.timedelta(minutes=6))
-        up_vote(self.post_request)
-        response = up_vote(self.post_request)
-        self.assertTrue(self.comment_2.up_votes.count() == 0)
-        self.assertTrue(self.comment_2.down_votes.count() == 0)
-        self.assertTrue(response.status_code == 200)
+    def test_get_all_comments_for_added_user(self):
+        user_3 = User(username="User3", email='user3@gmail.com')
+        user_3.save()
+        comment_4 = Comment(claim_id=self.claim_1.id,
+                            user_id=user_3.id,
+                            title=self.claim_1.claim,
+                            description='description4',
+                            url='url1',
+                            verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
+                            label='label1')
+        comment_4.save()
+        result = get_all_comments_for_user_id(user_3.id)
+        self.assertTrue(len(result) == 1)
+        self.assertTrue(result.first().claim_id == comment_4.claim_id)
+        self.assertTrue(result.first().user_id == comment_4.user_id)
+        self.assertTrue(result.first().title == comment_4.title)
+        self.assertTrue(result.first().description == comment_4.description)
+        self.assertTrue(result.first().url == comment_4.url)
+        self.assertTrue(result.first().verdict_date == comment_4.verdict_date)
+        self.assertTrue(result.first().label == comment_4.label)
 
-    def test_up_vote_after_down_vote(self):
-        comment_to_vote = {'comment_id': self.comment_2.id}
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(comment_to_vote)
-        self.post_request.POST = query_dict
-        self.post_request.user = self.user_1
-        self.assertRaises(Exception, down_vote, self.post_request)
-        self.assertRaises(Exception, up_vote, self.post_request)
-        Comment.objects.filter(id=self.comment_2.id).update(timestamp=datetime.datetime.now() -
-                                                            datetime.timedelta(minutes=6))
-        down_vote(self.post_request)
-        response = up_vote(self.post_request)
-        self.assertTrue(self.comment_2.up_votes.count() == 1)
-        self.assertTrue(self.comment_2.down_votes.count() == 0)
-        self.assertTrue(response.status_code == 200)
+    def test_get_all_comments_for_invalid_user_id(self):
+        result = get_all_comments_for_user_id(self.num_of_saved_users + random.randint(1, 10))
+        self.assertTrue(result is None)
 
-    def test_up_vote_user_not_authenticated(self):
-        from django.contrib.auth.models import AnonymousUser
-        comment_to_vote = {'comment_id': self.comment_2.id}
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(comment_to_vote)
-        self.post_request.POST = query_dict
-        self.post_request.user = AnonymousUser()
-        self.assertRaises(Http404, up_vote, self.post_request)
+    def test_get_all_comments_for_claim_id(self):
+        result_comment_1 = get_all_comments_for_claim_id(self.claim_1.id)
+        self.assertTrue(len(result_comment_1) == 1)
+        self.assertTrue(result_comment_1.first().claim_id == self.claim_1.id)
+        self.assertTrue(result_comment_1.first().user_id == self.comment_1.user_id)
+        self.assertTrue(result_comment_1.first().title == self.comment_1.title)
+        self.assertTrue(result_comment_1.first().description == self.comment_1.description)
+        self.assertTrue(result_comment_1.first().url == self.comment_1.url)
+        self.assertTrue(result_comment_1.first().verdict_date == self.comment_1.verdict_date)
+        self.assertTrue(result_comment_1.first().label == self.comment_1.label)
 
-    def test_up_vote_invalid_user(self):
-        user = User(id=self.num_of_saved_users + random.randint(1, 10), email="user@gmail.com")
-        comment_to_vote = {'comment_id': self.comment_1.id}
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(comment_to_vote)
-        self.post_request.POST = query_dict
-        self.post_request.user = user
-        self.assertRaises(Exception, down_vote, self.post_request)
+        result_comment_2 = get_all_comments_for_claim_id(self.claim_2.id)
+        self.assertTrue(len(result_comment_2) == 1)
+        self.assertTrue(result_comment_2.first().claim_id == self.claim_2.id)
+        self.assertTrue(result_comment_2.first().user_id == self.comment_2.user_id)
+        self.assertTrue(result_comment_2.first().title == self.comment_2.title)
+        self.assertTrue(result_comment_2.first().description == self.comment_2.description)
+        self.assertTrue(result_comment_2.first().url == self.comment_2.url)
+        self.assertTrue(result_comment_2.first().verdict_date == self.comment_2.verdict_date)
+        self.assertTrue(result_comment_2.first().label == self.comment_2.label)
 
-    def test_down_vote(self):
-        comment_to_vote = {'comment_id': self.comment_1.id}
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(comment_to_vote)
-        self.post_request.POST = query_dict
-        self.post_request.user = self.user_2
-        self.assertRaises(Exception, down_vote, self.post_request)
-        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
-                                                            datetime.timedelta(minutes=6))
-        response = down_vote(self.post_request)
-        self.assertTrue(self.comment_1.down_votes.count() == 1)
-        self.assertTrue(self.comment_1.up_votes.count() == 0)
-        self.assertTrue(response.status_code == 200)
+    def test_get_all_comments_for_claim_id_user_added_new_comment(self):
+        user_3 = User(username="User3", email='user3@gmail.com')
+        user_3.save()
+        comment_4 = Comment(claim_id=self.claim_1.id,
+                            user_id=user_3.id,
+                            title=self.claim_1.claim,
+                            description='description4',
+                            url='url1',
+                            verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
+                            label='label1')
+        comment_4.save()
+        result_comment_1 = get_all_comments_for_claim_id(self.claim_1.id)
+        self.assertTrue(len(result_comment_1) == 2)
+        self.assertTrue(result_comment_1[0].claim_id == self.claim_1.id)
+        self.assertTrue(result_comment_1[0].user_id == self.comment_1.user_id)
+        self.assertTrue(result_comment_1[0].title == self.comment_1.title)
+        self.assertTrue(result_comment_1[0].description == self.comment_1.description)
+        self.assertTrue(result_comment_1[0].url == self.comment_1.url)
+        self.assertTrue(result_comment_1[0].verdict_date == self.comment_1.verdict_date)
+        self.assertTrue(result_comment_1[0].label == self.comment_1.label)
+        self.assertTrue(result_comment_1[1].claim_id == comment_4.claim_id)
+        self.assertTrue(result_comment_1[1].user_id == comment_4.user_id)
+        self.assertTrue(result_comment_1[1].title == comment_4.title)
+        self.assertTrue(result_comment_1[1].description == comment_4.description)
+        self.assertTrue(result_comment_1[1].url == comment_4.url)
+        self.assertTrue(result_comment_1[1].verdict_date == comment_4.verdict_date)
+        self.assertTrue(result_comment_1[1].label == comment_4.label)
 
-    def test_down_vote_twice(self):
-        comment_to_vote = {'comment_id': self.comment_1.id}
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(comment_to_vote)
-        self.post_request.POST = query_dict
-        self.post_request.user = self.user_2
-        self.assertRaises(Exception, down_vote, self.post_request)
-        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
-                                                            datetime.timedelta(minutes=6))
-        down_vote(self.post_request)
-        response = down_vote(self.post_request)
-        self.assertTrue(self.comment_2.down_votes.count() == 0)
-        self.assertTrue(self.comment_2.down_votes.count() == 0)
-        self.assertTrue(response.status_code == 200)
-
-    def test_down_vote_after_up_vote(self):
-        comment_to_vote = {'comment_id': self.comment_1.id}
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(comment_to_vote)
-        self.post_request.POST = query_dict
-        self.post_request.user = self.user_2
-        self.assertRaises(Exception, up_vote, self.post_request)
-        self.assertRaises(Exception, down_vote, self.post_request)
-        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
-                                                            datetime.timedelta(minutes=6))
-        up_vote(self.post_request)
-        response = down_vote(self.post_request)
-        self.assertTrue(self.comment_1.up_votes.count() == 0)
-        self.assertTrue(self.comment_1.down_votes.count() == 1)
-        self.assertTrue(response.status_code == 200)
-
-    def test_down_vote_user_not_authenticated(self):
-        from django.contrib.auth.models import AnonymousUser
-        comment_to_vote = {'comment_id': self.comment_1.id}
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(comment_to_vote)
-        self.post_request.POST = query_dict
-        self.post_request.user = AnonymousUser()
-        self.assertRaises(Http404, down_vote, self.post_request)
-
-    def test_down_vote_invalid_user(self):
-        user = User(id=self.num_of_saved_users + random.randint(1, 10), email="user@gmail.com")
-        comment_to_vote = {'comment_id': self.comment_1.id}
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(comment_to_vote)
-        self.post_request.POST = query_dict
-        self.post_request.user = user
-        self.assertRaises(Exception, down_vote, self.post_request)
-
-    def test_check_if_vote_is_valid(self):
-        comment_to_vote = {'comment_id': self.comment_1.id,
-                           'user_id': self.user_1.id}
-        self.assertFalse(check_if_vote_is_valid(comment_to_vote)[0])
-        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
-                                                            datetime.timedelta(minutes=6))
-        self.assertTrue(check_if_vote_is_valid(comment_to_vote)[0])
-
-    def test_check_if_vote_is_valid_missing_user_id(self):
-        comment_to_vote = {'comment_id': self.comment_1.id}
-        self.assertFalse(check_if_vote_is_valid(comment_to_vote)[0])
-
-    def test_check_if_vote_is_valid_missing_invalid_user_id(self):
-        comment_to_vote = {'comment_id': self.comment_1.id,
-                           'user_id': self.num_of_saved_users + random.randint(1, 10)}
-        self.assertFalse(check_if_vote_is_valid(comment_to_vote)[0])
-
-    def test_check_if_vote_is_valid_missing_comment_id(self):
-        comment_to_vote = {'user_id': self.user_1.id}
-        self.assertFalse(check_if_vote_is_valid(comment_to_vote)[0])
-
-    def test_check_if_vote_is_valid_missing_invalid_comment_id(self):
-        comment_to_vote = {'comment_id': self.num_of_saved_comments + random.randint(1, 10),
-                           'user_id': self.user_1.id}
-        self.assertFalse(check_if_vote_is_valid(comment_to_vote)[0])
-
-    def test_edit_comment(self):
-        self.update_comment_details['comment_id'] = str(self.comment_1.id)
-        self.update_comment_details['user_id'] = str(self.comment_1.user_id)
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(self.update_comment_details)
-        self.post_request.POST = query_dict
-        self.post_request.user = self.user_1
-        self.assertTrue(edit_comment(self.post_request).status_code == 200)
-        new_comment = Comment.objects.filter(id=self.comment_1.id).first()
-        self.assertTrue(new_comment.title == self.update_comment_details['comment_title'])
-        self.assertTrue(new_comment.description == self.update_comment_details['comment_description'])
-        self.assertTrue(new_comment.url == self.update_comment_details['comment_reference'])
-        self.assertTrue(new_comment.verdict_date == self.comment_3.verdict_date)
-        self.assertTrue(new_comment.system_label == self.update_comment_details['comment_label'])
-
-    def test_edit_comment_by_user_not_his_comment(self):
-        self.update_comment_details['comment_id'] = str(self.comment_1.id)
-        self.update_comment_details['user_id'] = str(self.user_2.id)
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(self.update_comment_details)
-        self.post_request.POST = query_dict
-        self.post_request.user = self.user_2
-        self.assertRaises(Exception, edit_comment, self.post_request)
-        comment = Comment.objects.filter(id=self.comment_1.id).first()
-        self.assertTrue(comment.title == self.comment_1.title)
-        self.assertTrue(comment.description == self.comment_1.description)
-        self.assertTrue(comment.url == self.comment_1.url)
-        self.assertTrue(comment.verdict_date == self.comment_1.verdict_date)
-        self.assertTrue(comment.label == self.comment_1.label)
-
-    def test_edit_comment_by_invalid_user_id(self):
-        user = User(id=self.num_of_saved_users + random.randint(1, 10), email='user@gmail.com')
-        self.update_comment_details['user_id'] = user.id
-        self.update_comment_details['comment_id'] = str(self.comment_1.id)
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(self.update_comment_details)
-        self.post_request.POST = query_dict
-        self.post_request.user = user
-        self.assertRaises(Exception, edit_comment, self.post_request)
-        comment = Comment.objects.filter(id=self.comment_1.id).first()
-        self.assertTrue(comment.title == self.comment_1.title)
-        self.assertTrue(comment.description == self.comment_1.description)
-        self.assertTrue(comment.url == self.comment_1.url)
-        self.assertTrue(comment.verdict_date == self.comment_1.verdict_date)
-        self.assertTrue(comment.label == self.comment_1.label)
-
-    def test_edit_comment_by_invalid_comment_id(self):
-        self.update_comment_details['comment_id'] = self.num_of_saved_comments + random.randint(1, 10)
-        self.update_comment_details['user_id'] = str(self.comment_1.user_id)
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(self.update_comment_details)
-        self.post_request.POST = query_dict
-        self.post_request.user = self.user_1
-        self.assertRaises(Exception, edit_comment, self.post_request)
-        comment = Comment.objects.filter(id=self.comment_1.id).first()
-        self.assertTrue(comment.title == self.comment_1.title)
-        self.assertTrue(comment.description == self.comment_1.description)
-        self.assertTrue(comment.url == self.comment_1.url)
-        self.assertTrue(comment.verdict_date == self.comment_1.verdict_date)
-        self.assertTrue(comment.label == self.comment_1.label)
-
-    def test_edit_comment_missing_args(self):
-        for i in range(10):
-            dict_copy = self.update_comment_details.copy()
-            args_to_remove = []
-            for j in range(0, (random.randint(1, len(self.update_comment_details.keys()) - 1))):
-                args_to_remove.append(list(self.update_comment_details.keys())[j])
-            for j in range(len(args_to_remove)):
-                del self.update_comment_details[args_to_remove[j]]
-            query_dict = QueryDict('', mutable=True)
-            query_dict.update(self.update_comment_details)
-            self.post_request.POST = query_dict
-            self.post_request.user = self.user_1
-            self.assertRaises(Exception, edit_comment, self.post_request)
-            self.update_comment_details = dict_copy.copy()
-
-    def test_check_comment_new_fields(self):
-        self.update_comment_details['comment_id'] = str(self.comment_1.id)
-        self.update_comment_details['user_id'] = str(self.user_1.id)
-        self.update_comment_details['is_superuser'] = False
-        self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
-        self.update_comment_details['is_superuser'] = True
-        self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
-
-    def test_check_comment_new_fields_missing_user_id(self):
-        self.update_comment_details['comment_id'] = str(self.comment_1.id)
-        self.update_comment_details['is_superuser'] = False
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-        self.update_comment_details['is_superuser'] = True
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-
-    def test_check_comment_new_fields_invalid_user_id(self):
-        self.update_comment_details['comment_id'] = str(self.comment_1.id)
-        self.update_comment_details['user_id'] = str(self.num_of_saved_users + random.randint(1, 10))
-        self.update_comment_details['is_superuser'] = False
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-        self.update_comment_details['is_superuser'] = True
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-
-    def test_check_comment_new_fields_missing_user_type(self):
-        self.update_comment_details['comment_id'] = str(self.comment_1.id)
-        self.update_comment_details['user_id'] = str(self.user_1.id)
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-
-    def test_check_comment_new_fields_missing_comment_id(self):
-        self.update_comment_details['user_id'] = str(self.user_1.id)
-        self.update_comment_details['is_superuser'] = False
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-        self.update_comment_details['is_superuser'] = True
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-
-    def test_check_comment_new_fields_invalid_comment_id(self):
-        self.update_comment_details['comment_id'] = str(self.num_of_saved_comments + random.randint(1, 10))
-        self.update_comment_details['user_id'] = self.user_1.id
-        self.update_comment_details['is_superuser'] = False
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-        self.update_comment_details['is_superuser'] = True
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-
-    def test_check_comment_new_fields_missing_title(self):
-        self.update_comment_details['comment_id'] = str(self.comment_1.id)
-        self.update_comment_details['user_id'] = str(self.user_1.id)
-        self.update_comment_details['is_superuser'] = False
-        del self.update_comment_details['comment_title']
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-        self.update_comment_details['is_superuser'] = True
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-
-    def test_check_comment_new_fields_missing_description(self):
-        self.update_comment_details['comment_id'] = str(self.comment_1.id)
-        self.update_comment_details['user_id'] = str(self.user_1.id)
-        self.update_comment_details['is_superuser'] = False
-        del self.update_comment_details['comment_description']
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-        self.update_comment_details['is_superuser'] = True
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-
-    def test_check_comment_new_fields_missing_reference(self):
-        self.update_comment_details['comment_id'] = str(self.comment_1.id)
-        self.update_comment_details['user_id'] = str(self.user_1.id)
-        self.update_comment_details['is_superuser'] = False
-        del self.update_comment_details['comment_reference']
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-        self.update_comment_details['is_superuser'] = True
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-
-    def test_check_comment_new_fields_missing_label(self):
-        self.update_comment_details['comment_id'] = str(self.comment_1.id)
-        self.update_comment_details['user_id'] = str(self.user_1.id)
-        self.update_comment_details['is_superuser'] = False
-        del self.update_comment_details['comment_label']
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-        self.update_comment_details['is_superuser'] = True
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-
-    def test_check_comment_new_fields_comment_not_belong_to_user(self):
-        self.update_comment_details['comment_id'] = str(self.comment_2.id)
-        self.update_comment_details['user_id'] = str(self.user_1.id)
-        self.update_comment_details['is_superuser'] = False
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-        self.update_comment_details['is_superuser'] = True
-        self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
-
-    def test_check_comment_new_fields_edit_after_five_minutes(self):
-        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
-                                                            datetime.timedelta(minutes=6))
-        self.update_comment_details['comment_id'] = str(self.comment_1.id)
-        self.update_comment_details['user_id'] = str(self.user_1.id)
-        self.update_comment_details['is_superuser'] = False
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-        self.update_comment_details['is_superuser'] = True
-        self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
-
-    def test_check_comment_new_fields_comment_invalid_date_format(self):
-        self.update_comment_details['comment_id'] = str(self.comment_1.id)
-        self.update_comment_details['user_id'] = str(self.user_1.id)
-        self.update_comment_details['is_superuser'] = False
-        self.update_comment_details['comment_verdict_date'] = datetime.datetime.strptime(str(self.comment_1.verdict_date), '%Y-%m-%d').strftime('%m/%d/%y')
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-        self.update_comment_details['is_superuser'] = True
-        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
-
-    def test_delete_comment_by_user(self):
-        comment_to_delete = {'comment_id': self.comment_1.id}
-        self.post_request.POST = comment_to_delete
-        self.post_request.user = self.user_1
-        len_comments = len(Comment.objects.all())
-        response = delete_comment(self.post_request)
-        self.assertTrue(len(Comment.objects.all()) == len_comments - 1)
-        self.assertTrue(response.status_code == 200)
-
-    def test_delete_comment_by_user_not_his_comment(self):
-        comment_to_delete = {'comment_id': self.comment_2.id}
-        self.post_request.POST = comment_to_delete
-        self.post_request.user = self.user_1
-        len_comments = len(Comment.objects.all())
-        self.assertRaises(Exception, delete_comment, self.post_request)
-        self.assertTrue(len(Comment.objects.all()) == len_comments)
-
-    def test_delete_comment_by_invalid_user(self):
-        user = User(id=self.num_of_saved_users + random.randint(1, 10), email='user@gmail.com')
-        comment_to_delete = {'comment_id': self.comment_1.id}
-        self.post_request.POST = comment_to_delete
-        self.post_request.user = user
-        len_comments = len(Comment.objects.all())
-        self.assertRaises(Exception, delete_comment, self.post_request)
-        self.assertTrue(len(Comment.objects.all()) == len_comments)
-
-    def test_delete_comment_by_not_authenticated_user(self):
-        from django.contrib.auth.models import AnonymousUser
-        comment_to_delete = {'comment_id': self.comment_1.id}
-        self.post_request.POST = comment_to_delete
-        self.post_request.user = AnonymousUser()
-        len_comments = len(Comment.objects.all())
-        self.assertRaises(Http404, delete_comment, self.post_request)
-        self.assertTrue(len(Comment.objects.all()) == len_comments)
-
-    def test_delete_comment_by_invalid_comment_id(self):
-        comment_to_delete = {'comment_id': self.num_of_saved_comments + random.randint(1, 10)}
-        self.post_request.POST = comment_to_delete
-        self.post_request.user = self.user_1
-        len_comments = len(Comment.objects.all())
-        self.assertRaises(Exception, delete_comment, self.post_request)
-        self.assertTrue(len(Comment.objects.all()) == len_comments)
-
-    def test_check_if_delete_comment_is_valid(self):
-        comment_to_delete = {'comment_id': self.comment_1.id}
-        self.post_request.POST = comment_to_delete
-        self.post_request.user = self.user_1
-        self.assertTrue(check_if_delete_comment_is_valid(self.post_request)[0])
-
-    def test_check_if_delete_comment_is_valid_missing_comment_id(self):
-        self.post_request.user = self.user_1
-        self.assertFalse(check_if_delete_comment_is_valid(self.post_request)[0])
-
-    def test_check_if_delete_comment_is_valid_invalid_comment_id(self):
-        comment_to_delete = {'comment_id': self.num_of_saved_comments + random.randint(1, 10)}
-        self.post_request.POST = comment_to_delete
-        self.post_request.user = self.user_1
-        self.assertFalse(check_if_delete_comment_is_valid(self.post_request)[0])
-
-    def test_check_if_delete_comment_is_valid_invalid_user_id(self):
-        user = User(id=self.num_of_saved_users + random.randint(1, 10), email='user@gmail.com')
-        comment_to_delete = {'comment_id':  self.comment_1.id}
-        self.post_request.POST = comment_to_delete
-        self.post_request.user = user
-        self.assertFalse(check_if_delete_comment_is_valid(self.post_request)[0])
-
-    def test_check_if_delete_comment_is_valid_another_user(self):
-        comment_to_delete = {'comment_id':  self.comment_1.id}
-        self.post_request.POST = comment_to_delete
-        self.post_request.user = self.user_2
-        self.assertFalse(check_if_delete_comment_is_valid(self.post_request)[0])
+    def test_get_all_comments_for_invalid_claim_id(self):
+        result = get_all_comments_for_claim_id(self.num_of_saved_claims + random.randint(1, 10))
+        self.assertTrue(result is None)
 
     def test_update_authenticity_grade_true(self):
         Comment.objects.filter(id=self.comment_1.id).update(system_label='True')

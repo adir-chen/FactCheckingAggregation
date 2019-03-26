@@ -4,7 +4,7 @@ from django.http import HttpRequest, Http404, QueryDict
 from django.test import TestCase
 from django.utils.datastructures import MultiValueDict
 from logger.models import Logger
-from logger.views import view_log, save_log_message, check_duplicate_log_for_user,export_to_csv, \
+from logger.views import view_log, save_log_message, check_duplicate_log_for_user, export_to_csv, \
      check_if_csv_fields_are_valid, check_if_actions_list_valid, create_df_for_logger
 import random
 import datetime
@@ -44,6 +44,8 @@ class LoggerTest(TestCase):
         self.num_of_saved_logs = 4
         self.post_request = HttpRequest()
         self.post_request.method = 'POST'
+        self.get_request = HttpRequest()
+        self.get_request.method = 'GET'
         self.csv_fields = MultiValueDict({
             'actions_to_export[]': ["Adding a new claim", "Adding a new comment", "Editing a claim", "Editing a comment",
                                     "Deleting a claim", "Deleting a comment", "Reporting a claim as spam",
@@ -57,8 +59,8 @@ class LoggerTest(TestCase):
 
     def test_view_log_valid_user(self):
         admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
-        self.post_request.user = admin
-        self.assertTrue(view_log(self.post_request).status_code == 200)
+        self.get_request.user = admin
+        self.assertTrue(view_log(self.get_request).status_code == 200)
 
     def test_view_log_invalid_user(self):
         self.post_request.user = self.user_1
@@ -159,7 +161,7 @@ class LoggerTest(TestCase):
         self.assertTrue(res.status_code == 200)
         self.assertTrue(res.content.decode('utf-8') == 'Date,User Id,Username,Action,Result\r\n')
 
-    def test_export_to_csv_not_authenticated_user(self):
+    def test_export_to_csv_user_not_authenticated(self):
         from django.contrib.auth.models import AnonymousUser
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.csv_fields)
@@ -210,7 +212,7 @@ class LoggerTest(TestCase):
         self.csv_fields['date_start'] = year + '-' + month + '--' + day
         self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
 
-    def test_check_if_csv_fields_are_valid_invalid_format_verdict_date_end(self):
+    def test_check_if_csv_fields_are_valid_invalid_format_date_end(self):
         self.csv_fields['date_end'] = datetime.datetime.strftime(datetime.datetime.now() - datetime.timedelta(days=1),'%d.%m.%Y')
         self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
         self.csv_fields['date_end'] = datetime.datetime.strftime(datetime.datetime.now() + datetime.timedelta(days=7),'%d/%m/%Y')

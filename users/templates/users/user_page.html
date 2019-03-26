@@ -1,28 +1,38 @@
 {% extends 'claims/layout.html' %}
 
 {% block page_content %}
-    <div id="my_profile_page" style="max-width: 1000px; margin: auto; height: auto; padding: 40px 0;">
-        <h1>{{ user.username }}'s Profile:</h1>
-        <br>
-        <div class="claim_box" style="width: 100%; padding: 20px 40px 20px 20px; height: auto;">
-            {% csrf_token %}
-            {% if reputation|length > 0 %}
-                <h5> My Reputation: {{ reputation.0.user_rep }} </h5>
-            {% else %}
-                <h5> My Reputation: 0 </h5>
-            {% endif %}
-            <br>
-
-            <h5> My Claims:</h5>
-            <div class="headlines">
-                <div id="claim_large_columns" style="max-width: 1150px; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
-                    {% for claim, img in user_claims.object_list|slice:"0:3" %}
-                        {% include 'claims/claimbox_large.html' with claim=claim img=img %}
-                    {% endfor %}
-                </div>
-                <!--<button style="" onclick="showMoreClaimsFunc()" id="showMoreClaims">Show More</button>-->
+    <div class="page_wrapper">
+        <h1>{{ user.username }}'s Profile</h1>
+        <div class="comment_box" style="display: grid; padding: 20px; margin-top: 30px; grid-template-columns: 150px auto; grid-template-areas: 'user-profile-image user-profile-details';">
+            <div style="grid-area: user-profile-image; position: relative;">
+                {% if logged_in %}
+                    <span style="height: 20px; width: 20px; background-color: #00d700; border-radius: 50%; display: inline-block; position: absolute; bottom: 0; right: 0;"></span>
+                {% else %}
+                    <span style="height: 20px; width: 20px; background-color: #bbb; border-radius: 50%; display: inline-block; position: absolute; bottom: 0; right: 0;"></span>
+                {% endif %}
+                <img src="{{ user_img }}" style="max-width: 100%; padding: 5px;">
             </div>
+            <div style="grid-area: user-profile-details; padding: 10px 20px 10px 50px;">
+                <h5>{{ user.username }}</h5>
+                {% load static %}
+                {% for i in 'i'|rjust:user_rep %}
+                    <img src="{% static 'claims/assets/images/star.png' %}" style="width: 20px; height: 20px;">
+                {% endfor %}
+                <br><br>
+                Email: {{ user.email }}<br>
+                Last Login: {{ user.last_login|date:"d/m/Y H:i" }}
 
+            </div>
+        </div>
+        <hr>
+        <h4> {{ user.username }}'s Claims:</h4>
+        {% csrf_token %}
+        <div class="headlines">
+            <div id="claim_large_columns" style="width: 100%; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
+                {% for claim, img in user_claims.object_list|slice:"0:3" %}
+                    {% include 'claims/claimbox_large.html' with claim=claim img=img %}
+                {% endfor %}
+            </div>
             <div class="pagination">
                 <span class="step-links">
                     {% if user_claims.has_previous %}
@@ -40,130 +50,192 @@
                     {% endif %}
                 </span>
             </div>
-
-            <h5> My Comments:</h5>
-            <div class="headlines">
-                <div id="comments" style="max-width: 1150px; padding: 20px 20px; border-radius: 10px; background: #aabfd6; display: flex; flex-wrap: wrap; margin: 0 auto;">
-                    {% for comment, user  in user_comments.object_list|slice:"0:3" %}
-                        {% include 'comments/comment.html' with comment=comment user_details=user request=request only %}
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="pagination">
-                <span class="step-links">
-                    {% if user_comments.has_previous %}
-                        <a href="?page2=1" class="btn btn-info">&laquo; first</a>
-                        <a href="?page2={{ user_comments.previous_page_number }}" class="btn btn-info">previous</a>
-                    {% endif %}
-
-                    <span class="current" style="padding: 10px 20px;">
-                        Page {{ user_comments.number }} of {{ user_comments.paginator.num_pages }}
-                    </span>
-
-                    {% if user_comments.has_next %}
-                        <a href="?page2={{ user_comments.next_page_number }}" class="btn btn-info">next</a>
-                        <a href="?page2={{ user_comments.paginator.num_pages }}" class="btn btn-info">last &raquo;</a>
-                    {% endif %}
-                </span>
-            </div>
-
-            {% if user.id in scrapers_ids %}
-                <p id="error_msg" style="color: red; font-size: 12px;" hidden> </p>
-                <p id="success_msg" style="color: dodgerblue; font-size: 12px;" hidden>true label(s) deleted successfully</p>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; grid-column-gap: 20px;">
-                    <div id="true_labels">
-                        <h5>True Labels:</h5>
-                        {% for true_label in true_labels %}
-                            <label><input type="checkbox" value="value">{{ true_label }}</label><br>
-                        {% endfor %}
-                        <br>
-                        <button id="delete_true" onclick="delete_true_labels()">Delete true label(s)</button>
-                    </div>
-                    <div>
-                        <p id="error_msg_add_true" style="color: red; font-size: 12px;" hidden> </p>
-                        <p id="success_msg_add_true" style="color: dodgerblue; font-size: 12px;" hidden>true label added successfully</p>
-                        <h6>Add true label:</h6>
-                        <input id="true_label" type="text" placeholder="Label's name" style="width: 70%; margin-top: 10px; margin-bottom: 10px;"><br>
-                        <button id="add_true_label_submit" type="submit" class="btn btn-info" style="margin: 10px 0;">Add</button>
-                    </div>
-                </div>
-
-                <br>
-
-                <p id="error_msg_false" style="color: red; font-size: 12px;" hidden> </p>
-                <p id="success_msg_false" style="color: dodgerblue; font-size: 12px;" hidden>false label(s) deleted successfully</p>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; grid-column-gap: 20px;">
-                    <div id="false_labels">
-                        <h5>False Labels:</h5>
-                        {% for false_label in false_labels %}
-                            <label><input type="checkbox" value="value">{{ false_label }}</label><br>
-                        {% endfor %}
-                        <br>
-                        <button id="delete_false" onclick="delete_false_labels()">Delete false label(s)</button>
-                    </div>
-                        <div>
-                            <p id="error_msg_add_false" style="color: red; font-size: 12px;" hidden> </p>
-                            <p id="success_msg_add_false" style="color: dodgerblue; font-size: 12px;" hidden>false label added successfully</p>
-                            <h6>Add false label:</h6>
-                            <input id="false_label" type="text" placeholder="Label's name" style="width: 70%; margin-top: 10px; margin-bottom: 10px;"><br>
-                            <button id="add_false_label_submit" type="submit" class="btn btn-info" style="margin: 10px 0;">Add</button>
-                        </div>
-                </div>
-            {% endif %}
-
         </div>
+        <hr>
+        <h4>{{ user.username }}'s Comments:</h4>
+        <div class="headlines">
+            <div id="comments" style="width: 100%; padding: 20px; border-radius: 10px; background: #aabfd6; margin: 0 auto;">
+                {% for comment, user  in user_comments.object_list|slice:"0:3" %}
+                    Commented at {{ comment.timestamp }} on: <a href="/claim/{{ comment.claim_id }}">{{ comment.claim.claim }}</a>
+                    {% include 'comments/comment.html' with comment=comment user_details=user request=request only %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="pagination">
+            <span class="step-links">
+                {% if user_comments.has_previous %}
+                    <a href="?page2=1" class="btn btn-info">&laquo; first</a>
+                    <a href="?page2={{ user_comments.previous_page_number }}" class="btn btn-info">previous</a>
+                {% endif %}
+
+                <span class="current" style="padding: 10px 20px;">
+                    Page {{ user_comments.number }} of {{ user_comments.paginator.num_pages }}
+                </span>
+
+                {% if user_comments.has_next %}
+                    <a href="?page2={{ user_comments.next_page_number }}" class="btn btn-info">next</a>
+                    <a href="?page2={{ user_comments.paginator.num_pages }}" class="btn btn-info">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+
+        <hr>
+        <h4>{{ user.username }}'s published Tweets:</h4>
+        <div class="headlines">
+            <div id="tweets" style="width: 100%; padding: 20px; border-radius: 10px; background: #aabfd6; margin: 0 auto;">
+                {% for tweet, user  in user_tweets.object_list|slice:"0:3" %}
+                    Attached Tweet at {{ tweet.timestamp }} to claim: <a href="/claim/{{ tweet.claim_id }}">{{ tweet.claim.claim }}</a>
+                    {% include 'tweets/tweet.html' with tweet=tweet user_details=user request=request only %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="pagination">
+            <span class="step-links">
+                {% if user_tweets.has_previous %}
+                    <a href="?page2=1" class="btn btn-info">&laquo; first</a>
+                    <a href="?page2={{ user_tweets.previous_page_number }}" class="btn btn-info">previous</a>
+                {% endif %}
+
+                <span class="current" style="padding: 10px 20px;">
+                    Page {{ user_tweets.number }} of {{ user_tweets.paginator.num_pages }}
+                </span>
+
+                {% if user_tweets.has_next %}
+                    <a href="?page2={{ user_tweets.next_page_number }}" class="btn btn-info">next</a>
+                    <a href="?page2={{ user_tweets.paginator.num_pages }}" class="btn btn-info">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+
+        {% if user.id in scrapers_ids and request.user.is_superuser %}
+            <div class="comment_box" style="padding: 30px;">
+            <h5>True Labels:</h5>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 20px; max-width: 550px; margin-top: 20px;">
+                <div id="true_labels">
+                    <p id="error_msg_delete_true_label" style="color: red; font-size: 12px;" hidden> </p>
+                    <p id="success_msg_delete_true_label" style="color: dodgerblue; font-size: 12px;" hidden>True label(s) deleted successfully</p>
+                    {% for true_label in true_labels %}
+                        <label><input name="true_labels[]" class="true_labels[]" type="checkbox" value="{{ true_label }}">{{ true_label }}</label><br>
+                    {% endfor %}
+                    <br>
+                    <button id="delete_true_label_submit" class="btn btn-danger">Delete true label(s)</button>
+                </div>
+                <div>
+                    <p id="error_msg_add_true_label" style="color: red; font-size: 12px;" hidden> </p>
+                    <p id="success_msg_add_true_label" style="color: dodgerblue; font-size: 12px;" hidden>True label added successfully</p>
+                    <h6>Add true label:</h6>
+                    <input id="true_label" type="text" placeholder="Label's name" style="width: 70%; margin-top: 10px; margin-bottom: 10px;"><br>
+                    <button id="add_true_label_submit" type="submit" class="btn btn-info" style="margin: 10px 0;">Add</button>
+                </div>
+            </div>
+
+            <br>
+            <hr>
+            <br>
+
+            <h5>False Labels:</h5>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 20px; max-width: 550px; margin-top: 20px;">
+                <div id="false_labels">
+                    <p id="error_msg_delete_false_label" style="color: red; font-size: 12px;" hidden> </p>
+                    <p id="success_msg_delete_false_label" style="color: dodgerblue; font-size: 12px;" hidden>False label(s) deleted successfully</p>
+                    {% for false_label in false_labels %}
+                        <label><input type="checkbox" name="false_labels[]" class="false_labels[]" value="{{ false_label }}">{{ false_label }}</label><br>
+                    {% endfor %}
+                    <br>
+                    <button id="delete_false_label_submit" class="btn btn-danger">Delete false label(s)</button>
+                </div>
+                    <div>
+                        <p id="error_msg_add_false_label" style="color: red; font-size: 12px;" hidden> </p>
+                        <p id="success_msg_add_false_label" style="color: dodgerblue; font-size: 12px;" hidden>False label added successfully</p>
+                        <h6>Add false label:</h6>
+                        <input id="false_label" type="text" placeholder="Label's name" style="width: 70%; margin-top: 10px; margin-bottom: 10px;"><br>
+                        <button id="add_false_label_submit" type="submit" class="btn btn-info" style="margin: 10px 0;">Add</button>
+                    </div>
+            </div>
+            </div>
+        {% endif %}
     </div>
 
     <script>
-        function showMoreClaimsFunc() {
-            var moreClaims = document.getElementById("more_claims");
-            var btnText = document.getElementById("showMoreClaims");
-
-            if (moreClaims.style.display === "none") {
-                btnText.innerHTML = "Show Less";
-                moreClaims.style.display = "inline";
-            } else {
-                btnText.innerHTML = "Show More";
-                moreClaims.style.display = "none";
-            }
+        if(localStorage.getItem("success_msg_delete_true_label")){
+            $("#success_msg_delete_true_label").attr("hidden", false);
+            localStorage.clear();
+        }
+        else if(localStorage.getItem("success_msg_delete_false_label")){
+            $("#success_msg_delete_false_label").attr("hidden", false);
+            localStorage.clear();
+        }
+        else if(localStorage.getItem("success_msg_add_true_label")){
+            $("#success_msg_add_true_label").attr("hidden", false);
+            localStorage.clear();
+        }
+        else if(localStorage.getItem("success_msg_add_false_label")){
+            $("#success_msg_add_false_label").attr("hidden", false);
+            localStorage.clear();
         }
 
-        function showMoreCommentsFunc() {
-            var moreComments = document.getElementById("more_comments");
-            var btnText = document.getElementById("showMoreComments");
+        function hide_all_msgs(){
+            $("#success_msg_add_true_label").attr("hidden", true);
+            $("#success_msg_delete_true_label").attr("hidden", true);
+            $("#success_msg_add_false_label").attr("hidden", true);
+            $("#success_msg_delete_false_label").attr("hidden", true);
 
-            if (moreComments.style.display === "none") {
-                btnText.innerHTML = "Show Less";
-                moreComments.style.display = "inline";
-            } else {
-                btnText.innerHTML = "Show More";
-                moreComments.style.display = "none";
-            }
+            $("#error_msg_add_true_label").attr("hidden", true);
+            $("#error_msg_delete_true_label").attr("hidden", true);
+            $("#error_msg_add_false_label").attr("hidden", true);
+            $("#error_msg_delete_false_label").attr("hidden", true);
         }
-        
+
         $("#add_true_label_submit").click(function(e){
             e.preventDefault();
             $.ajax({
                 type: 'POST',
-                url: "{% url 'users:add_true_label' %}",
+                url: "{% url 'users:add_true_label_to_scraper' %}",
                 headers: { "X-CSRFToken": getCookie('csrftoken')},
                 data: {
-                    scraper: '{{ user.username }}',
-                    label: $("#true_label").val(),
+                    scraper_id: '{{ user.id }}',
+                    scraper_label: $("#true_label").val(),
                 },
                 success: function (request) {
-                    $("#error_msg_add_true").attr("hidden", true);
-                    $("#true_label").val('');
-                    location.href = 'http://{{ request.META.HTTP_HOST }}/users/{{ user.username }}';
-                    $("#success_msg_add_true").attr("hidden", false);
+                    localStorage.setItem("success_msg_add_true_label", true);
+                    window.location.reload()
                 },
                 error: function (error) {
-                     $("#success_msg_add_true").attr("hidden", true);
+                    hide_all_msgs();
                     let err = error.responseText.split('\n')[1];
-                    document.getElementById("error_msg_add_true").innerHTML =
-                        '* Error:  ' + err.toLowerCase() + ' *';
-                    $("#error_msg_add_true").attr("hidden", false);
+                    document.getElementById("error_msg_add_true_label").innerHTML =
+                    'Error: <br>' + err;
+                    $("#error_msg_add_true_label").attr("hidden", false);
+                }
+            });
+        });
+
+        $("#delete_true_label_submit").click(function(e){
+            e.preventDefault();
+            let true_labels = [];
+            $("#true_labels input:checked").each(function() {
+                true_labels.push($(this).val()); //push each val into the array
+            });
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'users:delete_true_label_from_scraper' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken') },
+                data: {
+                    scraper_id: '{{ user.id }}',
+                    scraper_label: true_labels
+                },
+                success: function (request) {
+                    localStorage.setItem("success_msg_delete_true_label", true);
+                    window.location.reload()
+                },
+                error: function (error) {
+                    hide_all_msgs();
+                    let err = error.responseText.split('\n')[1];
+                    document.getElementById("error_msg_delete_true_label").innerHTML =
+                    'Error: <br>' + err;
+                    $("#error_msg_delete_true_label").attr("hidden", false);
                 }
             });
         });
@@ -172,104 +244,53 @@
             e.preventDefault();
             $.ajax({
                 type: 'POST',
-                url: "{% url 'users:add_false_label' %}",
+                url: "{% url 'users:add_false_label_to_scraper' %}",
                 headers: { "X-CSRFToken": getCookie('csrftoken')},
                 data: {
-                    scraper: '{{ user.username }}',
-                    label: $("#false_label").val(),
+                    scraper_id: '{{ user.id }}',
+                    scraper_label: $("#false_label").val(),
                 },
                 success: function (request) {
-                    $("#error_msg_add_false").attr("hidden", true);
-                    $("#false_label").val('');
-                    $("#success_msg_add_false").attr("hidden", false);
+                    localStorage.setItem("success_msg_add_false_label", true);
+                    window.location.reload();
                 },
                 error: function (error) {
-                     $("#success_msg_add_false").attr("hidden", true);
+                    hide_all_msgs();
                     let err = error.responseText.split('\n')[1];
-                    document.getElementById("error_msg_add_false").innerHTML =
-                        '* Error:  ' + err.toLowerCase() + ' *';
-                    $("#error_msg_add_false").attr("hidden", false);
+                    document.getElementById("error_msg_add_false_label").innerHTML =
+                    'Error: <br>' + err;
+                    $("#error_msg_add_false_label").attr("hidden", false);
                 }
             });
         });
-        
-        function delete_true_labels() {
-            var container = document.getElementById("true_labels");
-            var elements = container.getElementsByTagName("input")
-            for (var i = 0, element; element = elements[i++];) {
-                if (element.type === "checkbox" && element.checked == true) {
-                    $.ajax({
-                        type: 'POST',
-                        url: "{% url 'users:remove_true_label' %}",
-                        headers: { "X-CSRFToken": getCookie('csrftoken') },
-                        data: {
-                            scraper: '{{ user.username }}',
-                            label: element.parentElement.innerText
-                        },
-                        success: function (request) {
-                            $("#error_msg").attr("hidden", true);
-                            for (var i = 0, element; element = elements[i++];){
-                                if (element.type === "checkbox" && element.checked == true){
-                                    element.parentElement.remove();
-                                }
-                                if (element.type === "checkbox"){
-                                    element.checked = false;
-                                }
-                            }
-                            $("#success_msg").attr("hidden", false);
-                            //$("html, body").animate({ scrollTop: 0 }, 0);
-                        },
-                        error: function (error) {
-                            $("#success_msg").attr("hidden", true);
-                            let err = error.responseText.split('\n')[1];
-                            document.getElementById("error_msg").innerHTML =
-                            '* Error:  ' + err.toLowerCase() + ' *';
-                            $("#error_msg").attr("hidden", false);
-                            //$("html, body").animate({ scrollTop: 0 }, 0);
-                        }
-                    });
-                }
-            }
-        }
 
-        function delete_false_labels() {
-            var container = document.getElementById("false_labels");
-            var elements = container.getElementsByTagName("input")
-            for (var i = 0, element; element = elements[i++];) {
-                if (element.type === "checkbox" && element.checked == true) {
-                    $.ajax({
-                        type: 'POST',
-                        url: "{% url 'users:remove_false_label' %}",
-                        headers: { "X-CSRFToken": getCookie('csrftoken') },
-                        data: {
-                            scraper: '{{ user.username }}',
-                            label: element.parentElement.innerText
-                        },
-                        success: function (request) {
-                            $("#error_msg_false").attr("hidden", true);
-                            for (var i = 0, element; element = elements[i++];){
-                                if (element.type === "checkbox" && element.checked == true){
-                                    element.parentElement.remove();
-                                }
-                                if (element.type === "checkbox"){
-                                    element.checked = false;
-                                }
-                            }
-                            $("#success_msg_false").attr("hidden", false);
-                            //$("html, body").animate({ scrollTop: 0 }, 0);
-                        },
-                        error: function (error) {
-                            $("#success_msg_false").attr("hidden", true);
-                            let err = error.responseText.split('\n')[1];
-                            document.getElementById("error_msg_false").innerHTML =
-                            '* Error:  ' + err.toLowerCase() + ' *';
-                            $("#error_msg_false").attr("hidden", false);
-                            //$("html, body").animate({ scrollTop: 0 }, 0);
-                        }
-                    });
+        $("#delete_false_label_submit").click(function(e){
+            e.preventDefault();
+            let false_labels = [];
+            $("#false_labels input:checked").each(function() {
+                false_labels.push($(this).val()); //push each val into the array
+            });
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'users:delete_false_label_from_scraper' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken') },
+                data: {
+                    scraper_id: '{{ user.id }}',
+                    scraper_label: false_labels
+                },
+                success: function (request) {
+                    localStorage.setItem("success_msg_delete_false_label", true);
+                    window.location.reload()
+                },
+                error: function (error) {
+                    hide_all_msgs();
+                    let err = error.responseText.split('\n')[1];
+                    document.getElementById("error_msg_delete_false_label").innerHTML =
+                    'Error: <br>' + err;
+                    $("#error_msg_delete_false_label").attr("hidden", false);
                 }
-            }
-        }
+            });
+        });
 
         function getCookie(c_name) {
             if (document.cookie.length > 0) {

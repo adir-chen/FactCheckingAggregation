@@ -1,0 +1,28 @@
+{% extends 'claims/layout.html' %}
+
+{% block page_content %}
+    <div class="page_wrapper">
+        <h3>Exporting tweets to a csv file:</h3><br>
+        <div class="new_comment claim_box" style="width: 100%; padding: 20px 40px 20px 20px;">
+            <form action="{% url 'tweets:export_to_csv' %}" method="post" target="_blank">
+                {% csrf_token %}
+                <h6>Choose which fields you want to export (default- all):</h6>
+                <input name="fields_to_export[]" class="fields_to_export[]" value="Claim" type="checkbox" checked>Claim&nbsp&nbsp
+                <input name="fields_to_export[]" class="fields_to_export[]" value="Tweet Link" type="checkbox" checked>Tweet Link&nbsp&nbsp
+                <input name="fields_to_export[]" class="fields_to_export[]" value="Author" type="checkbox" checked>Author&nbsp&nbsp
+                <input name="fields_to_export[]" class="fields_to_export[]" value="Author Rank" type="checkbox" checked>Author Rank&nbsp&nbsp
+                <input name="fields_to_export[]" class="fields_to_export[]" value="Label" type="checkbox" checked>Label<br>
+                <h6>Enter starting date:</h6>
+                <input type="date" name="date_start" id="date_start" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}">
+                <h6>Enter ending date:</h6>
+                <input type="date" name="date_end" id="date_end" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}"><br><br>
+                <button id="export_claims" type="submit" class="btn btn-info" style="margin: 10px 0;">Export Tweets</button>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block claim_head_title %}
+    FactCheckProject | Export Tweets
+{% endblock %}

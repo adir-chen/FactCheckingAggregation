@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from django.http import HttpRequest
+from django.http import HttpRequest, Http404
 from django.test import TestCase
 from claims.models import Claim
 from comments.models import Comment
@@ -14,8 +14,7 @@ class SearchTest(TestCase):
     def setUp(self):
         self.request = HttpRequest()
         self.request.method = 'GET'
-        if not self.request.GET._mutable:
-            self.request.GET._mutable = True
+        self.request.GET._mutable = True
 
     def tearDown(self):
         pass
@@ -24,6 +23,11 @@ class SearchTest(TestCase):
         self.request.GET['search_keywords'] = 'claim'
         response = search(self.request)
         self.assertTrue(response.status_code == 200)
+
+    def test_search_invalid_request(self):
+        self.request.GET['search_keywords'] = 'claim'
+        self.request.method = 'POST'
+        self.assertRaises(Http404, search, self.request)
 
     def test_search_many_claims(self):
         self.user = User(username="User1", email='user1@gmail.com')
