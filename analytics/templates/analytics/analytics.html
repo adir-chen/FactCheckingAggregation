@@ -5,98 +5,63 @@
     <div id="analytics_page" class="page_wrapper">
         <h4>WTFact Analytics:</h4>
         <div style="border: 2px solid lightblue; padding: 20px; border-radius: 7px; margin: 10px;">
-            <div id="chart_div" class="chart_div"></div>
+            <div id="chart_months" class="chart_div"></div>
             <h6>Change months:</h6>
             <div>
-                from <input type="month" id="custom_start_date" value="2019-01" max="{% now "Y-m" %}">
+                from <input type="month" id="custom_start_date" value="{{ past_date }}" max="{% now "Y-m" %}">
                 to <input type="month" id="custom_end_date" value="{{ current_date }}" max="{% now "Y-m" %}">
                 <button id="custom_button" class="btn btn-info">Set</button>
                 <button id="reset_button" class="btn btn-info" style="float: right">Reset</button>
             </div>
         </div>
         <div style="border: 2px solid lightblue; padding: 20px; border-radius: 7px; margin: 10px;">
-            <div id="chart_div1" class="chart_div"></div>
-            <h6>Change Month:</h6>
+            <div id="chart_days" class="chart_div"></div>
+            <h6>Change month:</h6>
             <div>
-                <input type="month" id="custom_start_date2" value="2019-01" max="{% now "Y-m" %}">
+                <input type="month" id="custom_start_date2" value="{% now "Y-m" %}" max="{% now "Y-m" %}">
                 <button id="custom_button2" class="btn btn-info">Set</button>
                 <button id="reset_button2" style="float: right" class="btn btn-info">Reset</button>
             </div>
         </div>
         <div style="border: 2px solid lightblue; padding: 20px; border-radius: 7px; margin: 10px;">
-            <h5>Show top Claims:</h5>
+            <h5>Show top viewed claims:</h5>
             Number of claims: <input id="num_of_claims" type="number" min="1" max="10" value="5"><br><br>
             from <input type="date" id="claims_start_date" value="2019-01-01" max="{% now "Y-m-d" %}">
             to <input type="date" id="claims_end_date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}">
             <br><br>
-            <button id="topClaims" class="btn btn-info">click</button>
+            <button id="top_claims" class="btn btn-info">click</button>
         </div>
     </div>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script>
         google.charts.load('current', {packages: ['corechart', 'bar']});
-        var loaded_reports1 = {{ reports_monthly }};
-        var loaded_reports2 = {{ reports_days }};
         google.charts.setOnLoadCallback(function () {
-            drawAll(loaded_reports1,loaded_reports2);
+            draw_chart_by_months({{ reports_months }});
+            draw_chart_by_days({{ reports_days }});
         });
 
-        var numberToDay = {
-            0 : 'Sunday',
-            1 : 'Monday',
-            2 : 'Tuesday',
-            3 : 'Wednesday',
-            4 : 'Thursday',
-            5 : 'Friday',
-            6 : 'Saturday'
-        };
-
-
-        function getMonthlyViews(reports){
+        function get_monthly_views(reports){
             {# reports is an array of type int(year), int(month), int(views)#}
-            rows = [['Month', 'Views']];
-
-            for(i=0; i<reports.length; i++){
-                row = reports[i];
-                newRow = ['' + row[1] + '/' + row[0]%1000, row[2]];
-                rows.push(newRow);
+            let rows = [['Month', 'Views']];
+            for(let i = 0; i < reports.length; i++){
+                let row = reports[i];
+                rows.push(['' + row[1] + '/' + row[0] % 1000, row[2]]);
             }
             return rows;
         }
 
-        function getDailyViews(reports){
-            {# reports is an array of type int(year), int(month),int(day), int(views)#}
-            rows = [['Days', 'Views']];
-
-            for(i=0; i<reports.length; i++){
-                row = reports[i];
-                {#newRow = ['' + row[2] + '/' + row[1] + '/' + row[0]%1000, row[3]];#}
-                newRow = [row[2], row[3]];
-                rows.push(newRow);
+        function get_daily_views(reports){
+            let rows = [['Days', 'Views']];
+            for(let i = 0; i < reports.length; i++){
+                let row = reports[i];
+                rows.push([row[2], row[3]]);
             }
             return rows;
         }
 
-        function getViewsDaysOfWeek(reports){
-            {# reports is an array of type int(day), int(views)#}
-            rows = [['Day', 'Views']];
-
-            for(i=0; i<reports.length; i++){
-                row = reports[i];
-                newRow = [numberToDay[row[0]], row[1]];
-                rows.push(newRow);
-            }
-
-            return rows;
-        }
-        function drawAll(loaded_reports1, loaded_reports2){
-            drawChart1(loaded_reports1);
-            drawChart2(loaded_reports2);
-        }
-
-        function drawChart1(loaded_reports1){
-            var data1 = new google.visualization.arrayToDataTable(getMonthlyViews(loaded_reports1));
-            var options1 = {
+        function draw_chart_by_months(reports){
+            let data = new google.visualization.arrayToDataTable(get_monthly_views(reports));
+            let options = {
                 chart: {
                     title: 'Title',
                     subtitle: 'Subtitle'
@@ -109,13 +74,13 @@
                     title: 'Views'
                 }
             };
-            var materialChart =  new google.visualization.ColumnChart(document.getElementById('chart_div'));
-            materialChart.draw(data1, options1);
+            let materialChart =  new google.visualization.ColumnChart(document.getElementById('chart_months'));
+            materialChart.draw(data, options);
         }
 
-        function drawChart2(loaded_reports2){
-            var data2 = new google.visualization.arrayToDataTable(getDailyViews(loaded_reports2));
-            var options2 = {
+        function draw_chart_by_days(reports){
+            let data = new google.visualization.arrayToDataTable(get_daily_views(reports));
+            let options = {
                 chart: {
                     title: 'Title',
                     subtitle: 'Subtitle'
@@ -129,26 +94,26 @@
                 }
 
             };
-            var materialChart =  new google.visualization.ColumnChart(document.getElementById('chart_div1'));
-            materialChart.draw(data2, options2);
+            let materialChart = new google.visualization.ColumnChart(document.getElementById('chart_days'));
+            materialChart.draw(data, options);
         }
 
         $("#custom_button").click(function(e){
-            {#e.preventDefault();#}
-            var start_date = $("#custom_start_date").val() + '-01';
-            var end_date = $("#custom_end_date").val();
-            end_date = end_date + '-' + new Date(end_date.substring(0,4), end_date.substring(5,8), 0).getDate()
+            e.preventDefault();
+            let start_date = $("#custom_start_date").val() + '-01';
+            let end_date = $("#custom_end_date").val();
+            end_date = end_date + '-' + new Date(end_date.substring(0,4), end_date.substring(5,8), 0).getDate();
             $.ajax({
                 type: 'POST',
-                url: "{% url 'analytics:view_analytics_customized' %}",
+                url: "{% url 'analytics:view_customized_analytics' %}",
                 headers: { "X-CSRFToken": getCookie('csrftoken') },
                 data: {
-                    dimensions: 'ga:year, ga:month',
                     start_date: start_date,
-                    end_date: end_date
+                    end_date: end_date,
+                    dimensions: 'ga:year, ga:month'
                 },
                 success: function (response) {
-                    drawChart1(response[0]);
+                    draw_chart_by_months(response[0]);
                 },
                 error: function (error) {
 
@@ -156,15 +121,14 @@
             });
         });
 
-
         $("#custom_button2").click(function(e){
-            {#e.preventDefault();#}
-            var start_date = $("#custom_start_date2").val() + '-01';
-            var end_date = $("#custom_start_date2").val();
-            end_date = end_date + '-' + new Date(end_date.substring(0,4), end_date.substring(5,8), 0).getDate()
+            e.preventDefault();
+            let start_date = $("#custom_start_date2").val() + '-01';
+            let end_date = $("#custom_start_date2").val();
+            end_date = end_date + '-' + new Date(end_date.substring(0, 4), end_date.substring(5,8), 0).getDate();
             $.ajax({
                 type: 'POST',
-                url: "{% url 'analytics:view_analytics_customized' %}",
+                url: "{% url 'analytics:view_customized_analytics' %}",
                 headers: { "X-CSRFToken": getCookie('csrftoken') },
                 data: {
                     dimensions: 'ga:year, ga:month, ga:day',
@@ -172,7 +136,7 @@
                     end_date: end_date
                 },
                 success: function (response) {
-                    drawChart2(response[0]);
+                    draw_chart_by_days(response[0]);
                 },
                 error: function (error) {
 
@@ -181,13 +145,14 @@
         });
 
         $("#reset_button").click(function (e) {
-            drawChart1(loaded_reports1);
-        });
-        $("#reset_button2").click(function (e) {
-            drawChart2(loaded_reports2);
+            draw_chart_by_months(loaded_reports1);
         });
 
-        $("#topClaims").click(function (e){
+        $("#reset_button2").click(function (e) {
+            draw_chart_by_days(loaded_reports2);
+        });
+
+        $("#top_claims").click(function (e){
             $.ajax({
                 type: 'POST',
                 url: "{% url 'analytics:view_top_n_claims' %}",
