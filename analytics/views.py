@@ -106,8 +106,10 @@ def check_if_top_claims_is_valid(top_claims_info):
     err = ''
     if 'n' not in top_claims_info or not top_claims_info['n']:
         err += 'Missing value for num of claims'
+    elif not top_claims_info['n'].isdigit():
+        err += 'Incorrect format for num of claims (integer)'
     elif not (1 <= int(top_claims_info['n']) <= 10):
-        err += 'Num of claims should be between 1 to 10'
+        err += 'Num of claims should be between 1 - 10'
     else:
         err = check_valid_dates(top_claims_info)
     if len(err) > 0:
@@ -119,7 +121,5 @@ def get_claim_as_json(claim):
     claim_json = {
         'id': claim.id,
         'claim': claim.claim,
-        'category': claim.category,
-        'tags': claim.tags
     }
     return claim_json
