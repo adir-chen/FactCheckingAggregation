@@ -56,6 +56,7 @@ def add_all_scrapers(request):
                                      false_labels=','.join(false_labels))
         scraper_1_details.save()
 
+        password = User.objects.make_random_password()
         scraper_2 = User.objects.create_user(username='Polygraph', password=password)
         scraper_2.save()
         scraper_2_img = Users_Images(user_id=scraper_2, user_img='https://www.polygraph.info/Content/responsive/RFE/en-Poly/img/logo.png')
@@ -70,6 +71,7 @@ def add_all_scrapers(request):
                                      false_labels=','.join(false_labels))
         scraper_2_details.save()
 
+        password = User.objects.make_random_password()
         scraper_3 = User.objects.create_user(username='TruthOrFiction', password=password)
         scraper_3.save()
         scraper_3_img = Users_Images(user_id=scraper_3, user_img='https://dn.truthorfiction.com/wp-content/uploads/2018/10/25032229/truth-or-fiction-logo-tagline.png')
@@ -85,6 +87,7 @@ def add_all_scrapers(request):
                                      false_labels=','.join(false_labels))
         scraper_3_details.save()
 
+        password = User.objects.make_random_password()
         scraper_4 = User.objects.create_user(username='Politifact', password=password)
         scraper_4.save()
         scraper_4_img = Users_Images(user_id=scraper_4, user_img='https://static.politifact.com/images/POLITIFACT_logo_rgb141x25.png')
@@ -99,6 +102,7 @@ def add_all_scrapers(request):
                                      false_labels=','.join(false_labels))
         scraper_4_details.save()
 
+        password = User.objects.make_random_password()
         scraper_5 = User.objects.create_user(username='GossipCop', password=password)
         scraper_5.save()
         scraper_5_img = Users_Images(user_id=scraper_5, user_img='https://s3.gossipcop.com/thm/gossipcop/images/horizontal-logo.png')
@@ -113,6 +117,7 @@ def add_all_scrapers(request):
                                      false_labels=','.join(false_labels))
         scraper_5_details.save()
 
+        password = User.objects.make_random_password()
         scraper_6 = User.objects.create_user(username='ClimateFeedback', password=password)
         scraper_6.save()
         scraper_6_img = Users_Images(user_id=scraper_6, user_img='https://climatefeedback.org/wp-content/themes/wordpress-theme/dist/images/Climate_Feedback_logo_s.png')
@@ -127,6 +132,7 @@ def add_all_scrapers(request):
                                      false_labels=','.join(false_labels))
         scraper_6_details.save()
 
+        password = User.objects.make_random_password()
         scraper_7 = User.objects.create_user(username='FactScan', password=password)
         scraper_7.save()
         scraper_7_img = Users_Images(user_id=scraper_7, user_img='http://factscan.ca/test/wp-content/uploads/2015/02/web-logo.png')
@@ -141,6 +147,7 @@ def add_all_scrapers(request):
                                      false_labels=','.join(false_labels))
         scraper_7_details.save()
 
+        password = User.objects.make_random_password()
         scraper_8 = User.objects.create_user(username='AfricaCheck', password=password)
         scraper_8.save()
         scraper_8_img = Users_Images(user_id=scraper_8, user_img='https://upload.wikimedia.org/wikipedia/en/2/2f/Africa_Check_Website_logo.png')
@@ -150,6 +157,7 @@ def add_all_scrapers(request):
         scraper_8_details = Scrapers(scraper_name=scraper_8.username, scraper_id=scraper_8)
         scraper_8_details.save()
 
+        password = User.objects.make_random_password()
         scraper_9 = User.objects.create_user(username='CNN', password=password)
         scraper_9.save()
         scraper_9_img = Users_Images(user_id=scraper_9, user_img='https://cdn.cnn.com/cnn/.e1mo/img/4.0/logos/CNN_logo_400x400.png')
