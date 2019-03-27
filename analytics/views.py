@@ -89,6 +89,8 @@ def view_top_n_claims(request):
         if claim is None:
             continue
         results.append([claim, views])
+        if len(results) == int(top_claims_info['n']):
+            break
 
     for report in results:
         reports_json.append({

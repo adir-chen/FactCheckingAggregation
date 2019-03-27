@@ -107,11 +107,8 @@ def get_report_top_n_claims(num_of_claims, start_date, end_date):
     sort = '-ga:pageViews'
     filters = 'ga:pagePath=~/claim/'
     reports = get_report(start_date, end_date, metrics, dimensions, sort, filters)
-    claims_with_num_views = {}
-    for row in reports.get('rows'):
+    top_claims = []
+    for row in reports.get('rows')[:num_of_claims * 2]:
         claim_id_arr = row[0].split('/')
-        claims_with_num_views[int(claim_id_arr[len(claim_id_arr) - 1])] = int(row[1])
-    top_n_claims = []
-    for claim_id in nlargest(num_of_claims, claims_with_num_views, key=claims_with_num_views.get):
-        top_n_claims.append([claim_id, claims_with_num_views[claim_id]])
-    return top_n_claims
+        top_claims.append([int(claim_id_arr[len(claim_id_arr) - 1]), int(row[1])])
+    return top_claims

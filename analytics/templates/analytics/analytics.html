@@ -8,45 +8,54 @@
             <table class="columns">
                 <tr>
                     <td>
-                        <div style="border: 2px solid lightblue; padding: 10px">
-                            <div id="chart_div" class="chart_div"></div>
+                        <div style="border: 2px solid lightblue; padding: 20px; border-radius: 7px; margin: 10px;">
+                            <div id="chart_months" class="chart_div"></div>
                             <h6>Change months:</h6>
                             <div>
                                 from <input type="month" id="custom_start_date" value="2019-01">
                                 to <input type="month" id="custom_end_date" value="{{ current_date }}">
-                                <button id="custom_button">Set</button>
-                                <button id="reset_button" style="float: right">Reset</button>
+                                <button id="custom_button" class="btn btn-info">Set</button>
+                                <button id="reset_button" class="btn btn-danger" style="float: right">Reset</button>
                             </div>
                         </div>
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <div style="border: 2px solid lightblue; padding: 10px">
-                            <div id="chart_div1" class="chart_div"></div>
+                        <div style="border: 2px solid lightblue; padding: 20px; border-radius: 7px; margin: 10px;">
+                            <div id="chart_days" class="chart_div"></div>
                             <h6>Change Month:</h6>
                             <div>
                                 <input type="month" id="custom_start_date2" value="2019-01">
-                                <button id="custom_button2">Set</button>
-                                <button id="reset_button2" style="float: right">Reset</button>
+                                <button id="custom_button2" class="btn btn-info">Set</button>
+                                <button id="reset_button2" class="btn btn-danger" style="float: right">Reset</button>
                             </div>
                         </div>
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <div style="border: 2px solid lightblue; padding: 10px">
-                            <table id="Top Claims">
-                                <tr>
-                                    <td>
-                                        <div>
+                        <div style="border: 2px solid lightblue; padding: 20px; border-radius: 7px; margin: 10px;">
+                            <h5>Show top viewed claims:</h5>
+                            Number of claims: <input id="num_of_claims" type="number" min="1" max="10" value="5"><br><br>
+                            from <input type="date" id="claims_start_date" value="2019-01-01" max="{% now "Y-m-d" %}">
+                            to <input type="date" id="claims_end_date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}">
+                            <br><br>
+                            <button id="top_claims" class="btn btn-info">click</button>
+                            <div >
+                                <table id="Top Claims">
+                                    <tr>
+                                        <td>
+                                            <div>
 
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-{#                            <button id="topClaims" >click</button>#}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                                {#                            <button id="topClaims" >click</button>#}
+                            </div>
                         </div>
+
                     </td>
                 </tr>
             </table>
@@ -55,11 +64,11 @@
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script>
         google.charts.load('current', {packages: ['corechart', 'bar']});
-        var loaded_reports1 = {{ reports_monthly }};
-        var loaded_reports2 = {{ reports_days }};
+        let reports_months = {{ reports_months }};
+        let reports_days = {{ reports_days }};
         google.charts.setOnLoadCallback(function () {
-            draw_chart_by_months({{ reports_months }});
-            draw_chart_by_days({{ reports_days }});
+            draw_chart_by_months(reports_months);
+            draw_chart_by_days(reports_days);
         });
 
         function get_monthly_views(reports){
@@ -153,9 +162,9 @@
                 url: "{% url 'analytics:view_customized_analytics' %}",
                 headers: { "X-CSRFToken": getCookie('csrftoken') },
                 data: {
-                    dimensions: 'ga:year, ga:month, ga:day',
                     start_date: start_date,
-                    end_date: end_date
+                    end_date: end_date,
+                    dimensions: 'ga:year, ga:month, ga:day',
                 },
                 success: function (response) {
                     draw_chart_by_days(response[0]);
@@ -167,41 +176,38 @@
         });
 
         $("#reset_button").click(function (e) {
-            draw_chart_by_months(loaded_reports1);
+            draw_chart_by_months({{ x }});
         });
 
         $("#reset_button2").click(function (e) {
-            draw_chart_by_days(loaded_reports2);
+            draw_chart_by_days({{ y }});
         });
 
-        $.ajax({
-            type: 'POST',
-            url: "{% url 'analytics:view_N_top_claims' %}",
-            headers: { "X-CSRFToken": getCookie('csrftoken') },
-            data: {
-                start_date: '2018-01-01',
-                end_date: 'today',
-                n: 5
-            },
-            success: function (response) {
-                {#"Top Claims"#}
-                console.log("started entering response to table");
-                console.log(response);
+        $("#top_claims").click(function(e){
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'analytics:view_top_n_claims' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken') },
+                data: {
+                    start_date: $("#claims_start_date").val(),
+                    end_date: $("#claims_end_date").val(),
+                    n: $("#num_of_claims").val()
+                },
+                success: function (response) {
+                    let response_table = response['reports'];
+                    for(let i=0; i<response_table.length; i++) {
+                        var data = response_table[i];
+                        var table = document.getElementById("Top Claims");
+                        var row = table.insertRow();
+                        var cell = row.insertCell();
+                        cell.innerText = '['+(i+1)+'] '+ data['claim']['claim'];
+                    }
 
-                for(i=0; i<response.length; i++) {
+                },
+                error: function (error) {
 
-                    console.log(i);
-                    var data = response[i];
-                    var table = document.getElementById("Top Claims");
-                    var row = table.insertRow();
-                    var cell = row.insertCell();
-                    cell.innerText = '['+i+'] S'+ data['claim']['claim'];
                 }
-
-            },
-            error: function (error) {
-
-            }
+            });
         });
 
         function getCookie(c_name) {
