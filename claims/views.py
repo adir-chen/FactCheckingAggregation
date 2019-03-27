@@ -136,12 +136,11 @@ def is_english_input(user_input):
 # This function checks if a given user posted new claims above the maximum limit (per day).
 # The function returns true in case the user exceeded the maximum limit, otherwise false
 def post_above_limit(user_id):
-    return False
-    # limit = 10
-    # from datetime import datetime
-    # return len(Logger.objects.filter(date__date=datetime.today(),
-    #                                  user_id=user_id,
-    #                                  action__icontains='Adding a new claim')) >= limit
+    limit = 10
+    from datetime import datetime
+    return len(Logger.objects.filter(date__date=datetime.today(),
+                                     user_id=user_id,
+                                     action__icontains='Adding a new claim')) >= limit
 
 
 # This function edits a claim in the website
@@ -322,7 +321,7 @@ def view_home(request):
     from django.core.paginator import Paginator
     claims = list(get_users_images_for_claims(Claim.objects.all().order_by('-id')).items())
     page = request.GET.get('page')
-    paginator = Paginator(claims, 7)
+    paginator = Paginator(claims, 24)
     return render(request, 'claims/index.html', {'claims': paginator.get_page(page)})
 
 

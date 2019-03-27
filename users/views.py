@@ -349,11 +349,11 @@ def user_page(request, username):
         user_tweets = list(get_users_details_for_comments(tweets).items())
     user_img, user_rep = get_user_img_and_rep(user.id)
     page = request.GET.get('page1')
-    paginator = Paginator(user_claims, 3)
+    paginator = Paginator(user_claims, 4)
     page2 = request.GET.get('page2')
-    paginator2 = Paginator(user_comments, 3)
+    paginator2 = Paginator(user_comments, 4)
     page3 = request.GET.get('page3')
-    paginator3 = Paginator(user_tweets, 3)
+    paginator3 = Paginator(user_tweets, 4)
     return render(request, 'users/user_page.html', {
         'user': user,
         'logged_in': logged_in,
@@ -364,8 +364,18 @@ def user_page(request, username):
         'user_rep': user_rep,
         'scrapers_ids': get_all_scrapers_ids_arr(),
         'true_labels': get_true_labels(username),
-        'false_labels': get_false_labels(username)
+        'false_labels': get_false_labels(username),
+        'scraper_url': get_scraper_url(username)
     })
+
+
+# This function returns all true labels of the given scraper
+def get_scraper_url(scraper_name):
+    scraper = Scrapers.objects.filter(scraper_name=scraper_name)
+    url = ''
+    if len(scraper) > 0:
+        url = scraper.first().scraper_url
+    return url
 
 
 # This function returns all true labels of the given scraper

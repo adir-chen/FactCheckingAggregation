@@ -5,14 +5,14 @@
     {% if claims.number == 1 %}
         <div class="headlines">
             <div id="claim_large_columns" style="max-width: 1150px; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
-                {% for claim, img in claims.object_list|slice:"0:3" %}
+                {% for claim, img in claims.object_list|slice:"0:4" %}
                     {% include 'claims/claimbox_large.html' with claim=claim img=img %}
                 {% endfor %}
             </div>
         </div>
         <div class="page_wrapper">
             <div id="claim_columns">
-                {% for claim, img in claims.object_list|slice:"3:" %}
+                {% for claim, img in claims.object_list|slice:"4:" %}
                     {% include 'claims/claimbox.html' with claim=claim img=img %}
                 {% endfor %}
             </div>

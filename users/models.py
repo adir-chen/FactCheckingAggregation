@@ -22,8 +22,10 @@ class Users_Reputations(models.Model):
 class Scrapers(models.Model):
     scraper_name = models.CharField(max_length=50)
     scraper_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    scraper_url = models.CharField(max_length=50)
     true_labels = models.TextField(default='true')
     false_labels = models.TextField(default='false')
+
 
     def __str__(self):
         return self.scraper_name

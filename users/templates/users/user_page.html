@@ -19,9 +19,12 @@
                     <img src="{% static 'claims/assets/images/star.png' %}" style="width: 20px; height: 20px;">
                 {% endfor %}
                 <br><br>
-                Email: {{ user.email }}<br>
-                Last Login: {{ user.last_login|date:"d/m/Y H:i" }}
-
+                {% if user.id in scrapers_ids %}
+                    <br>Website: <a href="{{ scraper_url }}" target="_blank">{{ scraper_url }}</a>
+                {% else %}
+                    Email: {{ user.email }}<br>
+                    Last Login: {{ user.last_login|date:"d/m/Y H:i" }}
+                {% endif %}
             </div>
         </div>
         <hr>
@@ -29,7 +32,7 @@
         {% csrf_token %}
         <div class="headlines">
             <div id="claim_large_columns" style="width: 100%; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
-                {% for claim, img in user_claims.object_list|slice:"0:3" %}
+                {% for claim, img in user_claims.object_list|slice:"0:4" %}
                     {% include 'claims/claimbox_large.html' with claim=claim img=img %}
                 {% endfor %}
             </div>
