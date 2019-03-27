@@ -117,6 +117,7 @@ def check_if_top_claims_is_valid(top_claims_info):
 
 def get_claim_as_json(claim):
     claim_json = {
+        'id': claim.id,
         'claim': claim.claim,
         'category': claim.category,
         'tags': claim.tags

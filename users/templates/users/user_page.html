@@ -83,16 +83,18 @@
             </span>
         </div>
 
-        <hr>
-        <h4>{{ user.username }}'s published Tweets:</h4>
-        <div class="headlines">
-            <div id="tweets" style="width: 100%; padding: 20px; border-radius: 10px; background: #aabfd6; margin: 0 auto;">
-                {% for tweet, user  in user_tweets.object_list|slice:"0:3" %}
-                    Attached Tweet at {{ tweet.timestamp }} to claim: <a href="/claim/{{ tweet.claim_id }}">{{ tweet.claim.claim }}</a>
-                    {% include 'tweets/tweet.html' with tweet=tweet user_details=user request=request only %}
-                {% endfor %}
+        {% if not user.id in scrapers_ids %}
+            <hr>
+            <h4>{{ user.username }}'s published Tweets:</h4>
+            <div class="headlines">
+                <div id="tweets" style="width: 100%; padding: 20px; border-radius: 10px; background: #aabfd6; margin: 0 auto;">
+                    {% for tweet, user  in user_tweets.object_list|slice:"0:3" %}
+                        Attached Tweet at {{ tweet.timestamp }} to claim: <a href="/claim/{{ tweet.claim_id }}">{{ tweet.claim.claim }}</a>
+                        {% include 'tweets/tweet.html' with tweet=tweet user_details=user request=request only %}
+                    {% endfor %}
+                </div>
             </div>
-        </div>
+        {% endif %}
 
         <div class="pagination">
             <span class="step-links">

@@ -14,5 +14,5 @@ def search(request):
     claims = Claim.objects.filter(Q(claim__icontains=keywords) | Q(tags__icontains=keywords)).order_by('-id')
     search_result = list(get_users_images_for_claims(claims).items())
     page = request.GET.get('page')
-    paginator = Paginator(search_result, 4)
+    paginator = Paginator(search_result, 24)
     return render(request, 'search/search.html', {'search_result': paginator.get_page(page)})

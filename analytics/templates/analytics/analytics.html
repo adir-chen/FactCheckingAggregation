@@ -4,63 +4,33 @@
     <!--Table and divs that hold the pie charts-->
     <div id="analytics_page" class="page_wrapper">
         <h4>WTFact Analytics:</h4>
-        <div>
-            <table class="columns">
-                <tr>
-                    <td>
-                        <div style="border: 2px solid lightblue; padding: 20px; border-radius: 7px; margin: 10px;">
-                            <div id="chart_months" class="chart_div"></div>
-                            <h6>Change months:</h6>
-                            <div>
-                                from <input type="month" id="custom_start_date" value="2019-01">
-                                to <input type="month" id="custom_end_date" value="{{ current_date }}">
-                                <button id="custom_button" class="btn btn-info">Set</button>
-                                <button id="reset_button" class="btn btn-danger" style="float: right">Reset</button>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div style="border: 2px solid lightblue; padding: 20px; border-radius: 7px; margin: 10px;">
-                            <div id="chart_days" class="chart_div"></div>
-                            <h6>Change Month:</h6>
-                            <div>
-                                <input type="month" id="custom_start_date2" value="2019-01">
-                                <button id="custom_button2" class="btn btn-info">Set</button>
-                                <button id="reset_button2" class="btn btn-danger" style="float: right">Reset</button>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div style="border: 2px solid lightblue; padding: 20px; border-radius: 7px; margin: 10px;">
-                            <h5>Show top viewed claims:</h5>
-                            Number of claims: <input id="num_of_claims" type="number" min="1" max="10" value="5"><br><br>
-                            from <input type="date" id="claims_start_date" value="2019-01-01" max="{% now "Y-m-d" %}">
-                            to <input type="date" id="claims_end_date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}">
-                            <br><br>
-                            <button id="top_claims" class="btn btn-info">click</button>
-                            <div >
-                                <table id="Top Claims">
-                                    <tr>
-                                        <td>
-                                            <div>
-
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </table>
-                                {#                            <button id="topClaims" >click</button>#}
-                            </div>
-                        </div>
-
-                    </td>
-                </tr>
-            </table>
+        <div class="chart_wrapper">
+            <div id="chart_months" class="chart_div"></div>
+            <h6>Change months:</h6>
+            from <input type="month" id="start_month" value="2019-01">
+            to <input type="month" id="end_month" value="{{ current_date }}">
+            <button id="set_months" class="btn btn-info">Set</button>
+            <button id="reset_months" class="btn btn-danger reset-btn">Reset</button>
+        </div>
+        <div class="chart_wrapper">
+            <div id="chart_days" class="chart_div"></div>
+            <h6>Change month:</h6>
+            <input type="month" id="start_days" value="2019-01">
+            <button id="set_days" class="btn btn-info">Set</button>
+            <button id="reset_days" class="btn btn-danger reset-btn">Reset</button>
+        </div>
+        <div class="chart_wrapper">
+            <h5>Show top viewed claims:</h5><br>
+            Number of claims: <input id="num_of_claims" type="number" min="1" max="10" value="5"><br><br>
+            from <input type="date" id="claims_start_date" value="2019-01-01" max="{% now "Y-m-d" %}">
+            to <input type="date" id="claims_end_date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}">
+            <br><br>
+            <button id="top_claims" class="btn btn-info">Show Claims</button>
+            <br><br>
+            <table id="show_top_claims"></table>
         </div>
     </div>
+
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script>
         google.charts.load('current', {packages: ['corechart', 'bar']});
@@ -118,7 +88,7 @@
                 },
                 title: "Views by days in month",
                 hAxis: {
-                    title: 'Day Of Week'
+                    title: 'Day of month'
                 },
                 vAxis: {
                     title: 'Views'
@@ -129,10 +99,10 @@
             materialChart.draw(data, options);
         }
 
-        $("#custom_button").click(function(e){
+        $("#set_months").click(function(e){
             e.preventDefault();
-            let start_date = $("#custom_start_date").val() + '-01';
-            let end_date = $("#custom_end_date").val();
+            let start_date = $("#start_month").val() + '-01';
+            let end_date = $("#end_month").val();
             end_date = end_date + '-' + new Date(end_date.substring(0,4), end_date.substring(5,8), 0).getDate();
             $.ajax({
                 type: 'POST',
@@ -152,10 +122,10 @@
             });
         });
 
-        $("#custom_button2").click(function(e){
+        $("#set_days").click(function(e){
             e.preventDefault();
-            let start_date = $("#custom_start_date2").val() + '-01';
-            let end_date = $("#custom_start_date2").val();
+            let start_date = $("#start_days").val() + '-01';
+            let end_date = $("#start_days").val();
             end_date = end_date + '-' + new Date(end_date.substring(0, 4), end_date.substring(5,8), 0).getDate();
             $.ajax({
                 type: 'POST',
@@ -175,11 +145,11 @@
             });
         });
 
-        $("#reset_button").click(function (e) {
+        $("#reset_months").click(function (e) {
             draw_chart_by_months({{ x }});
         });
 
-        $("#reset_button2").click(function (e) {
+        $("#reset_days").click(function (e) {
             draw_chart_by_days({{ y }});
         });
 
@@ -195,14 +165,26 @@
                 },
                 success: function (response) {
                     let response_table = response['reports'];
+                    var table = document.getElementById("show_top_claims");
+                    table.innerHTML = '';
+                    var row = table.insertRow();
+                    var cell = row.insertCell();
+                    var cell = row.insertCell();
+                    cell.innerHTML = '<b>Claim</b>';
+                    var cell = row.insertCell();
+                    cell.innerHTML = '<b>Views</b>';
+
                     for(let i=0; i<response_table.length; i++) {
                         var data = response_table[i];
-                        var table = document.getElementById("Top Claims");
                         var row = table.insertRow();
                         var cell = row.insertCell();
-                        cell.innerText = '['+(i+1)+'] '+ data['claim']['claim'];
+                        cell.innerHTML = '['+(i+1)+']';
+                        var cell = row.insertCell();
+                        cell.innerHTML = '<a href="/claim/' + data['claim']['id'] +'">' +
+                            data['claim']['claim'] + '</a>';
+                        var cell = row.insertCell();
+                        cell.innerHTML = data['views'];
                     }
-
                 },
                 error: function (error) {
 

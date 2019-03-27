@@ -698,7 +698,25 @@ table.log_table{
 
 .chart_div{
     height: 300px;
-    width: 850px;
-    margin: 20px;
+    width: 100%;
+    margin: 10px auto 30px auto;
     border: 1px solid #ccc;
+}
+
+div.chart_wrapper{
+    background: #fafafa;
+    border: 1px solid #c0c0c0;
+    padding: 30px 40px;
+    border-radius: 7px;
+    margin: 20px;
+}
+
+@media only screen and (min-width: 600px) {
+  .reset-btn {
+    float: right;
+  }
+}
+
+#show_top_claims td{
+    padding: 5px;
 }
