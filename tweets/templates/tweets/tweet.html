@@ -72,7 +72,7 @@
             <input id="tweet_{{ tweet.id }}_author" value="{{ tweet.author }}" type="text" placeholder="{{ tweet.author }}">
             <br>
             Author Loyalty Rank:<br>
-            <input id="tweet_{{ tweet.id }}_author_rank" value="{{ tweet.author_rank }}" type="text" placeholder="{{ tweet.author_rank }}">
+            <input id="tweet_{{ tweet.id }}_author_rank" value="{{ tweet.author_rank }}" type="number" min="1" max="100">
         </div>
     </div>
     {% if request.user.is_authenticated %}

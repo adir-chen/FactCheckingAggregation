@@ -58,53 +58,32 @@
         var loaded_reports1 = {{ reports_monthly }};
         var loaded_reports2 = {{ reports_days }};
         google.charts.setOnLoadCallback(function () {
-            drawAll(loaded_reports1,loaded_reports2);
+            draw_chart_by_months({{ reports_months }});
+            draw_chart_by_days({{ reports_days }});
         });
 
-        var numberToDay = {
-            0 : 'Sunday',
-            1 : 'Monday',
-            2 : 'Tuesday',
-            3 : 'Wednesday',
-            4 : 'Thursday',
-            5 : 'Friday',
-            6 : 'Saturday'
-        };
-
-
-        function getMonthlyViews(reports){
+        function get_monthly_views(reports){
             {# reports is an array of type int(year), int(month), int(views)#}
-            rows = [['Month', 'Views']];
-
-            for(i=0; i<reports.length; i++){
-                row = reports[i];
-                newRow = ['' + row[1] + '/' + row[0]%1000, row[2]];
-                rows.push(newRow);
+            let rows = [['Month', 'Views']];
+            for(let i = 0; i < reports.length; i++){
+                let row = reports[i];
+                rows.push(['' + row[1] + '/' + row[0] % 1000, row[2]]);
             }
             return rows;
         }
 
-        function getDailyViews(reports){
-            {# reports is an array of type int(year), int(month),int(day), int(views)#}
-            rows = [['Days', 'Views']];
-
-            for(i=0; i<reports.length; i++){
-                row = reports[i];
-                {#newRow = ['' + row[2] + '/' + row[1] + '/' + row[0]%1000, row[3]];#}
-                newRow = [row[2], row[3]];
-                rows.push(newRow);
+        function get_daily_views(reports){
+            let rows = [['Days', 'Views']];
+            for(let i = 0; i < reports.length; i++){
+                let row = reports[i];
+                rows.push([row[2], row[3]]);
             }
             return rows;
         }
 
-        function drawAll(loaded_reports1, loaded_reports2){
-            drawChart1(loaded_reports1);
-            drawChart2(loaded_reports2);
-        }
-
-        function drawChart1(loaded_reports1){
-            var data1 = new google.visualization.arrayToDataTable(getMonthlyViews(loaded_reports1));
-            var options1 = {
+        function draw_chart_by_months(reports){
+            let data = new google.visualization.arrayToDataTable(get_monthly_views(reports));
+            let options = {
                 chart: {
                     title: 'Title',
                     subtitle: 'Subtitle'
@@ -117,13 +96,13 @@
                     title: 'Views'
                 }
             };
-            var materialChart =  new google.visualization.ColumnChart(document.getElementById('chart_div'));
-            materialChart.draw(data1, options1);
+            let materialChart =  new google.visualization.ColumnChart(document.getElementById('chart_months'));
+            materialChart.draw(data, options);
         }
 
-        function drawChart2(loaded_reports2){
-            var data2 = new google.visualization.arrayToDataTable(getDailyViews(loaded_reports2));
-            var options2 = {
+        function draw_chart_by_days(reports){
+            let data = new google.visualization.arrayToDataTable(get_daily_views(reports));
+            let options = {
                 chart: {
                     title: 'Title',
                     subtitle: 'Subtitle'
@@ -137,25 +116,26 @@
                 }
 
             };
-            var materialChart =  new google.visualization.ColumnChart(document.getElementById('chart_div1'));
-            materialChart.draw(data2, options2);
+            let materialChart = new google.visualization.ColumnChart(document.getElementById('chart_days'));
+            materialChart.draw(data, options);
         }
 
         $("#custom_button").click(function(e){
-            {#e.preventDefault();#}
-            var start_date = $("#custom_start_date").val() + '-01';
-            var end_date = $("#custom_end_date").val();
-            end_date = end_date + '-' + new Date(end_date.substring(0,4), end_date.substring(5,8), 0).getDate()
+            e.preventDefault();
+            let start_date = $("#custom_start_date").val() + '-01';
+            let end_date = $("#custom_end_date").val();
+            end_date = end_date + '-' + new Date(end_date.substring(0,4), end_date.substring(5,8), 0).getDate();
             $.ajax({
                 type: 'POST',
-                url: "{% url 'analytics:view_analytics_customized' %}",
+                url: "{% url 'analytics:view_customized_analytics' %}",
                 headers: { "X-CSRFToken": getCookie('csrftoken') },
                 data: {
                     start_date: start_date,
-                    end_date: end_date
+                    end_date: end_date,
+                    dimensions: 'ga:year, ga:month'
                 },
                 success: function (response) {
-                    drawChart1(response[0]);
+                    draw_chart_by_months(response[0]);
                 },
                 error: function (error) {
 
@@ -163,22 +143,22 @@
             });
         });
 
-
         $("#custom_button2").click(function(e){
-            {#e.preventDefault();#}
-            var start_date = $("#custom_start_date2").val() + '-01';
-            var end_date = $("#custom_start_date2").val();
-            end_date = end_date + '-' + new Date(end_date.substring(0,4), end_date.substring(5,8), 0).getDate()
+            e.preventDefault();
+            let start_date = $("#custom_start_date2").val() + '-01';
+            let end_date = $("#custom_start_date2").val();
+            end_date = end_date + '-' + new Date(end_date.substring(0, 4), end_date.substring(5,8), 0).getDate();
             $.ajax({
                 type: 'POST',
-                url: "{% url 'analytics:view_analytics_customized_days' %}",
+                url: "{% url 'analytics:view_customized_analytics' %}",
                 headers: { "X-CSRFToken": getCookie('csrftoken') },
                 data: {
+                    dimensions: 'ga:year, ga:month, ga:day',
                     start_date: start_date,
                     end_date: end_date
                 },
                 success: function (response) {
-                    drawChart2(response[0]);
+                    draw_chart_by_days(response[0]);
                 },
                 error: function (error) {
 
@@ -187,10 +167,11 @@
         });
 
         $("#reset_button").click(function (e) {
-            drawChart1(loaded_reports1);
+            draw_chart_by_months(loaded_reports1);
         });
+
         $("#reset_button2").click(function (e) {
-            drawChart2(loaded_reports2);
+            draw_chart_by_days(loaded_reports2);
         });
 
         $.ajax({

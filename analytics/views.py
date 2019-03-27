@@ -1,82 +1,117 @@
+from django.http import Http404, HttpResponse, JsonResponse
+from django.shortcuts import render
+from analytics.GoogleAPI.AnalyticReports import get_report_view_by_time, get_report_top_n_claims
+from claims.views import get_claim_by_id
+from dateutil.relativedelta import relativedelta
+from logger.views import save_log_message
+import calendar
 import json
 import datetime
-import calendar
 
-from django.http import Http404, HttpResponse, JsonResponse
-
-from django.shortcuts import render
-from analytics.GoogleAPI.AnalyticReports import getReport_viewsByMonth, getReport_viewsByDays,getReport_NMostViewdCalims
-
-from claims.views import get_claim_by_id
 
 # This function returns analytics page
-def view_analytics_default(request):
-    reports_1 = getReport_viewsByMonth(start_date='2019-01-01', end_date='today')
-    reports_2 = getReport_viewsByDays(start_date='2019-03-01', end_date='today')
-    return view_analytics(request, reports_1, reports_2)
+def view_analytics(request):
+    if not request.user.is_superuser or request.method != 'GET':
+        raise Http404("Permission denied")
+    today = datetime.date.today()
+    past = today - relativedelta(months=3)
+    start_date_month = "{:04d}-{:02d}-{:02d}".format(past.year, past.month, past.day)
+    end_date_month = "{:04d}-{:02d}-{:02d}".format(today.year, today.month, today.day)
+    start_date_day = "{:04d}-{:02d}-{:02d}".format(today.year, today.month, 1)
+    end_date_day = "{:04d}-{:02d}-{:02d}".format(today.year, today.month,
+                                                 calendar.monthrange(today.year, today.month)[1])
+    months_reports = get_report_view_by_time(start_date=start_date_month, end_date=end_date_month,
+                                             dimensions='ga:year, ga:month')
+    days_reports = get_report_view_by_time(start_date=start_date_day, end_date=end_date_day,
+                                           dimensions='ga:year, ga:month, ga:day')
+    return render(request,
+                  'analytics/analytics.html',
+                  {'reports_months': months_reports,
+                   'reports_days': days_reports,
+                   'past_date': "{:04d}-{:02d}".format(past.year,
+                                                       past.month),
+                   'current_date': "{:04d}-{:02d}".format(today.year,
+                                                          today.month)})
 
-def view_analytics_customized(request):
-    # print("???")
-    # print(request.POST)
-    data = request.POST.dict()
-    reports_1 = getReport_viewsByMonth(start_date=data['start_date'], end_date=data['end_date'])
-    # reports_2 = getReport_DaysOfWeek(start_date=data['start_date'], end_date=data['end_date'])
+
+def view_customized_analytics(request):
+    customized_analytics_info = request.POST.dict()
+    valid_customized_analytics_info, err_msg = check_if_customized_analytics_is_valid(customized_analytics_info)
+    if not valid_customized_analytics_info:
+        save_log_message(request.user.id, request.user.username,
+                         'Viewing customized analytics. Error: ' + err_msg)
+        raise Exception(err_msg)
+    reports = get_report_view_by_time(start_date=customized_analytics_info['start_date'],
+                                      end_date=customized_analytics_info['end_date'],
+                                      dimensions=customized_analytics_info['dimensions'])
     return HttpResponse(
-        json.dumps([reports_1]),
+        json.dumps([reports]),
         content_type="application/json"
     )
-    # return view_analytics(request, data['start_date'], data['end_date'])
 
 
-def view_analytics_customized_days(request):
-    data = request.POST.dict()
-    # reports_1 = getReport_viewsByMonth(start_date=data['start_date'], end_date=data['end_date'])
-    reports_2 = getReport_viewsByDays(start_date=data['start_date'], end_date=data['end_date'])
-    return HttpResponse(
-        json.dumps([reports_2]),
-        content_type="application/json"
-    )
-    # return view_analytics(request, data['start_date'], data['end_date'])
-
-def view_analytics(request, reports_1, reports_2):
-    # if not request.user.is_superuser:
-    #     raise Http404("Permission denied")
-    now = datetime.datetime.now()
-
-    date =  "" + str(now.year) +\
-            '-' + ('0' if now.month<10 else '') + str(now.month)
-            # + '-' + ('0' if now.day<10 else '') + str(now.day)
-    return render(request, 'analytics/analytics.html', {'reports_monthly': reports_1, 'reports_days': reports_2, 'current_date': date})
+def check_if_customized_analytics_is_valid(top_claims_info):
+    err = ''
+    if 'dimensions' not in top_claims_info or not top_claims_info['dimensions']:
+        err += 'Missing value for dimensions'
+    else:
+        err = check_valid_dates(top_claims_info)
+    if len(err) > 0:
+        return False, err
+    return True, err
 
 
-def get_N_top_claims(n, start_date, end_date):
-    report = getReport_NMostViewdCalims(start_date =start_date, end_date=end_date)
-    results = []
-    i=0
-    for [claim_id, views] in report:
+def check_valid_dates(info):
+    err = ''
+    if 'start_date' not in info or not info['start_date']:
+        err += 'Missing value for starting date'
+    elif 'end_date' not in info or not info['end_date']:
+        err += 'Missing value for ending date'
+    elif not datetime.datetime.strptime(info['end_date'], "%Y-%m-%d") >= \
+            datetime.datetime.strptime(info['start_date'], "%Y-%m-%d"):
+        err += 'Ending date should be greater or equal to starting date'
+    return err
+
+
+def view_top_n_claims(request):
+    top_claims_info = request.POST.dict()
+    valid_top_claims_info, err_msg = check_if_top_claims_is_valid(top_claims_info)
+    if not valid_top_claims_info:
+        save_log_message(request.user.id, request.user.username,
+                         'Viewing top n claims. Error: ' + err_msg)
+        raise Exception(err_msg)
+    reports = get_report_top_n_claims(num_of_claims=int(top_claims_info['n']),
+                                      start_date=top_claims_info['start_date'],
+                                      end_date=top_claims_info['end_date'])
+    results, reports_json = ([] for i in range(2))
+    for [claim_id, views] in reports:
         claim = get_claim_by_id(claim_id)
         if claim is None:
             continue
-        results.append([claim_id, claim, views])
-        i+=1
-        if i == n:
-            break
-    return results
+        results.append([claim, views])
 
-
-def view_N_top_claims(request):
-    data = request.POST.dict()
-    reports = get_N_top_claims(n=int(data['n']), start_date=data['start_date'], end_date=data['end_date'])
-    reports_json = []
-    for report in reports:
+    for report in results:
         reports_json.append({
-            'claim_id': report[0],
-            'claim': get_claim_as_json(report[1]),
-            'views': report[2]
+            'claim': get_claim_as_json(report[0]),
+            'views': report[1]
         })
     return JsonResponse({
         'reports': reports_json
     })
+
+
+def check_if_top_claims_is_valid(top_claims_info):
+    err = ''
+    if 'n' not in top_claims_info or not top_claims_info['n']:
+        err += 'Missing value for num of claims'
+    elif not (1 <= int(top_claims_info['n']) <= 10):
+        err += 'Num of claims should be between 1 to 10'
+    else:
+        err = check_valid_dates(top_claims_info)
+    if len(err) > 0:
+        return False, err
+    return True, err
+
 
 def get_claim_as_json(claim):
     claim_json = {
@@ -85,11 +120,3 @@ def get_claim_as_json(claim):
         'tags': claim.tags
     }
     return claim_json
-
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
-# claim = models.CharField(max_length=150)
-# category = models.CharField(max_length=50)
-# tags = models.CharField(max_length=250)
-# authenticity_grade = models.IntegerField()
-# image_src = models.CharField(max_length=1000)
-# timestamp = models.DateTimeField(default=timezone.now)
