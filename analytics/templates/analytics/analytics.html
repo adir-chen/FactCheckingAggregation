@@ -36,7 +36,16 @@
                 <tr>
                     <td>
                         <div style="border: 2px solid lightblue; padding: 10px">
-                            <button id="topClaims" >click</button>
+                            <table id="Top Claims">
+                                <tr>
+                                    <td>
+                                        <div>
+
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+{#                            <button id="topClaims" >click</button>#}
                         </div>
                     </td>
                 </tr>
@@ -88,18 +97,6 @@
             return rows;
         }
 
-        function getViewsDaysOfWeek(reports){
-            {# reports is an array of type int(day), int(views)#}
-            rows = [['Day', 'Views']];
-
-            for(i=0; i<reports.length; i++){
-                row = reports[i];
-                newRow = [numberToDay[row[0]], row[1]];
-                rows.push(newRow);
-            }
-
-            return rows;
-        }
         function drawAll(loaded_reports1, loaded_reports2){
             drawChart1(loaded_reports1);
             drawChart2(loaded_reports2);
@@ -196,23 +193,34 @@
             drawChart2(loaded_reports2);
         });
 
-        $("#topClaims").click(function (e){
-            $.ajax({
-                type: 'POST',
-                url: "{% url 'analytics:view_N_top_claims' %}",
-                headers: { "X-CSRFToken": getCookie('csrftoken') },
-                data: {
-                    start_date: '01-01-2018',
-                    end_date: 'today',
-                    n: 5
-                },
-                success: function (response) {
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'analytics:view_N_top_claims' %}",
+            headers: { "X-CSRFToken": getCookie('csrftoken') },
+            data: {
+                start_date: '2018-01-01',
+                end_date: 'today',
+                n: 5
+            },
+            success: function (response) {
+                {#"Top Claims"#}
+                console.log("started entering response to table");
+                console.log(response);
 
-                },
-                error: function (error) {
+                for(i=0; i<response.length; i++) {
 
+                    console.log(i);
+                    var data = response[i];
+                    var table = document.getElementById("Top Claims");
+                    var row = table.insertRow();
+                    var cell = row.insertCell();
+                    cell.innerText = '['+i+'] S'+ data['claim']['claim'];
                 }
-            });
+
+            },
+            error: function (error) {
+
+            }
         });
 
         function getCookie(c_name) {
