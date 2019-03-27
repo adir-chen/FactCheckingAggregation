@@ -82,14 +82,14 @@ def get_report(start_date, end_date, metrics, dimensions, sort=None, filters=Non
 
 
 def get_report_countries(start_date, end_date):
-    metrics = 'ga:pageviews'
+    metrics = 'ga:pageViews'
     dimensions = 'ga:country'
     reports = get_report(start_date, end_date, metrics, dimensions)
     return reports.get('rows')
 
 
 def get_report_view_by_time(start_date, end_date, dimensions):
-    metrics = 'ga:pageviews'
+    metrics = 'ga:pageViews'
     reports = get_report(start_date, end_date, metrics, dimensions)
     table = []
     for row in reports.get('rows'):
@@ -101,7 +101,6 @@ def get_report_view_by_time(start_date, end_date, dimensions):
 
 
 def get_report_top_n_claims(num_of_claims, start_date, end_date):
-    from heapq import nlargest
     metrics = 'ga:pageViews'
     dimensions = 'ga:pagePath'
     sort = '-ga:pageViews'
