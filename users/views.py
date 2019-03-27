@@ -363,19 +363,19 @@ def user_page(request, username):
         'user_img': user_img,
         'user_rep': user_rep,
         'scrapers_ids': get_all_scrapers_ids_arr(),
+        'scraper_url': get_scraper_url(username),
         'true_labels': get_true_labels(username),
-        'false_labels': get_false_labels(username),
-        'scraper_url': get_scraper_url(username)
+        'false_labels': get_false_labels(username)
     })
 
 
 # This function returns all true labels of the given scraper
 def get_scraper_url(scraper_name):
     scraper = Scrapers.objects.filter(scraper_name=scraper_name)
-    url = ''
+    scraper_url = ''
     if len(scraper) > 0:
-        url = scraper.first().scraper_url
-    return url
+        scraper_url = scraper.first().scraper_url
+    return scraper_url
 
 
 # This function returns all true labels of the given scraper
