@@ -67,7 +67,10 @@ def get_results(service, profile_id, start_date, end_date, metrics, dimensions, 
 def get_report(start_date, end_date, metrics, dimensions, sort=None, filters=None):
     # Define the auth scopes to request.
     scope = 'https://www.googleapis.com/auth/analytics.readonly'
-    key_file_location = 'analytics\GoogleAPI\client_secrets.json'
+    # key_file_location = 'analytics\GoogleAPI\client_secrets.json'
+    import os
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    key_file_location = dir_path + '/client_secrets.json'
     # key_file_location = 'client_secrets.json'
 
     # Authenticate and construct service.

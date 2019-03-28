@@ -73,9 +73,11 @@ def check_if_comment_is_valid(comment_info):
     elif 'url' not in comment_info or not comment_info['url']:
         err += 'Missing value for url'
     elif 'verdict_date' not in comment_info or not comment_info['verdict_date']:
-        err += 'Missing value for verdict_date'
+        err += 'Missing value for verdict date'
     elif 'label' not in comment_info or not comment_info['label']:
         err += 'Missing value for label'
+    elif not (comment_info['url'].startswith('http://') or comment_info['url'].startswith('https://')):
+        err += 'Invalid value for url'
     elif len(Claim.objects.filter(id=comment_info['claim_id'])) == 0:
         err += 'Claim ' + str(comment_info['claim_id']) + 'does not exist'
     elif not check_if_user_exists_by_user_id(comment_info['user_id']):
@@ -195,6 +197,9 @@ def check_comment_new_fields(new_comment_fields):
         err += 'Missing value for comment reference'
     elif 'comment_label' not in new_comment_fields or not new_comment_fields['comment_label']:
         err += 'Missing value for comment label'
+    elif not (new_comment_fields['comment_reference'].startswith('http://')
+              or new_comment_fields['comment_reference'].startswith('https://')):
+        err += 'Invalid value for url'
     elif not check_if_user_exists_by_user_id(new_comment_fields['user_id']):
         err += 'User with id ' + str(new_comment_fields['user_id']) + ' does not exist'
     elif len(Comment.objects.filter(id=new_comment_fields['comment_id'])) == 0:
@@ -332,7 +337,7 @@ def check_if_vote_is_valid(vote_fields):
         err += 'Comment with id ' + str(vote_fields['comment_id']) + ' does not exist'
     elif (timezone.now() - Comment.objects.filter(id=vote_fields['comment_id']).first().timestamp).total_seconds() \
              / 60 <= max_minutes_to_vote_comment:
-        err += 'You can no vote this comment yet. This comment has just been added, ' \
+        err += 'You can not vote this comment yet. This comment has just been added, ' \
                'therefore you will be able to vote on it in a few minutes.'
     if len(err) > 0:
         return False, err
