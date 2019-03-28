@@ -71,7 +71,7 @@ def get_report(start_date, end_date, metrics, dimensions, sort=None, filters=Non
     dir_path = os.path.dirname(os.path.realpath(__file__))
     # print(dir_path)
     # key_file_location = 'analytics\GoogleAPI\client_secrets.json'
-    key_file_location = dir_path + '\client_secrets.json'
+    key_file_location = dir_path + '/client_secrets.json'
 
     # Authenticate and construct service.
     service = get_service(
