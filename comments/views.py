@@ -332,7 +332,7 @@ def check_if_vote_is_valid(vote_fields):
         err += 'Comment with id ' + str(vote_fields['comment_id']) + ' does not exist'
     elif (timezone.now() - Comment.objects.filter(id=vote_fields['comment_id']).first().timestamp).total_seconds() \
              / 60 <= max_minutes_to_vote_comment:
-        err += 'You can no vote this comment yet. This comment has just been added, ' \
+        err += 'You can not vote this comment yet. This comment has just been added, ' \
                'therefore you will be able to vote on it in a few minutes.'
     if len(err) > 0:
         return False, err

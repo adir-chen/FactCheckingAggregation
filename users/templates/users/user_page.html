@@ -24,7 +24,6 @@
                 {% if user.id in scrapers_ids %}
                     <br>Website: <a href="{{ scraper_url }}" target="_blank">{{ scraper_url }}</a>
                 {% else %}
-                    Email: {{ user.email }}<br>
                     Last Login: {{ user.last_login|date:"d/m/Y H:i" }}
                 {% endif %}
             </div>
@@ -90,9 +89,9 @@
             <h4>{{ user.username }}'s published Tweets:</h4>
             <div class="headlines">
                 <div id="tweets" style="width: 100%; padding: 20px; border-radius: 10px; background: #aabfd6; margin: 0 auto;">
-                    {% for tweet, user  in user_tweets.object_list|slice:"0:3" %}
+                    {% for tweet, user_details  in user_tweets.object_list|slice:"0:3" %}
                         Attached Tweet at {{ tweet.timestamp }} to claim: <a href="/claim/{{ tweet.claim_id }}">{{ tweet.claim.claim }}</a>
-                        {% include 'tweets/tweet.html' with tweet=tweet user_details=user request=request only %}
+                        {% include 'tweets/tweet.html' with tweet=tweet user_details=user_details request=request only %}
                     {% endfor %}
                 </div>
             </div>
@@ -164,7 +163,7 @@
             </div>
         {% endif %}
     </div>
-
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
     <script>
         if(localStorage.getItem("success_msg_delete_true_label")){
             $("#success_msg_delete_true_label").attr("hidden", false);
@@ -298,6 +297,11 @@
                 }
             });
         });
+
+        function search_on_twitter(tag){
+            window.open('https://twitter.com/search?q=' + tag, '_blank');
+            {# for google --> 'http://google.com/search?q='#}
+        }
 
         function getCookie(c_name) {
             if (document.cookie.length > 0) {
