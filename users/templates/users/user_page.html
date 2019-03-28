@@ -8,7 +8,9 @@
                 {% if logged_in %}
                     <span style="height: 20px; width: 20px; background-color: #00d700; border-radius: 50%; display: inline-block; position: absolute; bottom: 0; right: 0;"></span>
                 {% else %}
+                    {% if not user.id in scrapers_ids %}
                     <span style="height: 20px; width: 20px; background-color: #bbb; border-radius: 50%; display: inline-block; position: absolute; bottom: 0; right: 0;"></span>
+                    {% endif %}
                 {% endif %}
                 <img src="{{ user_img }}" style="max-width: 100%; padding: 5px;">
             </div>
