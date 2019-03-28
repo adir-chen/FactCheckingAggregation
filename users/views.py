@@ -329,9 +329,10 @@ def user_page(request, user_id):
     from django.contrib.sessions.models import Session
     if request.method != 'GET':
         raise Http404("Permission denied")
-    user = User.objects.filter(id=user_id).first()
-    if user is None:
-        raise Http404('User with id ' + user_id + ' does not exist')
+    user = User.objects.filter(id=user_id)
+    if len(user) == 0:
+        raise Http404('User with id ' + str(user_id) + ' does not exist')
+    user = user.first()
     decoded_sessions = [s.get_decoded() for s in Session.objects.all()]
     # logged_in_users = [int(s.get('_auth_user_id')) for s in decoded_sessions]
     # logged_in = user.id in logged_in_users
@@ -411,7 +412,7 @@ def add_true_label_to_scraper(request):
     scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
     Scrapers.objects.filter(id=scraper.id).update(true_labels=scraper.true_labels +
                                                   ',' + scraper_info['scraper_label'])
-    return user_page(return_get_request_to_user(request.user), scraper.scraper_name)
+    return user_page(return_get_request_to_user(request.user), scraper.scraper_id.id)
 
 
 # This function deletes the specified true label from the scraper
@@ -437,7 +438,7 @@ def delete_true_label_from_scraper(request):
         if true_label not in true_labels:
             new_scraper_true_labels.append(true_label)
     Scrapers.objects.filter(id=scraper.id).update(true_labels=','.join(new_scraper_true_labels))
-    return user_page(return_get_request_to_user(request.user), scraper.scraper_name)
+    return user_page(return_get_request_to_user(request.user), scraper.scraper_id.id)
 
 
 # This function adds a false label to the scraper
@@ -454,7 +455,7 @@ def add_false_label_to_scraper(request):
     scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
     Scrapers.objects.filter(id=scraper.id).update(false_labels=scraper.false_labels +
                                                                ',' + scraper_info['scraper_label'])
-    return user_page(return_get_request_to_user(request.user), scraper.scraper_name)
+    return user_page(return_get_request_to_user(request.user), scraper.scraper_id.id)
 
 
 # This function deletes the specified false label from the scraper
@@ -480,7 +481,7 @@ def delete_false_label_from_scraper(request):
         if false_label not in false_labels:
             new_scraper_false_labels.append(false_label)
     Scrapers.objects.filter(id=scraper.id).update(false_labels=','.join(new_scraper_false_labels))
-    return user_page(return_get_request_to_user(request.user), scraper.scraper_name)
+    return user_page(return_get_request_to_user(request.user), scraper.scraper_id.id)
 
 
 # This function checks if a given scraper's info (for adding a new label) is valid,

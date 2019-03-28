@@ -287,7 +287,7 @@ def download_claims(request):
     import csv
     if not request.user.is_superuser or request.method != "POST" or 'csv_file' not in request.FILES:
         raise Http404("Permission denied")
-    claims = request.FILES['csv_file'].read().decode('utf-8-sig')
+    claims = request.FILES['csv_file'].read().decode('utf-8', 'ignore')
     if [header.lower().strip() for header in claims.split('\n')[0].split(',')] != \
             ['claim', 'category', 'tags', 'image_src', 'add_comment',
              'title', 'description', 'url', 'verdict_date', 'label']:
