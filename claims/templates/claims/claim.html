@@ -143,8 +143,9 @@
                 <div class="comment_footer">
                     Reference:
                     <input id="{{ claim.id }}_new_comment_url" type="text"><br>
-                    Tags:
-                    <input id="{{ claim.id }}_new_comment_tags"  placeholder="Tags (separated by comma). Used for searching purpose." type="text"><br>
+                    Tags (separated by comma):
+                    <p class="action_msg note_msg">Used for searching purpose.</p>
+                    <input id="{{ claim.id }}_new_comment_tags" type="text"><br>
                     <p id="add_new_comment" class="action_msg note_msg" >If you want to edit your comment you will be able to do so during the next 5 minutes from the time you added it.</p>
                     <button type="submit" id="{{ claim.id }}_new_comment_save" class="btn btn-info" style="margin: 10px 0;">Add your comment</button>
                 </div>

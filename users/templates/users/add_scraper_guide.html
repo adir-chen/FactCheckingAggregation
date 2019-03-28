@@ -42,12 +42,20 @@
             <h5>Step 2 (here):</h5>
             <p id="success_msg" style="color: dodgerblue; font-size: 12px;" hidden>Your scraper has been added successfully</p>
             <p id="error_msg" style="color: red; font-size: 12px;" hidden> </p>
-            <input id="scraper_name" type="text" placeholder="Scraper's name" style="width: 50%; margin: 10px;"><br>
-            <input id="scraper_password" type="password" placeholder="Scraper's password" style="width: 50%; margin: 10px;"><br>
-            <input id="scraper_password_2" type="password" placeholder="Enter scraper's password again" style="width: 50%; margin: 10px;"><br>
-            <input id="scraper_icon" type="text" placeholder="Scraper's icon (link)" style="width: 50%; margin: 10px;"><br>
-            <input id="scraper_true_labels" type="text" placeholder="Scraper true labels (separated by comma). Used for labeling scraper's claims as True (default- true)." style="width: 85%; margin: 10px;"><br>
-            <input id="scraper_false_labels" type="text" placeholder="Scraper false labels (separated by comma). Used for labeling scraper's claims as False (default- false)." style="width: 85%; margin: 10px;"><br>
+            Scraper's name:<br>
+            <input id="scraper_name" type="text" style="max-width: 350px; width: 100%; margin: 10px;"><br>
+            Scraper's password:<br>
+            <input id="scraper_password" type="password" style="max-width: 350px; width: 100%; margin: 10px;"><br>
+            Enter scraper's password again:<br>
+            <input id="scraper_password_2" type="password" style="max-width: 350px; width: 100%; margin: 10px;"><br>
+            Scraper's icon (link):<br>
+            <input id="scraper_icon" type="text" style="width: 100%; margin: 10px;"><br>
+            Scraper true labels (separated by comma):<br>
+            <p class="action_msg note_msg">Used for labeling scraper's claims as True (default- true).</p>
+            <input id="scraper_true_labels" type="text" style="width: 100%; margin: 10px;"><br>
+            Scraper false labels (separated by comma):<br>
+            <p class="action_msg note_msg">Used for labeling scraper's claims as False (default- false).</p>
+            <input id="scraper_false_labels" type="text" style="width: 100%; margin: 10px;"><br>
             <br>
             <button id="add_scraper_submit" type="submit" class="btn btn-info" style="margin: 10px 0;">Add</button>
         </div>

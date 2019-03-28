@@ -9,20 +9,28 @@
                 If you want to edit your claim/comment you will be able to do so during the next 5 minutes.</p>
             <p id="error_msg_add_new_claim" class="action_msg error_msg" hidden> </p>
             <h5>Claim Details:</h5>
-            <input id="claim" type="text" placeholder="Claim" style="width: 100%; margin: 10px;"><br>
-            <input id="category" type="text" placeholder="Category" style="width: 100%; margin: 10px;"><br>
-            <input id="tags" type="text" placeholder="Tags (separated by comma). Used for searching purpose." style="width: 100%; margin: 10px;"><br>
-            <input id="image_src" type="text" placeholder="Image Url" style="width: 100%; margin: 10px;"><br>
+            <p style="width: 100%; margin: 10px;">Claim:</p>
+            <input id="claim" type="text" style="width: 100%; margin: 10px;"><br>
+            <p style="width: 100%; margin: 10px;">Category:</p>
+            <input id="category" type="text" style="width: 100%; margin: 10px;"><br>
+            <p style="width: 100%; margin: 10px;">Tags (separated by comma):</p>
+            <p class="action_msg note_msg" style="margin-left: 10px;">Used for searching purpose.</p>
+            <input id="tags" type="text" style="width: 100%; margin: 10px;"><br>
+            <p style="width: 100%; margin: 10px;">Image Url:</p>
+            <input id="image_src" type="text" style="width: 100%; margin: 10px;"><br>
             <br>
-            <input id='add_comment' type="checkbox" onclick='enable_comment()'>Add your comment on this claim<br><br>
+            <input id='add_comment' type="checkbox" onclick='enable_comment()'> Add your comment on this claim<br><br>
             <h5>Comment Details (Source Information):</h5>
-            <p>
+            <p class="action_msg note_msg">
                 The claim will be submitted along with your comment containing your verdict on it (True/False/Unknown).<br>
                 Other Users will be able to comment their on verdicts.
             </p>
-            <input id="title" type="text" placeholder="Title" readonly style="width: 100%; margin: 10px;"><br>
-            <textarea id="description" placeholder="Description" readonly style="width: 100%; margin: 10px;"></textarea><br>
-            <input id="url" type="text" placeholder="Website url" readonly style="width: 100%; margin: 10px;"><br>
+            <p style="width: 100%; margin: 10px;">Title:</p>
+            <input id="title" type="text" readonly style="width: 100%; margin: 10px;"><br>
+            <p style="width: 100%; margin: 10px;">Description:</p>
+            <textarea id="description" readonly style="width: 100%; margin: 10px;"></textarea><br>
+            <p style="width: 100%; margin: 10px;">Website Url:</p>
+            <input id="url" type="text" readonly style="width: 100%; margin: 10px;"><br>
             <p style="width: 100%; margin: 10px;">Verdict Date (according to source website):</p>
             <input type="date" id="verdict_date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}" readonly style="width: 100%; margin: 10px;">
             <p style="width: 100%; margin: 10px;">Label:</p>
