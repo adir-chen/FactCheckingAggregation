@@ -62,7 +62,7 @@ class CommentTests(TestCase):
                                  user_id=self.user_1.id,
                                  title=self.claim_1.claim,
                                  description='description1',
-                                 url='url1',
+                                 url='http://url1/',
                                  tags='tag1',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label1')
@@ -70,7 +70,7 @@ class CommentTests(TestCase):
                                  user_id=self.user_2.id,
                                  title=self.claim_2.claim,
                                  description='description2',
-                                 url='url2',
+                                 url='http://url2/',
                                  tags='tag2,tag3',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label2')
@@ -78,7 +78,7 @@ class CommentTests(TestCase):
                                  user_id=self.user_2.id,
                                  title=self.claim_1.claim,
                                  description='description3',
-                                 url='url3',
+                                 url='http://url3/',
                                  tags='',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label3')
@@ -86,7 +86,7 @@ class CommentTests(TestCase):
                                  user_id=self.user_1.id,
                                  title=self.claim_2.claim,
                                  description='description4',
-                                 url='url4',
+                                 url='http://url4/',
                                  tags='',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label4')
@@ -94,7 +94,7 @@ class CommentTests(TestCase):
                                  user_id=self.claim_3.user_id,
                                  title=self.claim_3.claim,
                                  description='description5',
-                                 url='url5',
+                                 url='http://url5/',
                                  tags='',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label5')
@@ -102,7 +102,7 @@ class CommentTests(TestCase):
                                  user_id=self.claim_4.user_id,
                                  title=self.claim_4.claim,
                                  description='description6',
-                                 url='url6',
+                                 url='http://url6/',
                                  tags='',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label6')
@@ -989,16 +989,16 @@ class CommentTests(TestCase):
         res = export_to_csv(self.post_request)
         self.assertTrue(res.status_code == 200)
         expected_info = 'Claim Id,Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n' +\
-                        str(self.comment_5.claim.id) + ',claim3,description5,url5,category3,' + str(self.comment_5.verdict_date) + ',,label5,,0\r\n' +\
-                        str(self.comment_6.claim.id) + ',claim4,description6,url6,category4,' + str(self.comment_6.verdict_date) + ',,label6,,0\r\n'
+                        str(self.comment_5.claim.id) + ',claim3,description5,http://url5/,category3,' + str(self.comment_5.verdict_date) + ',,label5,,0\r\n' +\
+                        str(self.comment_6.claim.id) + ',claim4,description6,http://url6/,category4,' + str(self.comment_6.verdict_date) + ',,label6,,0\r\n'
         self.assertEqual(res.content.decode('utf-8'), expected_info)
         Comment.objects.filter(id=self.comment_5.id).update(tags='tag1', system_label='True')
         Comment.objects.filter(id=self.comment_6.id).update(tags='tag6, tag7', system_label='False')
         res = export_to_csv(self.post_request)
         self.assertTrue(res.status_code == 200)
         expected_info = 'Claim Id,Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n'  + \
-                        str(self.comment_5.claim.id) + ',claim3,description5,url5,category3,' + str(self.comment_5.verdict_date) + ',tag1,label5,True,0\r\n' + \
-                        str(self.comment_6.claim.id) + ',claim4,description6,url6,category4,' + str(self.comment_6.verdict_date) + ',"tag6, tag7",label6,False,0\r\n'
+                        str(self.comment_5.claim.id) + ',claim3,description5,http://url5/,category3,' + str(self.comment_5.verdict_date) + ',tag1,label5,True,0\r\n' + \
+                        str(self.comment_6.claim.id) + ',claim4,description6,http://url6/,category4,' + str(self.comment_6.verdict_date) + ',"tag6, tag7",label6,False,0\r\n'
         self.assertEqual(res.content.decode('utf-8'), expected_info)
 
     def test_export_to_csv_invalid_arg_for_scraper(self):

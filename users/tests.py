@@ -167,7 +167,7 @@ class UsersTest(TestCase):
                               user_id=Scrapers.objects.filter(scraper_name=scrapers_names[i])[0].scraper_id.id,
                               title='title_' + str(i + 1),
                               description='description_' + str(i + 1),
-                              url='url_' + str(i + 1),
+                              url='http://url_' + str(i + 1) +'/',
                               verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
                               label='label' + str(i + 1))
             comment.save()
@@ -189,7 +189,7 @@ class UsersTest(TestCase):
         self.get_request.user = self.admin
         self.assertTrue(add_all_scrapers(self.get_request).status_code == 200)
         scrapers_names = ['Snopes', 'Polygraph', 'TruthOrFiction', 'Politifact', 'GossipCop',
-                          'ClimateFeedback', 'FactScan', 'AfricaCheck']
+                          'ClimateFeedback', 'FactScan', 'AfricaCheck', 'CNN']
         for i in range(len(scrapers_names)):
             claim_1 = Claim(user_id=Scrapers.objects.filter(scraper_name=scrapers_names[i])[0].scraper_id.id,
                             claim='Sniffing rosemary increases human memory by up to 75 percent' + str(i),
@@ -207,14 +207,14 @@ class UsersTest(TestCase):
                                 user_id=Scrapers.objects.filter(scraper_name=scrapers_names[i])[0].scraper_id.id,
                                 title='title_' + str(i + 1),
                                 description='description_' + str(i + 1),
-                                url='url_' + str(i + 1),
+                                url='http://url_' + str(i + 1) + '/',
                                 verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
                                 label='label' + str(i + 1))
             comment_2 = Comment(claim_id=claim_2.id,
                                 user_id=Scrapers.objects.filter(scraper_name=scrapers_names[i])[0].scraper_id.id,
                                 title='title_' + str(i + 2),
                                 description='description_' + str(i + 2),
-                                url='url_' + str(i + 2),
+                                url='http://url_' + str(i + 2) + '/',
                                 verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
                                 label='label' + str(i + 2))
             comment_2.save()
@@ -223,13 +223,14 @@ class UsersTest(TestCase):
         self.get_request.user = self.admin
         scrapers_comments_val = json.loads(get_random_claims_from_scrapers(self.get_request).content.decode('utf-8'))
         for scraper_name, scraper_comment in scrapers_comments_val.items():
-            self.assertTrue(scraper_comment == {'title': scrapers_comments[scraper_name][1].title,
+            scraper_dict = {'title': scrapers_comments[scraper_name][1].title,
                                                 'claim': scrapers_comments[scraper_name][0].claim,
                                                 'description': scrapers_comments[scraper_name][1].description,
                                                 'url': scrapers_comments[scraper_name][1].url,
                                                 'verdict_date': str(scrapers_comments[scraper_name][1].verdict_date),
                                                 'category': scrapers_comments[scraper_name][0].category,
-                                                'label':  scrapers_comments[scraper_name][1].label})
+                                                'label':  scrapers_comments[scraper_name][1].label}
+            self.assertTrue(scraper_comment == scraper_dict)
 
     def test_get_random_claims_from_scrapers_not_admin_user(self):
         self.get_request.user = self.admin
@@ -418,13 +419,13 @@ class UsersTest(TestCase):
                           user_id=self.user_1.id,
                           title='title1',
                           description='description1',
-                          url='url1',
+                          url='http://url1/',
                           tags='tag1',
                           verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                           label='label1')
         comment.save()
         self.get_request.user = self.user_1
-        self.assertTrue(user_page(self.get_request, self.user_1.username).status_code == 200)
+        self.assertTrue(user_page(self.get_request, self.user_1.id).status_code == 200)
 
     def test_user_page_with_claim_only(self):
         claim = Claim(user_id=self.user_1.id,
@@ -434,7 +435,7 @@ class UsersTest(TestCase):
                       authenticity_grade=0)
         claim.save()
         self.get_request.user = self.user_1
-        self.assertTrue(user_page(self.get_request, self.user_1.username).status_code == 200)
+        self.assertTrue(user_page(self.get_request, self.user_1.id).status_code == 200)
 
     def test_user_page_with_comment_only(self):
         claim = Claim(user_id=self.user_2.id,
@@ -447,23 +448,22 @@ class UsersTest(TestCase):
                           user_id=self.user_1.id,
                           title='title1',
                           description='description1',
-                          url='url1',
+                          url='http://url1/',
                           tags='tag1',
                           verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                           label='label1')
         comment.save()
         self.get_request.user = self.user_1
-        self.assertTrue(user_page(self.get_request, self.user_1.username).status_code == 200)
+        self.assertTrue(user_page(self.get_request, self.user_1.id).status_code == 200)
 
     def test_user_page_invalid_user(self):
-        invalid_username = ''.join(random.choices(string.ascii_letters, k=random.randint(1, 10)))
+        invalid_user_id = random.randint(self.num_of_saved_users + 1, self.num_of_saved_users + 20)
         self.get_request.user = self.user_1
-        self.assertRaises(Http404, user_page, self.get_request, invalid_username)
+        self.assertRaises(Http404, user_page, self.get_request, invalid_user_id)
 
     def test_user_page_invalid_request(self):
-        invalid_username = ''.join(random.choices(string.ascii_letters, k=random.randint(1, 10)))
         self.post_request.user = self.user_1
-        self.assertRaises(Http404, user_page, self.post_request, invalid_username)
+        self.assertRaises(Http404, user_page, self.post_request, self.user_1.id)
 
     def test_test_get_scraper_url_for_user(self):
         self.assertTrue((get_scraper_url(self.user_1.username)) == '')
@@ -621,7 +621,7 @@ class UsersTest(TestCase):
         query_dict.update(self.delete_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Http404, add_true_label_to_scraper, self.post_request)
+        self.assertRaises(Http404, delete_true_label_from_scraper, self.post_request)
 
     def test_delete_true_label_from_scraper_invalid_request(self):
         scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
