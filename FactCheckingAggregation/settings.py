@@ -159,6 +159,7 @@ USE_TZ = False
 
 STATIC_URL = '/static/'
 
+STATIC_ROOT = '/claims/static/claims/assets/images/'
 # Use nose to run all tests
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
