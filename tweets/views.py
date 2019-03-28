@@ -421,7 +421,7 @@ def download_tweets_for_claims(request):
         request.user = authenticate(request, username=request.POST.get('username'), password=request.POST.get('password'))
     if not request.user.is_superuser or request.method != "POST" or 'csv_file' not in request.FILES:
         raise Http404("Permission denied")
-    tweets = request.FILES['csv_file'].read().decode('utf-8')
+    tweets = request.FILES['csv_file'].read().decode('utf-8-sig')
     if [header.lower().strip() for header in tweets.split('\n')[0].split(',')] != \
             ['claim id', 'tweet link', 'author', 'author rank']:
         raise Http404("Permission denied")
