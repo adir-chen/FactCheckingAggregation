@@ -295,26 +295,28 @@
         });
 
         $("#{{ claim.id }}_claim_delete").click(function(e){
-            e.preventDefault();
-            $.ajax({
-                type: 'POST',
-                url: "{% url 'claims:delete_claim' %}",
-                headers: { "X-CSRFToken": '{{ csrf_token }}' },
-                data: {
-                    claim_id: '{{ claim.id }}',
-                },
-                success: function () {
-                    location.href = 'http://{{ request.META.HTTP_HOST }}';
-                },
-                error: function (error) {
-                    hide_all_msgs();
-                    window.location.reload();
-                    let err = error.responseText.split('\n')[1];
-                    document.getElementById("error_msg_{{ claim.id }}_claim_edit").innerHTML =
-                    'Error: <br>' + err;
-                    $("#error_msg_{{ claim.id }}_claim_edit").attr("hidden", false);
-                }
-            });
+            if (confirm('Are you sure you want to delete this claim?')){
+                e.preventDefault();
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'claims:delete_claim' %}",
+                    headers: { "X-CSRFToken": '{{ csrf_token }}' },
+                    data: {
+                        claim_id: '{{ claim.id }}',
+                    },
+                    success: function () {
+                        location.href = 'http://{{ request.META.HTTP_HOST }}';
+                    },
+                    error: function (error) {
+                        hide_all_msgs();
+                        window.location.reload();
+                        let err = error.responseText.split('\n')[1];
+                        document.getElementById("error_msg_{{ claim.id }}_claim_edit").innerHTML =
+                        'Error: <br>' + err;
+                        $("#error_msg_{{ claim.id }}_claim_edit").attr("hidden", false);
+                    }
+                });
+            }
         });
 
         $("#{{ claim.id }}_claim_report_spam").click(function(e){
