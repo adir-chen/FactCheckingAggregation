@@ -292,7 +292,9 @@ def download_claims(request):
             ['claim', 'category', 'tags', 'image_src', 'add_comment',
              'title', 'description', 'url', 'verdict_date', 'label']:
         raise Http404(', '.join([header.lower().strip() for header in claims.split('\n')[0].split(',')]))
-    for claim in csv.DictReader(claims.splitlines()):
+    reader = csv.DictReader(claims.splitlines())
+    reader.fieldnames = [name.lower() for name in reader.fieldnames]
+    for claim in reader:
         claim_info = {'claim': claim['claim'],
                       'category': claim['category'],
                       'tags': claim['tags'],
