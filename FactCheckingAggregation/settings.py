@@ -179,3 +179,5 @@ NOSE_ARGS = [
     # '--cover-html'
 ]
 
+SITE_KEY = '6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz'
+SECRET_KEY = '6LdG7JoUAAAAAKQaAFo67f-5fzV6LiXZ-zJomV9V'

@@ -1,6 +1,9 @@
 {% extends 'claims/layout.html' %}
 {% load social_widgets %}
 {% block page_content %}
+    <head>
+	    <script src='https://www.google.com/recaptcha/api.js'></script>
+    </head>
     <div class="page_wrapper">
         <h1 id="claim_page_title" style="margin-bottom: 30px;">{{ claim.claim }}</h1>
         <div id="claim_page_title_wrapper" class="claim_page_title_wrapper">
@@ -147,6 +150,7 @@
                     <p class="action_msg note_msg">Used for searching purpose.</p>
                     <input id="{{ claim.id }}_new_comment_tags" type="text"><br>
                     <p id="add_new_comment" class="action_msg note_msg" >If you want to edit your comment you will be able to do so during the next 5 minutes from the time you added it.</p>
+                    <div class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
                     <button type="submit" id="{{ claim.id }}_new_comment_save" class="btn btn-info" style="margin: 10px 0;">Add your comment</button>
                 </div>
             </div>
@@ -215,31 +219,33 @@
         }
 
         $("#{{ claim.id }}_new_comment_save").click(function(){
-            $.ajax({
-                type: 'POST',
-                url: "{% url 'comments:add_comment' %}",
-                headers: { "X-CSRFToken": getCookie('csrftoken') },
-                data: {
-                    claim_id: '{{ claim.id }}',
-                    title: $("#{{ claim.id }}_new_comment_title").val(),
-                    description: $("#{{ claim.id }}_new_comment_description").val(),
-                    url: $("#{{ claim.id }}_new_comment_url").val(),
-                    tags: $("#{{ claim.id }}_new_comment_tags").val(),
-                    verdict_date: $("#{{ claim.id }}_new_comment_date").val(),
-                    label: document.querySelector('input[name="{{ claim.id }}_new_comment_label"]:checked').value,
-                },
-                success: function () {
-                    localStorage.setItem("success_msg_{{ claim.id }}_new_comment", true);
-                    window.location.reload();
-                },
-                error: function (error) {
-                    hide_all_msgs();
-                    let err = error.responseText.split('\n')[1];
-                    document.getElementById("error_msg_{{ claim.id }}_new_comment").innerHTML =
-                    'Error: <br>' + err;
-                    $("#error_msg_{{ claim.id }}_new_comment").attr("hidden", false);
-                }
-            });
+            if (check_recaptcha()){
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'comments:add_comment' %}",
+                    headers: { "X-CSRFToken": getCookie('csrftoken') },
+                    data: {
+                        claim_id: '{{ claim.id }}',
+                        title: $("#{{ claim.id }}_new_comment_title").val(),
+                        description: $("#{{ claim.id }}_new_comment_description").val(),
+                        url: $("#{{ claim.id }}_new_comment_url").val(),
+                        tags: $("#{{ claim.id }}_new_comment_tags").val(),
+                        verdict_date: $("#{{ claim.id }}_new_comment_date").val(),
+                        label: document.querySelector('input[name="{{ claim.id }}_new_comment_label"]:checked').value,
+                    },
+                    success: function () {
+                        localStorage.setItem("success_msg_{{ claim.id }}_new_comment", true);
+                        window.location.reload();
+                    },
+                    error: function (error) {
+                        hide_all_msgs();
+                        let err = error.responseText.split('\n')[1];
+                        document.getElementById("error_msg_{{ claim.id }}_new_comment").innerHTML =
+                        'Error: <br>' + err;
+                        $("#error_msg_{{ claim.id }}_new_comment").attr("hidden", false);
+                    }
+                });
+            }
         });
 
         $("#{{ claim.id }}_new_tweet_save").click(function(){
@@ -345,6 +351,31 @@
         function search_on_twitter(tag){
             window.open('https://twitter.com/search?q=' + tag, '_blank');
             {# for google --> 'http://google.com/search?q='#}
+        }
+
+        function check_recaptcha() {
+            if (grecaptcha === undefined) {
+                alert('Recaptcha not defined');
+                return false;
+            }
+            let response = grecaptcha.getResponse();
+            if (!response) {
+                alert('Could not get recaptcha response');
+                return false;
+            }
+
+            let ajax = new XMLHttpRequest();
+            ajax.onreadystatechange = function() {
+                if (this.readyState === 4) {
+                    if (this.status === 200) {
+                        alert('Recaptcha got unexpected error');
+                        return false;
+                    }
+                }
+            };
+            ajax.open('POST', 'validate-recaptcha.php', true);
+            ajax.send('recaptcha=' + response);
+            return true;
         }
 
         function getCookie(c_name) {

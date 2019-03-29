@@ -1,6 +1,9 @@
 {% extends 'claims/layout.html' %}
 
 {% block page_content %}
+    <head>
+	    <script src='https://www.google.com/recaptcha/api.js'></script>
+    </head>
     <div class="page_wrapper">
         <h3>Add new claim:</h3>
         <br>
@@ -39,6 +42,7 @@
                 <input type="radio" name="label" class="label" value="False" disabled>False<br>
                 <input type="radio" name="label" class="label" value="Unknown" disabled>Unknown<br>
             </div>
+            <div class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
             <button id="submit_claim" type="submit" class="btn btn-info" style="margin: 10px 0;">Add Claim</button>
         </div>
     </div>
@@ -54,37 +58,39 @@
         }
 
         $("#submit_claim").click(function(e){
-            e.preventDefault();
-            $.ajax({
-                type: 'POST',
-                url: "{% url 'claims:add_claim' %}",
-                headers: { "X-CSRFToken": getCookie('csrftoken') },
-                data: {
-                    claim: $("#claim").val(),
-                    category: $("#category").val(),
-                    tags: $("#tags").val(),
-                    image_src: $("#image_src").val(),
-                    add_comment: document.getElementById('add_comment').checked,
-                    title: $("#title").val(),
-                    description: $("#description").val(),
-                    url: $("#url").val(),
-                    verdict_date: $("#verdict_date").val(),
-                    label: $(".label:checked").val()
-                },
-                success: function (request) {
-                    localStorage.setItem("success_msg_add_new_claim", true);
-                    $("html, body").animate({ scrollTop: 200 }, 0);
-                    window.location.reload();
-                },
-                error: function (error) {
-                    hide_all_msgs();
-                    let err = error.responseText.split('\n')[1];
-                    document.getElementById("error_msg_add_new_claim").innerHTML =
-                    'Error: <br>' + err;
-                    $("#error_msg_add_new_claim").attr("hidden", false);
-                    $("html, body").animate({ scrollTop: 200 }, 0);
-                }
-            });
+            if (check_recaptcha()){
+                e.preventDefault();
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'claims:add_claim' %}",
+                    headers: { "X-CSRFToken": getCookie('csrftoken') },
+                    data: {
+                        claim: $("#claim").val(),
+                        category: $("#category").val(),
+                        tags: $("#tags").val(),
+                        image_src: $("#image_src").val(),
+                        add_comment: document.getElementById('add_comment').checked,
+                        title: $("#title").val(),
+                        description: $("#description").val(),
+                        url: $("#url").val(),
+                        verdict_date: $("#verdict_date").val(),
+                        label: $(".label:checked").val()
+                    },
+                    success: function (request) {
+                        localStorage.setItem("success_msg_add_new_claim", true);
+                        $("html, body").animate({ scrollTop: 200 }, 0);
+                        window.location.reload();
+                    },
+                    error: function (error) {
+                        hide_all_msgs();
+                        let err = error.responseText.split('\n')[1];
+                        document.getElementById("error_msg_add_new_claim").innerHTML =
+                        'Error: <br>' + err;
+                        $("#error_msg_add_new_claim").attr("hidden", false);
+                        $("html, body").animate({ scrollTop: 200 }, 0);
+                    }
+                });
+            }
         });
 
         function enable_comment(){
@@ -115,6 +121,31 @@
                 }
             }
             return "";
+        }
+
+        function check_recaptcha() {
+            if (grecaptcha === undefined) {
+                alert('Recaptcha not defined');
+                return false;
+            }
+            let response = grecaptcha.getResponse();
+            if (!response) {
+                alert('Could not get recaptcha response');
+                return false;
+            }
+
+            let ajax = new XMLHttpRequest();
+            ajax.onreadystatechange = function() {
+                if (this.readyState === 4) {
+                    if (this.status === 200) {
+                        alert('Recaptcha got unexpected error');
+                        return false;
+                    }
+                }
+            };
+            ajax.open('POST', 'validate-recaptcha.php', true);
+            ajax.send('recaptcha=' + response);
+            return true;
         }
     </script>
 {% endblock %}
