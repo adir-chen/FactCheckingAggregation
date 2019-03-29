@@ -1,4 +1,3 @@
-import smtplib
 from datetime import datetime
 from django.http import Http404
 from django.shortcuts import render
@@ -9,6 +8,7 @@ from logger.views import save_log_message
 from ipware import get_client_ip
 from claims.views import return_get_request_to_user
 from django.conf import settings
+import smtplib
 
 
 # This function return an HTML page for contact us
