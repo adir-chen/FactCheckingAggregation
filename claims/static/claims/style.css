@@ -339,7 +339,7 @@ div.page_box{
     }
 }
 
-.claim_box img{
+img.claim_image{
     width: 100%;
     margin: 0;
     border-radius: 7px 7px 0 0;
