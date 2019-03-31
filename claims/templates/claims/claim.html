@@ -1,8 +1,12 @@
 {% extends 'claims/layout.html' %}
 {% load social_widgets %}
 {% block page_content %}
+    {% load is_debug_mode %}
+    {% is_debug_mode as is_debug_mode %}
     <head>
-	    <script src='https://www.google.com/recaptcha/api.js'></script>
+        {% if not is_debug_mode %}
+	        <script src='https://www.google.com/recaptcha/api.js' async defer></script>
+        {% endif %}
     </head>
     <div class="page_wrapper">
         <h1 id="claim_page_title" style="margin-bottom: 30px;">{{ claim.claim }}</h1>
@@ -150,7 +154,9 @@
                     <p class="action_msg note_msg">Used for searching purpose.</p>
                     <input id="{{ claim.id }}_new_comment_tags" type="text"><br>
                     <p id="add_new_comment" class="action_msg note_msg" >If you want to edit your comment you will be able to do so during the next 5 minutes from the time you added it.</p>
-                    <div class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
+                    {% if not is_debug_mode %}
+                        <div class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
+                    {% endif %}
                     <button type="submit" id="{{ claim.id }}_new_comment_save" class="btn btn-info" style="margin: 10px 0;">Add your comment</button>
                 </div>
             </div>
@@ -219,7 +225,8 @@
         }
 
         $("#{{ claim.id }}_new_comment_save").click(function(){
-            if (check_recaptcha()){
+            let debug_mode = '{% is_debug_mode %}' == 'True';
+            if (debug_mode || (!debug_mode && check_recaptcha())){
                 $.ajax({
                     type: 'POST',
                     url: "{% url 'comments:add_comment' %}",

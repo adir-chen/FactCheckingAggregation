@@ -509,4 +509,3 @@ def return_get_request_to_user(user):
     request.stats_code = 200
     request.method = 'GET'
     return request
-

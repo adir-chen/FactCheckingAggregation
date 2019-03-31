@@ -10,6 +10,7 @@ from selenium.webdriver.common.keys import Keys
 from claims.models import Claim
 from comments.models import Comment
 from tweets.models import Tweet
+from django.test.utils import override_settings
 
 
 def authenticated_browser(browser, client, live_server_url, user):
@@ -21,6 +22,7 @@ def authenticated_browser(browser, client, live_server_url, user):
     return browser
 
 
+@override_settings(DEBUG=True)
 class UITests(StaticLiveServerTestCase):
 
     def setUp(self):
@@ -117,11 +119,11 @@ class UITests(StaticLiveServerTestCase):
 
     def test_click_my_profile(self):
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
-        about = browser.find_element_by_link_text('My profile')
-        about.click()
+        profile = browser.find_element_by_link_text('My profile')
+        profile.click()
         self.assertEqual(
             browser.current_url,
-            self.live_server_url + '/users/'+self.user1.username
+            self.live_server_url + '/users/' + str(self.user1.id)
         )
 
     def test_user_see_claim_on_home_page(self):
@@ -382,6 +384,7 @@ class UITests(StaticLiveServerTestCase):
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
         browser.find_element_by_id('comment_' + str(self.comment_1.id) + '_delete').click()
+        browser.switch_to_alert().accept()
         time.sleep(2)  # wait for comment to be deleted
         browser.get(self.browser.current_url)
         self.assertEqual(
@@ -394,6 +397,7 @@ class UITests(StaticLiveServerTestCase):
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user2)
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
         browser.find_element_by_id('tweet_' + str(tweet_1.id) + '_delete').click()
+        browser.switch_to_alert().accept()
         time.sleep(2)  # wait for tweet to be deleted
         browser.get(self.browser.current_url)
         self.assertEqual(
@@ -405,6 +409,7 @@ class UITests(StaticLiveServerTestCase):
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
         browser.find_element_by_id(str(self.claim_1.id) + '_claim_delete').click()
+        browser.switch_to_alert().accept()
         time.sleep(2)   # wait for claim to be deleted
         browser.get(self.live_server_url)
         self.assertEqual(
@@ -516,12 +521,7 @@ class UITests(StaticLiveServerTestCase):
         )
 
     def test_guest_cannot_view_add_new_claim(self):
-        self.browser.get(self.live_server_url + '/add_claim_page')
-        self.assertEqual(
-            self.browser.find_element_by_tag_name('h1').text,
-            # 'Page Not Found | 404' - if Debug=False
-            'Not Found'
-        )
+        self.assertRaises(Exception, self.browser.get(self.live_server_url + '/add_claim_page'))
 
     def test_add_new_claim_with_comment(self):
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
