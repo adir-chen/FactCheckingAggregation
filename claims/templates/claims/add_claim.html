@@ -2,7 +2,7 @@
 
 {% block page_content %}
     <head>
-	    <script src='https://www.google.com/recaptcha/api.js'></script>
+	    <script src='https://www.google.com/recaptcha/api.js' async defer></script>
     </head>
     <div class="page_wrapper">
         <h3>Add new claim:</h3>
@@ -42,7 +42,7 @@
                 <input type="radio" name="label" class="label" value="False" disabled>False<br>
                 <input type="radio" name="label" class="label" value="Unknown" disabled>Unknown<br>
             </div>
-            <div class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
+            <div id="g-recaptcha" class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
             <button id="submit_claim" type="submit" class="btn btn-info" style="margin: 10px 0;">Add Claim</button>
         </div>
     </div>
@@ -65,6 +65,7 @@
                     url: "{% url 'claims:add_claim' %}",
                     headers: { "X-CSRFToken": getCookie('csrftoken') },
                     data: {
+                        {#g_recaptcha_response: $("#g-recaptcha-response").val(),#}
                         claim: $("#claim").val(),
                         category: $("#category").val(),
                         tags: $("#tags").val(),
@@ -143,8 +144,6 @@
                     }
                 }
             };
-            ajax.open('POST', 'validate-recaptcha.php', true);
-            ajax.send('recaptcha=' + response);
             return true;
         }
     </script>
