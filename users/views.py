@@ -370,7 +370,7 @@ def user_page(request, user_id):
     })
 
 
-# This function returns all true labels of the given scraper
+# This function returns the url of the given scraper
 def get_scraper_url(scraper_name):
     scraper = Scrapers.objects.filter(scraper_name=scraper_name)
     scraper_url = ''

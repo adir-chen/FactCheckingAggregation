@@ -3,15 +3,15 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils.datastructures import MultiValueDict
 from claims.models import Claim
-from tweets.views import add_tweet, build_tweet, check_if_tweet_is_valid, edit_tweet, \
-    check_tweet_new_fields, delete_tweet, check_if_delete_tweet_is_valid, up_vote, down_vote, \
+from tweets.views import add_tweet, build_tweet, build_author, check_if_tweet_is_valid, is_valid_author, \
+    edit_tweet, check_tweet_new_fields, delete_tweet, check_if_delete_tweet_is_valid, up_vote, down_vote, \
     check_if_vote_is_valid, set_user_label_to_tweet, check_if_tweet_label_is_valid, \
     export_to_csv, check_if_csv_fields_are_valid, check_if_fields_list_valid, create_df_for_tweets, \
     export_tweets_page, download_tweets_for_claims
-
-from tweets.models import Tweet
+from tweets.models import Tweet, Author
 from users.models import User
 import datetime
+import string
 import random
 
 
@@ -37,43 +37,49 @@ class CommentTests(TestCase):
         self.claim_2.save()
         self.num_of_saved_claims = 2
 
+        self.author_1 = Author(author_name='author1',
+                               author_rank=20)
+        self.author_1.save()
         self.tweet_1 = Tweet(claim_id=self.claim_1.id,
                              user_id=self.admin.id,
+                             author=self.author_1,
                              tweet_link='tweet_link1',
-                             author='author1',
-                             author_rank=20,
                              )
 
+        self.author_2 = Author(author_name='author2',
+                               author_rank=80)
+        self.author_2.save()
         self.tweet_2 = Tweet(claim_id=self.claim_2.id,
                              user_id=self.user.id,
+                             author=self.author_2,
                              tweet_link='tweet_link2',
-                             author='author2',
-                             author_rank=80,
                              )
 
+        self.author_3 = Author(author_name='author3',
+                               author_rank=60)
+        self.author_3.save()
         self.tweet_3 = Tweet(claim_id=self.claim_2.id,
                              user_id=self.user.id,
+                             author=self.author_3,
                              tweet_link='tweet_link3',
-                             author='author3',
-                             author_rank=60,
                              )
 
         self.tweet_1.save()
         self.tweet_2.save()
         self.num_of_saved_tweets = 2
-
+        self.num_of_saved_authors = 3
+        self.tweet_link = 'https://twitter.com/Israel/status/1112580470003458054'
+        self.author_name = 'Israel'
         self.new_tweet_details = {'user_id': self.user.id,
                                   'is_superuser': False,
                                   'claim_id': self.claim_1.id,
-                                  'tweet_link': 'tweet_link1',
-                                  'author': 'author1',
+                                  'tweet_link': self.tweet_link,
                                   'author_rank': '50'}
 
         self.update_tweet_details = {'tweet_id': self.tweet_2.id,
                                      'user_id': self.tweet_2.user_id,
                                      'is_superuser': False,
-                                     'tweet_link': 'new_tweet_link1',
-                                     'author': 'new_author1',
+                                     'tweet_link': self.tweet_link,
                                      'author_rank': '40'}
 
         self.tweet_label = {'user_id': self.claim_2.user_id,
@@ -112,8 +118,8 @@ class CommentTests(TestCase):
         self.assertTrue(new_tweet.claim_id == self.new_tweet_details['claim_id'])
         self.assertTrue(new_tweet.user_id == self.new_tweet_details['user_id'])
         self.assertTrue(new_tweet.tweet_link == self.new_tweet_details['tweet_link'])
-        self.assertTrue(new_tweet.author == self.new_tweet_details['author'])
-        self.assertTrue(new_tweet.author_rank == int(self.new_tweet_details['author_rank']))
+        self.assertTrue(new_tweet.author.author_name == self.author_name)
+        self.assertTrue(new_tweet.author.author_rank == int(self.new_tweet_details['author_rank']))
 
     def test_add_tweet_by_user_not_authenticated(self):
         from django.contrib.auth.models import AnonymousUser
@@ -141,12 +147,6 @@ class CommentTests(TestCase):
 
     def test_add_comment_missing_tweet_link(self):
         del self.new_tweet_details['tweet_link']
-        self.post_request.POST = self.new_tweet_details
-        self.post_request.user = self.user
-        self.assertRaises(Exception, add_tweet, self.post_request)
-
-    def test_add_comment_missing_author(self):
-        del self.new_tweet_details['author']
         self.post_request.POST = self.new_tweet_details
         self.post_request.user = self.user
         self.assertRaises(Exception, add_tweet, self.post_request)
@@ -179,16 +179,16 @@ class CommentTests(TestCase):
         build_tweet(self.tweet_3.claim_id,
                     self.tweet_3.user_id,
                     self.tweet_3.tweet_link,
-                    self.tweet_3.author,
-                    self.tweet_3.author_rank)
+                    self.tweet_3.author.author_name,
+                    self.tweet_3.author.author_rank)
         self.assertTrue(len(Tweet.objects.all()) == len_tweets + 1)
         new_tweet = Tweet.objects.all().order_by('-id').first()
         self.assertTrue(new_tweet.id == self.num_of_saved_tweets + 1)
         self.assertTrue(new_tweet.claim_id == self.tweet_3.claim_id)
         self.assertTrue(new_tweet.user_id == self.tweet_3.user_id)
         self.assertTrue(new_tweet.tweet_link == self.tweet_3.tweet_link)
-        self.assertTrue(new_tweet.author == self.tweet_3.author)
-        self.assertTrue(new_tweet.author_rank == self.tweet_3.author_rank)
+        self.assertTrue(new_tweet.author.author_name == self.tweet_3.author.author_name)
+        self.assertTrue(new_tweet.author.author_rank == self.tweet_3.author.author_rank)
 
     def test_build_tweet_by_added_user(self):
         len_tweets = len(Tweet.objects.all())
@@ -198,16 +198,31 @@ class CommentTests(TestCase):
         build_tweet(self.tweet_3.claim_id,
                     self.tweet_3.user_id,
                     self.tweet_3.tweet_link,
-                    self.tweet_3.author,
-                    self.tweet_3.author_rank)
+                    self.tweet_3.author.author_name,
+                    self.tweet_3.author.author_rank)
         self.assertTrue(len(Tweet.objects.all()) == len_tweets + 1)
         new_tweet = Tweet.objects.all().order_by('-id').first()
         self.assertTrue(new_tweet.id == self.num_of_saved_tweets + 1)
         self.assertTrue(new_tweet.claim_id == self.tweet_3.claim_id)
         self.assertTrue(new_tweet.user_id == self.tweet_3.user_id)
         self.assertTrue(new_tweet.tweet_link == self.tweet_3.tweet_link)
-        self.assertTrue(new_tweet.author == self.tweet_3.author)
-        self.assertTrue(new_tweet.author_rank == self.tweet_3.author_rank)
+        self.assertTrue(new_tweet.author.author_name == self.tweet_3.author.author_name)
+        self.assertTrue(new_tweet.author.author_rank == self.tweet_3.author.author_rank)
+
+    def test_build_existing_author(self):
+        self.assertTrue(build_author(self.author_1.author_name, self.author_1.author_rank) == self.author_1)
+
+    def test_build_existing_author_new_rank(self):
+        new_author_rank = random.randint(1, 100)
+        self.assertTrue(build_author(self.author_1.author_name, new_author_rank) == self.author_1)
+        self.assertTrue(Author.objects.filter(author_name=self.author_1.author_name).first().author_rank ==
+                        new_author_rank)
+
+    def test_build_new_author(self):
+        new_author_rank = random.randint(1, 100)
+        new_author = build_author('author' + str(self.num_of_saved_authors), new_author_rank)
+        self.assertTrue(new_author.author_name == 'author' + str(self.num_of_saved_authors))
+        self.assertTrue(new_author.author_rank == new_author_rank)
 
     def test_check_if_tweet_is_valid(self):
         self.assertTrue(check_if_tweet_is_valid(self.new_tweet_details))
@@ -228,8 +243,13 @@ class CommentTests(TestCase):
         del self.new_tweet_details['tweet_link']
         self.assertFalse(check_if_tweet_is_valid(self.new_tweet_details)[0])
 
-    def test_check_if_tweet_is_valid_missing_author(self):
-        del self.new_tweet_details['author']
+    def test_check_if_tweet_is_valid_invalid_tweet_link(self):
+        letters = string.ascii_lowercase
+        self.new_tweet_details['tweet_link'] = ''.join(random.choice(letters) for i in range(random.randint(1, 10)))
+        self.assertFalse(check_if_tweet_is_valid(self.new_tweet_details)[0])
+
+    def test_check_if_tweet_is_valid_invalid_tweet_author(self):
+        self.new_tweet_details['tweet_link'] = 'https://twitter.com/'
         self.assertFalse(check_if_tweet_is_valid(self.new_tweet_details)[0])
 
     def test_check_if_tweet_is_valid_missing_author_rank(self):
@@ -258,9 +278,14 @@ class CommentTests(TestCase):
         self.new_tweet_details['claim_id'] = str(self.claim_2.id)
         self.assertFalse(check_if_tweet_is_valid(self.new_tweet_details)[0])
 
-    def test_check_if_tweet_is_valid_invalid_input_for_author(self):
-        self.new_tweet_details['author'] = 'קלט בשפה שאינה אנגלית'
-        self.assertFalse(check_if_tweet_is_valid(self.new_tweet_details)[0])
+    def test_is_valid_author(self):
+        self.assertTrue(is_valid_author(self.new_tweet_details))
+        self.assertTrue(self.new_tweet_details['author_name'] == self.author_name)
+
+    def test_is_valid_author_invalid(self):
+        letters = string.ascii_lowercase
+        self.new_tweet_details['tweet_link'] = ''.join(random.choice(letters) for i in range(random.randint(1, 10)))
+        self.assertFalse(is_valid_author(self.new_tweet_details))
 
     def test_edit_tweet(self):
         query_dict = QueryDict('', mutable=True)
@@ -270,8 +295,8 @@ class CommentTests(TestCase):
         self.assertTrue(edit_tweet(self.post_request).status_code == 200)
         tweet = Tweet.objects.filter(id=self.tweet_2.id).first()
         self.assertTrue(tweet.tweet_link == self.update_tweet_details['tweet_link'])
-        self.assertTrue(tweet.author == self.update_tweet_details['author'])
-        self.assertTrue(tweet.author_rank == int(self.update_tweet_details['author_rank']))
+        self.assertTrue(tweet.author.author_name == self.author_name)
+        self.assertTrue(tweet.author.author_rank == int(self.update_tweet_details['author_rank']))
 
     def test_edit_tweet_by_user_not_his_tweet(self):
         new_user = User(username='newUser', email='newUser@gmail.com')
@@ -284,8 +309,8 @@ class CommentTests(TestCase):
         self.assertRaises(Exception, edit_tweet, self.post_request)
         tweet = Tweet.objects.filter(id=self.tweet_2.id).first()
         self.assertTrue(tweet.tweet_link == self.tweet_2.tweet_link)
-        self.assertTrue(tweet.author == self.tweet_2.author)
-        self.assertTrue(tweet.author_rank == self.tweet_2.author_rank)
+        self.assertTrue(tweet.author.author_name == self.tweet_2.author.author_name)
+        self.assertTrue(tweet.author.author_rank == self.tweet_2.author.author_rank)
 
     def test_edit_tweet_by_invalid_user_id(self):
         user = User(id=self.num_of_saved_users + random.randint(1, 10), email='user@gmail.com')
@@ -298,8 +323,8 @@ class CommentTests(TestCase):
         self.assertRaises(Exception, edit_tweet, self.post_request)
         tweet = Tweet.objects.filter(id=self.tweet_2.id).first()
         self.assertTrue(tweet.tweet_link == self.tweet_2.tweet_link)
-        self.assertTrue(tweet.author == self.tweet_2.author)
-        self.assertTrue(tweet.author_rank == self.tweet_2.author_rank)
+        self.assertTrue(tweet.author.author_name == self.tweet_2.author.author_name)
+        self.assertTrue(tweet.author.author_rank == self.tweet_2.author.author_rank)
 
     def test_edit_tweet_by_invalid_tweet_id(self):
         self.update_tweet_details['tweet_id'] = self.num_of_saved_tweets + random.randint(1, 10)
@@ -310,8 +335,8 @@ class CommentTests(TestCase):
         self.assertRaises(Exception, edit_tweet, self.post_request)
         tweet = Tweet.objects.filter(id=self.tweet_2.id).first()
         self.assertTrue(tweet.tweet_link == self.tweet_2.tweet_link)
-        self.assertTrue(tweet.author == self.tweet_2.author)
-        self.assertTrue(tweet.author_rank == self.tweet_2.author_rank)
+        self.assertTrue(tweet.author.author_name == self.tweet_2.author.author_name)
+        self.assertTrue(tweet.author.author_rank == self.tweet_2.author.author_rank)
 
     def test_edit_tweet_missing_args(self):
         for i in range(10):
@@ -336,8 +361,8 @@ class CommentTests(TestCase):
         self.assertRaises(Http404, edit_tweet, self.get_request)
         tweet = Tweet.objects.filter(id=self.tweet_2.id).first()
         self.assertTrue(tweet.tweet_link == self.tweet_2.tweet_link)
-        self.assertTrue(tweet.author == self.tweet_2.author)
-        self.assertTrue(tweet.author_rank == self.tweet_2.author_rank)
+        self.assertTrue(tweet.author.author_name == self.tweet_2.author.author_name)
+        self.assertTrue(tweet.author.author_rank == self.tweet_2.author.author_rank)
 
     def test_check_tweet_new_fields(self):
         self.assertTrue(check_tweet_new_fields(self.update_tweet_details)[0])
@@ -376,12 +401,6 @@ class CommentTests(TestCase):
         self.update_tweet_details['is_superuser'] = True
         self.assertFalse(check_tweet_new_fields(self.update_tweet_details)[0])
 
-    def test_check_tweet_new_fields_missing_author(self):
-        del self.update_tweet_details['author']
-        self.assertFalse(check_tweet_new_fields(self.update_tweet_details)[0])
-        self.update_tweet_details['is_superuser'] = True
-        self.assertFalse(check_tweet_new_fields(self.update_tweet_details)[0])
-
     def test_check_tweet_new_fields_missing_author_rank(self):
         del self.update_tweet_details['author_rank']
         self.assertFalse(check_tweet_new_fields(self.update_tweet_details)[0])
@@ -410,12 +429,6 @@ class CommentTests(TestCase):
         self.assertFalse(check_tweet_new_fields(self.update_tweet_details)[0])
         self.update_tweet_details['is_superuser'] = True
         self.assertTrue(check_tweet_new_fields(self.update_tweet_details)[0])
-
-    def test_check_tweet_new_fields_invalid_input_for_author(self):
-        self.update_tweet_details['author'] = 'Խոսք'
-        self.assertFalse(check_tweet_new_fields(self.update_tweet_details)[0])
-        self.update_tweet_details['is_superuser'] = True
-        self.assertFalse(check_tweet_new_fields(self.update_tweet_details)[0])
 
     def test_delete_tweet_by_user(self):
         tweet_to_delete = {'tweet_id': self.tweet_2.id}
@@ -778,11 +791,11 @@ class CommentTests(TestCase):
         self.assertTrue(res.status_code == 200)
         expected_info = 'Claim Id,Claim,Tweet Link,Author,Author Rank,Label\r\n'\
                         '' + str(self.tweet_1.claim_id) + ',' + self.tweet_1.claim.claim + ',' + \
-                        '' + self.tweet_1.tweet_link + ',' + self.tweet_1.author + ',' + \
-                        '' + str(self.tweet_1.author_rank) + ',False\r\n' + \
+                        '' + self.tweet_1.tweet_link + ',' + self.tweet_1.author.author_name + ',' + \
+                        '' + str(self.tweet_1.author.author_rank) + ',False\r\n' + \
                         '' + str(self.tweet_2.claim_id) + ',' + self.tweet_2.claim.claim + ',' + \
-                        '' + self.tweet_2.tweet_link + ',' + self.tweet_2.author + ',' + \
-                        '' + str(self.tweet_2.author_rank) + ',True\r\n'
+                        '' + self.tweet_2.tweet_link + ',' + self.tweet_2.author.author_name + ',' + \
+                        '' + str(self.tweet_2.author.author_rank) + ',True\r\n'
         self.assertEqual(res.content.decode('utf-8'), expected_info)
 
     def test_export_to_csv_invalid_arg_for_fields(self):
@@ -915,15 +928,15 @@ class CommentTests(TestCase):
                 self.assertTrue(row['Claim Id'] == self.tweet_1.claim.id)
                 self.assertTrue(row['Claim'] == self.tweet_1.claim.claim)
                 self.assertTrue(row['Tweet Link'] == self.tweet_1.tweet_link)
-                self.assertTrue(row['Author'] == self.tweet_1.author)
-                self.assertTrue(row['Author Rank'] == self.tweet_1.author_rank)
+                self.assertTrue(row['Author'] == self.tweet_1.author.author_name)
+                self.assertTrue(row['Author Rank'] == self.tweet_1.author.author_rank)
                 self.assertTrue(row['Label'] == '')
             elif index == 1:
                 self.assertTrue(row['Claim Id'] == self.tweet_2.claim.id)
                 self.assertTrue(row['Claim'] == self.tweet_2.claim.claim)
                 self.assertTrue(row['Tweet Link'] == self.tweet_2.tweet_link)
-                self.assertTrue(row['Author'] == self.tweet_2.author)
-                self.assertTrue(row['Author Rank'] == self.tweet_2.author_rank)
+                self.assertTrue(row['Author'] == self.tweet_2.author.author_name)
+                self.assertTrue(row['Author Rank'] == self.tweet_2.author.author_rank)
                 self.assertTrue(row['Label'] == '')
 
     def test_export_claims_page(self):
@@ -951,8 +964,8 @@ class CommentTests(TestCase):
         self.assertTrue(new_tweet.claim_id == self.test_file_data['claim_id'])
         self.assertTrue(new_tweet.user_id == self.test_file_data['user_id'])
         self.assertTrue(new_tweet.tweet_link == self.test_file_data['tweet_link'])
-        self.assertTrue(new_tweet.author == self.test_file_data['author'])
-        self.assertTrue(new_tweet.author_rank == int(float(self.test_file_data['author_rank'] * 100)))
+        self.assertTrue(new_tweet.author.author_name == self.test_file_data['author'])
+        self.assertTrue(new_tweet.author.author_rank == int(float(self.test_file_data['author_rank'] * 100)))
 
     def test_download_tweets_for_claims_not_admin_user(self):
         self.post_request.FILES['csv_file'] = self.test_file
@@ -971,7 +984,7 @@ class CommentTests(TestCase):
 
     def test_download_tweets_for_claims_user_authenticated(self):
         from django.contrib.auth.models import AnonymousUser
-        details = {'username':self.admin.username, 'password': self.password}
+        details = {'username': self.admin.username, 'password': self.password}
         self.post_request.POST = details
         self.post_request.FILES['csv_file'] = self.test_file
         self.post_request.user = AnonymousUser()
@@ -983,8 +996,8 @@ class CommentTests(TestCase):
         self.assertTrue(new_tweet.claim_id == self.test_file_data['claim_id'])
         self.assertTrue(new_tweet.user_id == self.test_file_data['user_id'])
         self.assertTrue(new_tweet.tweet_link == self.test_file_data['tweet_link'])
-        self.assertTrue(new_tweet.author == self.test_file_data['author'])
-        self.assertTrue(new_tweet.author_rank == int(float(self.test_file_data['author_rank'] * 100)))
+        self.assertTrue(new_tweet.author.author_name == self.test_file_data['author'])
+        self.assertTrue(new_tweet.author.author_rank == int(float(self.test_file_data['author_rank'] * 100)))
 
     def test_download_tweets_for_claims_invalid_request(self):
         self.get_request.FILES['csv_file'] = self.test_file

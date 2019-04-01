@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.utils.datastructures import MultiValueDict
 from claims.models import Claim
 from comments.models import Comment
-from comments.views import add_comment, build_comment, check_if_comment_is_valid, convert_date_format, \
+from comments.views import add_comment, build_comment, check_if_comment_is_valid, is_valid_url, convert_date_format, \
     is_valid_verdict_date, get_system_label_to_comment, edit_comment, check_comment_new_fields, \
     delete_comment, check_if_delete_comment_is_valid, up_vote, down_vote, check_if_vote_is_valid, \
     export_to_csv, check_if_csv_fields_are_valid, check_if_fields_and_scrapers_lists_valid, \
@@ -11,6 +11,7 @@ from comments.views import add_comment, build_comment, check_if_comment_is_valid
     update_authenticity_grade
 from users.models import User, Scrapers
 import datetime
+import string
 import random
 
 
@@ -58,11 +59,12 @@ class CommentTests(TestCase):
         self.claim_3.save()
         self.claim_4.save()
         self.num_of_saved_claims = 4
+        self.url = 'https://www.snopes.com/fact-check/page/'
         self.comment_1 = Comment(claim_id=self.claim_1.id,
                                  user_id=self.user_1.id,
                                  title=self.claim_1.claim,
                                  description='description1',
-                                 url='http://url1/',
+                                 url=self.url + str(random.randint(1, 10)),
                                  tags='tag1',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label1')
@@ -70,7 +72,7 @@ class CommentTests(TestCase):
                                  user_id=self.user_2.id,
                                  title=self.claim_2.claim,
                                  description='description2',
-                                 url='http://url2/',
+                                 url=self.url + str(random.randint(1, 10)),
                                  tags='tag2,tag3',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label2')
@@ -78,7 +80,7 @@ class CommentTests(TestCase):
                                  user_id=self.user_2.id,
                                  title=self.claim_1.claim,
                                  description='description3',
-                                 url='http://url3/',
+                                 url=self.url + str(random.randint(1, 10)),
                                  tags='',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label3')
@@ -86,7 +88,7 @@ class CommentTests(TestCase):
                                  user_id=self.user_1.id,
                                  title=self.claim_2.claim,
                                  description='description4',
-                                 url='http://url4/',
+                                 url=self.url + str(random.randint(1, 10)),
                                  tags='',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label4')
@@ -94,7 +96,7 @@ class CommentTests(TestCase):
                                  user_id=self.claim_3.user_id,
                                  title=self.claim_3.claim,
                                  description='description5',
-                                 url='http://url5/',
+                                 url=self.url + str(random.randint(1, 10)),
                                  tags='',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label5')
@@ -102,7 +104,7 @@ class CommentTests(TestCase):
                                  user_id=self.claim_4.user_id,
                                  title=self.claim_4.claim,
                                  description='description6',
-                                 url='http://url6/',
+                                 url=self.url + str(random.randint(1, 10)),
                                  tags='',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label6')
@@ -366,6 +368,15 @@ class CommentTests(TestCase):
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
 
+    def test_check_if_comment_is_valid_invalid_url(self):
+        letters = string.ascii_lowercase
+        self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
+        self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
+        self.new_comment_details_user_1['url'] = ''.join(random.choice(letters) for i in range(random.randint(1, 10)))
+        self.new_comment_details_user_2['url'] = ''.join(random.choice(letters) for i in range(random.randint(1, 10)))
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+
     def test_check_if_comment_is_valid_missing_label(self):
         self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
         self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
@@ -464,6 +475,14 @@ class CommentTests(TestCase):
         self.new_comment_details_user_2['tags'] = 'tag%,tag4'
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+
+    def test_is_valid_url(self):
+        self.assertTrue(is_valid_url(self.new_comment_details_user_1['url']))
+
+    def test_is_valid_url_invalid(self):
+        letters = string.ascii_lowercase
+        self.new_comment_details_user_1['url'] = ''.join(random.choice(letters) for i in range(random.randint(1, 10)))
+        self.assertFalse(is_valid_url(self.new_comment_details_user_1['url']))
 
     def test_convert_date_format_valid(self):
         err = ''
@@ -989,16 +1008,16 @@ class CommentTests(TestCase):
         res = export_to_csv(self.post_request)
         self.assertTrue(res.status_code == 200)
         expected_info = 'Claim Id,Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n' +\
-                        str(self.comment_5.claim.id) + ',claim3,description5,http://url5/,category3,' + str(self.comment_5.verdict_date) + ',,label5,,0\r\n' +\
-                        str(self.comment_6.claim.id) + ',claim4,description6,http://url6/,category4,' + str(self.comment_6.verdict_date) + ',,label6,,0\r\n'
+                        str(self.comment_5.claim.id) + ',claim3,description5,' + self.comment_5.url + ',category3,' + str(self.comment_5.verdict_date) + ',,label5,,0\r\n' +\
+                        str(self.comment_6.claim.id) + ',claim4,description6,' + self.comment_6.url + ',category4,' + str(self.comment_6.verdict_date) + ',,label6,,0\r\n'
         self.assertEqual(res.content.decode('utf-8'), expected_info)
         Comment.objects.filter(id=self.comment_5.id).update(tags='tag1', system_label='True')
         Comment.objects.filter(id=self.comment_6.id).update(tags='tag6, tag7', system_label='False')
         res = export_to_csv(self.post_request)
         self.assertTrue(res.status_code == 200)
         expected_info = 'Claim Id,Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n'  + \
-                        str(self.comment_5.claim.id) + ',claim3,description5,http://url5/,category3,' + str(self.comment_5.verdict_date) + ',tag1,label5,True,0\r\n' + \
-                        str(self.comment_6.claim.id) + ',claim4,description6,http://url6/,category4,' + str(self.comment_6.verdict_date) + ',"tag6, tag7",label6,False,0\r\n'
+                        str(self.comment_5.claim.id) + ',claim3,description5,' + self.comment_5.url + ',category3,' + str(self.comment_5.verdict_date) + ',tag1,label5,True,0\r\n' + \
+                        str(self.comment_6.claim.id) + ',claim4,description6,' + self.comment_6.url + ',category4,' + str(self.comment_6.verdict_date) + ',"tag6, tag7",label6,False,0\r\n'
         self.assertEqual(res.content.decode('utf-8'), expected_info)
 
     def test_export_to_csv_invalid_arg_for_scraper(self):

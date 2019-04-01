@@ -37,13 +37,13 @@
             </blockquote>
         </div>
         <div class="tweet_verdict">
-            {{ user_details.user.username }} ranked <span id="{{ tweet.id }}_author_name" style="font-style: italic;">{{ tweet.author }}</span>'s loyalty:<br><br><br>
-            {% if tweet.author_rank >= 50 %}
+            {{ user_details.user.username }} ranked <span id="{{ tweet.id }}_author_name" style="font-style: italic;">{{ tweet.author.author_name }}</span>'s loyalty:<br><br><br>
+            {% if tweet.author.author_rank >= 50 %}
                 <span class="author_rank verdict_true">
             {% else %}
                 <span class="author_rank verdict_false">
             {% endif %}
-                <b>{{ tweet.author_rank }}%</b>
+                <b>{{ tweet.author.author_rank }}%</b>
             </span>
         </div>
         <div class="tweet_voting">
@@ -68,11 +68,8 @@
             <input id="tweet_{{ tweet.id }}_link" value="{{ tweet.tweet_link }}" type="text" placeholder="{{ tweet.tweet_link }}">
         </div>
         <div class="tweet_verdict" style="padding: 20px;">
-            Author Name:<br>
-            <input id="tweet_{{ tweet.id }}_author" value="{{ tweet.author }}" type="text" placeholder="{{ tweet.author }}">
-            <br>
             Author Loyalty Rank:<br>
-            <input id="tweet_{{ tweet.id }}_author_rank" value="{{ tweet.author_rank }}" type="number" min="1" max="100">
+            <input id="tweet_{{ tweet.id }}_author_rank" value="{{ tweet.author.author_rank }}" type="number" min="1" max="100">
         </div>
     </div>
     {% if request.user.is_authenticated %}
@@ -280,7 +277,6 @@
             data: {
                 tweet_id: '{{ tweet.id }}',
                 tweet_link: $("#tweet_{{ tweet.id }}_link").val(),
-                author: $("#tweet_{{ tweet.id }}_author").val(),
                 author_rank: $("#tweet_{{ tweet.id }}_author_rank").val(),
             },
             success: function () {

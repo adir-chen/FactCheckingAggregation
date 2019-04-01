@@ -165,18 +165,18 @@ TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 # Tell nose to measure coverage
 NOSE_ARGS = [
-    # '--with-coverage',
-    # '--cover-package=users',
-    # '--cover-package=claims',
-    # '--cover-package=comments',
-    # '--cover-package=tweets',
-    # '--cover-package=contact_us',
-    # '--cover-package=logger',
-    # '--cover-package=search',
-    # '--cover-package=analytics',
+    '--with-coverage',
+    '--cover-package=users',
+    '--cover-package=claims',
+    '--cover-package=comments',
+    '--cover-package=tweets',
+    '--cover-package=contact_us',
+    '--cover-package=logger',
+    '--cover-package=search',
+    '--cover-package=analytics',
     '--detailed-errors',
     '-s',
-    # '--cover-html'
+    '--cover-html'
 ]
 
 GOOGLE_RECAPTCHA_V2_SECRET_KEY = '6LdG7JoUAAAAAKQaAFo67f-5fzV6LiXZ-zJomV9V'

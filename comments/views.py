@@ -7,6 +7,7 @@ from logger.views import save_log_message
 from users.views import check_if_user_exists_by_user_id, get_all_scrapers_ids_arr
 from datetime import datetime
 from django.utils import timezone
+import requests
 import csv
 
 
@@ -72,12 +73,12 @@ def check_if_comment_is_valid(comment_info):
         err += 'Missing value for description'
     elif 'url' not in comment_info or not comment_info['url']:
         err += 'Missing value for url'
+    elif not is_valid_url(comment_info['url']):
+        err += 'Invalid value for url'
     elif 'verdict_date' not in comment_info or not comment_info['verdict_date']:
         err += 'Missing value for verdict date'
     elif 'label' not in comment_info or not comment_info['label']:
         err += 'Missing value for label'
-    elif not (comment_info['url'].startswith('http://') or comment_info['url'].startswith('https://')):
-        err += 'Invalid value for url'
     elif len(Claim.objects.filter(id=comment_info['claim_id'])) == 0:
         err += 'Claim ' + str(comment_info['claim_id']) + 'does not exist'
     elif not check_if_user_exists_by_user_id(comment_info['user_id']):
@@ -93,6 +94,15 @@ def check_if_comment_is_valid(comment_info):
     if len(err) > 0:
         return False, err
     return True, err
+
+
+# This function checks if a given url is valid
+def is_valid_url(url):
+    try:
+        request = requests.get(url)
+        return request.status_code == 200
+    except Exception:
+        return False
 
 
 # This function converts a date field in a dict from %Y-%m-%d format to the system format which is %d/%m/%Y
@@ -194,12 +204,11 @@ def check_comment_new_fields(new_comment_fields):
     elif 'comment_verdict_date' not in new_comment_fields or not new_comment_fields['comment_verdict_date']:
         err += 'Missing value for comment verdict date'
     elif 'comment_reference' not in new_comment_fields or not new_comment_fields['comment_reference']:
-        err += 'Missing value for comment reference'
+        err += 'Missing value for comment url'
+    elif not is_valid_url(new_comment_fields['comment_reference']):
+        err += 'Invalid value for comment url'
     elif 'comment_label' not in new_comment_fields or not new_comment_fields['comment_label']:
         err += 'Missing value for comment label'
-    elif not (new_comment_fields['comment_reference'].startswith('http://')
-              or new_comment_fields['comment_reference'].startswith('https://')):
-        err += 'Invalid value for url'
     elif not check_if_user_exists_by_user_id(new_comment_fields['user_id']):
         err += 'User with id ' + str(new_comment_fields['user_id']) + ' does not exist'
     elif len(Comment.objects.filter(id=new_comment_fields['comment_id'])) == 0:

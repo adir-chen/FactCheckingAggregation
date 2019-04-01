@@ -4,8 +4,9 @@ from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
 from claims.models import Claim
 from claims.views import view_home, view_claim, is_english_input, return_get_request_to_user
+from comments.views import is_valid_url
 from logger.views import save_log_message
-from tweets.models import Tweet
+from tweets.models import Tweet, Author
 from datetime import datetime
 from users.views import check_if_user_exists_by_user_id
 import csv
@@ -27,7 +28,7 @@ def add_tweet(request):
     build_tweet(tweet_info['claim_id'],
                 tweet_info['user_id'],
                 tweet_info['tweet_link'],
-                tweet_info['author'],
+                tweet_info['author_name'],
                 int(tweet_info['author_rank']))
     save_log_message(request.user.id, request.user.username,
                      'Adding a new tweet on claim with id ' + str(request.POST.get("claim_id")), True)
@@ -35,15 +36,25 @@ def add_tweet(request):
 
 
 # This function adds a new tweet to a claim in the website
-def build_tweet(claim_id, user_id, tweet_link, author, author_rank):
+def build_tweet(claim_id, user_id, tweet_link, author_name, author_rank):
     tweet = Tweet(
         claim_id=claim_id,
         user_id=user_id,
+        author=build_author(author_name, author_rank),
         tweet_link=tweet_link,
-        author=author,
-        author_rank=author_rank
     )
     tweet.save()
+
+
+def build_author(author_name, author_rank):
+    author = Author.objects.filter(author_name=author_name)
+    if len(author) > 0:
+        author.update(author_rank=author_rank)
+        return author.first()
+    author = Author(author_name=author_name,
+                    author_rank=author_rank)
+    author.save()
+    return author
 
 
 # This function checks if a given tweet is valid, i.e. the tweet has all the fields with the correct format.
@@ -58,8 +69,10 @@ def check_if_tweet_is_valid(tweet_info):
         err += 'Missing value for user type'
     elif 'tweet_link' not in tweet_info or not tweet_info['tweet_link']:
         err += 'Missing value for tweet link'
-    elif 'author' not in tweet_info or not tweet_info['author']:
-        err += 'Missing value for author'
+    elif not is_valid_url(tweet_info['tweet_link']):
+        err += 'Invalid value for tweet link'
+    elif not is_valid_author(tweet_info):
+        err += 'Invalid value for tweet link'
     elif 'author_rank' not in tweet_info or not tweet_info['author_rank']:
         err += 'Missing value for author rank'
     elif not tweet_info['author_rank'].isdigit():
@@ -72,11 +85,18 @@ def check_if_tweet_is_valid(tweet_info):
         err += 'User with id ' + str(tweet_info['user_id']) + ' does not exist'
     elif not tweet_info['is_superuser'] and len(Tweet.objects.filter(claim_id=tweet_info['claim_id'], user_id=tweet_info['user_id'])) > 0:
         err += 'You can only tweet once on a claim'
-    elif not is_english_input(tweet_info['author']):
-        err += 'Input should be in the English language'
     if len(err) > 0:
         return False, err
     return True, err
+
+
+def is_valid_author(tweet_info):
+    import re
+    author_pattern = re.compile("http(?:s)?:\/\/(?:www\.)?twitter\.com\/([a-zA-Z0-9_]+)/")
+    if re.search(author_pattern, tweet_info['tweet_link']):
+        tweet_info['author_name'] = tweet_info['tweet_link'].split('/')[3]
+        return True
+    return False
 
 
 # This function edits a tweet in the website
@@ -94,8 +114,7 @@ def edit_tweet(request):
         raise Exception(err_msg)
     Tweet.objects.filter(id=new_tweet_fields['tweet_id']).update(
         tweet_link=new_tweet_fields['tweet_link'],
-        author=new_tweet_fields['author'],
-        author_rank=new_tweet_fields['author_rank'])
+        author=build_author(new_tweet_fields['author_name'], new_tweet_fields['author_rank']))
     claim_id = Tweet.objects.filter(id=new_tweet_fields['tweet_id']).first().claim_id
     save_log_message(request.user.id, request.user.username,
                      'Editing a tweet with id ' + str(request.POST.get('tweet_id')), True)
@@ -108,8 +127,6 @@ def edit_tweet(request):
 def check_tweet_new_fields(new_tweet_fields):
     err = ''
     max_minutes_to_edit_tweet = 5
-    # if 'label' not in new_tweet_fields or not new_tweet_fields['label']:
-    #     new_tweet_fields['label'] = ''
     if 'user_id' not in new_tweet_fields or not new_tweet_fields['user_id']:
         err += 'Missing value for user id'
     elif 'is_superuser' not in new_tweet_fields:
@@ -118,8 +135,10 @@ def check_tweet_new_fields(new_tweet_fields):
         err += 'Missing value for tweet id'
     elif 'tweet_link' not in new_tweet_fields or not new_tweet_fields['tweet_link']:
         err += 'Missing value for tweet link'
-    elif 'author' not in new_tweet_fields or not new_tweet_fields['author']:
-        err += 'Missing value for tweet author'
+    elif not is_valid_url(new_tweet_fields['tweet_link']):
+        err += 'Invalid value for tweet link'
+    elif not is_valid_author(new_tweet_fields):
+        err += 'Invalid value for tweet link'
     elif 'author_rank' not in new_tweet_fields or not new_tweet_fields['author_rank']:
         err += 'Missing value for author rank'
     elif not new_tweet_fields['author_rank'].isdigit():
@@ -136,8 +155,6 @@ def check_tweet_new_fields(new_tweet_fields):
     elif (not new_tweet_fields['is_superuser']) and (timezone.now() - Tweet.objects.filter(id=new_tweet_fields['tweet_id']).first().timestamp).total_seconds() \
             / 60 > max_minutes_to_edit_tweet:
         err += 'You can no longer edit your tweet'
-    elif not is_english_input(new_tweet_fields['author']):
-        err += 'Input should be in the English language'
     if len(err) > 0:
         return False, err
     return True, err
@@ -386,8 +403,8 @@ def create_df_for_tweets(fields_to_export, date_start, date_end):
         claims_ids.append(tweet.claim.id)
         claims.append(tweet.claim.claim)
         tweets_links.append(tweet.tweet_link)
-        authors.append(tweet.author)
-        authors_ranks.append(tweet.author_rank)
+        authors.append(tweet.author.author_name)
+        authors_ranks.append(tweet.author.author_rank)
         labels.append(tweet.label)
         dates.append(tweet.timestamp.date())
     df_tweets['User Id'] = users_ids

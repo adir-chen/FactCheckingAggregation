@@ -100,9 +100,6 @@
                         <input id="{{ claim.id }}_new_tweet_link" type="text">
                     </div>
                     <div class="tweet_verdict" style="padding: 20px;">
-                        Author Name:<br>
-                        <input id="{{ claim.id }}_new_tweet_author" type="text">
-                        <br>
                         Author Loyalty Rank:<br>
                         <input id="{{ claim.id }}_new_tweet_author_rank" type="number" min="1" max="100">
                     </div>
@@ -263,7 +260,6 @@
                 data: {
                     claim_id: '{{ claim.id }}',
                     tweet_link: $("#{{ claim.id }}_new_tweet_link").val(),
-                    author: $("#{{ claim.id }}_new_tweet_author").val(),
                     author_rank: $("#{{ claim.id }}_new_tweet_author_rank").val(),
                 },
                 success: function () {
