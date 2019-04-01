@@ -36,7 +36,7 @@ class SystemTesting(TestCase):
                                  user_id=self.claim_1.user_id,
                                  title='title1',
                                  description='description1',
-                                 url='url1',
+                                 url='http://url1/',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
                                  label='True')
         self.comment_1.save()
@@ -45,7 +45,7 @@ class SystemTesting(TestCase):
         self.new_claim_with_comment_details = {'claim': 'claim3',
                                                'title': 'title3',
                                                'description': 'description3',
-                                               'url': 'url3',
+                                               'url': 'http://url3/',
                                                'add_comment': 'true',
                                                'verdict_date': datetime.datetime.strptime(str(datetime.date.today() - datetime.timedelta(days=random.randint(0, 10))), '%Y-%m-%d').strftime('%d/%m/%Y'),
                                                'tags': 'tag4,tag5',
@@ -60,7 +60,7 @@ class SystemTesting(TestCase):
 
         self.new_comment_details = {'title': 'commentTitle',
                                     'description': 'commentDescription',
-                                    'url': 'commentUrl',
+                                    'url': 'http://commentUrl/',
                                     'verdict_date': datetime.datetime.strptime(str(datetime.date.today() - datetime.timedelta(days=random.randint(0, 10))), '%Y-%m-%d').strftime('%d/%m/%Y'),
                                     'label': 'True'}
 
@@ -71,7 +71,7 @@ class SystemTesting(TestCase):
 
         self.update_comment_details = {'comment_title': 'newCommentTitle',
                                        'comment_description': 'commentDescription',
-                                       'comment_reference': 'newCommentUrl',
+                                       'comment_reference': 'http://newCommentUrl/',
                                        'comment_tags': 'newCommentTag1,newCommentTag2',
                                        'comment_verdict_date': self.new_comment_details['verdict_date'],
                                        'comment_label': 'False'}

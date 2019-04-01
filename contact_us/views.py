@@ -32,13 +32,6 @@ def send_email(request):
         save_log_message(request.user.id, request.user.username,
                          'Sending an email from ip - ' + ip + '. Error: ' + err_msg)
         raise Exception(err_msg)
-    # message = 'Subject: {}\n\n{}'.format(mail_info['subject'], mail_info['description'])
-    # server = smtplib.SMTP(settings.EMAIL_HOST, 587)
-    # server.starttls()
-    # server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
-    # server.sendmail(settings.EMAIL_HOST_USER,
-    #                 settings.EMAIL_HOST_USER,
-    #                 message)
     send_mail(mail_info['user_email'] + ': ' + mail_info['subject'],
               mail_info['description'],
               'wtfactnews@gmail.com',
