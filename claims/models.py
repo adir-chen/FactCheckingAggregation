@@ -1,6 +1,7 @@
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.staticfiles.templatetags.staticfiles import static
 
 
 class Claim(models.Model):
@@ -9,7 +10,7 @@ class Claim(models.Model):
     category = models.CharField(max_length=50)
     tags = models.CharField(max_length=250)
     authenticity_grade = models.IntegerField()
-    image_src = models.CharField(max_length=1000)
+    image_src = models.CharField(max_length=1000, default=static('claims/assets/images/claim_default_image.jpg'))
     timestamp = models.DateTimeField(default=timezone.now)
 
     def __str__(self):

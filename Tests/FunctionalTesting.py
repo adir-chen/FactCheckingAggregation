@@ -730,11 +730,8 @@ class UITests(StaticLiveServerTestCase):
         if random.randint(0, 10) > 5:
             browser.find_element_by_id('category').send_keys('category2')
             filled += 1
-        if random.randint(0, 10) > 5:
+        if filled < 2 and random.randint(0, 10) > 5:
             browser.find_element_by_id('tags').send_keys('tag3,tag4')
-            filled += 1
-        if filled < 3 and random.randint(0, 10) > 5:
-            browser.find_element_by_id('image_src').send_keys('image2')
         browser.find_element_by_id('submit_claim').click()
         time.sleep(2)  # wait 2 second for page to show the error
         self.assertTrue(

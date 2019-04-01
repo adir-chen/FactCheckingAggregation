@@ -12,6 +12,7 @@ from users.views import check_if_user_exists_by_user_id
 from .models import Claim
 from django.views.decorators.csrf import ensure_csrf_cookie
 import math
+from django.contrib.staticfiles.templatetags.staticfiles import static
 
 
 # This function adds a new claim to the website, followed with a comment on it
@@ -74,8 +75,8 @@ def check_if_claim_is_valid(claim_info):
         err += 'Missing value for claim'
     elif 'category' not in claim_info or not claim_info['category']:
         err += 'Missing value for category'
-    elif 'image_src' not in claim_info or not claim_info['image_src']:
-        err += 'Missing value for image source'
+    elif not claim_info['image_src']:
+        claim_info['image_src'] = static('claims/assets/images/claim_default_image.jpg')
     elif 'add_comment' not in claim_info:
         err += 'Missing value for adding a comment option'
     elif len(Claim.objects.filter(claim=claim_info['claim'])) > 0:
@@ -187,8 +188,8 @@ def check_claim_new_fields(new_claim_fields):
         err += 'Missing value for claim'
     elif 'category' not in new_claim_fields or not new_claim_fields['category']:
         err += 'Missing value for category'
-    elif 'image_src' not in new_claim_fields or not new_claim_fields['image_src']:
-        err += 'Missing value for image source'
+    elif not new_claim_fields['image_src']:
+        new_claim_fields['image_src'] = static('claims/assets/images/claim_default_image.jpg')
     elif not check_if_user_exists_by_user_id(new_claim_fields['user_id']):
         err += 'User with id ' + str(new_claim_fields['user_id']) + ' does not exist'
     elif len(Claim.objects.filter(id=new_claim_fields['claim_id'])) == 0:
