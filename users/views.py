@@ -172,23 +172,6 @@ def add_all_scrapers(request):
     return view_home(return_get_request_to_user(request.user))
 
 
-# def update_scrapers_info(request):
-#     from comments.models import Comment
-#     if not check_if_user_exists_by_user_id(scraper_id):
-#         raise Exception('Scraper with id ' + str(scraper_id) + ' does not exists')
-#     scraper = User.objects.filter(id=scraper_id).first()
-#     Scrapers.objects.filter(scraper_id=scraper).update()
-#     for comment in Comment.objects.filter(user_id=scraper):
-#             label = comment.label.lower().strip()
-#             scraper = Scrapers.objects.filter(scraper_id=).first()
-#             if label in scraper.true_labels:
-#                 Comment.objects.filter(id=comment.id).update(system_label='True')
-#             elif label in scraper.false_labels:
-#                 Comment.objects.filter(id=comment.id).update(system_label='False')
-#             else:
-#                 Comment.objects.filter(id=comment.id).update(system_label='Unknown')
-
-
 # This function returns all the scrapers' ids
 def get_all_scrapers_ids(request):
     if request.method != 'GET':
@@ -411,6 +394,9 @@ def add_true_label_to_scraper(request):
     scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
     Scrapers.objects.filter(id=scraper.id).update(true_labels=scraper.true_labels +
                                                   ',' + scraper_info['scraper_label'])
+    update_scrapers_comments_verdicts(scraper.scraper_id.id)
+    save_log_message(request.user.id, request.user.username,
+                     'Adding a new label (T) for scraper - ' + scraper.scraper_name)
     return user_page(return_get_request_to_user(request.user), scraper.scraper_id.id)
 
 
@@ -437,6 +423,9 @@ def delete_true_label_from_scraper(request):
         if true_label not in true_labels:
             new_scraper_true_labels.append(true_label)
     Scrapers.objects.filter(id=scraper.id).update(true_labels=','.join(new_scraper_true_labels))
+    update_scrapers_comments_verdicts(scraper.scraper_id.id)
+    save_log_message(request.user.id, request.user.username,
+                     'Deleting a label (T) from scraper - ' + scraper.scraper_name)
     return user_page(return_get_request_to_user(request.user), scraper.scraper_id.id)
 
 
@@ -454,6 +443,9 @@ def add_false_label_to_scraper(request):
     scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
     Scrapers.objects.filter(id=scraper.id).update(false_labels=scraper.false_labels +
                                                                ',' + scraper_info['scraper_label'])
+    update_scrapers_comments_verdicts(scraper.scraper_id.id)
+    save_log_message(request.user.id, request.user.username,
+                     'Adding a new label (F) for scraper - ' + scraper.scraper_name)
     return user_page(return_get_request_to_user(request.user), scraper.scraper_id.id)
 
 
@@ -480,6 +472,9 @@ def delete_false_label_from_scraper(request):
         if false_label not in false_labels:
             new_scraper_false_labels.append(false_label)
     Scrapers.objects.filter(id=scraper.id).update(false_labels=','.join(new_scraper_false_labels))
+    update_scrapers_comments_verdicts(scraper.scraper_id.id)
+    save_log_message(request.user.id, request.user.username,
+                     'Deleting a label (F) from scraper - ' + scraper.scraper_name)
     return user_page(return_get_request_to_user(request.user), scraper.scraper_id.id)
 
 
@@ -541,4 +536,18 @@ def check_if_scraper_labels_already_exist(scraper_id, labels_list, label):
     if len(err) > 0:
         return False, err
     return True, err
+
+
+def update_scrapers_comments_verdicts(scraper_id):
+    if not check_if_user_exists_by_user_id(scraper_id):
+        raise Exception('Scraper with id ' + str(scraper_id) + ' does not exists')
+    scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_id).first()).first()
+    for comment in Comment.objects.filter(user_id=scraper_id):
+        label = comment.label.lower().strip()
+        if label in scraper.true_labels:
+            Comment.objects.filter(id=comment.id).update(system_label='True')
+        elif label in scraper.false_labels:
+            Comment.objects.filter(id=comment.id).update(system_label='False')
+        else:
+            Comment.objects.filter(id=comment.id).update(system_label='Unknown')
 

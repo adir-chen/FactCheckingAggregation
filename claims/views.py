@@ -65,6 +65,8 @@ def check_if_claim_is_valid(claim_info):
     err = ''
     if 'tags' not in claim_info or not claim_info['tags']:
         claim_info['tags'] = ''
+    if 'image_src' not in claim_info or not claim_info['image_src']:
+        claim_info['image_src'] = static('claims/assets/images/claim_default_image.jpg')
     if not check_if_input_format_is_valid(claim_info['tags']):
         err += 'Incorrect format for tags'
     elif 'user_id' not in claim_info:
@@ -176,6 +178,8 @@ def check_claim_new_fields(new_claim_fields):
     max_minutes_to_edit_claim = 5
     if 'tags' not in new_claim_fields or not new_claim_fields['tags']:
         new_claim_fields['tags'] = ''
+    if 'image_src' not in new_claim_fields or not new_claim_fields['image_src']:
+        new_claim_fields['image_src'] = static('claims/assets/images/claim_default_image.jpg')
     if not check_if_input_format_is_valid(new_claim_fields['tags']):
         err += 'Incorrect format for tags'
     elif 'user_id' not in new_claim_fields or not new_claim_fields['user_id']:
@@ -188,8 +192,6 @@ def check_claim_new_fields(new_claim_fields):
         err += 'Missing value for claim'
     elif 'category' not in new_claim_fields or not new_claim_fields['category']:
         err += 'Missing value for category'
-    elif not new_claim_fields['image_src']:
-        new_claim_fields['image_src'] = static('claims/assets/images/claim_default_image.jpg')
     elif not check_if_user_exists_by_user_id(new_claim_fields['user_id']):
         err += 'User with id ' + str(new_claim_fields['user_id']) + ' does not exist'
     elif len(Claim.objects.filter(id=new_claim_fields['claim_id'])) == 0:

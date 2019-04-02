@@ -277,9 +277,9 @@ class ClaimTests(TestCase):
         self.new_claim_details['user_id'] = self.user.id
         self.new_claim_details['is_superuser'] = False
         del self.new_claim_details['image_src']
-        self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
+        self.assertTrue(check_if_claim_is_valid(self.new_claim_details)[0])
         self.new_claim_details['is_superuser'] = True
-        self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
+        self.assertTrue(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_missing_add_comment(self):
         self.new_claim_details['user_id'] = self.user.id
@@ -530,9 +530,9 @@ class ClaimTests(TestCase):
         self.update_claim_details['user_id'] = self.user.id
         self.update_claim_details['is_superuser'] = False
         del self.update_claim_details['image_src']
-        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        self.assertTrue(check_claim_new_fields(self.update_claim_details)[0])
         self.update_claim_details['is_superuser'] = True
-        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        self.assertTrue(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_claim_does_not_belong_to_user(self):
         user_3 = User(username='User3')

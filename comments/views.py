@@ -513,3 +513,4 @@ def update_authenticity_grade(claim_id):
     else:
         authenticity_grade = (num_of_true_label/(num_of_true_label + num_of_false_label)) * 100
     Claim.objects.filter(id=claim_id).update(authenticity_grade=authenticity_grade)
+
