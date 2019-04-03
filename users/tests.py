@@ -4,13 +4,12 @@ from django.test import TestCase
 from users.models import User, Scrapers, Users_Reputations
 from claims.models import Claim
 from comments.models import Comment
-from users.views import check_if_user_exists_by_user_id, get_username_by_user_id, add_all_scrapers, \
+from users.views import check_if_user_exists_by_user_id, get_username_by_user_id, get_user_reputation, add_all_scrapers, \
     get_all_scrapers_ids, get_all_scrapers_ids_arr, get_random_claims_from_scrapers, add_scraper_guide, add_new_scraper, \
     check_if_scraper_info_is_valid, update_reputation_for_user, user_page, get_scraper_url, get_true_labels, get_false_labels, \
     add_true_label_to_scraper, delete_true_label_from_scraper, add_false_label_to_scraper, \
     delete_false_label_from_scraper, check_if_scraper_new_label_is_valid, \
-    check_if_scraper_label_delete_is_valid, check_if_scraper_labels_already_exist, \
-    update_scrapers_comments_verdicts
+    check_if_scraper_label_delete_is_valid, check_if_scraper_labels_already_exist
 import json
 import random
 import datetime
@@ -92,6 +91,15 @@ class UsersTest(TestCase):
     def test_get_username_by_user_id_invalid_user(self):
         self.assertTrue(get_username_by_user_id(self.num_of_saved_users + 1) is None)
         self.assertTrue(get_username_by_user_id(self.num_of_saved_users + random.randint(1, 10)) is None)
+
+    def test_get_user_reputation(self):
+        self.assertTrue(get_user_reputation(self.user_1.id) == self.rep)
+
+    def test_get_user_reputation_invalid_user(self):
+        self.assertRaises(Exception, get_user_reputation, self.num_of_saved_users + 1)
+
+    def test_get_user_reputation_for_valid_user_without_reputation(self):
+        self.assertTrue(get_user_reputation(self.user_2.id) == 1)
 
     def test_add_all_scrapers(self):
         self.get_request.user = self.admin

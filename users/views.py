@@ -5,7 +5,6 @@ from django.shortcuts import render
 from claims.models import Claim
 from comments.models import Comment
 from logger.views import save_log_message
-from tweets.models import Tweet
 from users.models import Users_Images, Scrapers
 from users.models import Users_Reputations
 
@@ -26,12 +25,18 @@ def get_username_by_user_id(user_id):
     return None
 
 
-# This function returns the user object for a given username (in case the username exists), otherwise none
-def get_user_by_username(username):
-    result = User.objects.filter(username=username)
-    if len(result) > 0:
-        return result.first()
-    return None
+def get_user_reputation(user_id):
+    if not check_if_user_exists_by_user_id(user_id):
+        raise Exception('User with id ' + str(user_id) + ' does not exists')
+    user_rep = Users_Reputations.objects.filter(user_id=User.objects.filter(id=user_id).first())
+    if len(user_rep) == 0:
+        new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=user_id).first())
+        new_user_rep.save()
+        user_rep = new_user_rep
+    else:
+        user_rep = user_rep.first()
+    return user_rep.user_rep
+
 
 
 # This function adds all the scrapers as users to the website
@@ -328,22 +333,16 @@ def user_page(request, user_id):
     comments = Comment.objects.filter(user=user.id)
     if len(comments) > 0:
         user_comments = list(get_users_details_for_comments(comments).items())
-    tweets = Tweet.objects.filter(user=user.id)
-    if len(tweets) > 0:
-        user_tweets = list(get_users_details_for_comments(tweets).items())
     user_img, user_rep = get_user_img_and_rep(user.id)
     page = request.GET.get('page1')
     paginator = Paginator(user_claims, 4)
-    page2 = request.GET.get('page2')
-    paginator2 = Paginator(user_comments, 4)
-    page3 = request.GET.get('page3')
-    paginator3 = Paginator(user_tweets, 4)
+    page_2 = request.GET.get('page2')
+    paginator_2 = Paginator(user_comments, 4)
     return render(request, 'users/user_page.html', {
         'user': user,
         'logged_in': logged_in,
         'user_claims': paginator.get_page(page),
-        'user_comments': paginator2.get_page(page2),
-        'user_tweets': paginator3.get_page(page3),
+        'user_comments': paginator_2.get_page(page_2),
         'user_img': user_img,
         'user_rep': user_rep,
         'scrapers_ids': get_all_scrapers_ids_arr(),
@@ -550,4 +549,7 @@ def update_scrapers_comments_verdicts(scraper_id):
             Comment.objects.filter(id=comment.id).update(system_label='False')
         else:
             Comment.objects.filter(id=comment.id).update(system_label='Unknown')
+
+
+
 

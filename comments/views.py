@@ -4,10 +4,11 @@ from comments.models import Comment
 from claims.models import Claim
 from django.http import HttpResponse, Http404
 from logger.views import save_log_message
-from users.views import check_if_user_exists_by_user_id, get_all_scrapers_ids_arr
+from users.views import check_if_user_exists_by_user_id, get_all_scrapers_ids_arr, get_user_reputation
 from datetime import datetime
 from django.utils import timezone
 import requests
+import math
 import csv
 
 
@@ -58,6 +59,7 @@ def build_comment(claim_id, user_id, title, description, url, tags, verdict_date
 # The function returns true in case the comment is valid, otherwise false and an error
 def check_if_comment_is_valid(comment_info):
     from claims.views import check_if_input_format_is_valid, is_english_input
+    max_comments = 5
     err = ''
     if 'tags' not in comment_info or not comment_info['tags']:
         comment_info['tags'] = ''
@@ -83,8 +85,8 @@ def check_if_comment_is_valid(comment_info):
         err += 'Claim ' + str(comment_info['claim_id']) + 'does not exist'
     elif not check_if_user_exists_by_user_id(comment_info['user_id']):
         err += 'User with id ' + str(comment_info['user_id']) + ' does not exist'
-    elif len(Comment.objects.filter(claim_id=comment_info['claim_id'], user_id=comment_info['user_id'])) > 0:
-        err += 'You can only comment once on a claim'
+    elif len(Comment.objects.filter(claim_id=comment_info['claim_id'], user_id=comment_info['user_id'])) > max_comments:
+        err += 'Maximum number of comments per claim is ' + str(max_comments)
     elif not is_english_input(comment_info['title']) or \
             not is_english_input(comment_info['description']) or \
             not is_english_input(comment_info['tags']):
@@ -499,18 +501,25 @@ def get_all_comments_for_claim_id(claim_id):
 
 # This function updates the claim's authenticity grade
 def update_authenticity_grade(claim_id):
-    num_of_true_label = 0
-    num_of_false_label = 0
-    result = Comment.objects.filter(claim_id=claim_id)
-    for res in result:
-        if res.up_votes.count() - res.down_votes.count() >= 0:
-            if res.system_label == 'True':
-                num_of_true_label += 1
-            elif res.system_label == 'False':
-                num_of_false_label += 1
-    if num_of_true_label + num_of_false_label == 0:
-        authenticity_grade = 0
-    else:
-        authenticity_grade = (num_of_true_label/(num_of_true_label + num_of_false_label)) * 100
+    weighted_sum_true_label, weighted_sum_false_label = 0, 0
+    num_of_true_labels, num_of_false_labels = 0, 0
+    for comment in Comment.objects.filter(claim_id=claim_id):
+        user_rep = (math.ceil(get_user_reputation(comment.user_id) / 20)) / 5
+        if comment.up_votes.count() == comment.down_votes.count() == 0:
+            comment_ratio_votes = 1
+        else:
+            comment_ratio_votes = comment.up_votes.count() / (comment.up_votes.count() + comment.down_votes.count())
+        comment_score = user_rep * comment_ratio_votes
+        if comment.system_label == 'True':
+            num_of_true_labels += 1
+            weighted_sum_true_label += comment_score
+        elif comment.system_label == 'False':
+            num_of_false_labels += 1
+            weighted_sum_false_label += comment_score
+    if not num_of_true_labels == 0:
+        weighted_sum_true_label /= num_of_true_labels
+    if not num_of_false_labels == 0:
+        weighted_sum_false_label /= num_of_false_labels
+    authenticity_grade = max(0, (weighted_sum_true_label - weighted_sum_false_label) * 100)
     Claim.objects.filter(id=claim_id).update(authenticity_grade=authenticity_grade)
 

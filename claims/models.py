@@ -18,9 +18,14 @@ class Claim(models.Model):
 
     def users_commented_ids(self):
         from comments.models import Comment
-        user_ids = []
+        max_comments = 5
+        users_with_num_of_comments = {}
         for comment in Comment.objects.filter(claim_id=self.id):
-            user_ids.append(comment.user_id)
+            if comment.user_id not in users_with_num_of_comments:
+                users_with_num_of_comments[comment.user_id] = 1
+            else:
+                users_with_num_of_comments[comment.user_id] += 1
+        user_ids = [user_id for user_id in users_with_num_of_comments if users_with_num_of_comments[user_id] > max_comments]
         return user_ids
 
     def users_tweeted_ids(self):
@@ -29,3 +34,11 @@ class Claim(models.Model):
         for tweet in Tweet.objects.filter(claim_id=self.id):
             user_ids.append(tweet.user_id)
         return user_ids
+
+
+class Claims_Reports(models.Model):
+    claim = models.ForeignKey(Claim, on_delete=models.CASCADE)
+    report_id = models.IntegerField()
+
+    def __str__(self):
+        return str(self.claim.id) + ' - ' + str(self.report_id)

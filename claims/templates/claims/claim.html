@@ -53,17 +53,17 @@
             <a id="{{ claim.id }}_claim_whatsApp_share" class="btn whatsApp-share-button" href="whatsapp://send?text={{ request.META.HTTP_HOST }}{{ request.path }}%20"
             data-size="large"><img src="{% static 'claims/assets/images/whatsApp_icon.png' %}"> Share claim on WhatsApp</a>
         {% endif %}
-        {% if tweets %}
-        <hr><br>
-        <div id="tweets">
-            <h3>Related tweets:</h3>
-            <br>
-            {% for tweet, user_details  in tweets.items %}
-                {% include 'tweets/tweet.html' with tweet=tweet user_details=user_details request=request only %}
-            {% endfor %}
-        </div>
-        <br>
-        {% endif %}
+{#        {% if tweets %}#}
+{#        <hr><br>#}
+{#        <div id="tweets">#}
+{#            <h3>Related tweets:</h3>#}
+{#            <br>#}
+{#            {% for tweet, user_details  in tweets.items %}#}
+{#                {% include 'tweets/tweet.html' with tweet=tweet user_details=user_details request=request only %}#}
+{#            {% endfor %}#}
+{#        </div>#}
+{#        <br>#}
+{#        {% endif %}#}
         <br><hr><br>
         <div id="comments">
         {% if comments %}
@@ -76,41 +76,6 @@
             <h3>No verdicts yet.</h3>
         {%  endif %}
         </div>
-        {% if request.user.is_authenticated and request.user.id not in claim.users_tweeted_ids %}
-            <hr><br>
-            <h3>Add Tweet:</h3>
-            <br>
-            <div class="tweet_box">
-                <div style="grid-area: tweet-user;">
-                    <div class="comment_user_image">
-                        {% load static %}
-                        <img src="{{ user_img }}">
-                    </div>
-                    <div class="comment_user_details">
-                        User: <a href="/users/{{ request.user.username }}">{{ request.user.username }}</a><br>
-                        {% for i in 'i'|rjust:user_rep %}
-                            <img src="{% static 'claims/assets/images/star.png' %}">
-                        {% endfor %}
-                    </div>
-
-                </div>
-                <div id="tweet_content" class="tweet_content_edit">
-                    <div class="tweet_emb" style="padding: 20px;">
-                        Tweet URL:<br>
-                        <input id="{{ claim.id }}_new_tweet_link" type="text">
-                    </div>
-                    <div class="tweet_verdict" style="padding: 20px;">
-                        Author Loyalty Rank:<br>
-                        <input id="{{ claim.id }}_new_tweet_author_rank" type="number" min="1" max="100">
-                    </div>
-                </div>
-                <div class="tweet_btn_row">
-                    <p id="success_msg_{{ claim.id }}_new_tweet" class="action_msg error_msg" hidden>Tweet was added successfully</p>
-                    <p id="error_msg_{{ claim.id }}_new_tweet" class="action_msg error_msg" hidden></p>
-                    <button id="{{ claim.id }}_new_tweet_save" type="submit" class="btn btn-info">Add Tweet</button>
-                </div>
-            </div>
-        {% endif %}
         {% if request.user.is_authenticated and request.user.id not in claim.users_commented_ids %}
             <br><hr>
             <h3>Add Comment:</h3>

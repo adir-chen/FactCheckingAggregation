@@ -9,7 +9,7 @@ from comments.views import add_comment, build_comment, check_if_comment_is_valid
     export_to_csv, check_if_csv_fields_are_valid, check_if_fields_and_scrapers_lists_valid, \
     create_df_for_claims, get_all_comments_for_user_id, get_all_comments_for_claim_id, \
     update_authenticity_grade
-from users.models import User, Scrapers
+from users.models import User, Scrapers, Users_Reputations
 import datetime
 import string
 import random
@@ -21,6 +21,10 @@ class CommentTests(TestCase):
         self.user_2 = User(username="User2", email='user2@gmail.com')
         self.user_1.save()
         self.user_2.save()
+        self.user_1_rep = Users_Reputations(user_id=self.user_1, user_rep=100)
+        self.user_2_rep = Users_Reputations(user_id=self.user_2, user_rep=1)
+        self.user_1_rep.save()
+        self.user_2_rep.save()
         self.new_scraper_1 = User(username="newScraper1")
         self.new_scraper_1.save()
         self.new_scraper_scraper_1 = Scrapers(scraper_name=self.new_scraper_1.username,
@@ -399,11 +403,20 @@ class CommentTests(TestCase):
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
 
-    def test_check_if_comment_is_valid_comment_twice(self):
+    def test_check_if_comment_is_valid_comment_above_maximum(self):
         self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
         self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
         self.new_comment_details_user_1['claim_id'] = str(self.claim_1.id)
         self.new_comment_details_user_2['claim_id'] = str(self.claim_2.id)
+        for i in range(5):
+            self.assertTrue(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+            self.assertTrue(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+            self.post_request.POST = self.new_comment_details_user_1
+            self.post_request.user = self.user_1
+            self.assertTrue(add_comment(self.post_request).status_code == 200)
+            self.post_request.POST = self.new_comment_details_user_2
+            self.post_request.user = self.user_2
+            self.assertTrue(add_comment(self.post_request).status_code == 200)
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
 
@@ -1386,19 +1399,19 @@ class CommentTests(TestCase):
         result = get_all_comments_for_claim_id(self.num_of_saved_claims + random.randint(1, 10))
         self.assertTrue(result is None)
 
-    def test_update_authenticity_grade_true(self):
+    def test_update_authenticity_grade_two_true_comments(self):
         Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
         self.comment_3.save()
         Comment.objects.filter(id=self.comment_3.id).update(system_label='True')
         update_authenticity_grade(self.claim_1.id)
-        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 100)
+        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 60)
 
-    def test_update_authenticity_grade_true_and_false(self):
+    def test_update_authenticity_grade_true_and_false_comments(self):
         Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
         self.comment_3.save()
         Comment.objects.filter(id=self.comment_3.id).update(system_label='False')
         update_authenticity_grade(self.claim_1.id)
-        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 50)
+        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 80)
 
     def test_update_authenticity_grade_true_and_false_with_down_vote(self):
         Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
@@ -1430,7 +1443,7 @@ class CommentTests(TestCase):
                                                             datetime.timedelta(minutes=6))
         up_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
-        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 50)
+        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 80)
 
     def test_update_authenticity_grade_true_with_up_vote_and_false(self):
         Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
@@ -1446,7 +1459,7 @@ class CommentTests(TestCase):
                                                             datetime.timedelta(minutes=6))
         up_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
-        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 50)
+        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 80)
 
     def test_update_authenticity_grade_true_with_down_vote_and_false(self):
         Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
