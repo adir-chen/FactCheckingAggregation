@@ -355,7 +355,7 @@ def view_claim(request, claim_id):
     elif request.method != "GET":
         raise Http404("Permission denied")
     comments = get_users_details_for_comments(Comment.objects.filter(claim_id=claim_id))
-    tweets = get_users_details_for_comments(Tweet.objects.filter(claim_id=claim_id))
+    tweets = Tweet.objects.filter(claim_id=claim_id)
     user_img, user_rep = None, None
     if request.user.is_authenticated:
         user_img, user_rep = get_user_img_and_rep(request.user.id)

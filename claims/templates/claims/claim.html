@@ -35,8 +35,11 @@
             Image Url: <input id="{{ claim.id }}_image_src" value="{{ claim.image_src }}" type="text" placeholder="{{ claim.image_src }}" class="claim_edit">
         </div>
         <br>
+        <div class="buttons_row">
+        {% if claim.get_report_link %}
+            <a href="{{ claim.get_report_link }}" class="btn btn-info">Read Report</a>
+        {% endif %}
         {% if request.user.is_authenticated %}
-            <div class="buttons_row">
                 {% if claim.user_id == request.user.id or request.user.is_superuser %}
                     <button id="{{ claim.id }}_claim_edit" hidden="hidden" type="submit" class="btn btn-info" onclick="edit_claim()">Edit your claim</button>
                     <button id="{{ claim.id }}_claim_cancel" hidden="hidden" type="submit" class="btn btn-info" onclick="edit_claim_cancel()">Cancel</button>
@@ -44,8 +47,8 @@
                     <button id="{{ claim.id }}_claim_delete" type="submit" class="btn btn-danger">Delete</button>
                 {% endif %}
                 <button id="{{ claim.id }}_claim_report_spam" type="submit" class="btn btn-danger">Report Spam</button>
-            </div>
         {% endif %}
+        </div>
         {% load static %}
         <a id="{{ claim.id }}_claim_twitter_share" class="btn twitter-share-btn" href="https://twitter.com/intent/tweet?text=http://{{ request.META.HTTP_HOST }}{{ request.path }}%20"
         target="_blank" data-size="large"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"> Share claim on Twitter</a>
@@ -53,17 +56,17 @@
             <a id="{{ claim.id }}_claim_whatsApp_share" class="btn whatsApp-share-button" href="whatsapp://send?text={{ request.META.HTTP_HOST }}{{ request.path }}%20"
             data-size="large"><img src="{% static 'claims/assets/images/whatsApp_icon.png' %}"> Share claim on WhatsApp</a>
         {% endif %}
-{#        {% if tweets %}#}
-{#        <hr><br>#}
-{#        <div id="tweets">#}
-{#            <h3>Related tweets:</h3>#}
-{#            <br>#}
-{#            {% for tweet, user_details  in tweets.items %}#}
-{#                {% include 'tweets/tweet.html' with tweet=tweet user_details=user_details request=request only %}#}
-{#            {% endfor %}#}
-{#        </div>#}
-{#        <br>#}
-{#        {% endif %}#}
+        {% if tweets %}
+        <hr><br>
+        <div id="tweets">
+            <h3>Related tweets:</h3>
+            <br>
+            {% for tweet  in tweets %}
+                {% include 'tweets/tweet.html' with claim=claim tweet=tweet request=request only %}
+            {% endfor %}
+        </div>
+        <br>
+        {% endif %}
         <br><hr><br>
         <div id="comments">
         {% if comments %}

@@ -35,8 +35,16 @@ class Claim(models.Model):
             user_ids.append(tweet.user_id)
         return user_ids
 
+    def get_report_link(self):
+        tap_url = ''
+        report = ClaimsReports.objects.filter(claim_id=self.id)
+        if len(report) > 0:
+            return tap_url + '/' + str(report.first().id)
+        else:
+            return None
 
-class Claims_Reports(models.Model):
+
+class ClaimsReports(models.Model):
     claim = models.ForeignKey(Claim, on_delete=models.CASCADE)
     report_id = models.IntegerField()
 

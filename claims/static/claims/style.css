@@ -573,6 +573,20 @@ a.tag_link:hover{
     border-color: #000;
 }
 
+div.comment_refrence_preview{
+    max-width: 400px;
+    padding: 20px;
+    margin: 10px 0;
+    border-radius: 7px;
+    background: #d7e5f2;
+}
+
+.comment_refrence_preview img{
+    max-width: 100%;
+    width: auto;
+    height: auto;
+}
+
 /*################
     TWEETS
 ################*/

@@ -63,7 +63,12 @@
         <div class="comment_footer">
             <div id="comment_{{ comment.id }}_footer">
                 Reference:
-                <a target="_blank" href={{ comment.url }}>link to source</a><br>
+                <a id="comment_{{ comment.id }}_reference_link" target="_blank" href="{{ comment.url }}">link to source</a><br>
+                <div id="comment_{{ comment.id }}_reference_preview" hidden="hidden" class="comment_refrence_preview">
+                    <a href="{{ comment.url }}"><h5 id="{{ comment.id }}_reference_title"></h5></a>
+                    <p id="{{ comment.id }}_reference_description"></p>
+                    <a target="_blank" href={{ comment.url }}><img id="{{ comment.id }}_reference_image" src=""></a>
+                </div>
                 {% if comment.tags %}
                     Tags:
                     {% for tag in comment.tags_as_list %}
@@ -299,6 +304,24 @@
                     $("#error_msg_{{ comment.id }}_comment_edit").attr("hidden", false);
                 }
             });
+        }
+    });
+
+    $.ajax({
+        url: "https://api.linkpreview.net?key=5ca51d3319aea9e4745a6b2bdebae79fa8fbe2c83b7ca&q={{ comment.url }}",
+        success: function(result){
+            try {
+                if (result.title != "" && result.description != "" && result.src != "") {
+                    $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
+                    document.getElementById("{{ comment.id }}_reference_title").innerText = result.title;
+                    document.getElementById("{{ comment.id }}_reference_description").innerText = result.description;
+                    document.getElementById("{{ comment.id }}_reference_image").src = result.image;
+                    $("#comment_{{ comment.id }}_reference_preview").attr("hidden", false);
+                }
+            }
+            catch(e){
+
+            }
         }
     });
 </script>
