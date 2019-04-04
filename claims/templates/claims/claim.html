@@ -83,7 +83,7 @@
             <br><hr>
             <h3>Add Comment:</h3>
             <br>
-            <div class="comment_box">
+            <div class="comment_box" id="add_new_comment_box">
                 <div class="comment_header">
                     <div class="comment_user_image">
                         {% load static %}
@@ -198,6 +198,9 @@
                     },
                     success: function () {
                         window.location.reload();
+                        $('html, body').animate({
+                            scrollTop: $("#comment_box_{{ claim.max_comment_id }}").offset().top
+                        }, 0);
                     },
                     error: function (error) {
                         hide_all_msgs();

@@ -574,17 +574,39 @@ a.tag_link:hover{
 }
 
 div.comment_refrence_preview{
-    max-width: 400px;
     padding: 20px;
     margin: 10px 0;
     border-radius: 7px;
     background: #d7e5f2;
+    display: grid;
+    grid-template-areas:
+        'preview-details'
+        'preview-img';
 }
 
 .comment_refrence_preview img{
     max-width: 100%;
     width: auto;
     height: auto;
+}
+
+.preview_img{
+    grid-area: preview-img;
+}
+
+.preview_details{
+    grid-area: preview-details;
+}
+
+@media (min-width: 800px) {
+    div.comment_refrence_preview {
+        grid-template-areas: 'preview-img preview-details';
+    }
+
+    .preview_details{
+        grid-area: preview-details;
+        padding-left: 20px;
+    }
 }
 
 /*################

@@ -1,6 +1,6 @@
 {%  load mathfilters %}
 <div style="margin: auto;">
-    <div class="comment_box">
+    <div class="comment_box" id="comment_box_{{ comment.id }}">
         <div class="comment_header">
             <div class="comment_user_image">
                 <img src="{{ user_details.user_img.user_img }}">
@@ -65,10 +65,17 @@
                 Reference:
                 <a id="comment_{{ comment.id }}_reference_link" target="_blank" href="{{ comment.url }}">link to source</a><br>
                 <div id="comment_{{ comment.id }}_reference_preview" hidden="hidden" class="comment_refrence_preview">
-                    <a href="{{ comment.url }}"><h5 id="{{ comment.id }}_reference_title"></h5></a>
-                    <p id="{{ comment.id }}_reference_description"></p>
-                    <a target="_blank" href={{ comment.url }}><img id="{{ comment.id }}_reference_image" src=""></a>
+                    <div class="preview_img">
+                        <a target="_blank" href={{ comment.url }}><img id="{{ comment.id }}_reference_image" src=""></a>
+                    </div>
+                    <div class="preview_details">
+                        <a href="{{ comment.url }}"><h5 id="{{ comment.id }}_reference_title"></h5></a>
+                        <p id="{{ comment.id }}_reference_description"></p>
+                    </div>
                 </div>
+                <blockquote class="twitter-tweet" data-lang="en" hidden="hidden" id="reference_tweet_{{ comment.id }}">
+                    <a href="{{ comment.url }}"></a>
+                </blockquote>
                 {% if comment.tags %}
                     Tags:
                     {% for tag in comment.tags_as_list %}
@@ -315,17 +322,23 @@
     $.ajax({
         url: "https://api.linkpreview.net?key=5ca51d3319aea9e4745a6b2bdebae79fa8fbe2c83b7ca&q={{ comment.url }}",
         success: function(result){
-            try {
-                if (result.title != "" && result.description != "" && result.src != "") {
-                    $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
-                    document.getElementById("{{ comment.id }}_reference_title").innerText = result.title;
-                    document.getElementById("{{ comment.id }}_reference_description").innerText = result.description;
-                    document.getElementById("{{ comment.id }}_reference_image").src = result.image;
-                    $("#comment_{{ comment.id }}_reference_preview").attr("hidden", false);
-                }
+            var tweet_link = '{{ comment.url }}';
+            if (tweet_link.toLowerCase().startsWith("https://twitter.com")){
+                $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
+                $("#reference_tweet_{{ comment.id }}").attr("hidden", false);
             }
-            catch(e){
+            else {
+                try {
+                    if (result.title != "" && result.description != "" && result.src != "") {
+                        $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
+                        document.getElementById("{{ comment.id }}_reference_title").innerText = result.title;
+                        document.getElementById("{{ comment.id }}_reference_description").innerText = result.description;
+                        document.getElementById("{{ comment.id }}_reference_image").src = result.image;
+                        $("#comment_{{ comment.id }}_reference_preview").attr("hidden", false);
+                    }
+                } catch (e) {
 
+                }
             }
         }
     });
