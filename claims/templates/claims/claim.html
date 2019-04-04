@@ -199,7 +199,7 @@
                     success: function () {
                         window.location.reload();
                         $('html, body').animate({
-                            scrollTop: $("#comment_box_{{ claim.max_comment_id }}").offset().top
+                            scrollTop: $("#comment_box_{{ claim.max_comment_id }}").offset().top + 250
                         }, 0);
                     },
                     error: function (error) {
