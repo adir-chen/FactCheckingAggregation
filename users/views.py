@@ -38,7 +38,6 @@ def get_user_reputation(user_id):
     return user_rep.user_rep
 
 
-
 # This function adds all the scrapers as users to the website
 def add_all_scrapers(request):
     from claims.views import view_home, return_get_request_to_user
