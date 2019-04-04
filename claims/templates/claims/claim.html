@@ -106,7 +106,6 @@
                 </div>
                 <hr>
                 <div class="comment_content_edit">
-                    <p id="success_msg_{{ claim.id }}_new_comment" class="action_msg error_msg" hidden>Comment was added successfully</p>
                     <p id="error_msg_{{ claim.id }}_new_comment" class="action_msg error_msg" hidden></p>
                     Title: <input id="{{ claim.id }}_new_comment_title" type="text"><br>
                     Description:<br>
@@ -147,22 +146,14 @@
             $("#success_msg_{{ claim.id }}_claim_report_spam").attr("hidden", false);
             localStorage.clear();
         }
-        else if(localStorage.getItem("success_msg_{{ claim.id }}_new_comment")){
-            $("#success_msg_{{ claim.id }}_new_comment").attr("hidden", false);
-            localStorage.clear();
-        }
-
 
         function hide_all_msgs(){
             $("#success_msg_{{ claim.id }}_claim_edit").attr("hidden", true);
             $("#success_msg_{{ claim.id }}_claim_report_spam").attr("hidden", true);
-            $("#success_msg_{{ claim.id }}_new_comment").attr("hidden", true);
-            $("#success_msg_{{ claim.id }}_new_tweet").attr("hidden", true);
 
             $("#error_msg_{{ claim.id }}_claim_edit").attr("hidden", true);
             $("#error_msg_{{ claim.id }}_claim_report_spam").attr("hidden", true);
             $("#error_msg_{{ claim.id }}_new_comment").attr("hidden", true);
-            $("#error_msg_{{ claim.id }}_new_tweet").attr("hidden", true);
         }
 
         function edit_claim() {
@@ -206,7 +197,6 @@
                         label: document.querySelector('input[name="{{ claim.id }}_new_comment_label"]:checked').value,
                     },
                     success: function () {
-                        localStorage.setItem("success_msg_{{ claim.id }}_new_comment", true);
                         window.location.reload();
                     },
                     error: function (error) {
@@ -219,31 +209,6 @@
                 });
             }
         });
-
-        $("#{{ claim.id }}_new_tweet_save").click(function(){
-            $.ajax({
-                type: 'POST',
-                url: "{% url 'tweets:add_tweet' %}",
-                headers: { "X-CSRFToken": getCookie('csrftoken') },
-                data: {
-                    claim_id: '{{ claim.id }}',
-                    tweet_link: $("#{{ claim.id }}_new_tweet_link").val(),
-                    author_rank: $("#{{ claim.id }}_new_tweet_author_rank").val(),
-                },
-                success: function () {
-                    localStorage.setItem("success_msg_{{ claim.id }}_new_tweet", true);
-                    window.location.reload();
-                    location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';
-                },
-                error: function (error) {
-                    hide_all_msgs();
-                    let err = error.responseText.split('\n')[1];
-                    document.getElementById("error_msg_{{ claim.id }}_new_tweet").innerHTML =
-                    'Error: <br>' + err;
-                    $("#error_msg_{{ claim.id }}_new_tweet").attr("hidden", false);
-                }
-            });
-         });
 
         $("#{{ claim.id }}_claim_save").click(function(){
             $.ajax({
@@ -286,7 +251,6 @@
                     },
                     error: function (error) {
                         hide_all_msgs();
-                        window.location.reload();
                         let err = error.responseText.split('\n')[1];
                         document.getElementById("error_msg_{{ claim.id }}_claim_edit").innerHTML =
                         'Error: <br>' + err;

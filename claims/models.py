@@ -37,14 +37,14 @@ class Claim(models.Model):
 
     def get_report_link(self):
         tap_url = ''
-        report = ClaimsReports.objects.filter(claim_id=self.id)
+        report = Claims_Reports.objects.filter(claim_id=self.id)
         if len(report) > 0:
             return tap_url + '/' + str(report.first().id)
         else:
             return None
 
 
-class ClaimsReports(models.Model):
+class Claims_Reports(models.Model):
     claim = models.ForeignKey(Claim, on_delete=models.CASCADE)
     report_id = models.IntegerField()
 
