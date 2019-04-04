@@ -64,18 +64,9 @@
             <div id="comment_{{ comment.id }}_footer">
                 Reference:
                 <a id="comment_{{ comment.id }}_reference_link" target="_blank" href="{{ comment.url }}">link to source</a><br>
-                <div id="comment_{{ comment.id }}_reference_preview" hidden="hidden" class="comment_refrence_preview">
-                    <div class="preview_img">
-                        <a target="_blank" href={{ comment.url }}><img id="{{ comment.id }}_reference_image" src=""></a>
-                    </div>
-                    <div class="preview_details">
-                        <a href="{{ comment.url }}"><h5 id="{{ comment.id }}_reference_title"></h5></a>
-                        <p id="{{ comment.id }}_reference_description"></p>
-                    </div>
+                <div id="comment_{{ comment.id }}_reference_preview" hidden="hidden">
+
                 </div>
-                <blockquote class="twitter-tweet" data-lang="en" hidden="hidden" id="reference_tweet_{{ comment.id }}">
-                    <a href="{{ comment.url }}"></a>
-                </blockquote>
                 {% if comment.tags %}
                     Tags:
                     {% for tag in comment.tags_as_list %}
@@ -319,27 +310,62 @@
         }
     });
 
+    function getYoutubeVideoId(url) {
+        var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        var match = url.match(regExp);
+
+        if (match && match[2].length == 11) {
+            return match[2];
+        } else {
+            return 'error';
+        }
+    }
+
+    function linkPreview(result){
+        var comment_link = '{{ comment.url }}';
+        if (comment_link.toLowerCase().startsWith("https://twitter.com/")){
+            $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
+             document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML = "<blockquote class=\"twitter-tweet item_preview\" data-lang=\"en\">\n" +
+                 "                    <a href=\"{{ comment.url }}\"></a>\n" +
+                 "                </blockquote>";
+            $("#comment_{{ comment.id }}_reference_preview").attr("hidden", false);
+        }
+        else if (comment_link.toLowerCase().startsWith("https://www.youtube.com/") ||
+                comment_link.toLowerCase().startsWith("https://youtu.be/")){
+            $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
+            document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML =
+                "<iframe class=\"youtube_preview item_preview\" src=\"//www.youtube.com/embed/" + getYoutubeVideoId('{{ comment.url }}') +
+                    "\" frameborder=\"0\" allow=\"accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>\n"
+            $("#comment_{{ comment.id }}_reference_preview").attr("hidden", false);
+        }
+        else if (result != 'error') {
+            try {
+                if (result.title != "" && result.description != "" && result.src != "") {
+                    $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
+                    document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML = "<div class=\"comment_refrence_preview\">\n" +
+                        "                        <div class=\"preview_img\">\n" +
+                        "                            <a target=\"_blank\" href={{ comment.url }}><img src=\"" + result.image + "\"></a>\n" +
+                        "                        </div>\n" +
+                        "                        <div class=\"preview_details\">\n" +
+                        "                            <a href=\"{{ comment.url }}\"><h5>" + result.title+ "</h5></a>\n" +
+                        "                            <p>" + result.description + "</p>\n" +
+                        "                        </div>\n" +
+                        "                    </div>";
+                    $("#comment_{{ comment.id }}_reference_preview").attr("hidden", false);
+                }
+            } catch (e) {
+
+            }
+        }
+    }
+
     $.ajax({
         url: "https://api.linkpreview.net?key=5ca51d3319aea9e4745a6b2bdebae79fa8fbe2c83b7ca&q={{ comment.url }}",
         success: function(result){
-            var tweet_link = '{{ comment.url }}';
-            if (tweet_link.toLowerCase().startsWith("https://twitter.com")){
-                $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
-                $("#reference_tweet_{{ comment.id }}").attr("hidden", false);
-            }
-            else {
-                try {
-                    if (result.title != "" && result.description != "" && result.src != "") {
-                        $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
-                        document.getElementById("{{ comment.id }}_reference_title").innerText = result.title;
-                        document.getElementById("{{ comment.id }}_reference_description").innerText = result.description;
-                        document.getElementById("{{ comment.id }}_reference_image").src = result.image;
-                        $("#comment_{{ comment.id }}_reference_preview").attr("hidden", false);
-                    }
-                } catch (e) {
-
-                }
-            }
+            linkPreview(result)
+        },
+        error: function(e){
+            linkPreview('error')
         }
     });
 </script>

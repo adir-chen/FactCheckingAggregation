@@ -598,6 +598,10 @@ div.comment_refrence_preview{
     grid-area: preview-details;
 }
 
+div.item_preview{
+        max-width: 100%;
+    }
+
 @media (min-width: 800px) {
     div.comment_refrence_preview {
         grid-template-areas: 'preview-img preview-details';
@@ -606,6 +610,11 @@ div.comment_refrence_preview{
     .preview_details{
         grid-area: preview-details;
         padding-left: 20px;
+    }
+
+    iframe.youtube_preview{
+        width: 650px;
+        height: 315px;
     }
 }
 
