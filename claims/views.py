@@ -160,7 +160,7 @@ def edit_claim(request):
     Claim.objects.filter(id=claim.id).update(
         claim=new_claim_fields['claim'],
         category=new_claim_fields['category'],
-        tags=','.join(new_claim_fields['tags'].split()),
+        tags=','.join(new_claim_fields['tags'].split(',')),
         image_src=new_claim_fields['image_src'])
     save_log_message(request.user.id, request.user.username,
                      'Editing a claim with id ' + str(request.POST.get('claim_id')), True)

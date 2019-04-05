@@ -122,13 +122,15 @@ class CommentTests(TestCase):
                                            'description': self.comment_4.description,
                                            'url': self.comment_4.url,
                                            'verdict_date': datetime.datetime.strptime(str(self.comment_4.verdict_date), '%Y-%m-%d').strftime('%d/%m/%Y'),
-                                           'label': self.comment_4.label}
+                                           'label': self.comment_4.label,
+                                           'is_superuser': True}
         self.new_comment_details_user_2 = {'claim_id': self.comment_3.claim_id,
                                            'title': self.comment_3.title,
                                            'description': self.comment_3.description,
                                            'url': self.comment_3.url,
                                            'verdict_date': datetime.datetime.strptime(str(self.comment_3.verdict_date), '%Y-%m-%d').strftime('%d/%m/%Y'),
-                                           'label': self.comment_3.label}
+                                           'label': self.comment_3.label,
+                                           'is_superuser': False}
 
         self.update_comment_details = {'comment_title': self.comment_3.title,
                                        'comment_description': self.comment_3.description,
@@ -408,7 +410,7 @@ class CommentTests(TestCase):
         self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
         self.new_comment_details_user_1['claim_id'] = str(self.claim_1.id)
         self.new_comment_details_user_2['claim_id'] = str(self.claim_2.id)
-        for i in range(5):
+        for i in range(4):
             self.assertTrue(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
             self.assertTrue(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
             self.post_request.POST = self.new_comment_details_user_1
@@ -417,7 +419,7 @@ class CommentTests(TestCase):
             self.post_request.POST = self.new_comment_details_user_2
             self.post_request.user = self.user_2
             self.assertTrue(add_comment(self.post_request).status_code == 200)
-        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+        self.assertTrue(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
 
     def test_check_if_comment_is_valid_invalid_date_format(self):
@@ -727,7 +729,7 @@ class CommentTests(TestCase):
         self.update_comment_details['is_superuser'] = True
         self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
 
-    def test_check_comment_new_fields_edit_after_five_minutes(self):
+    def test_check_comment_new_fields_edit_after_ten_minutes(self):
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
                                                             datetime.timedelta(minutes=11))
         self.update_comment_details['comment_id'] = str(self.comment_1.id)

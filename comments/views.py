@@ -19,6 +19,7 @@ def add_comment(request):
         raise Http404("Permission denied")
     comment_info = request.POST.copy()
     comment_info['user_id'] = request.user.id
+    comment_info['is_superuser'] = request.user.is_superuser
     valid_comment, err_msg = check_if_comment_is_valid(comment_info)
     if not valid_comment:
         save_log_message(request.user.id, request.user.username,
@@ -84,7 +85,9 @@ def check_if_comment_is_valid(comment_info):
         err += 'Claim ' + str(comment_info['claim_id']) + 'does not exist'
     elif not check_if_user_exists_by_user_id(comment_info['user_id']):
         err += 'User with id ' + str(comment_info['user_id']) + ' does not exist'
-    elif len(Comment.objects.filter(claim_id=comment_info['claim_id'], user_id=comment_info['user_id'])) > max_comments:
+    elif (not comment_info['is_superuser']) and len(Comment.objects.filter(claim_id=comment_info['claim_id'],
+                                                                           user_id=comment_info['user_id'])) >= \
+            max_comments:
         err += 'Maximum number of comments per claim is ' + str(max_comments)
     elif not is_english_input(comment_info['title']) or \
             not is_english_input(comment_info['description']) or \
@@ -170,7 +173,7 @@ def edit_comment(request):
         title=new_comment_fields['comment_title'],
         description=new_comment_fields['comment_description'],
         url=new_comment_fields['comment_reference'],
-        tags=','.join(new_comment_fields['comment_tags'].split()),
+        tags=','.join(new_comment_fields['comment_tags'].split(',')),
         verdict_date=datetime.strptime(new_comment_fields['comment_verdict_date'], '%d/%m/%Y'),
         system_label=new_comment_fields['comment_label'])
     claim_id = Comment.objects.filter(id=new_comment_fields['comment_id']).first().claim_id

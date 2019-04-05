@@ -56,8 +56,8 @@ def check_if_reply_is_valid(reply_info):
         err += 'Comment ' + str(reply_info['comment_id']) + 'does not exist'
     elif not check_if_user_exists_by_user_id(reply_info['user_id']):
         err += 'User with id ' + str(reply_info['user_id']) + ' does not exist'
-    elif not reply_info['is_superuser'] and len(Reply.objects.filter(comment_id=reply_info['comment_id'],
-                                                                     user_id=reply_info['user_id'])) > max_replies:
+    elif (not reply_info['is_superuser']) and len(Reply.objects.filter(comment_id=reply_info['comment_id'],
+                                                                       user_id=reply_info['user_id'])) >= max_replies:
         err += 'Maximum number of replies per comment is ' + str(max_replies)
     elif not is_english_input(reply_info['content']):
         err += 'Input should be in the English language'
@@ -103,12 +103,12 @@ def check_reply_new_fields(new_reply_fields):
     elif not check_if_user_exists_by_user_id(new_reply_fields['user_id']):
         err += 'User with id ' + str(new_reply_fields['user_id']) + ' does not exist'
     elif len(Reply.objects.filter(id=new_reply_fields['reply_id'])) == 0:
-        err += 'Reply with id ' + str(new_reply_fields['comment_id']) + ' does not exist'
+        err += 'Reply with id ' + str(new_reply_fields['reply_id']) + ' does not exist'
     elif (not new_reply_fields['is_superuser']) and len(Reply.objects.filter(id=new_reply_fields['reply_id'],
                                                                              user_id=new_reply_fields['user_id'])) == 0:
         err += 'Reply with id ' + str(new_reply_fields['reply_id']) + ' does not belong to user with id ' + \
                str(new_reply_fields['user_id'])
-    elif (not new_reply_fields['is_superuser']) and (timezone.now() - Comment.objects.filter(id=new_reply_fields['reply_id']).first().timestamp).total_seconds() \
+    elif (not new_reply_fields['is_superuser']) and (timezone.now() - Reply.objects.filter(id=new_reply_fields['reply_id']).first().timestamp).total_seconds() \
             / 60 > max_minutes_to_edit_reply:
         err += 'You can no longer edit your reply'
     elif not is_english_input(new_reply_fields['reply_content']):
@@ -153,3 +153,4 @@ def check_if_delete_reply_is_valid(request):
     if len(err) > 0:
         return False, err
     return True, err
+
