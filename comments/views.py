@@ -22,8 +22,7 @@ def add_comment(request):
     valid_comment, err_msg = check_if_comment_is_valid(comment_info)
     if not valid_comment:
         save_log_message(request.user.id, request.user.username,
-                         'Adding a new comment on claim with id ' +
-                         str(request.POST.get("claim_id")) + '. Error: ' + err_msg)
+                         'Adding a new comment on claim. Error: ' + err_msg)
         raise Exception(err_msg)
     build_comment(comment_info['claim_id'],
                   comment_info['user_id'],
@@ -165,8 +164,7 @@ def edit_comment(request):
     valid_new_comment, err_msg = check_comment_new_fields(new_comment_fields)
     if not valid_new_comment:
         save_log_message(request.user.id, request.user.username,
-                         'Editing a comment with id ' + str(request.POST.get('comment_id')) +
-                         '. Error: ' + err_msg)
+                         'Editing a comment. Error: ' + err_msg)
         raise Exception(err_msg)
     Comment.objects.filter(id=new_comment_fields['comment_id']).update(
         title=new_comment_fields['comment_title'],
@@ -188,7 +186,7 @@ def edit_comment(request):
 def check_comment_new_fields(new_comment_fields):
     from claims.views import check_if_input_format_is_valid, is_english_input
     err = ''
-    max_minutes_to_edit_comment = 5
+    max_minutes_to_edit_comment = 10
     if 'comment_tags' not in new_comment_fields or not new_comment_fields['comment_tags']:
         new_comment_fields['comment_tags'] = ''
     if not check_if_input_format_is_valid(new_comment_fields['comment_tags']):
@@ -261,7 +259,7 @@ def delete_comment(request):
 def check_if_delete_comment_is_valid(request):
     err = ''
     if not request.POST.get('comment_id'):
-        err += 'Missing value for claim id'
+        err += 'Missing value for comment id'
     elif len(Comment.objects.filter(id=request.POST.get('comment_id'))) == 0:
         err += 'Comment with id ' + str(request.user.id) + ' does not exist'
     elif not check_if_user_exists_by_user_id(request.user.id):
@@ -337,7 +335,7 @@ def down_vote(request):
 # The function returns true in case the vote is valid, otherwise false and an error
 def check_if_vote_is_valid(vote_fields):
     err = ''
-    max_minutes_to_vote_comment = 5
+    max_minutes_to_vote_comment = 10
     if 'user_id' not in vote_fields or not vote_fields['user_id']:
         err += 'Missing value for user id'
     elif not check_if_user_exists_by_user_id(vote_fields['user_id']):

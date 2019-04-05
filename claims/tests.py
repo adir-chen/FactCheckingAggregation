@@ -562,7 +562,7 @@ class ClaimTests(TestCase):
         self.update_claim_details['user_id'] = self.user.id
         self.update_claim_details['is_superuser'] = False
         Claim.objects.filter(id=self.claim_1.id).update(timestamp=datetime.datetime.now() -
-                                                        datetime.timedelta(minutes=6))
+                                                        datetime.timedelta(minutes=11))
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
         self.update_claim_details['is_superuser'] = True
         self.assertTrue(check_claim_new_fields(self.update_claim_details)[0])
