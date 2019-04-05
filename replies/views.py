@@ -56,7 +56,8 @@ def check_if_reply_is_valid(reply_info):
         err += 'Comment ' + str(reply_info['comment_id']) + 'does not exist'
     elif not check_if_user_exists_by_user_id(reply_info['user_id']):
         err += 'User with id ' + str(reply_info['user_id']) + ' does not exist'
-    elif len(Reply.objects.filter(comment_id=reply_info['comment_id'], user_id=reply_info['user_id'])) > max_replies:
+    elif not reply_info['is_superuser'] and len(Reply.objects.filter(comment_id=reply_info['comment_id'],
+                                                                     user_id=reply_info['user_id'])) > max_replies:
         err += 'Maximum number of replies per comment is ' + str(max_replies)
     elif not is_english_input(reply_info['content']):
         err += 'Input should be in the English language'
