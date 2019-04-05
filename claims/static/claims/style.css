@@ -633,28 +633,24 @@ div.replies_area{
 }
 
 div.reply_box{
-    padding: 20px;
+    padding: 10px;
+    margin: 0;
     font-size: 14px;
     display: grid;
-    grid-template-areas:
-        'reply-img'
-        'reply-content';
+    grid-template-columns: 80px auto;
+    /*grid-template-areas:*/
+    /*    'reply-img'*/
+    /*    'reply-content';*/
 }
 
-div.reply_img{
-    grid-area: reply-img;
-    width: 100px;
-    height: 70px;
-}
-
-div.reply_content{
-    grid-area: reply-content;
-    width: 100%;
+.reply_img img{
+    max-width: 50px;
+    max-height: 50px;
 }
 
 @media (min-width: 800px) {
     div.reply_box{
-        grid-template-areas: 'reply-img reply-content';
+        /*grid-template-areas: 'reply-img reply-content';*/
     }
 }
 

@@ -1,17 +1,16 @@
 <div class="reply_box" id="reply_box_{{ reply.id }}">
     <div class="reply_img">
-        <img src="{{ user_details.user_img.user_img }}" style="max-width: 50px; max-height: 50px;">
+        <img src="{{ user_details.user_img.user_img }}"><br><br>
         <a href="/users/{{ user_details.user.id }}">{{ user_details.user.username }}</a>
     </div>
-    <div class="reply_content">
+    <div>
         {{ reply.content }}
     </div>
 </div>
-<textarea id="{{ reply.id }}_reply_content_edit" placeholder="{{ reply.content }}" style="margin-right: 10px;">
-
-</textarea><br>
-{% if request.user.is_superuser or request.user.is_authenticated and comment.user_id == request.user.id %}
-    <br>
+<textarea id="{{ reply.id }}_reply_content_edit" placeholder="{{ reply.content }}" style="margin-right: 10px;" hidden="hidden">
+    {{ reply.content }}
+</textarea>
+{% if request.user.is_superuser or request.user.is_authenticated and reply.user_id == request.user.id %}
     <p id="success_msg_{{ reply.id }}_reply_edit" class="action_msg note_msg" hidden>Reply was edited successfully</p>
     <p id="error_msg_{{ reply.id }}_reply_edit" class="action_msg error_msg" hidden></p>
     <button id="reply_{{ reply.id }}_edit" hidden='hidden' type="submit" class="btn btn-info" onclick="edit_reply_{{ reply.id }}()">Edit your reply</button>
@@ -45,6 +44,7 @@
     function edit_reply_{{ reply.id }}() {
         $("#reply_box_{{ reply.id }}").attr("hidden", true);
         $("#{{ reply.id }}_reply_content_edit").attr("hidden", false);
+        $("#reply_{{ reply.id }}_edit").attr("hidden", true);
         $("#reply_{{ reply.id }}_cancel").attr("hidden", false);
         $("#reply_{{ reply.id }}_save").attr("hidden", false);
     }
@@ -52,6 +52,7 @@
     function edit_reply_{{ reply.id }}_cancel() {
         $("#reply_box_{{ reply.id }}").attr("hidden", false);
         $("#{{ reply.id }}_reply_content_edit").attr("hidden", true);
+        $("#reply_{{ reply.id }}_edit").attr("hidden", false);
         $("#reply_{{ reply.id }}_cancel").attr("hidden", true);
         $("#reply_{{ reply.id }}_save").attr("hidden", true);
         $("#reply_{{ reply.id }}_error_msg").attr("hidden", true);
@@ -60,7 +61,7 @@
     $("#reply_{{ reply.id }}_save").click(function(e){
         $.ajax({
             type: 'POST',
-            url: "{% url 'comments:edit_comment' %}",
+            url: "{% url 'replies:edit_reply' %}",
             headers: { "X-CSRFToken": getCookie('csrftoken') },
             data: {
                 comment_id: '{{ comment.id }}',
@@ -85,7 +86,7 @@
             e.preventDefault();
             $.ajax({
                 type: 'POST',
-                url: "{% url 'comments:delete_comment' %}",
+                url: "{% url 'replies:delete_reply' %}",
                 headers: { "X-CSRFToken": getCookie('csrftoken') },
                 data: {
                     reply_id: '{{ reply.id }}',
