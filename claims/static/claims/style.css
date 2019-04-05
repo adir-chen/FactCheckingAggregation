@@ -441,7 +441,7 @@ span.authenticity_grade{
 
 div.comment_box {
     background-color: #fff;
-    margin: 20px 0;
+    margin: 20px 0 0 0;
     border-radius: 7px;
     border: 1px solid #c0c0c0;
     width: 100%;
@@ -615,6 +615,46 @@ div.item_preview{
     iframe.youtube_preview{
         width: 650px;
         height: 315px;
+    }
+}
+
+/*################
+    REPLIES
+################*/
+
+div.replies_area{
+    background: #fbfbfb;
+    padding: 10px;
+    border-radius: 0 0 7px 7px;
+    width: 85%;
+    margin: auto;
+    border: 1px solid #dedede;
+    border-top: 0;
+}
+
+div.reply_box{
+    padding: 20px;
+    font-size: 14px;
+    display: grid;
+    grid-template-areas:
+        'reply-img'
+        'reply-content';
+}
+
+div.reply_img{
+    grid-area: reply-img;
+    width: 100px;
+    height: 70px;
+}
+
+div.reply_content{
+    grid-area: reply-content;
+    width: 100%;
+}
+
+@media (min-width: 800px) {
+    div.reply_box{
+        grid-template-areas: 'reply-img reply-content';
     }
 }
 
