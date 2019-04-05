@@ -40,9 +40,18 @@ class Comment(models.Model):
         from replies.models import Reply
         return Reply.objects.filter(comment_id=self.id)
 
-    def get_replies_with_images(self):
+    def get_first_two_replies(self):
+        return self.get_replies()[:2]
+
+    def has_more_replies(self):
+        return len(self.get_replies()) > 2
+
+    def get_more_replies(self):
+        return self.get_replies()[2:]
+
+    @staticmethod
+    def get_replies_images(reply_objects):
         from users.models import Users_Images
-        reply_objects = self.get_replies()
         replies = {}
         for reply in reply_objects:
             user_img = Users_Images.objects.filter(user_id=reply.user_id)
@@ -56,5 +65,10 @@ class Comment(models.Model):
                               'user_img': user_img}
         return replies
 
+    def get_replies_with_images(self):
+        return Comment.get_replies_images(self.get_first_two_replies())
+
+    def get_more_replies_with_images(self):
+        return Comment.get_replies_images(self.get_more_replies())
 
 
