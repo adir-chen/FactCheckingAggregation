@@ -99,19 +99,27 @@
         {% for reply, user_details  in comment.get_replies_with_images.items %}
             {% include 'replies/reply.html' with reply=reply user_details=user_details request=request only %}
         {% endfor %}
+        <div id="{{ comment.id }}_more_replies" hidden="hidden">
+            {% for reply, user_details  in comment.get_more_replies_with_images.items %}
+                {% include 'replies/reply.html' with reply=reply user_details=user_details request=request only %}
+            {% endfor %}
+        </div>
+        <button id="reply_{{ comment.id }}_view_more" type="submit" class="btn btn-info">View more</button>
         {% if request.user.is_authenticated %}
-            <button id="reply_{{ comment.id }}_add" type="submit" class="btn btn-info">Add new reply</button>
-            <div id="reply_{{ comment.id }}_add_form" style="padding: 20px;" hidden="hidden">
-                Add Reply:<br>
-                <textarea id="{{ comment.id }}_new_reply_content" style="margin-right: 10px;">
+            {% if request.user.is_superuser or request.user.id not in comment.users_replied_ids %}
+                <button id="reply_{{ comment.id }}_add" type="submit" class="btn btn-info">Add new reply</button>
+                <div id="reply_{{ comment.id }}_add_form" style="padding: 20px;" hidden="hidden">
+                    Add Reply:<br>
+                    <textarea id="{{ comment.id }}_new_reply_content" style="margin-right: 10px;">
 
-                </textarea><br>
-                {% if not is_debug_mode %}
-                    <div class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
-                {% endif %}
-                <button id="{{ comment.id }}_new_reply_save" type="submit" class="btn btn-info">Save</button>
-                <p id="error_msg_{{ comment.id }}_new_reply" class="action_msg error_msg" hidden></p>
-            </div>
+                    </textarea><br>
+                    {% if not is_debug_mode %}
+                        <div class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
+                    {% endif %}
+                    <button id="{{ comment.id }}_new_reply_save" type="submit" class="btn btn-info">Save</button>
+                    <p id="error_msg_{{ comment.id }}_new_reply" class="action_msg error_msg" hidden></p>
+                </div>
+            {% endif %}
         {% endif %}
     </div>
 </div>
@@ -329,6 +337,11 @@
                 }
             });
         }
+    });
+
+    $("#reply_{{ comment.id }}_view_more").click(function(e){
+        $("#reply_{{ comment.id }}_view_more").attr("hidden", true);
+        $("#{{ comment.id }}_more_replies").attr("hidden", false);
     });
 
     $("#reply_{{ comment.id }}_add").click(function(e){
