@@ -36,10 +36,6 @@ class Comment(models.Model):
         user_ids = [user_id for user_id in users_with_num_of_replies if users_with_num_of_replies[user_id] > max_replies]
         return user_ids
 
-    def has_replies(self):
-        from replies.models import Reply
-        return len(Reply.objects.filter(comment_id=self.id)) > 0
-
     def get_replies(self):
         from replies.models import Reply
         return Reply.objects.filter(comment_id=self.id)

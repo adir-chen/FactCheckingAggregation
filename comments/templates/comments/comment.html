@@ -95,27 +95,25 @@
             {% endif %}
         </div>
     </div>
-    {% if comment.has_replies %}
-        <div class="replies_area">
-            {% for reply, user_details  in comment.get_replies_with_images.items %}
-                {% include 'replies/reply.html' with reply=reply user_details=user_details request=request only %}
-            {% endfor %}
-            {% if request.user.is_authenticated %}
-                <button id="reply_{{ comment.id }}_add" type="submit" class="btn btn-info">Add new reply</button>
-                <div id="reply_{{ comment.id }}_add_form" style="padding: 20px;" hidden="hidden">
-                    Add Reply:<br>
-                    <textarea id="{{ comment.id }}_new_reply_content" style="margin-right: 10px;">
+    <div class="replies_area">
+        {% for reply, user_details  in comment.get_replies_with_images.items %}
+            {% include 'replies/reply.html' with reply=reply user_details=user_details request=request only %}
+        {% endfor %}
+        {% if request.user.is_authenticated %}
+            <button id="reply_{{ comment.id }}_add" type="submit" class="btn btn-info">Add new reply</button>
+            <div id="reply_{{ comment.id }}_add_form" style="padding: 20px;" hidden="hidden">
+                Add Reply:<br>
+                <textarea id="{{ comment.id }}_new_reply_content" style="margin-right: 10px;">
 
-                    </textarea><br>
-                    {% if not is_debug_mode %}
-                        <div class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
-                    {% endif %}
-                    <button id="{{ comment.id }}_new_reply_save" type="submit" class="btn btn-info">Save</button>
-                    <p id="error_msg_{{ comment.id }}_new_reply" class="action_msg error_msg" hidden></p>
-                </div>
-            {% endif %}
-        </div>
-    {% endif %}
+                </textarea><br>
+                {% if not is_debug_mode %}
+                    <div class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
+                {% endif %}
+                <button id="{{ comment.id }}_new_reply_save" type="submit" class="btn btn-info">Save</button>
+                <p id="error_msg_{{ comment.id }}_new_reply" class="action_msg error_msg" hidden></p>
+            </div>
+        {% endif %}
+    </div>
 </div>
 
 <script>
