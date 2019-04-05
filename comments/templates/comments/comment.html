@@ -106,6 +106,7 @@
         </div>
         {% if comment.has_more_replies %}
             <button id="reply_{{ comment.id }}_view_more" type="submit" class="btn btn-info">View more</button>
+            <button id="reply_{{ comment.id }}_hide_replies" type="submit" class="btn btn-info" hidden="hidden">Hide replies</button>
         {% endif %}
         {% if request.user.is_authenticated %}
             {% if request.user.is_superuser or request.user.id not in comment.users_replied_ids %}
@@ -343,7 +344,14 @@
 
     $("#reply_{{ comment.id }}_view_more").click(function(e){
         $("#reply_{{ comment.id }}_view_more").attr("hidden", true);
+        $("#reply_{{ comment.id }}_hide_replies").attr("hidden", false);
         $("#{{ comment.id }}_more_replies").attr("hidden", false);
+    });
+
+    $("#reply_{{ comment.id }}_hide_replies").click(function(e){
+        $("#reply_{{ comment.id }}_view_more").attr("hidden", false);
+        $("#reply_{{ comment.id }}_hide_replies").attr("hidden", true);
+        $("#{{ comment.id }}_more_replies").attr("hidden", true);
     });
 
     $("#reply_{{ comment.id }}_add").click(function(e){
