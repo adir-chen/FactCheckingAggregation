@@ -550,5 +550,35 @@ def update_scrapers_comments_verdicts(scraper_id):
             Comment.objects.filter(id=comment.id).update(system_label='Unknown')
 
 
+def update_user_img(request):
+    from claims.views import return_get_request_to_user
+    if not request.user.is_authenticated or request.method != 'POST':
+        raise Http404("Permission denied")
+    user_info = request.POST.dict()
+    user_info['user_id'] = request.user.id
+    valid_user_info, err_msg = check_if_user_info_is_valid(user_info)
+    if not valid_user_info:
+        save_log_message(request.user.id, request.user.username,
+                         'Editing user image. Error: ' + err_msg)
+        raise Exception(err_msg)
+    user = User.objects.filter(id=request.user.id).first()
+    Users_Images.objects.filter(user_id=user).update(user_img=user_info['user_img'])
+    save_log_message(request.user.id, request.user.username,
+                     'Editing user image of ' + user.username)
+    return user_page(return_get_request_to_user(request.user), request.user.id)
+
+
+def check_if_user_info_is_valid(user_info):
+    err = ''
+    if 'user_id' not in user_info or not user_info['user_id']:
+        err += 'Missing value for user id'
+    elif 'user_img' not in user_info:
+        err += 'Missing value for user image'
+    elif not check_if_user_exists_by_user_id(user_info['user_id']):
+        err += 'User with id ' + str(user_info['user_id']) + ' does not exist'
+    if len(err) > 0:
+        return False, err
+    return True, err
+
 
 

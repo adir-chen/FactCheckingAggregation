@@ -9,7 +9,8 @@ from users.views import check_if_user_exists_by_user_id, get_username_by_user_id
     check_if_scraper_info_is_valid, update_reputation_for_user, user_page, get_scraper_url, get_true_labels, get_false_labels, \
     add_true_label_to_scraper, delete_true_label_from_scraper, add_false_label_to_scraper, \
     delete_false_label_from_scraper, check_if_scraper_new_label_is_valid, \
-    check_if_scraper_label_delete_is_valid, check_if_scraper_labels_already_exist
+    check_if_scraper_label_delete_is_valid, check_if_scraper_labels_already_exist, update_user_img, \
+    check_if_user_info_is_valid
 import json
 import random
 import datetime
@@ -72,6 +73,8 @@ class UsersTest(TestCase):
 
         self.comment_1.save()
         self.num_of_saved_comments = 1
+
+        self.update_user_image = {'user_img': 'newUserImg'}
 
     def tearDown(self):
         pass
@@ -1094,3 +1097,49 @@ class UsersTest(TestCase):
         self.post_request.user = self.admin
         self.assertTrue(delete_false_label_from_scraper(self.post_request).status_code == 200)
         self.assertTrue(Comment.objects.filter(id=self.comment_1.id).first().system_label == 'Unknown')
+
+    def test_update_user_img(self):
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.update_user_image)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertTrue(update_user_img(self.post_request).status_code == 200)
+
+    def test_update_user_img_by_not_authenticated_user(self):
+        from django.contrib.auth.models import AnonymousUser
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.update_user_image)
+        self.post_request.POST = query_dict
+        self.post_request.user = AnonymousUser()
+        self.assertRaises(Http404, update_user_img, self.post_request)
+
+    def test_update_user_img_invalid_request(self):
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.update_user_image)
+        self.get_request.POST = query_dict
+        self.get_request.user = self.admin
+        self.assertRaises(Http404, update_user_img, self.get_request)
+
+    def test_update_user_img_missing_img(self):
+        del self.update_user_image['user_img']
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.update_user_image)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertRaises(Exception, update_user_img, self.post_request)
+
+    def test_check_if_user_info_is_valid(self):
+        self.update_user_image['user_id'] = str(self.user_1.id)
+        self.assertTrue(check_if_user_info_is_valid(self.update_user_image)[0])
+
+    def test_check_if_user_info_is_valid_missing_user_id(self):
+        self.assertFalse(check_if_user_info_is_valid(self.update_user_image)[0])
+
+    def test_check_if_user_info_is_valid_invalid_user_id(self):
+        self.update_user_image['user_id'] = str(self.num_of_saved_users + random.randint(1, 10))
+        self.assertFalse(check_if_user_info_is_valid(self.update_user_image)[0])
+
+    def test_check_if_user_info_is_valid_missing_user_img(self):
+        del self.update_user_image['user_img']
+        self.assertFalse(check_if_user_info_is_valid(self.update_user_image)[0])
+

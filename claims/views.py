@@ -69,7 +69,7 @@ def check_if_claim_is_valid(claim_info):
         claim_info['image_src'] = static('claims/assets/images/claim_default_image.jpg')
     if not check_if_input_format_is_valid(claim_info['tags']):
         err += 'Incorrect format for tags'
-    elif 'user_id' not in claim_info:
+    elif 'user_id' not in claim_info or not claim_info['user_id']:
         err += 'Missing value for user id'
     elif 'is_superuser' not in claim_info:
         err += 'Missing value for user type'
