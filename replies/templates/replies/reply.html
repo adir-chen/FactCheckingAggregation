@@ -7,9 +7,7 @@
         {{ reply.content }}
     </div>
 </div>
-<textarea id="{{ reply.id }}_reply_content_edit" placeholder="{{ reply.content }}" style="margin-right: 10px;" hidden="hidden">
-    {{ reply.content }}
-</textarea>
+<textarea id="{{ reply.id }}_reply_content_edit" placeholder="{{ reply.content }}" style="margin-right: 10px;" hidden="hidden">{{ reply.content }}</textarea>
 {% if request.user.is_superuser or request.user.is_authenticated and reply.user_id == request.user.id %}
     <p id="success_msg_{{ reply.id }}_reply_edit" class="action_msg note_msg" hidden>Reply was edited successfully</p>
     <p id="error_msg_{{ reply.id }}_reply_edit" class="action_msg error_msg" hidden></p>
@@ -64,8 +62,8 @@
             url: "{% url 'replies:edit_reply' %}",
             headers: { "X-CSRFToken": getCookie('csrftoken') },
             data: {
-                comment_id: '{{ comment.id }}',
-                content: $("#{{ reply.id }}_reply_content_edit").val(),
+                reply_id: '{{ reply.id }}',
+                reply_content: $("#{{ reply.id }}_reply_content_edit").val(),
             },
             success: function () {
                 localStorage.setItem("success_msg_{{ reply.id }}_reply_edit", true);
@@ -76,7 +74,7 @@
                 let err = error.responseText.split('\n')[1];
                 document.getElementById("error_msg_{{ reply.id }}_reply_edit").innerHTML =
                 'Error: <br>' + err;
-                $("#error_msg_{{ comment.id }}_comment_edit").attr("hidden", false);
+                $("#error_msg_{{ reply.id }}_reply_edit").attr("hidden", false);
             }
         });
     });
