@@ -104,7 +104,9 @@
                 {% include 'replies/reply.html' with reply=reply user_details=user_details request=request only %}
             {% endfor %}
         </div>
-        <button id="reply_{{ comment.id }}_view_more" type="submit" class="btn btn-info">View more</button>
+        {% if comment.has_more_replies %}
+            <button id="reply_{{ comment.id }}_view_more" type="submit" class="btn btn-info">View more</button>
+        {% endif %}
         {% if request.user.is_authenticated %}
             {% if request.user.is_superuser or request.user.id not in comment.users_replied_ids %}
                 <button id="reply_{{ comment.id }}_add" type="submit" class="btn btn-info">Add new reply</button>
