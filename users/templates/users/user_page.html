@@ -28,6 +28,14 @@
                 {% endif %}
             </div>
         </div>
+        {% if request.user.is_superuser or request.user.is_authenticated and user.id == request.user.id %}
+            <br>
+            <button id="change_profile_image" type="submit" class="btn btn-info">Change profile image</button>
+            <input id="profile_image_input" value="{{ user_img }}" type="text" placeholder="{{ user_img }}" style="width: 80%;" hidden="hidden">
+            <button id="save_profile_image" type="submit" class="btn btn-info" hidden="hidden">Save</button>
+            <p id="error_msg_change_profile_image" style="color: red; font-size: 12px;" hidden></p>
+            <p id="success_msg_change_profile_image" style="color: dodgerblue; font-size: 12px;" hidden>Profile image updated succesfully.</p>
+        {% endif %}
         <hr>
         <h4> {{ user.username }}'s Claims:</h4>
         {% csrf_token %}
@@ -61,7 +69,8 @@
             <div id="comments" style="width: 100%; padding: 20px; border-radius: 10px; background: #aabfd6; margin: 0 auto;">
                 {% for comment, user  in user_comments.object_list|slice:"0:3" %}
                     Commented at {{ comment.timestamp }} on: <a href="/claim/{{ comment.claim_id }}">{{ comment.claim.claim }}</a>
-                    {% include 'comments/comment.html' with comment=comment user_details=user request=request only %}
+                    {% include 'comments/comment.html' with comment=comment user_details=user show_replies=False request=request only %}
+                    <br>
                 {% endfor %}
             </div>
         </div>
@@ -80,37 +89,6 @@
                 {% if user_comments.has_next %}
                     <a href="?page2={{ user_comments.next_page_number }}" class="btn btn-info">next</a>
                     <a href="?page2={{ user_comments.paginator.num_pages }}" class="btn btn-info">last &raquo;</a>
-                {% endif %}
-            </span>
-        </div>
-
-        {% if not user.id in scrapers_ids %}
-            <hr>
-            <h4>{{ user.username }}'s published Tweets:</h4>
-            <div class="headlines">
-                <div id="tweets" style="width: 100%; padding: 20px; border-radius: 10px; background: #aabfd6; margin: 0 auto;">
-                    {% for tweet, user_details  in user_tweets.object_list|slice:"0:3" %}
-                        Attached Tweet at {{ tweet.timestamp }} to claim: <a href="/claim/{{ tweet.claim_id }}">{{ tweet.claim.claim }}</a>
-                        {% include 'tweets/tweet.html' with tweet=tweet user_details=user_details request=request only %}
-                    {% endfor %}
-                </div>
-            </div>
-        {% endif %}
-
-        <div class="pagination">
-            <span class="step-links">
-                {% if user_tweets.has_previous %}
-                    <a href="?page2=1" class="btn btn-info">&laquo; first</a>
-                    <a href="?page2={{ user_tweets.previous_page_number }}" class="btn btn-info">previous</a>
-                {% endif %}
-
-                <span class="current" style="padding: 10px 20px;">
-                    Page {{ user_tweets.number }} of {{ user_tweets.paginator.num_pages }}
-                </span>
-
-                {% if user_tweets.has_next %}
-                    <a href="?page2={{ user_tweets.next_page_number }}" class="btn btn-info">next</a>
-                    <a href="?page2={{ user_tweets.paginator.num_pages }}" class="btn btn-info">last &raquo;</a>
                 {% endif %}
             </span>
         </div>
@@ -294,6 +272,36 @@
                     document.getElementById("error_msg_delete_false_label").innerHTML =
                     'Error: <br>' + err;
                     $("#error_msg_delete_false_label").attr("hidden", false);
+                }
+            });
+        });
+
+        $("#change_profile_image").click(function(e){
+            $("#change_profile_image").attr("hidden", true);
+            $("#profile_image_input").attr("hidden", false);
+            $("#save_profile_image").attr("hidden", false);
+        });
+
+        $("#save_profile_image").click(function(e){
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'users:update_user_img' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken')},
+                data: {
+                    user_id: '{{ user.id }}',
+                    user_img: $("#profile_image_input").val(),
+                },
+                success: function (request) {
+                    localStorage.setItem("success_msg_change_profile_image", true);
+                    window.location.reload();
+                },
+                error: function (error) {
+                    hide_all_msgs();
+                    let err = error.responseText.split('\n')[1];
+                    document.getElementById("error_msg_change_profile_image").innerHTML =
+                    'Error: <br>' + err;
+                    $("#error_msg_change_profile_image").attr("hidden", false);
                 }
             });
         });

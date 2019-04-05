@@ -73,7 +73,7 @@
             <h3>Users' verdicts:</h3>
             <br>
             {% for comment, user_details  in comments.items %}
-                {% include 'comments/comment.html' with comment=comment user_details=user_details request=request only %}
+                {% include 'comments/comment.html' with comment=comment user_details=user_details show_replies=True request=request only %}
             {% endfor %}
         {% else %}
             <h3>No verdicts yet.</h3>
