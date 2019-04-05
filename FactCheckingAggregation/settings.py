@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'claims.apps.ClaimsConfig',
     'comments.apps.CommentsConfig',
     'tweets.apps.TweetsConfig',
+    'replies.apps.RepliesConfig',
     'users.apps.UsersConfig',
     'search.apps.SearchConfig',
     'contact_us.apps.ContactUsConfig',

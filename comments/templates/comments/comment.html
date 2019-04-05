@@ -1,4 +1,6 @@
 {%  load mathfilters %}
+{% load is_debug_mode %}
+{% is_debug_mode as is_debug_mode %}
 <div style="margin: auto;">
     <div class="comment_box" id="comment_box_{{ comment.id }}">
         <div class="comment_header">
@@ -93,6 +95,27 @@
             {% endif %}
         </div>
     </div>
+    {% if comment.has_replies %}
+        <div class="replies_area">
+            {% for reply, user_details  in comment.get_replies_with_images.items %}
+                {% include 'replies/reply.html' with reply=reply user_details=user_details request=request only %}
+            {% endfor %}
+            {% if request.user.is_authenticated %}
+                <button id="reply_{{ comment.id }}_add" type="submit" class="btn btn-info">Add new reply</button>
+                <div id="reply_{{ comment.id }}_add_form" style="padding: 20px;" hidden="hidden">
+                    Add Reply:<br>
+                    <textarea id="{{ comment.id }}_new_reply_content" style="margin-right: 10px;">
+
+                    </textarea><br>
+                    {% if not is_debug_mode %}
+                        <div class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
+                    {% endif %}
+                    <button id="{{ comment.id }}_new_reply_save" type="submit" class="btn btn-info">Save</button>
+                    <p id="error_msg_{{ comment.id }}_new_reply" class="action_msg error_msg" hidden></p>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
 </div>
 
 <script>
@@ -100,7 +123,7 @@
     let down_voted_{{ comment.id }} = false;
     let up_count_{{ comment.id }} = {{ comment.up_votes.count }};
     let down_count_{{ comment.id }} = {{ comment.down_votes.count }};
-    let max_minutes_to_edit_comment_{{ comment.id }} = 5;
+    let max_minutes_to_edit_comment_{{ comment.id }} = 10;
     let comment_timestamp_{{ comment.id }} = new Date('{{ comment.timestamp|date:"D, d M Y H:i:s" }}');
     {% if request.user.is_superuser %}
         $("#comment_{{ comment.id }}_edit").attr("hidden", false);
@@ -305,6 +328,39 @@
                     document.getElementById("error_msg_{{ comment.id }}_comment_edit").innerHTML =
                         'Error: <br>' + err;
                     $("#error_msg_{{ comment.id }}_comment_edit").attr("hidden", false);
+                }
+            });
+        }
+    });
+
+    $("#reply_{{ comment.id }}_add").click(function(e){
+        $("#reply_{{ comment.id }}_add").attr("hidden", true);
+        $("#reply_{{ comment.id }}_add_form").attr("hidden", false);
+    });
+
+    $("#{{ comment.id }}_new_reply_save").click(function(e){
+        let debug_mode = '{% is_debug_mode %}' == 'True';
+        if (debug_mode || (!debug_mode && check_recaptcha())){
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'replies:add_reply' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken') },
+                data: {
+                    comment_id: '{{ comment.id }}',
+                    content: $("#{{ comment.id }}_new_reply_content").val(),
+                },
+                success: function () {
+                    window.location.reload();
+                    {#$('html, body').animate({#}
+                    {#    scrollTop: $("#comment_box_{{ claim.max_comment_id }}").offset().top + 250#}
+                    {# }, 0);#}
+                },
+                error: function (error) {
+                    hide_all_msgs();
+                    let err = error.responseText.split('\n')[1];
+                    document.getElementById("error_msg_{{ comment.id }}_new_reply").innerHTML =
+                    'Error: <br>' + err;
+                    $("#error_msg_{{ comment.id }}_new_reply").attr("hidden", false);
                 }
             });
         }

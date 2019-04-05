@@ -126,7 +126,7 @@ def delete_reply(request):
         save_log_message(request.user.id, request.user.username,
                          'Deleting a reply. Error: ' + err_msg)
         raise Exception(err_msg)
-    comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
+    comment = get_object_or_404(Comment, id=Reply.objects.filter(id=request.POST.get('reply_id')).first().comment_id)
     claim_id = comment.claim_id
     Reply.objects.filter(id=request.POST.get('reply_id')).delete()
     save_log_message(request.user.id, request.user.username,
