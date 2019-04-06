@@ -1,6 +1,8 @@
 {%  load mathfilters %}
+{% load is_debug_mode %}
+{% is_debug_mode as is_debug_mode %}
 <div style="margin: auto;">
-    <div class="comment_box">
+    <div class="comment_box" id="comment_box_{{ comment.id }}">
         <div class="comment_header">
             <div class="comment_user_image">
                 <img src="{{ user_details.user_img.user_img }}">
@@ -63,7 +65,10 @@
         <div class="comment_footer">
             <div id="comment_{{ comment.id }}_footer">
                 Reference:
-                <a target="_blank" href={{ comment.url }}>link to source</a><br>
+                <a id="comment_{{ comment.id }}_reference_link" target="_blank" href="{{ comment.url }}">link to source</a><br>
+                <div id="comment_{{ comment.id }}_reference_preview" hidden="hidden">
+
+                </div>
                 {% if comment.tags %}
                     Tags:
                     {% for tag in comment.tags_as_list %}
@@ -90,6 +95,38 @@
             {% endif %}
         </div>
     </div>
+    {% if show_replies %}
+        <div class="replies_area">
+            {% for reply, user_details  in comment.get_replies_with_images.items %}
+                {% include 'replies/reply.html' with reply=reply user_details=user_details request=request only %}
+            {% endfor %}
+            <div id="{{ comment.id }}_more_replies" hidden="hidden">
+                {% for reply, user_details  in comment.get_more_replies_with_images.items %}
+                    {% include 'replies/reply.html' with reply=reply user_details=user_details request=request only %}
+                {% endfor %}
+            </div>
+            {% if comment.has_more_replies %}
+                <button id="reply_{{ comment.id }}_view_more" type="submit" class="btn btn-info">View more</button>
+                <button id="reply_{{ comment.id }}_hide_replies" type="submit" class="btn btn-info" hidden="hidden">Hide replies</button>
+            {% endif %}
+            {% if request.user.is_authenticated %}
+                {% if request.user.is_superuser or request.user.id not in comment.users_replied_ids %}
+                    <button id="reply_{{ comment.id }}_add" type="submit" class="btn btn-info">Add new reply</button>
+                    <div id="reply_{{ comment.id }}_add_form" style="padding: 20px;" hidden="hidden">
+                        Add Reply:<br>
+                        <textarea id="{{ comment.id }}_new_reply_content" style="margin-right: 10px;">
+
+                        </textarea><br>
+                        {% if not is_debug_mode %}
+                            <div class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
+                        {% endif %}
+                        <button id="{{ comment.id }}_new_reply_save" type="submit" class="btn btn-info">Save</button>
+                        <p id="error_msg_{{ comment.id }}_new_reply" class="action_msg error_msg" hidden></p>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    {% endif %}
 </div>
 
 <script>
@@ -97,7 +134,7 @@
     let down_voted_{{ comment.id }} = false;
     let up_count_{{ comment.id }} = {{ comment.up_votes.count }};
     let down_count_{{ comment.id }} = {{ comment.down_votes.count }};
-    let max_minutes_to_edit_comment_{{ comment.id }} = 5;
+    let max_minutes_to_edit_comment_{{ comment.id }} = 10;
     let comment_timestamp_{{ comment.id }} = new Date('{{ comment.timestamp|date:"D, d M Y H:i:s" }}');
     {% if request.user.is_superuser %}
         $("#comment_{{ comment.id }}_edit").attr("hidden", false);
@@ -142,6 +179,7 @@
             {% endif %}
         {% endfor %}
     });
+
     $("#{{ comment.id }}_arrow_up").click(function(e){
         e.preventDefault();
         $.ajax({
@@ -178,6 +216,7 @@
             }
         });
     });
+
     $("#{{ comment.id }}_arrow_down").click(function(e){
         e.preventDefault();
         $.ajax({
@@ -214,6 +253,7 @@
             }
         });
     });
+
     function edit_comment_{{ comment.id }}() {
         $("#comment_{{ comment.id }}_verdict_date").attr("hidden", true);
         $("#comment_{{ comment.id }}_verdict").attr("hidden", true);
@@ -235,6 +275,7 @@
             document.getElementById("comment_{{ comment.id }}_unknown_radio").checked = true;
         {%  endif %}
     }
+
     function edit_comment_{{ comment.id }}_cancel() {
         $("#comment_{{ comment.id }}_verdict_date").attr("hidden", false);
         $("#comment_{{ comment.id }}_verdict").attr("hidden", false);
@@ -250,6 +291,7 @@
         $("#comment_{{ comment.id }}_save").attr("hidden", true);
         $("#comment_{{ comment.id }}_error_msg").attr("hidden", true);
     }
+
     $("#comment_{{ comment.id }}_save").click(function(e){
         $.ajax({
             type: 'POST',
@@ -265,7 +307,6 @@
                 comment_label: document.querySelector('input[name="comment_{{ comment.id }}_label"]:checked').value,
             },
             success: function () {
-                {#location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ comment.claim_id }}';#}
                 localStorage.setItem("success_msg_{{ comment.id }}_comment_edit", true);
                 window.location.reload();
             },
@@ -278,6 +319,7 @@
             }
         });
     });
+
     $("#comment_{{ comment.id }}_delete").click(function(e){
         if (confirm('Are you sure you want to delete this comment?')){
             e.preventDefault();
@@ -289,8 +331,8 @@
                     comment_id: '{{ comment.id }}',
                 },
                 success: function (page) {
+                    $("html, body").animate({ scrollTop: 200 }, 0);
                     window.location.reload();
-                    {#location.href =  'http://{{ request.META.HTTP_HOST }}/claim/{{ comment.claim_id }}';#}
                 },
                 error: function (error) {
                     let err = error.responseText.split('\n')[1];
@@ -299,6 +341,110 @@
                     $("#error_msg_{{ comment.id }}_comment_edit").attr("hidden", false);
                 }
             });
+        }
+    });
+
+    $("#reply_{{ comment.id }}_view_more").click(function(e){
+        $("#reply_{{ comment.id }}_view_more").attr("hidden", true);
+        $("#reply_{{ comment.id }}_hide_replies").attr("hidden", false);
+        $("#{{ comment.id }}_more_replies").attr("hidden", false);
+    });
+
+    $("#reply_{{ comment.id }}_hide_replies").click(function(e){
+        $("#reply_{{ comment.id }}_view_more").attr("hidden", false);
+        $("#reply_{{ comment.id }}_hide_replies").attr("hidden", true);
+        $("#{{ comment.id }}_more_replies").attr("hidden", true);
+    });
+
+    $("#reply_{{ comment.id }}_add").click(function(e){
+        $("#reply_{{ comment.id }}_add").attr("hidden", true);
+        $("#reply_{{ comment.id }}_add_form").attr("hidden", false);
+    });
+
+    $("#{{ comment.id }}_new_reply_save").click(function(e){
+        let debug_mode = '{% is_debug_mode %}' == 'True';
+        if (debug_mode || (!debug_mode && check_recaptcha())){
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'replies:add_reply' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken') },
+                data: {
+                    comment_id: '{{ comment.id }}',
+                    content: $("#{{ comment.id }}_new_reply_content").val(),
+                },
+                success: function () {
+                    window.location.reload();
+                    {#$('html, body').animate({#}
+                    {#    scrollTop: $("#comment_box_{{ claim.max_comment_id }}").offset().top + 250#}
+                    {# }, 0);#}
+                },
+                error: function (error) {
+                    hide_all_msgs();
+                    let err = error.responseText.split('\n')[1];
+                    document.getElementById("error_msg_{{ comment.id }}_new_reply").innerHTML =
+                    'Error: <br>' + err;
+                    $("#error_msg_{{ comment.id }}_new_reply").attr("hidden", false);
+                }
+            });
+        }
+    });
+
+    function getYoutubeVideoId(url) {
+        var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        var match = url.match(regExp);
+
+        if (match && match[2].length == 11) {
+            return match[2];
+        } else {
+            return 'error';
+        }
+    }
+
+    function linkPreview(result){
+        var comment_link = '{{ comment.url }}';
+        if (comment_link.toLowerCase().startsWith("https://twitter.com/")){
+            $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
+             document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML = "<blockquote class=\"twitter-tweet item_preview\" data-lang=\"en\">\n" +
+                 "                    <a href=\"{{ comment.url }}\"></a>\n" +
+                 "                </blockquote>";
+            $("#comment_{{ comment.id }}_reference_preview").attr("hidden", false);
+        }
+        else if (comment_link.toLowerCase().startsWith("https://www.youtube.com/") ||
+                comment_link.toLowerCase().startsWith("https://youtu.be/")){
+            $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
+            document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML =
+                "<iframe class=\"youtube_preview item_preview\" src=\"//www.youtube.com/embed/" + getYoutubeVideoId('{{ comment.url }}') +
+                    "\" frameborder=\"0\" allow=\"accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>\n"
+            $("#comment_{{ comment.id }}_reference_preview").attr("hidden", false);
+        }
+        else if (result != 'error') {
+            try {
+                if (result.title != "" && result.description != "" && result.src != "") {
+                    $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
+                    document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML = "<div class=\"comment_refrence_preview\">\n" +
+                        "                        <div class=\"preview_img\">\n" +
+                        "                            <a target=\"_blank\" href={{ comment.url }}><img src=\"" + result.image + "\"></a>\n" +
+                        "                        </div>\n" +
+                        "                        <div class=\"preview_details\">\n" +
+                        "                            <a href=\"{{ comment.url }}\"><h5>" + result.title+ "</h5></a>\n" +
+                        "                            <p>" + result.description + "</p>\n" +
+                        "                        </div>\n" +
+                        "                    </div>";
+                    $("#comment_{{ comment.id }}_reference_preview").attr("hidden", false);
+                }
+            } catch (e) {
+
+            }
+        }
+    }
+
+    $.ajax({
+        url: "https://api.linkpreview.net?key=5ca51d3319aea9e4745a6b2bdebae79fa8fbe2c83b7ca&q={{ comment.url }}",
+        success: function(result){
+            linkPreview(result)
+        },
+        error: function(e){
+            linkPreview('error')
         }
     });
 </script>

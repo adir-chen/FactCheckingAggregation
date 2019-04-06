@@ -3,7 +3,8 @@
 {% block page_content %}
     <div class="page_wrapper">
         <h4>Import claims:</h4>
-        <p class="action_msg note_msg">Expected Format: [claim, category, tags, image_src, add_comment, title, description, url, verdict_date, label]</p>
+        <p class="action_msg note_msg">Expected Format: [claim, category, tags, image_src, add_comment ("true"/"false"), title, description, url, verdict_date, label (True/False/Unknown)] - case insensitive<br>
+        In case you want to upload just a claim (without a comment) fill the first five fields (with add_comment = 'false'). Otherwise, you must fill all the fields (with add_comment = 'true')</p>
         <form action="{% url "claims:download_claims" %}" method="POST" enctype="multipart/form-data" class="form-horizontal">
         {% csrf_token %}
         <div class="form-group">
@@ -19,7 +20,7 @@
         </div>
         </form>
         <h4>Import tweets:</h4>
-        <p class="action_msg note_msg">Expected Format: [claim Id, tweet link, author, author rank]</p>
+        <p class="action_msg note_msg">Expected Format: [claim Id, tweet link, author, author rank] - case insensitive</p>
         <form action="{% url "tweets:download_tweets_for_claims" %}" method="POST" enctype="multipart/form-data" class="form-horizontal">
         {% csrf_token %}
         <div class="form-group">

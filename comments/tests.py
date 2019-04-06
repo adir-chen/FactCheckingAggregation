@@ -3,14 +3,15 @@ from django.test import TestCase
 from django.utils.datastructures import MultiValueDict
 from claims.models import Claim
 from comments.models import Comment
-from comments.views import add_comment, build_comment, check_if_comment_is_valid, convert_date_format, \
+from comments.views import add_comment, build_comment, check_if_comment_is_valid, is_valid_url, convert_date_format, \
     is_valid_verdict_date, get_system_label_to_comment, edit_comment, check_comment_new_fields, \
     delete_comment, check_if_delete_comment_is_valid, up_vote, down_vote, check_if_vote_is_valid, \
     export_to_csv, check_if_csv_fields_are_valid, check_if_fields_and_scrapers_lists_valid, \
     create_df_for_claims, get_all_comments_for_user_id, get_all_comments_for_claim_id, \
     update_authenticity_grade
-from users.models import User, Scrapers
+from users.models import User, Scrapers, Users_Reputations
 import datetime
+import string
 import random
 
 
@@ -20,6 +21,10 @@ class CommentTests(TestCase):
         self.user_2 = User(username="User2", email='user2@gmail.com')
         self.user_1.save()
         self.user_2.save()
+        self.user_1_rep = Users_Reputations(user_id=self.user_1, user_rep=100)
+        self.user_2_rep = Users_Reputations(user_id=self.user_2, user_rep=1)
+        self.user_1_rep.save()
+        self.user_2_rep.save()
         self.new_scraper_1 = User(username="newScraper1")
         self.new_scraper_1.save()
         self.new_scraper_scraper_1 = Scrapers(scraper_name=self.new_scraper_1.username,
@@ -58,11 +63,12 @@ class CommentTests(TestCase):
         self.claim_3.save()
         self.claim_4.save()
         self.num_of_saved_claims = 4
+        self.url = 'https://www.snopes.com/fact-check/page/'
         self.comment_1 = Comment(claim_id=self.claim_1.id,
                                  user_id=self.user_1.id,
                                  title=self.claim_1.claim,
                                  description='description1',
-                                 url='http://url1/',
+                                 url=self.url + str(random.randint(1, 10)),
                                  tags='tag1',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label1')
@@ -70,7 +76,7 @@ class CommentTests(TestCase):
                                  user_id=self.user_2.id,
                                  title=self.claim_2.claim,
                                  description='description2',
-                                 url='http://url2/',
+                                 url=self.url + str(random.randint(1, 10)),
                                  tags='tag2,tag3',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label2')
@@ -78,7 +84,7 @@ class CommentTests(TestCase):
                                  user_id=self.user_2.id,
                                  title=self.claim_1.claim,
                                  description='description3',
-                                 url='http://url3/',
+                                 url=self.url + str(random.randint(1, 10)),
                                  tags='',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label3')
@@ -86,7 +92,7 @@ class CommentTests(TestCase):
                                  user_id=self.user_1.id,
                                  title=self.claim_2.claim,
                                  description='description4',
-                                 url='http://url4/',
+                                 url=self.url + str(random.randint(1, 10)),
                                  tags='',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label4')
@@ -94,7 +100,7 @@ class CommentTests(TestCase):
                                  user_id=self.claim_3.user_id,
                                  title=self.claim_3.claim,
                                  description='description5',
-                                 url='http://url5/',
+                                 url=self.url + str(random.randint(1, 10)),
                                  tags='',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label5')
@@ -102,7 +108,7 @@ class CommentTests(TestCase):
                                  user_id=self.claim_4.user_id,
                                  title=self.claim_4.claim,
                                  description='description6',
-                                 url='http://url6/',
+                                 url=self.url + str(random.randint(1, 10)),
                                  tags='',
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                                  label='label6')
@@ -116,13 +122,15 @@ class CommentTests(TestCase):
                                            'description': self.comment_4.description,
                                            'url': self.comment_4.url,
                                            'verdict_date': datetime.datetime.strptime(str(self.comment_4.verdict_date), '%Y-%m-%d').strftime('%d/%m/%Y'),
-                                           'label': self.comment_4.label}
+                                           'label': self.comment_4.label,
+                                           'is_superuser': True}
         self.new_comment_details_user_2 = {'claim_id': self.comment_3.claim_id,
                                            'title': self.comment_3.title,
                                            'description': self.comment_3.description,
                                            'url': self.comment_3.url,
                                            'verdict_date': datetime.datetime.strptime(str(self.comment_3.verdict_date), '%Y-%m-%d').strftime('%d/%m/%Y'),
-                                           'label': self.comment_3.label}
+                                           'label': self.comment_3.label,
+                                           'is_superuser': False}
 
         self.update_comment_details = {'comment_title': self.comment_3.title,
                                        'comment_description': self.comment_3.description,
@@ -366,6 +374,15 @@ class CommentTests(TestCase):
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
 
+    def test_check_if_comment_is_valid_invalid_url(self):
+        letters = string.ascii_lowercase
+        self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
+        self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
+        self.new_comment_details_user_1['url'] = ''.join(random.choice(letters) for i in range(random.randint(1, 10)))
+        self.new_comment_details_user_2['url'] = ''.join(random.choice(letters) for i in range(random.randint(1, 10)))
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+
     def test_check_if_comment_is_valid_missing_label(self):
         self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
         self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
@@ -388,12 +405,21 @@ class CommentTests(TestCase):
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
 
-    def test_check_if_comment_is_valid_comment_twice(self):
+    def test_check_if_comment_is_valid_comment_above_maximum(self):
         self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
         self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
         self.new_comment_details_user_1['claim_id'] = str(self.claim_1.id)
         self.new_comment_details_user_2['claim_id'] = str(self.claim_2.id)
-        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+        for i in range(4):
+            self.assertTrue(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+            self.assertTrue(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+            self.post_request.POST = self.new_comment_details_user_1
+            self.post_request.user = self.user_1
+            self.assertTrue(add_comment(self.post_request).status_code == 200)
+            self.post_request.POST = self.new_comment_details_user_2
+            self.post_request.user = self.user_2
+            self.assertTrue(add_comment(self.post_request).status_code == 200)
+        self.assertTrue(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
 
     def test_check_if_comment_is_valid_invalid_date_format(self):
@@ -464,6 +490,14 @@ class CommentTests(TestCase):
         self.new_comment_details_user_2['tags'] = 'tag%,tag4'
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+
+    def test_is_valid_url(self):
+        self.assertTrue(is_valid_url(self.new_comment_details_user_1['url']))
+
+    def test_is_valid_url_invalid(self):
+        letters = string.ascii_lowercase
+        self.new_comment_details_user_1['url'] = ''.join(random.choice(letters) for i in range(random.randint(1, 10)))
+        self.assertFalse(is_valid_url(self.new_comment_details_user_1['url']))
 
     def test_convert_date_format_valid(self):
         err = ''
@@ -695,9 +729,9 @@ class CommentTests(TestCase):
         self.update_comment_details['is_superuser'] = True
         self.assertTrue(check_comment_new_fields(self.update_comment_details)[0])
 
-    def test_check_comment_new_fields_edit_after_five_minutes(self):
+    def test_check_comment_new_fields_edit_after_ten_minutes(self):
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
-                                                            datetime.timedelta(minutes=6))
+                                                            datetime.timedelta(minutes=11))
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
         self.update_comment_details['user_id'] = str(self.user_1.id)
         self.update_comment_details['is_superuser'] = False
@@ -820,7 +854,7 @@ class CommentTests(TestCase):
         self.post_request.user = self.user_1
         self.assertRaises(Exception, up_vote, self.post_request)
         Comment.objects.filter(id=self.comment_2.id).update(timestamp=datetime.datetime.now() -
-                                                                      datetime.timedelta(minutes=6))
+                                                                      datetime.timedelta(minutes=11))
         response = up_vote(self.post_request)
         self.assertTrue(self.comment_2.up_votes.count() == 1)
         self.assertTrue(self.comment_2.down_votes.count() == 0)
@@ -834,7 +868,7 @@ class CommentTests(TestCase):
         self.post_request.user = self.user_1
         self.assertRaises(Exception, up_vote, self.post_request)
         Comment.objects.filter(id=self.comment_2.id).update(timestamp=datetime.datetime.now() -
-                                                                      datetime.timedelta(minutes=6))
+                                                                      datetime.timedelta(minutes=11))
         up_vote(self.post_request)
         response = up_vote(self.post_request)
         self.assertTrue(self.comment_2.up_votes.count() == 0)
@@ -850,7 +884,7 @@ class CommentTests(TestCase):
         self.assertRaises(Exception, down_vote, self.post_request)
         self.assertRaises(Exception, up_vote, self.post_request)
         Comment.objects.filter(id=self.comment_2.id).update(timestamp=datetime.datetime.now() -
-                                                                      datetime.timedelta(minutes=6))
+                                                                      datetime.timedelta(minutes=11))
         down_vote(self.post_request)
         response = up_vote(self.post_request)
         self.assertTrue(self.comment_2.up_votes.count() == 1)
@@ -891,7 +925,7 @@ class CommentTests(TestCase):
         self.post_request.user = self.user_2
         self.assertRaises(Exception, down_vote, self.post_request)
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
-                                                                      datetime.timedelta(minutes=6))
+                                                                      datetime.timedelta(minutes=11))
         response = down_vote(self.post_request)
         self.assertTrue(self.comment_1.down_votes.count() == 1)
         self.assertTrue(self.comment_1.up_votes.count() == 0)
@@ -905,7 +939,7 @@ class CommentTests(TestCase):
         self.post_request.user = self.user_2
         self.assertRaises(Exception, down_vote, self.post_request)
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
-                                                                      datetime.timedelta(minutes=6))
+                                                                      datetime.timedelta(minutes=11))
         down_vote(self.post_request)
         response = down_vote(self.post_request)
         self.assertTrue(self.comment_2.down_votes.count() == 0)
@@ -921,7 +955,7 @@ class CommentTests(TestCase):
         self.assertRaises(Exception, up_vote, self.post_request)
         self.assertRaises(Exception, down_vote, self.post_request)
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
-                                                                      datetime.timedelta(minutes=6))
+                                                                      datetime.timedelta(minutes=11))
         up_vote(self.post_request)
         response = down_vote(self.post_request)
         self.assertTrue(self.comment_1.up_votes.count() == 0)
@@ -959,7 +993,7 @@ class CommentTests(TestCase):
                            'user_id': self.user_1.id}
         self.assertFalse(check_if_vote_is_valid(comment_to_vote)[0])
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
-                                                                      datetime.timedelta(minutes=6))
+                                                                      datetime.timedelta(minutes=11))
         self.assertTrue(check_if_vote_is_valid(comment_to_vote)[0])
 
     def test_check_if_vote_is_valid_missing_user_id(self):
@@ -989,16 +1023,16 @@ class CommentTests(TestCase):
         res = export_to_csv(self.post_request)
         self.assertTrue(res.status_code == 200)
         expected_info = 'Claim Id,Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n' +\
-                        str(self.comment_5.claim.id) + ',claim3,description5,http://url5/,category3,' + str(self.comment_5.verdict_date) + ',,label5,,0\r\n' +\
-                        str(self.comment_6.claim.id) + ',claim4,description6,http://url6/,category4,' + str(self.comment_6.verdict_date) + ',,label6,,0\r\n'
+                        str(self.comment_5.claim.id) + ',claim3,description5,' + self.comment_5.url + ',category3,' + str(self.comment_5.verdict_date) + ',,label5,,0\r\n' +\
+                        str(self.comment_6.claim.id) + ',claim4,description6,' + self.comment_6.url + ',category4,' + str(self.comment_6.verdict_date) + ',,label6,,0\r\n'
         self.assertEqual(res.content.decode('utf-8'), expected_info)
         Comment.objects.filter(id=self.comment_5.id).update(tags='tag1', system_label='True')
         Comment.objects.filter(id=self.comment_6.id).update(tags='tag6, tag7', system_label='False')
         res = export_to_csv(self.post_request)
         self.assertTrue(res.status_code == 200)
         expected_info = 'Claim Id,Title,Description,Url,Category,Verdict Date,Tags,Label,System Label,Authenticity Grade\r\n'  + \
-                        str(self.comment_5.claim.id) + ',claim3,description5,http://url5/,category3,' + str(self.comment_5.verdict_date) + ',tag1,label5,True,0\r\n' + \
-                        str(self.comment_6.claim.id) + ',claim4,description6,http://url6/,category4,' + str(self.comment_6.verdict_date) + ',"tag6, tag7",label6,False,0\r\n'
+                        str(self.comment_5.claim.id) + ',claim3,description5,' + self.comment_5.url + ',category3,' + str(self.comment_5.verdict_date) + ',tag1,label5,True,0\r\n' + \
+                        str(self.comment_6.claim.id) + ',claim4,description6,' + self.comment_6.url + ',category4,' + str(self.comment_6.verdict_date) + ',"tag6, tag7",label6,False,0\r\n'
         self.assertEqual(res.content.decode('utf-8'), expected_info)
 
     def test_export_to_csv_invalid_arg_for_scraper(self):
@@ -1367,19 +1401,19 @@ class CommentTests(TestCase):
         result = get_all_comments_for_claim_id(self.num_of_saved_claims + random.randint(1, 10))
         self.assertTrue(result is None)
 
-    def test_update_authenticity_grade_true(self):
+    def test_update_authenticity_grade_two_true_comments(self):
         Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
         self.comment_3.save()
         Comment.objects.filter(id=self.comment_3.id).update(system_label='True')
         update_authenticity_grade(self.claim_1.id)
-        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 100)
+        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 60)
 
-    def test_update_authenticity_grade_true_and_false(self):
+    def test_update_authenticity_grade_true_and_false_comments(self):
         Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
         self.comment_3.save()
         Comment.objects.filter(id=self.comment_3.id).update(system_label='False')
         update_authenticity_grade(self.claim_1.id)
-        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 50)
+        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 80)
 
     def test_update_authenticity_grade_true_and_false_with_down_vote(self):
         Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
@@ -1392,7 +1426,7 @@ class CommentTests(TestCase):
         self.post_request.user = self.user_1
         self.assertRaises(Exception, down_vote, self.post_request)
         Comment.objects.filter(id=self.comment_3.id).update(timestamp=datetime.datetime.now() -
-                                                            datetime.timedelta(minutes=6))
+                                                            datetime.timedelta(minutes=11))
         down_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
         self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 100)
@@ -1408,10 +1442,10 @@ class CommentTests(TestCase):
         self.post_request.user = self.user_2
         self.assertRaises(Exception, up_vote, self.post_request)
         Comment.objects.filter(id=self.comment_3.id).update(timestamp=datetime.datetime.now() -
-                                                            datetime.timedelta(minutes=6))
+                                                            datetime.timedelta(minutes=11))
         up_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
-        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 50)
+        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 80)
 
     def test_update_authenticity_grade_true_with_up_vote_and_false(self):
         Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
@@ -1424,10 +1458,10 @@ class CommentTests(TestCase):
         self.post_request.user = self.user_2
         self.assertRaises(Exception, up_vote, self.post_request)
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
-                                                            datetime.timedelta(minutes=6))
+                                                            datetime.timedelta(minutes=11))
         up_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
-        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 50)
+        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 80)
 
     def test_update_authenticity_grade_true_with_down_vote_and_false(self):
         Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
@@ -1439,7 +1473,7 @@ class CommentTests(TestCase):
         self.post_request.user = self.user_1
         self.assertRaises(Exception, up_vote, self.post_request)
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
-                                                            datetime.timedelta(minutes=6))
+                                                            datetime.timedelta(minutes=11))
         down_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
         self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 0)
@@ -1455,7 +1489,7 @@ class CommentTests(TestCase):
         self.post_request.user = self.user_1
         self.assertRaises(Exception, down_vote, self.post_request)
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
-                                                            datetime.timedelta(minutes=6))
+                                                            datetime.timedelta(minutes=11))
         down_vote(self.post_request)
         comment_to_vote['comment_id'] = self.comment_3.id
         query_dict = QueryDict('', mutable=True)
@@ -1463,7 +1497,7 @@ class CommentTests(TestCase):
         self.post_request.POST = query_dict
         self.assertRaises(Exception, down_vote, self.post_request)
         Comment.objects.filter(id=self.comment_3.id).update(timestamp=datetime.datetime.now() -
-                                                            datetime.timedelta(minutes=6))
+                                                            datetime.timedelta(minutes=11))
         down_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
         self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 0)

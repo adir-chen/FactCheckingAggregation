@@ -65,25 +65,26 @@ class ClaimTests(TestCase):
         self.claim_2.save()
         self.claim_3.save()
         self.num_of_saved_claims = 3
+        self.url = 'https://www.snopes.com/fact-check/page/'
         self.comment_1 = Comment(claim_id=self.claim_1.id,
                                  user_id=self.claim_1.user_id,
                                  title='title1',
                                  description='description1',
-                                 url='http://url1/',
+                                 url=self.url + str(random.randint(1, 10)),
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
                                  label='True')
         self.comment_2 = Comment(claim_id=self.claim_2.id,
                                  user_id=self.claim_2.user_id,
                                  title='title2',
                                  description='description2',
-                                 url='http://url2/',
+                                 url=self.url + str(random.randint(1, 10)),
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
                                  label='False')
         self.comment_3 = Comment(claim_id=self.claim_3.id,
                                  user_id=self.claim_3.user_id,
                                  title='title3',
                                  description='description3',
-                                 url='http://url3/',
+                                 url=self.url + str(random.randint(1, 10)),
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
                                  label='Unknown')
 
@@ -94,7 +95,7 @@ class ClaimTests(TestCase):
         self.new_claim_details = {'claim': self.claim_4.claim,
                                   'title': 'title4',
                                   'description': 'description4',
-                                  'url': 'http://url4/',
+                                  'url': self.url + str(random.randint(1, 10)),
                                   'add_comment': "true",
                                   'verdict_date': datetime.datetime.strptime(str(datetime.date.today() - datetime.timedelta(days=random.randint(0, 10))), '%Y-%m-%d').strftime('%d/%m/%Y'),
                                   'tags': self.claim_4.tags,
@@ -276,9 +277,9 @@ class ClaimTests(TestCase):
         self.new_claim_details['user_id'] = self.user.id
         self.new_claim_details['is_superuser'] = False
         del self.new_claim_details['image_src']
-        self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
+        self.assertTrue(check_if_claim_is_valid(self.new_claim_details)[0])
         self.new_claim_details['is_superuser'] = True
-        self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
+        self.assertTrue(check_if_claim_is_valid(self.new_claim_details)[0])
 
     def test_check_if_claim_is_valid_missing_add_comment(self):
         self.new_claim_details['user_id'] = self.user.id
@@ -529,9 +530,9 @@ class ClaimTests(TestCase):
         self.update_claim_details['user_id'] = self.user.id
         self.update_claim_details['is_superuser'] = False
         del self.update_claim_details['image_src']
-        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        self.assertTrue(check_claim_new_fields(self.update_claim_details)[0])
         self.update_claim_details['is_superuser'] = True
-        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        self.assertTrue(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_claim_does_not_belong_to_user(self):
         user_3 = User(username='User3')
@@ -561,7 +562,7 @@ class ClaimTests(TestCase):
         self.update_claim_details['user_id'] = self.user.id
         self.update_claim_details['is_superuser'] = False
         Claim.objects.filter(id=self.claim_1.id).update(timestamp=datetime.datetime.now() -
-                                                        datetime.timedelta(minutes=6))
+                                                        datetime.timedelta(minutes=11))
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
         self.update_claim_details['is_superuser'] = True
         self.assertTrue(check_claim_new_fields(self.update_claim_details)[0])

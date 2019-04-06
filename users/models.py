@@ -26,6 +26,5 @@ class Scrapers(models.Model):
     true_labels = models.TextField(default='true')
     false_labels = models.TextField(default='false')
 
-
     def __str__(self):
         return self.scraper_name

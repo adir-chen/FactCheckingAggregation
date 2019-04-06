@@ -4,9 +4,11 @@ from comments.models import Comment
 from claims.models import Claim
 from django.http import HttpResponse, Http404
 from logger.views import save_log_message
-from users.views import check_if_user_exists_by_user_id, get_all_scrapers_ids_arr
+from users.views import check_if_user_exists_by_user_id, get_all_scrapers_ids_arr, get_user_reputation
 from datetime import datetime
 from django.utils import timezone
+import requests
+import math
 import csv
 
 
@@ -17,11 +19,11 @@ def add_comment(request):
         raise Http404("Permission denied")
     comment_info = request.POST.copy()
     comment_info['user_id'] = request.user.id
+    comment_info['is_superuser'] = request.user.is_superuser
     valid_comment, err_msg = check_if_comment_is_valid(comment_info)
     if not valid_comment:
         save_log_message(request.user.id, request.user.username,
-                         'Adding a new comment on claim with id ' +
-                         str(request.POST.get("claim_id")) + '. Error: ' + err_msg)
+                         'Adding a new comment on claim. Error: ' + err_msg)
         raise Exception(err_msg)
     build_comment(comment_info['claim_id'],
                   comment_info['user_id'],
@@ -57,6 +59,7 @@ def build_comment(claim_id, user_id, title, description, url, tags, verdict_date
 # The function returns true in case the comment is valid, otherwise false and an error
 def check_if_comment_is_valid(comment_info):
     from claims.views import check_if_input_format_is_valid, is_english_input
+    max_comments = 5
     err = ''
     if 'tags' not in comment_info or not comment_info['tags']:
         comment_info['tags'] = ''
@@ -72,18 +75,20 @@ def check_if_comment_is_valid(comment_info):
         err += 'Missing value for description'
     elif 'url' not in comment_info or not comment_info['url']:
         err += 'Missing value for url'
+    elif not is_valid_url(comment_info['url']):
+        err += 'Invalid value for url'
     elif 'verdict_date' not in comment_info or not comment_info['verdict_date']:
         err += 'Missing value for verdict date'
     elif 'label' not in comment_info or not comment_info['label']:
         err += 'Missing value for label'
-    elif not (comment_info['url'].startswith('http://') or comment_info['url'].startswith('https://')):
-        err += 'Invalid value for url'
     elif len(Claim.objects.filter(id=comment_info['claim_id'])) == 0:
         err += 'Claim ' + str(comment_info['claim_id']) + 'does not exist'
     elif not check_if_user_exists_by_user_id(comment_info['user_id']):
         err += 'User with id ' + str(comment_info['user_id']) + ' does not exist'
-    elif len(Comment.objects.filter(claim_id=comment_info['claim_id'], user_id=comment_info['user_id'])) > 0:
-        err += 'You can only comment once on a claim'
+    elif (not comment_info['is_superuser']) and len(Comment.objects.filter(claim_id=comment_info['claim_id'],
+                                                                           user_id=comment_info['user_id'])) >= \
+            max_comments:
+        err += 'Maximum number of comments per claim is ' + str(max_comments)
     elif not is_english_input(comment_info['title']) or \
             not is_english_input(comment_info['description']) or \
             not is_english_input(comment_info['tags']):
@@ -93,6 +98,15 @@ def check_if_comment_is_valid(comment_info):
     if len(err) > 0:
         return False, err
     return True, err
+
+
+# This function checks if a given url is valid
+def is_valid_url(url):
+    try:
+        request = requests.get(url)
+        return request.status_code == 200
+    except Exception:
+        return False
 
 
 # This function converts a date field in a dict from %Y-%m-%d format to the system format which is %d/%m/%Y
@@ -153,14 +167,13 @@ def edit_comment(request):
     valid_new_comment, err_msg = check_comment_new_fields(new_comment_fields)
     if not valid_new_comment:
         save_log_message(request.user.id, request.user.username,
-                         'Editing a comment with id ' + str(request.POST.get('comment_id')) +
-                         '. Error: ' + err_msg)
+                         'Editing a comment. Error: ' + err_msg)
         raise Exception(err_msg)
     Comment.objects.filter(id=new_comment_fields['comment_id']).update(
         title=new_comment_fields['comment_title'],
         description=new_comment_fields['comment_description'],
         url=new_comment_fields['comment_reference'],
-        tags=','.join(new_comment_fields['comment_tags'].split()),
+        tags=','.join(new_comment_fields['comment_tags'].split(',')),
         verdict_date=datetime.strptime(new_comment_fields['comment_verdict_date'], '%d/%m/%Y'),
         system_label=new_comment_fields['comment_label'])
     claim_id = Comment.objects.filter(id=new_comment_fields['comment_id']).first().claim_id
@@ -176,7 +189,7 @@ def edit_comment(request):
 def check_comment_new_fields(new_comment_fields):
     from claims.views import check_if_input_format_is_valid, is_english_input
     err = ''
-    max_minutes_to_edit_comment = 5
+    max_minutes_to_edit_comment = 10
     if 'comment_tags' not in new_comment_fields or not new_comment_fields['comment_tags']:
         new_comment_fields['comment_tags'] = ''
     if not check_if_input_format_is_valid(new_comment_fields['comment_tags']):
@@ -194,12 +207,11 @@ def check_comment_new_fields(new_comment_fields):
     elif 'comment_verdict_date' not in new_comment_fields or not new_comment_fields['comment_verdict_date']:
         err += 'Missing value for comment verdict date'
     elif 'comment_reference' not in new_comment_fields or not new_comment_fields['comment_reference']:
-        err += 'Missing value for comment reference'
+        err += 'Missing value for comment url'
+    elif not is_valid_url(new_comment_fields['comment_reference']):
+        err += 'Invalid value for comment url'
     elif 'comment_label' not in new_comment_fields or not new_comment_fields['comment_label']:
         err += 'Missing value for comment label'
-    elif not (new_comment_fields['comment_reference'].startswith('http://')
-              or new_comment_fields['comment_reference'].startswith('https://')):
-        err += 'Invalid value for url'
     elif not check_if_user_exists_by_user_id(new_comment_fields['user_id']):
         err += 'User with id ' + str(new_comment_fields['user_id']) + ' does not exist'
     elif len(Comment.objects.filter(id=new_comment_fields['comment_id'])) == 0:
@@ -250,7 +262,7 @@ def delete_comment(request):
 def check_if_delete_comment_is_valid(request):
     err = ''
     if not request.POST.get('comment_id'):
-        err += 'Missing value for claim id'
+        err += 'Missing value for comment id'
     elif len(Comment.objects.filter(id=request.POST.get('comment_id'))) == 0:
         err += 'Comment with id ' + str(request.user.id) + ' does not exist'
     elif not check_if_user_exists_by_user_id(request.user.id):
@@ -326,7 +338,7 @@ def down_vote(request):
 # The function returns true in case the vote is valid, otherwise false and an error
 def check_if_vote_is_valid(vote_fields):
     err = ''
-    max_minutes_to_vote_comment = 5
+    max_minutes_to_vote_comment = 10
     if 'user_id' not in vote_fields or not vote_fields['user_id']:
         err += 'Missing value for user id'
     elif not check_if_user_exists_by_user_id(vote_fields['user_id']):
@@ -490,17 +502,25 @@ def get_all_comments_for_claim_id(claim_id):
 
 # This function updates the claim's authenticity grade
 def update_authenticity_grade(claim_id):
-    num_of_true_label = 0
-    num_of_false_label = 0
-    result = Comment.objects.filter(claim_id=claim_id)
-    for res in result:
-        if res.up_votes.count() - res.down_votes.count() >= 0:
-            if res.system_label == 'True':
-                num_of_true_label += 1
-            elif res.system_label == 'False':
-                num_of_false_label += 1
-    if num_of_true_label + num_of_false_label == 0:
-        authenticity_grade = 0
-    else:
-        authenticity_grade = (num_of_true_label/(num_of_true_label + num_of_false_label)) * 100
+    weighted_sum_true_label, weighted_sum_false_label = 0, 0
+    num_of_true_labels, num_of_false_labels = 0, 0
+    for comment in Comment.objects.filter(claim_id=claim_id):
+        user_rep = (math.ceil(get_user_reputation(comment.user_id) / 20)) / 5
+        if comment.up_votes.count() == comment.down_votes.count() == 0:
+            comment_ratio_votes = 1
+        else:
+            comment_ratio_votes = comment.up_votes.count() / (comment.up_votes.count() + comment.down_votes.count())
+        comment_score = user_rep * comment_ratio_votes
+        if comment.system_label == 'True':
+            num_of_true_labels += 1
+            weighted_sum_true_label += comment_score
+        elif comment.system_label == 'False':
+            num_of_false_labels += 1
+            weighted_sum_false_label += comment_score
+    if not num_of_true_labels == 0:
+        weighted_sum_true_label /= num_of_true_labels
+    if not num_of_false_labels == 0:
+        weighted_sum_false_label /= num_of_false_labels
+    authenticity_grade = max(0, (weighted_sum_true_label - weighted_sum_false_label) * 100)
     Claim.objects.filter(id=claim_id).update(authenticity_grade=authenticity_grade)
+

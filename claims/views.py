@@ -12,17 +12,18 @@ from users.views import check_if_user_exists_by_user_id
 from .models import Claim
 from django.views.decorators.csrf import ensure_csrf_cookie
 import math
+from django.contrib.staticfiles.templatetags.staticfiles import static
 
 
-# This function adds a new claim to the website, followed with a comment on it
+# This function adds a new claim to the website, may followed with a comment on it
 def add_claim(request):
+    if request.method != "POST":
+        raise Http404("Permission denied")
     if not request.user.is_authenticated:  # scraper case
         if not request.POST.get('username') or not request.POST.get('password') or not \
                 authenticate(request, username=request.POST.get('username'), password=request.POST.get('password')):
             raise Http404("Permission denied")
         request.user = authenticate(request, username=request.POST.get('username'), password=request.POST.get('password'))
-    if request.method != "POST":
-        raise Http404("Permission denied")
     claim_info = request.POST.dict()
     claim_info['user_id'] = request.user.id
     claim_info['is_superuser'] = request.user.is_superuser
@@ -64,24 +65,24 @@ def check_if_claim_is_valid(claim_info):
     err = ''
     if 'tags' not in claim_info or not claim_info['tags']:
         claim_info['tags'] = ''
+    if 'image_src' not in claim_info or not claim_info['image_src']:
+        claim_info['image_src'] = static('claims/assets/images/claim_default_image.jpg')
     if not check_if_input_format_is_valid(claim_info['tags']):
         err += 'Incorrect format for tags'
-    elif 'user_id' not in claim_info:
-        err += 'Missing value for user'
+    elif 'user_id' not in claim_info or not claim_info['user_id']:
+        err += 'Missing value for user id'
     elif 'is_superuser' not in claim_info:
         err += 'Missing value for user type'
     elif 'claim' not in claim_info or not claim_info['claim']:
         err += 'Missing value for claim'
     elif 'category' not in claim_info or not claim_info['category']:
         err += 'Missing value for category'
-    elif 'image_src' not in claim_info or not claim_info['image_src']:
-        err += 'Missing value for image source'
     elif 'add_comment' not in claim_info:
         err += 'Missing value for adding a comment option'
-    elif len(Claim.objects.filter(claim=claim_info['claim'])) > 0:
-        err += 'Claim ' + claim_info['claim'] + ' already exists'
     elif not check_if_user_exists_by_user_id(claim_info['user_id']):
         err += 'User ' + str(claim_info['user_id']) + ' does not exist'
+    elif len(Claim.objects.filter(claim=claim_info['claim'], user_id=claim_info['user_id'])) > 0:
+        err += 'Claim ' + claim_info['claim'] + ' already exists'
     elif not is_english_input(claim_info['claim']) or \
             not is_english_input(claim_info['category']) or \
             not is_english_input(claim_info['tags']):
@@ -159,7 +160,7 @@ def edit_claim(request):
     Claim.objects.filter(id=claim.id).update(
         claim=new_claim_fields['claim'],
         category=new_claim_fields['category'],
-        tags=','.join(new_claim_fields['tags'].split()),
+        tags=','.join(new_claim_fields['tags'].split(',')),
         image_src=new_claim_fields['image_src'])
     save_log_message(request.user.id, request.user.username,
                      'Editing a claim with id ' + str(request.POST.get('claim_id')), True)
@@ -172,9 +173,11 @@ def edit_claim(request):
 def check_claim_new_fields(new_claim_fields):
     from django.utils import timezone
     err = ''
-    max_minutes_to_edit_claim = 5
+    max_minutes_to_edit_claim = 10
     if 'tags' not in new_claim_fields or not new_claim_fields['tags']:
         new_claim_fields['tags'] = ''
+    if 'image_src' not in new_claim_fields or not new_claim_fields['image_src']:
+        new_claim_fields['image_src'] = static('claims/assets/images/claim_default_image.jpg')
     if not check_if_input_format_is_valid(new_claim_fields['tags']):
         err += 'Incorrect format for tags'
     elif 'user_id' not in new_claim_fields or not new_claim_fields['user_id']:
@@ -187,15 +190,15 @@ def check_claim_new_fields(new_claim_fields):
         err += 'Missing value for claim'
     elif 'category' not in new_claim_fields or not new_claim_fields['category']:
         err += 'Missing value for category'
-    elif 'image_src' not in new_claim_fields or not new_claim_fields['image_src']:
-        err += 'Missing value for image source'
     elif not check_if_user_exists_by_user_id(new_claim_fields['user_id']):
         err += 'User with id ' + str(new_claim_fields['user_id']) + ' does not exist'
     elif len(Claim.objects.filter(id=new_claim_fields['claim_id'])) == 0:
         err += 'Claim with id ' + str(new_claim_fields['claim_id']) + ' does not exist'
-    elif (not new_claim_fields['is_superuser']) and len(Claim.objects.filter(id=new_claim_fields['claim_id'], user_id=new_claim_fields['user_id'])) == 0:
+    elif (not new_claim_fields['is_superuser']) and len(Claim.objects.filter(id=new_claim_fields['claim_id'],
+                                                                             user_id=new_claim_fields['user_id'])) == 0:
         err += 'Claim does not belong to user with id ' + str(new_claim_fields['user_id'])
-    elif len(Claim.objects.exclude(id=new_claim_fields['claim_id']).filter(claim=new_claim_fields['claim'])) > 0:
+    elif len(Claim.objects.exclude(id=new_claim_fields['claim_id']).filter(claim=new_claim_fields['claim'],
+                                                                           user_id=new_claim_fields['user_id'])) > 0:
         err += 'Claim already exists'
     elif (not new_claim_fields['is_superuser']) and (timezone.now() - Claim.objects.filter(id=new_claim_fields['claim_id']).first().timestamp).total_seconds() \
             / 60 > max_minutes_to_edit_claim:
@@ -242,8 +245,10 @@ def check_if_delete_claim_is_valid(request):
         err += 'Claim with id ' + str(request.user.id) + ' does not exist'
     elif not check_if_user_exists_by_user_id(request.user.id):
         err += 'User with id ' + str(request.user.id) + ' does not exist'
-    elif not request.user.is_superuser and len(Claim.objects.filter(id=request.POST.get('claim_id'), user=request.user.id)) == 0:
-        err += 'Claim with id ' + str(request.POST.get('claim_id')) + ' does not belong to user with id ' + str(request.user.id)
+    elif not request.user.is_superuser and len(Claim.objects.filter(id=request.POST.get('claim_id'),
+                                                                    user=request.user.id)) == 0:
+        err += 'Claim with id ' + str(request.POST.get('claim_id')) + ' does not belong to user with id ' + \
+               str(request.user.id)
     if len(err) > 0:
         return False, err
     return True, err
@@ -291,8 +296,10 @@ def download_claims(request):
     if [header.lower().strip() for header in claims.split('\n')[0].split(',')] != \
             ['claim', 'category', 'tags', 'image_src', 'add_comment',
              'title', 'description', 'url', 'verdict_date', 'label']:
-        raise Http404('BLABLA')
-    for claim in csv.DictReader(claims.splitlines()):
+        raise Http404(', '.join([header.lower().strip() for header in claims.split('\n')[0].split(',')]))
+    reader = csv.DictReader(claims.splitlines())
+    reader.fieldnames = [name.lower() for name in reader.fieldnames]
+    for claim in reader:
         claim_info = {'claim': claim['claim'],
                       'category': claim['category'],
                       'tags': claim['tags'],
@@ -350,7 +357,7 @@ def view_claim(request, claim_id):
     elif request.method != "GET":
         raise Http404("Permission denied")
     comments = get_users_details_for_comments(Comment.objects.filter(claim_id=claim_id))
-    tweets = get_users_details_for_comments(Tweet.objects.filter(claim_id=claim_id))
+    tweets = Tweet.objects.filter(claim_id=claim_id)
     user_img, user_rep = None, None
     if request.user.is_authenticated:
         user_img, user_rep = get_user_img_and_rep(request.user.id)
@@ -507,4 +514,3 @@ def return_get_request_to_user(user):
     request.stats_code = 200
     request.method = 'GET'
     return request
-

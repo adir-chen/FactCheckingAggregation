@@ -339,7 +339,7 @@ div.page_box{
     }
 }
 
-.claim_box img{
+img.claim_image{
     width: 100%;
     margin: 0;
     border-radius: 7px 7px 0 0;
@@ -441,7 +441,7 @@ span.authenticity_grade{
 
 div.comment_box {
     background-color: #fff;
-    margin: 20px 0;
+    margin: 20px 0 0 0;
     border-radius: 7px;
     border: 1px solid #c0c0c0;
     width: 100%;
@@ -571,6 +571,87 @@ a.tag_link {
 a.tag_link:hover{
     color: #000;
     border-color: #000;
+}
+
+div.comment_refrence_preview{
+    padding: 20px;
+    margin: 10px 0;
+    border-radius: 7px;
+    background: #d7e5f2;
+    display: grid;
+    grid-template-areas:
+        'preview-details'
+        'preview-img';
+}
+
+.comment_refrence_preview img{
+    max-width: 100%;
+    width: auto;
+    height: auto;
+}
+
+.preview_img{
+    grid-area: preview-img;
+}
+
+.preview_details{
+    grid-area: preview-details;
+}
+
+div.item_preview{
+        max-width: 100%;
+    }
+
+@media (min-width: 800px) {
+    div.comment_refrence_preview {
+        grid-template-areas: 'preview-img preview-details';
+    }
+
+    .preview_details{
+        grid-area: preview-details;
+        padding-left: 20px;
+    }
+
+    iframe.youtube_preview{
+        width: 650px;
+        height: 315px;
+    }
+}
+
+/*################
+    REPLIES
+################*/
+
+div.replies_area{
+    background: #fbfbfb;
+    padding: 10px;
+    border-radius: 0 0 7px 7px;
+    width: 85%;
+    margin: auto;
+    border: 1px solid #dedede;
+    border-top: 0;
+}
+
+div.reply_box{
+    padding: 10px;
+    margin: 0;
+    font-size: 14px;
+    display: grid;
+    grid-template-columns: 80px auto;
+    /*grid-template-areas:*/
+    /*    'reply-img'*/
+    /*    'reply-content';*/
+}
+
+.reply_img img{
+    max-width: 50px;
+    max-height: 50px;
+}
+
+@media (min-width: 800px) {
+    div.reply_box{
+        /*grid-template-areas: 'reply-img reply-content';*/
+    }
 }
 
 /*################

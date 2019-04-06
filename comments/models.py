@@ -24,5 +24,51 @@ class Comment(models.Model):
     def tags_as_list(self):
         return self.tags.split(',')
 
+    def users_replied_ids(self):
+        from replies.models import Reply
+        max_replies = 5
+        users_with_num_of_replies = {}
+        for reply in Reply.objects.filter(comment_id=self.id):
+            if reply.user_id not in users_with_num_of_replies:
+                users_with_num_of_replies[reply.user_id] = 1
+            else:
+                users_with_num_of_replies[reply.user_id] += 1
+        user_ids = [user_id for user_id in users_with_num_of_replies if users_with_num_of_replies[user_id] > max_replies]
+        return user_ids
+
+    def get_replies(self):
+        from replies.models import Reply
+        return Reply.objects.filter(comment_id=self.id)
+
+    def get_first_two_replies(self):
+        return self.get_replies()[:2]
+
+    def has_more_replies(self):
+        return len(self.get_replies()) > 2
+
+    def get_more_replies(self):
+        return self.get_replies()[2:]
+
+    @staticmethod
+    def get_replies_images(reply_objects):
+        from users.models import Users_Images
+        replies = {}
+        for reply in reply_objects:
+            user_img = Users_Images.objects.filter(user_id=reply.user_id)
+            if len(user_img) == 0:
+                new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=reply.user_id).first())
+                new_user_img.save()
+                user_img = new_user_img
+            else:
+                user_img = user_img.first()
+            replies[reply] = {'user': User.objects.filter(id=reply.user_id).first(),
+                              'user_img': user_img}
+        return replies
+
+    def get_replies_with_images(self):
+        return Comment.get_replies_images(self.get_first_two_replies())
+
+    def get_more_replies_with_images(self):
+        return Comment.get_replies_images(self.get_more_replies())
 
 

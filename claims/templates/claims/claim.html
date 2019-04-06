@@ -1,6 +1,13 @@
 {% extends 'claims/layout.html' %}
 {% load social_widgets %}
 {% block page_content %}
+    {% load is_debug_mode %}
+    {% is_debug_mode as is_debug_mode %}
+    <head>
+        {% if not is_debug_mode %}
+	        <script src='https://www.google.com/recaptcha/api.js' async defer></script>
+        {% endif %}
+    </head>
     <div class="page_wrapper">
         <h1 id="claim_page_title" style="margin-bottom: 30px;">{{ claim.claim }}</h1>
         <div id="claim_page_title_wrapper" class="claim_page_title_wrapper">
@@ -28,8 +35,11 @@
             Image Url: <input id="{{ claim.id }}_image_src" value="{{ claim.image_src }}" type="text" placeholder="{{ claim.image_src }}" class="claim_edit">
         </div>
         <br>
+        <div class="buttons_row">
+        {% if claim.get_report_link %}
+            <a href="{{ claim.get_report_link }}" class="btn btn-info">Read Report</a>
+        {% endif %}
         {% if request.user.is_authenticated %}
-            <div class="buttons_row">
                 {% if claim.user_id == request.user.id or request.user.is_superuser %}
                     <button id="{{ claim.id }}_claim_edit" hidden="hidden" type="submit" class="btn btn-info" onclick="edit_claim()">Edit your claim</button>
                     <button id="{{ claim.id }}_claim_cancel" hidden="hidden" type="submit" class="btn btn-info" onclick="edit_claim_cancel()">Cancel</button>
@@ -37,8 +47,8 @@
                     <button id="{{ claim.id }}_claim_delete" type="submit" class="btn btn-danger">Delete</button>
                 {% endif %}
                 <button id="{{ claim.id }}_claim_report_spam" type="submit" class="btn btn-danger">Report Spam</button>
-            </div>
         {% endif %}
+        </div>
         {% load static %}
         <a id="{{ claim.id }}_claim_twitter_share" class="btn twitter-share-btn" href="https://twitter.com/intent/tweet?text=http://{{ request.META.HTTP_HOST }}{{ request.path }}%20"
         target="_blank" data-size="large"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"> Share claim on Twitter</a>
@@ -51,8 +61,8 @@
         <div id="tweets">
             <h3>Related tweets:</h3>
             <br>
-            {% for tweet, user_details  in tweets.items %}
-                {% include 'tweets/tweet.html' with tweet=tweet user_details=user_details request=request only %}
+            {% for tweet  in tweets %}
+                {% include 'tweets/tweet.html' with claim=claim tweet=tweet request=request only %}
             {% endfor %}
         </div>
         <br>
@@ -63,55 +73,17 @@
             <h3>Users' verdicts:</h3>
             <br>
             {% for comment, user_details  in comments.items %}
-                {% include 'comments/comment.html' with comment=comment user_details=user_details request=request only %}
+                {% include 'comments/comment.html' with comment=comment user_details=user_details show_replies=True request=request only %}
             {% endfor %}
         {% else %}
             <h3>No verdicts yet.</h3>
         {%  endif %}
         </div>
-        {% if request.user.is_authenticated and request.user.id not in claim.users_tweeted_ids %}
-            <hr><br>
-            <h3>Add Tweet:</h3>
-            <br>
-            <div class="tweet_box">
-                <div style="grid-area: tweet-user;">
-                    <div class="comment_user_image">
-                        {% load static %}
-                        <img src="{{ user_img }}">
-                    </div>
-                    <div class="comment_user_details">
-                        User: <a href="/users/{{ request.user.username }}">{{ request.user.username }}</a><br>
-                        {% for i in 'i'|rjust:user_rep %}
-                            <img src="{% static 'claims/assets/images/star.png' %}">
-                        {% endfor %}
-                    </div>
-
-                </div>
-                <div id="tweet_content" class="tweet_content_edit">
-                    <div class="tweet_emb" style="padding: 20px;">
-                        Tweet URL:<br>
-                        <input id="{{ claim.id }}_new_tweet_link" type="text">
-                    </div>
-                    <div class="tweet_verdict" style="padding: 20px;">
-                        Author Name:<br>
-                        <input id="{{ claim.id }}_new_tweet_author" type="text">
-                        <br>
-                        Author Loyalty Rank:<br>
-                        <input id="{{ claim.id }}_new_tweet_author_rank" type="number" min="1" max="100">
-                    </div>
-                </div>
-                <div class="tweet_btn_row">
-                    <p id="success_msg_{{ claim.id }}_new_tweet" class="action_msg error_msg" hidden>Tweet was added successfully</p>
-                    <p id="error_msg_{{ claim.id }}_new_tweet" class="action_msg error_msg" hidden></p>
-                    <button id="{{ claim.id }}_new_tweet_save" type="submit" class="btn btn-info">Add Tweet</button>
-                </div>
-            </div>
-        {% endif %}
         {% if request.user.is_authenticated and request.user.id not in claim.users_commented_ids %}
             <br><hr>
             <h3>Add Comment:</h3>
             <br>
-            <div class="comment_box">
+            <div class="comment_box" id="add_new_comment_box">
                 <div class="comment_header">
                     <div class="comment_user_image">
                         {% load static %}
@@ -134,7 +106,6 @@
                 </div>
                 <hr>
                 <div class="comment_content_edit">
-                    <p id="success_msg_{{ claim.id }}_new_comment" class="action_msg error_msg" hidden>Comment was added successfully</p>
                     <p id="error_msg_{{ claim.id }}_new_comment" class="action_msg error_msg" hidden></p>
                     Title: <input id="{{ claim.id }}_new_comment_title" type="text"><br>
                     Description:<br>
@@ -147,6 +118,9 @@
                     <p class="action_msg note_msg">Used for searching purpose.</p>
                     <input id="{{ claim.id }}_new_comment_tags" type="text"><br>
                     <p id="add_new_comment" class="action_msg note_msg" >If you want to edit your comment you will be able to do so during the next 5 minutes from the time you added it.</p>
+                    {% if not is_debug_mode %}
+                        <div class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
+                    {% endif %}
                     <button type="submit" id="{{ claim.id }}_new_comment_save" class="btn btn-info" style="margin: 10px 0;">Add your comment</button>
                 </div>
             </div>
@@ -172,22 +146,14 @@
             $("#success_msg_{{ claim.id }}_claim_report_spam").attr("hidden", false);
             localStorage.clear();
         }
-        else if(localStorage.getItem("success_msg_{{ claim.id }}_new_comment")){
-            $("#success_msg_{{ claim.id }}_new_comment").attr("hidden", false);
-            localStorage.clear();
-        }
-
 
         function hide_all_msgs(){
             $("#success_msg_{{ claim.id }}_claim_edit").attr("hidden", true);
             $("#success_msg_{{ claim.id }}_claim_report_spam").attr("hidden", true);
-            $("#success_msg_{{ claim.id }}_new_comment").attr("hidden", true);
-            $("#success_msg_{{ claim.id }}_new_tweet").attr("hidden", true);
 
             $("#error_msg_{{ claim.id }}_claim_edit").attr("hidden", true);
             $("#error_msg_{{ claim.id }}_claim_report_spam").attr("hidden", true);
             $("#error_msg_{{ claim.id }}_new_comment").attr("hidden", true);
-            $("#error_msg_{{ claim.id }}_new_tweet").attr("hidden", true);
         }
 
         function edit_claim() {
@@ -215,58 +181,37 @@
         }
 
         $("#{{ claim.id }}_new_comment_save").click(function(){
-            $.ajax({
-                type: 'POST',
-                url: "{% url 'comments:add_comment' %}",
-                headers: { "X-CSRFToken": getCookie('csrftoken') },
-                data: {
-                    claim_id: '{{ claim.id }}',
-                    title: $("#{{ claim.id }}_new_comment_title").val(),
-                    description: $("#{{ claim.id }}_new_comment_description").val(),
-                    url: $("#{{ claim.id }}_new_comment_url").val(),
-                    tags: $("#{{ claim.id }}_new_comment_tags").val(),
-                    verdict_date: $("#{{ claim.id }}_new_comment_date").val(),
-                    label: document.querySelector('input[name="{{ claim.id }}_new_comment_label"]:checked').value,
-                },
-                success: function () {
-                    localStorage.setItem("success_msg_{{ claim.id }}_new_comment", true);
-                    window.location.reload();
-                },
-                error: function (error) {
-                    hide_all_msgs();
-                    let err = error.responseText.split('\n')[1];
-                    document.getElementById("error_msg_{{ claim.id }}_new_comment").innerHTML =
-                    'Error: <br>' + err;
-                    $("#error_msg_{{ claim.id }}_new_comment").attr("hidden", false);
-                }
-            });
+            let debug_mode = '{% is_debug_mode %}' == 'True';
+            if (debug_mode || (!debug_mode && check_recaptcha())){
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'comments:add_comment' %}",
+                    headers: { "X-CSRFToken": getCookie('csrftoken') },
+                    data: {
+                        claim_id: '{{ claim.id }}',
+                        title: $("#{{ claim.id }}_new_comment_title").val(),
+                        description: $("#{{ claim.id }}_new_comment_description").val(),
+                        url: $("#{{ claim.id }}_new_comment_url").val(),
+                        tags: $("#{{ claim.id }}_new_comment_tags").val(),
+                        verdict_date: $("#{{ claim.id }}_new_comment_date").val(),
+                        label: document.querySelector('input[name="{{ claim.id }}_new_comment_label"]:checked').value,
+                    },
+                    success: function () {
+                        window.location.reload();
+                        $('html, body').animate({
+                            scrollTop: $("#comment_box_{{ claim.max_comment_id }}").offset().top + 250
+                        }, 0);
+                    },
+                    error: function (error) {
+                        hide_all_msgs();
+                        let err = error.responseText.split('\n')[1];
+                        document.getElementById("error_msg_{{ claim.id }}_new_comment").innerHTML =
+                        'Error: <br>' + err;
+                        $("#error_msg_{{ claim.id }}_new_comment").attr("hidden", false);
+                    }
+                });
+            }
         });
-
-        $("#{{ claim.id }}_new_tweet_save").click(function(){
-            $.ajax({
-                type: 'POST',
-                url: "{% url 'tweets:add_tweet' %}",
-                headers: { "X-CSRFToken": getCookie('csrftoken') },
-                data: {
-                    claim_id: '{{ claim.id }}',
-                    tweet_link: $("#{{ claim.id }}_new_tweet_link").val(),
-                    author: $("#{{ claim.id }}_new_tweet_author").val(),
-                    author_rank: $("#{{ claim.id }}_new_tweet_author_rank").val(),
-                },
-                success: function () {
-                    localStorage.setItem("success_msg_{{ claim.id }}_new_tweet", true);
-                    window.location.reload();
-                    location.href = 'http://{{ request.META.HTTP_HOST }}/claim/{{ claim.id }}';
-                },
-                error: function (error) {
-                    hide_all_msgs();
-                    let err = error.responseText.split('\n')[1];
-                    document.getElementById("error_msg_{{ claim.id }}_new_tweet").innerHTML =
-                    'Error: <br>' + err;
-                    $("#error_msg_{{ claim.id }}_new_tweet").attr("hidden", false);
-                }
-            });
-         });
 
         $("#{{ claim.id }}_claim_save").click(function(){
             $.ajax({
@@ -309,7 +254,6 @@
                     },
                     error: function (error) {
                         hide_all_msgs();
-                        window.location.reload();
                         let err = error.responseText.split('\n')[1];
                         document.getElementById("error_msg_{{ claim.id }}_claim_edit").innerHTML =
                         'Error: <br>' + err;
@@ -345,6 +289,29 @@
         function search_on_twitter(tag){
             window.open('https://twitter.com/search?q=' + tag, '_blank');
             {# for google --> 'http://google.com/search?q='#}
+        }
+
+        function check_recaptcha() {
+            if (grecaptcha === undefined) {
+                alert('Recaptcha not defined');
+                return false;
+            }
+            let response = grecaptcha.getResponse();
+            if (!response) {
+                alert('Could not get recaptcha response');
+                return false;
+            }
+
+            let ajax = new XMLHttpRequest();
+            ajax.onreadystatechange = function() {
+                if (this.readyState === 4) {
+                    if (this.status === 200) {
+                        alert('Recaptcha got unexpected error');
+                        return false;
+                    }
+                }
+            };
+            return true;
         }
 
         function getCookie(c_name) {

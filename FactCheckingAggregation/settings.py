@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'claims.apps.ClaimsConfig',
     'comments.apps.CommentsConfig',
     'tweets.apps.TweetsConfig',
+    'replies.apps.RepliesConfig',
     'users.apps.UsersConfig',
     'search.apps.SearchConfig',
     'contact_us.apps.ContactUsConfig',
@@ -159,6 +160,7 @@ USE_TZ = False
 
 STATIC_URL = '/static/'
 
+STATIC_ROOT = '/claims/static/claims/assets/images/'
 # Use nose to run all tests
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
@@ -178,3 +180,5 @@ NOSE_ARGS = [
     # '--cover-html'
 ]
 
+GOOGLE_RECAPTCHA_V2_SECRET_KEY = '6LdG7JoUAAAAAKQaAFo67f-5fzV6LiXZ-zJomV9V'
+GOOGLE_RECAPTCHA_V2_SITE_KEY = '6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz'
