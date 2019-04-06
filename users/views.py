@@ -366,6 +366,8 @@ def get_true_labels(scraper_name):
     true_labels = []
     if len(scraper) > 0:
         true_labels = scraper.first().true_labels.split(',')
+        if len(true_labels) == 1 and not true_labels[0]:  # without labels
+            true_labels = []
     return true_labels
 
 
@@ -375,6 +377,8 @@ def get_false_labels(scraper_name):
     false_labels = []
     if len(scraper) > 0:
         false_labels = scraper.first().false_labels.split(',')
+        if len(false_labels) == 1 and not false_labels[0]:  # without labels
+            false_labels = []
     return false_labels
 
 
@@ -390,8 +394,11 @@ def add_true_label_to_scraper(request):
                          'Adding a new label (T) for scraper. Error: ' + err_msg)
         raise Exception(err_msg)
     scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
-    Scrapers.objects.filter(id=scraper.id).update(true_labels=scraper.true_labels +
-                                                  ',' + scraper_info['scraper_label'])
+    true_labels = ''
+    if scraper.true_labels:
+        true_labels = scraper.true_labels + ','
+    Scrapers.objects.filter(id=scraper.id).update(true_labels=true_labels +
+                                                  scraper_info['scraper_label'])
     update_scrapers_comments_verdicts(scraper.scraper_id.id)
     save_log_message(request.user.id, request.user.username,
                      'Adding a new label (T) for scraper - ' + scraper.scraper_name)
@@ -439,8 +446,11 @@ def add_false_label_to_scraper(request):
                          'Adding a new label (F) for scraper. Error: ' + err_msg)
         raise Exception(err_msg)
     scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
-    Scrapers.objects.filter(id=scraper.id).update(false_labels=scraper.false_labels +
-                                                               ',' + scraper_info['scraper_label'])
+    false_labels = ''
+    if scraper.false_labels:
+        false_labels = scraper.false_labels + ','
+    Scrapers.objects.filter(id=scraper.id).update(false_labels=false_labels +
+                                                  scraper_info['scraper_label'])
     update_scrapers_comments_verdicts(scraper.scraper_id.id)
     save_log_message(request.user.id, request.user.username,
                      'Adding a new label (F) for scraper - ' + scraper.scraper_name)
