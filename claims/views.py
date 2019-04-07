@@ -11,6 +11,7 @@ from logger.views import save_log_message, check_duplicate_log_for_user
 from users.views import check_if_user_exists_by_user_id
 from .models import Claim
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.conf import settings
 import math
 from django.contrib.staticfiles.templatetags.staticfiles import static
 
@@ -67,7 +68,9 @@ def check_if_claim_is_valid(claim_info):
         claim_info['tags'] = ''
     if 'image_src' not in claim_info or not claim_info['image_src']:
         claim_info['image_src'] = static('claims/assets/images/claim_default_image.jpg')
-    if not check_if_input_format_is_valid(claim_info['tags']):
+    if 'g_recaptcha_response' not in claim_info or not check_g_recaptcha_response(claim_info['g_recaptcha_response']):
+        err += 'Invalid Captcha'
+    elif not check_if_input_format_is_valid(claim_info['tags']):
         err += 'Incorrect format for tags'
     elif 'user_id' not in claim_info or not claim_info['user_id']:
         err += 'Missing value for user id'
@@ -92,6 +95,17 @@ def check_if_claim_is_valid(claim_info):
     if len(err) > 0:
         return False, err
     return True, err
+
+
+def check_g_recaptcha_response(user_recaptcha_response):
+    import requests
+    data = {
+        'secret': settings.GOOGLE_RECAPTCHA_V2_SECRET_KEY,
+        'response': user_recaptcha_response
+    }
+    r = requests.post('https://www.google.com/recaptcha/api/siteverify', data=data)
+    result = r.json()
+    return result['success']
 
 
 # This function checks if given claim's tags are valid, i.e. the tags are in the correct format.
@@ -309,7 +323,8 @@ def download_claims(request):
                       'description': claim['description'],
                       'url': claim['url'],
                       'verdict_date': claim['verdict_date'],
-                      'label': claim['label']}
+                      'label': claim['label'],
+                      'g_recaptcha_response': settings.TAP_KEY}
         post_request = HttpRequest()
         post_request.method = 'POST'
         post_request.user = request.user

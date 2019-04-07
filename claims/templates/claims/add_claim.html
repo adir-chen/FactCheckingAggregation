@@ -47,7 +47,8 @@
                 <input type="radio" name="label" class="label" value="Unknown" disabled>Unknown<br>
             </div>
             {% if not is_debug_mode %}
-                <div id="g-recaptcha" class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
+                <div id="g-recaptcha" class="g-recaptcha" data-sitekey="6LeWrJwUAAAAAI-kXXteJEO6BYsOwpdwN_Uf7uaz"></div>
+                <div id="g-recaptcha-response" hidden></div>
             {% endif %}
             <button id="submit_claim" type="submit" class="btn btn-info" style="margin: 10px 0;">Add Claim</button>
         </div>
@@ -72,7 +73,7 @@
                     url: "{% url 'claims:add_claim' %}",
                     headers: { "X-CSRFToken": getCookie('csrftoken') },
                     data: {
-                        {#g_recaptcha_response: $("#g-recaptcha-response").val(),#}
+                        g_recaptcha_response: $("#g-recaptcha-response").val(),
                         claim: $("#claim").val(),
                         category: $("#category").val(),
                         tags: $("#tags").val(),
@@ -137,11 +138,12 @@
                 return false;
             }
             let response = grecaptcha.getResponse();
+
             if (!response) {
                 alert('Could not get recaptcha response');
                 return false;
             }
-
+            $("#g-recaptcha-response").val(response);
             let ajax = new XMLHttpRequest();
             ajax.onreadystatechange = function() {
                 if (this.readyState === 4) {

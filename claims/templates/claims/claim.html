@@ -119,7 +119,8 @@
                     <input id="{{ claim.id }}_new_comment_tags" type="text"><br>
                     <p id="add_new_comment" class="action_msg note_msg" >If you want to edit your comment you will be able to do so during the next 5 minutes from the time you added it.</p>
                     {% if not is_debug_mode %}
-                        <div class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
+                        <div class="g-recaptcha" data-sitekey="6LeWrJwUAAAAAI-kXXteJEO6BYsOwpdwN_Uf7uaz"></div>
+                        <div id="g-recaptcha-response" hidden></div>
                     {% endif %}
                     <button type="submit" id="{{ claim.id }}_new_comment_save" class="btn btn-info" style="margin: 10px 0;">Add your comment</button>
                 </div>
@@ -188,6 +189,7 @@
                     url: "{% url 'comments:add_comment' %}",
                     headers: { "X-CSRFToken": getCookie('csrftoken') },
                     data: {
+                        g_recaptcha_response: $("#g-recaptcha-response").val(),
                         claim_id: '{{ claim.id }}',
                         title: $("#{{ claim.id }}_new_comment_title").val(),
                         description: $("#{{ claim.id }}_new_comment_description").val(),
@@ -301,7 +303,7 @@
                 alert('Could not get recaptcha response');
                 return false;
             }
-
+            $("#g-recaptcha-response").val(response);
             let ajax = new XMLHttpRequest();
             ajax.onreadystatechange = function() {
                 if (this.readyState === 4) {

@@ -58,12 +58,14 @@ def build_comment(claim_id, user_id, title, description, url, tags, verdict_date
 # This function checks if a given comment is valid, i.e. the comment has all the fields with the correct format.
 # The function returns true in case the comment is valid, otherwise false and an error
 def check_if_comment_is_valid(comment_info):
-    from claims.views import check_if_input_format_is_valid, is_english_input
+    from claims.views import check_g_recaptcha_response, check_if_input_format_is_valid, is_english_input
     max_comments = 5
     err = ''
     if 'tags' not in comment_info or not comment_info['tags']:
         comment_info['tags'] = ''
-    if not check_if_input_format_is_valid(comment_info['tags']):
+    if 'g_recaptcha_response' not in comment_info or not check_g_recaptcha_response(comment_info['g_recaptcha_response']):
+        err += 'Invalid Captcha'
+    elif not check_if_input_format_is_valid(comment_info['tags']):
         err += 'Incorrect format for tags'
     elif 'claim_id' not in comment_info or not comment_info['claim_id']:
         err += 'Missing value for claim id'

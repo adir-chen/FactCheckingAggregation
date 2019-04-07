@@ -117,20 +117,25 @@ class CommentTests(TestCase):
         self.comment_5.save()
         self.comment_6.save()
         self.num_of_saved_comments = 4
+
+        self.SITE_KEY_TEST = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
+
         self.new_comment_details_user_1 = {'claim_id': self.comment_4.claim_id,
                                            'title': self.comment_4.title,
                                            'description': self.comment_4.description,
                                            'url': self.comment_4.url,
                                            'verdict_date': datetime.datetime.strptime(str(self.comment_4.verdict_date), '%Y-%m-%d').strftime('%d/%m/%Y'),
                                            'label': self.comment_4.label,
-                                           'is_superuser': True}
+                                           'is_superuser': True,
+                                           'g_recaptcha_response': self.SITE_KEY_TEST}
         self.new_comment_details_user_2 = {'claim_id': self.comment_3.claim_id,
                                            'title': self.comment_3.title,
                                            'description': self.comment_3.description,
                                            'url': self.comment_3.url,
                                            'verdict_date': datetime.datetime.strptime(str(self.comment_3.verdict_date), '%Y-%m-%d').strftime('%d/%m/%Y'),
                                            'label': self.comment_3.label,
-                                           'is_superuser': False}
+                                           'is_superuser': False,
+                                           'g_recaptcha_response': self.SITE_KEY_TEST}
 
         self.update_comment_details = {'comment_title': self.comment_3.title,
                                        'comment_description': self.comment_3.description,
