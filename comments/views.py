@@ -84,7 +84,7 @@ def check_if_comment_is_valid(comment_info):
     elif 'label' not in comment_info or not comment_info['label']:
         err += 'Missing value for label'
     elif len(Claim.objects.filter(id=comment_info['claim_id'])) == 0:
-        err += 'Claim ' + str(comment_info['claim_id']) + 'does not exist'
+        err += 'Claim ' + str(comment_info['claim_id']) + ' does not exist'
     elif not check_if_user_exists_by_user_id(comment_info['user_id']):
         err += 'User with id ' + str(comment_info['user_id']) + ' does not exist'
     elif (not comment_info['is_superuser']) and len(Comment.objects.filter(claim_id=comment_info['claim_id'],
