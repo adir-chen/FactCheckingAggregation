@@ -1,3 +1,4 @@
 .idea
 *.pyc
 FactCheckingAggregation/settings.py
+analytics/GoogleAPI/client_secrets.json
