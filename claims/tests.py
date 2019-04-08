@@ -92,6 +92,7 @@ class ClaimTests(TestCase):
         self.comment_2.save()
         self.comment_3.save()
         self.num_of_saved_comments = 3
+        self.SITE_KEY_TEST = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
         self.new_claim_details = {'claim': self.claim_4.claim,
                                   'title': 'title4',
                                   'description': 'description4',
@@ -101,7 +102,8 @@ class ClaimTests(TestCase):
                                   'tags': self.claim_4.tags,
                                   'category': self.claim_4.category,
                                   'label': 'False',
-                                  'image_src': self.claim_4.image_src}
+                                  'image_src': self.claim_4.image_src,
+                                  'g_recaptcha_response': self.SITE_KEY_TEST}
         self.post_request = HttpRequest()
         self.post_request.method = 'POST'
         self.get_request = HttpRequest()

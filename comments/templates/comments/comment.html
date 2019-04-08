@@ -107,7 +107,7 @@
             </div>
             {% if comment.has_more_replies %}
                 <button id="reply_{{ comment.id }}_view_more" type="submit" class="btn btn-info">View more</button>
-                <button id="reply_{{ comment.id }}_hide_replies" type="submit" class="btn btn-info" hidden="hidden">Hide replies</button>
+                <button id="reply_{{ comment.id }}_hide_replies" type="submit" class="btn btn-info" hidden="hidden">Show less</button>
             {% endif %}
             {% if request.user.is_authenticated %}
                 {% if request.user.is_superuser or request.user.id not in comment.users_replied_ids %}
@@ -374,9 +374,6 @@
                 },
                 success: function () {
                     window.location.reload();
-                    {#$('html, body').animate({#}
-                    {#    scrollTop: $("#comment_box_{{ claim.max_comment_id }}").offset().top + 250#}
-                    {# }, 0);#}
                 },
                 error: function (error) {
                     hide_all_msgs();
@@ -390,8 +387,8 @@
     });
 
     function getYoutubeVideoId(url) {
-        var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-        var match = url.match(regExp);
+        let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        let match = url.match(regExp);
 
         if (match && match[2].length == 11) {
             return match[2];
@@ -401,11 +398,11 @@
     }
 
     function linkPreview(result){
-        var comment_link = '{{ comment.url }}';
+        let comment_link = '{{ comment.url }}';
         if (comment_link.toLowerCase().startsWith("https://twitter.com/")){
             $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
              document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML = "<blockquote class=\"twitter-tweet item_preview\" data-lang=\"en\">\n" +
-                 "                    <a href=\"{{ comment.url }}\"></a>\n" +
+                 "                    <a target=\"_blank\" href=\"{{ comment.url }}\"></a>\n" +
                  "                </blockquote>";
             $("#comment_{{ comment.id }}_reference_preview").attr("hidden", false);
         }
@@ -420,13 +417,14 @@
         else if (result != 'error') {
             try {
                 if (result.title != "" && result.description != "" && result.src != "") {
+                    console.log('Yes')
                     $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
                     document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML = "<div class=\"comment_refrence_preview\">\n" +
                         "                        <div class=\"preview_img\">\n" +
                         "                            <a target=\"_blank\" href={{ comment.url }}><img src=\"" + result.image + "\"></a>\n" +
                         "                        </div>\n" +
                         "                        <div class=\"preview_details\">\n" +
-                        "                            <a href=\"{{ comment.url }}\"><h5>" + result.title+ "</h5></a>\n" +
+                        "                            <a target=\"_blank\" href=\"{{ comment.url }}\"><h5>" + result.title+ "</h5></a>\n" +
                         "                            <p>" + result.description + "</p>\n" +
                         "                        </div>\n" +
                         "                    </div>";

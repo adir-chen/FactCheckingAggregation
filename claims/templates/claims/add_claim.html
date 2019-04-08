@@ -13,17 +13,17 @@
         <br>
         <div class="new_comment claim_box" style="width: 100%; padding: 20px 40px 20px 20px;">
             <p id="success_msg_add_new_claim" class="action_msg note_msg" hidden>Your claim has been added successfully.<br>
-                If you want to edit your claim/comment you will be able to do so during the next 5 minutes.</p>
+                If you want to edit your claim/comment you will be able to do so during the next 10 minutes.</p>
             <p id="error_msg_add_new_claim" class="action_msg error_msg" hidden> </p>
             <h5>Claim Details:</h5>
             <p style="width: 100%; margin: 10px;">Claim:</p>
             <input id="claim" type="text" style="width: 100%; margin: 10px;"><br>
             <p style="width: 100%; margin: 10px;">Category:</p>
             <input id="category" type="text" style="width: 100%; margin: 10px;"><br>
-            <p style="width: 100%; margin: 10px;">Tags (separated by comma):</p>
+            <p style="width: 100%; margin: 10px;">Tags (optional, separated by comma):</p>
             <p class="action_msg note_msg" style="margin-left: 10px;">Used for searching purpose.</p>
             <input id="tags" type="text" style="width: 100%; margin: 10px;"><br>
-            <p style="width: 100%; margin: 10px;">Image Url:</p>
+            <p style="width: 100%; margin: 10px;">Image Url (optional):</p>
             <input id="image_src" type="text" style="width: 100%; margin: 10px;"><br>
             <br>
             <input id='add_comment' type="checkbox" onclick='enable_comment()'> Add your comment on this claim<br><br>
@@ -47,7 +47,8 @@
                 <input type="radio" name="label" class="label" value="Unknown" disabled>Unknown<br>
             </div>
             {% if not is_debug_mode %}
-                <div id="g-recaptcha" class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
+                <div id="g-recaptcha" class="g-recaptcha" data-sitekey="6LeWrJwUAAAAAI-kXXteJEO6BYsOwpdwN_Uf7uaz"></div>
+                <div id="g-recaptcha-response" hidden></div>
             {% endif %}
             <button id="submit_claim" type="submit" class="btn btn-info" style="margin: 10px 0;">Add Claim</button>
         </div>
@@ -72,7 +73,7 @@
                     url: "{% url 'claims:add_claim' %}",
                     headers: { "X-CSRFToken": getCookie('csrftoken') },
                     data: {
-                        {#g_recaptcha_response: $("#g-recaptcha-response").val(),#}
+                        g_recaptcha_response: $("#g-recaptcha-response").val(),
                         claim: $("#claim").val(),
                         category: $("#category").val(),
                         tags: $("#tags").val(),
@@ -137,11 +138,12 @@
                 return false;
             }
             let response = grecaptcha.getResponse();
+
             if (!response) {
                 alert('Could not get recaptcha response');
                 return false;
             }
-
+            $("#g-recaptcha-response").val(response);
             let ajax = new XMLHttpRequest();
             ajax.onreadystatechange = function() {
                 if (this.readyState === 4) {
