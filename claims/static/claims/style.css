@@ -14,15 +14,19 @@ body {
 
 @media (min-width: 800px) {
     #header-wrapper {
-        max-width: 1250px;
+        max-width: 1150px;
         margin: auto;
         display: grid;
-        grid-template-columns: 500px auto;
+        grid-template-columns: 400px auto;
         grid-template-areas: 'site-logo header-tools';
     }
 
     .site-logo img{
         max-width: 500px;
+    }
+
+    .header-tools{
+        padding-left: 70px;
     }
 }
 
@@ -44,7 +48,6 @@ body {
     grid-area: header-tools;
     font-size: 22px;
     color: #C0C0C0;
-    padding-left: 70px;
 }
 
 .header-tools ul{
