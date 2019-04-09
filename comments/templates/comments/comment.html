@@ -1,6 +1,4 @@
 {%  load mathfilters %}
-{% load is_debug_mode %}
-{% is_debug_mode as is_debug_mode %}
 <div style="margin: auto;">
     <div class="comment_box" id="comment_box_{{ comment.id }}">
         <div class="comment_header">
@@ -117,9 +115,6 @@
                         <textarea id="{{ comment.id }}_new_reply_content" style="margin-right: 10px;">
 
                         </textarea><br>
-                        {% if not is_debug_mode %}
-                            <div class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
-                        {% endif %}
                         <button id="{{ comment.id }}_new_reply_save" type="submit" class="btn btn-info">Save</button>
                         <p id="error_msg_{{ comment.id }}_new_reply" class="action_msg error_msg" hidden></p>
                     </div>
@@ -362,28 +357,25 @@
     });
 
     $("#{{ comment.id }}_new_reply_save").click(function(e){
-        let debug_mode = '{% is_debug_mode %}' == 'True';
-        if (debug_mode || (!debug_mode && check_recaptcha())){
-            $.ajax({
-                type: 'POST',
-                url: "{% url 'replies:add_reply' %}",
-                headers: { "X-CSRFToken": getCookie('csrftoken') },
-                data: {
-                    comment_id: '{{ comment.id }}',
-                    content: $("#{{ comment.id }}_new_reply_content").val(),
-                },
-                success: function () {
-                    window.location.reload();
-                },
-                error: function (error) {
-                    hide_all_msgs();
-                    let err = error.responseText.split('\n')[1];
-                    document.getElementById("error_msg_{{ comment.id }}_new_reply").innerHTML =
-                    'Error: <br>' + err;
-                    $("#error_msg_{{ comment.id }}_new_reply").attr("hidden", false);
-                }
-            });
-        }
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'replies:add_reply' %}",
+            headers: { "X-CSRFToken": getCookie('csrftoken') },
+            data: {
+                comment_id: '{{ comment.id }}',
+                content: $("#{{ comment.id }}_new_reply_content").val(),
+            },
+            success: function () {
+                window.location.reload();
+            },
+            error: function (error) {
+                hide_all_msgs();
+                let err = error.responseText.split('\n')[1];
+                document.getElementById("error_msg_{{ comment.id }}_new_reply").innerHTML =
+                'Error: <br>' + err;
+                $("#error_msg_{{ comment.id }}_new_reply").attr("hidden", false);
+            }
+        });
     });
 
     function getYoutubeVideoId(url) {

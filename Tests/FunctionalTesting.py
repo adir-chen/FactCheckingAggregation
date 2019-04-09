@@ -9,6 +9,7 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium.webdriver.common.keys import Keys
 from claims.models import Claim
 from comments.models import Comment
+from replies.models import Reply
 from tweets.models import Tweet
 from django.test.utils import override_settings
 from django.contrib.staticfiles.templatetags.staticfiles import static
@@ -50,7 +51,7 @@ class UITests(StaticLiveServerTestCase):
                                  system_label='True',
                                  tags='t1,t2')
         self.comment_1.save()
-        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() - datetime.timedelta(minutes=6))
+        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() - datetime.timedelta(minutes=10))
         self.browser = webdriver.Chrome('Tests/chromedriver.exe')
         self.browser.implicitly_wait(10)
         self.client = Client()
@@ -202,6 +203,27 @@ class UITests(StaticLiveServerTestCase):
             tweet_1.tweet_link
         )
 
+    def test_view_reply(self):
+        reply_1 = Reply(user_id=self.user1.id,
+                        comment_id=self.comment_1.id,
+                        content='content1')
+        reply_1.save()
+        time.sleep(1)
+        self.browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        self.assertEqual(
+            self.browser.find_element_by_class_name('reply_img').find_element_by_tag_name('img').get_attribute(
+                'src'),
+            self.live_server_url + '/static/claims/assets/images/profile_default_image.jpg'
+        )
+        self.assertEqual(
+            self.browser.find_element_by_class_name('reply_img').find_element_by_tag_name('a').text,
+            reply_1.user.username
+        )
+        self.assertEqual(
+            self.browser.find_element_by_id('reply_' + str(reply_1.id) + '_content').text,
+            reply_1.content
+        )
+
     def test_edit_comment(self):
         comment_2 = Comment(claim_id=self.claim_1.id,
                             user_id=self.user2.id,
@@ -271,6 +293,25 @@ class UITests(StaticLiveServerTestCase):
             ['t5']
         )
 
+    def test_edit_reply(self):
+        reply_1 = Reply(user_id=self.user1.id,
+                        comment_id=self.comment_1.id,
+                        content='content1')
+        reply_1.save()
+        time.sleep(1)
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
+        browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        browser.find_element_by_id('reply_' + str(reply_1.id) + '_edit').click()
+        browser.find_element_by_id(str(reply_1.id) + '_reply_content_edit').clear()
+        browser.find_element_by_id(str(reply_1.id) + '_reply_content_edit').send_keys('content2')
+        browser.find_element_by_id('reply_' + str(reply_1.id) + '_save').click()
+        time.sleep(2)
+        browser.get(browser.current_url)
+        self.assertEqual(
+            browser.find_element_by_id('reply_' + str(reply_1.id) + '_content').text,
+            'content2'
+        )
+
     def test_delete_comment(self):
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
@@ -281,6 +322,23 @@ class UITests(StaticLiveServerTestCase):
         self.assertEqual(
             len(browser.find_elements_by_class_name('comment_box')),
             1   # only add comment form remains
+        )
+
+    def test_delete_reply(self):
+        reply_1 = Reply(user_id=self.user1.id,
+                        comment_id=self.comment_1.id,
+                        content='content1')
+        reply_1.save()
+        time.sleep(1)
+        browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
+        browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        browser.find_element_by_id('reply_' + str(reply_1.id) + '_delete').click()
+        browser.switch_to_alert().accept()
+        time.sleep(2)  # wait for reply to be deleted
+        browser.get(self.browser.current_url)
+        self.assertEqual(
+            len(browser.find_elements_by_class_name('reply_box')),
+            0
         )
 
     def test_delete_tweet_by_admin(self):
@@ -570,7 +628,7 @@ class UITests(StaticLiveServerTestCase):
             browser.find_element_by_id(str(self.claim_1.id) + '_new_comment_url').send_keys('http://url2/')
             filled += 1
         browser.find_element_by_id(str(self.claim_1.id) + '_new_comment_save').click()
-        time.sleep(2)   # wait 2 second for page to show the error
+        time.sleep(4)   # wait 4 second for page to show the error
         self.assertTrue(
             'Error' in browser.find_element_by_id('error_msg_' + claim_id + '_new_comment').text
         )
@@ -590,7 +648,7 @@ class UITests(StaticLiveServerTestCase):
         if filled < 2 and random.randint(0, 10) > 5:
             browser.find_element_by_id('tags').send_keys('tag3,tag4')
         browser.find_element_by_id('submit_claim').click()
-        time.sleep(2)  # wait 2 second for page to show the error
+        time.sleep(4)  # wait 4 second for page to show the error
         self.assertTrue(
             'Error' in browser.find_element_by_id('error_msg_add_new_claim').text
         )
@@ -617,7 +675,7 @@ class UITests(StaticLiveServerTestCase):
         if filled < 2 and random.randint(0, 10) > 5:
             browser.find_element_by_id('url').send_keys('http://url2/')
         browser.find_element_by_id('submit_claim').click()
-        time.sleep(2)  # wait 2 second for page to show the error
+        time.sleep(4)  # wait 4 second for page to show the error
         self.assertTrue(
             'Error' in browser.find_element_by_id('error_msg_add_new_claim').text
         )
@@ -815,7 +873,7 @@ class UITests(StaticLiveServerTestCase):
         if num == 1:
             self.assertEqual(
                 len(self.browser.find_elements_by_class_name('claim_box')),
-                1
+                3
             )
             self.assertEqual(
                 self.browser.find_element_by_class_name('claim_box').find_element_by_tag_name('h6').text,

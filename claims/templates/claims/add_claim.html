@@ -4,9 +4,7 @@
     {% load is_debug_mode %}
     {% is_debug_mode as is_debug_mode %}
     <head>
-        {% if not is_debug_mode %}
-	        <script src='https://www.google.com/recaptcha/api.js' async defer></script>
-        {% endif %}
+        <script src='https://www.google.com/recaptcha/api.js' async defer></script>
     </head>
     <div class="page_wrapper">
         <h3>Add new claim:</h3>
@@ -46,10 +44,9 @@
                 <input type="radio" name="label" class="label" value="False" disabled>False<br>
                 <input type="radio" name="label" class="label" value="Unknown" disabled>Unknown<br>
             </div>
-            {% if not is_debug_mode %}
-                <div id="g-recaptcha" class="g-recaptcha" data-sitekey="6LeWrJwUAAAAAI-kXXteJEO6BYsOwpdwN_Uf7uaz"></div>
-                <div id="g-recaptcha-response" hidden></div>
-            {% endif %}
+            <div id="g-recaptcha" class="g-recaptcha" data-sitekey="6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz"></div>
+{#            <div id="g-recaptcha" class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>#}
+            <div id="g-recaptcha-response" hidden></div>
             <button id="submit_claim" type="submit" class="btn btn-info" style="margin: 10px 0;">Add Claim</button>
         </div>
     </div>
