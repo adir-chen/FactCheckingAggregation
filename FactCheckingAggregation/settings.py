@@ -166,19 +166,20 @@ TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 # Tell nose to measure coverage
 NOSE_ARGS = [
-    '--with-coverage',
-    '--cover-package=users',
-    '--cover-package=claims',
-    '--cover-package=comments',
-    '--cover-package=tweets',
-    '--cover-package=contact_us',
-    '--cover-package=logger',
-    '--cover-package=search',
-    '--cover-package=analytics',
+    # '--with-coverage',
+    # '--cover-package=users',
+    # '--cover-package=claims',
+    # '--cover-package=comments',
+    # '--cover-package=tweets',
+    # '--cover-package=contact_us',
+    # '--cover-package=logger',
+    # '--cover-package=search',
+    # '--cover-package=analytics',
     '--detailed-errors',
     '-s',
-    '--cover-html'
+    # '--cover-html'
 ]
 
-GOOGLE_RECAPTCHA_V2_SECRET_KEY = '6LdG7JoUAAAAAKQaAFo67f-5fzV6LiXZ-zJomV9V'
-GOOGLE_RECAPTCHA_V2_SITE_KEY = '6LdG7JoUAAAAAB8V_dsgqIHEYc-NvE-4PZtfHREz'
+# GOOGLE_RECAPTCHA_V2_SECRET_KEY = '6LeWrJwUAAAAAK-UM_UQG0qsWp1fD-f5L_2J93jY'
+GOOGLE_RECAPTCHA_V2_SECRET_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'  # for testing
+TAP_KEY = '03AOLTBLTZGRhx5cC0aTbZcb-YVW9MrBp9vYcP6hgOJnrQWcgOAsyFEIOldqRrgiU3GjPxb5D7xMimsVfBYBqteNcSxIkBE5pwGq4zF1Ifdw6iKg8t89Kdqsir6hXcJIjYHu7pukRWNqDAgR0oLW1ZguflGYxBK3YQDKrnJLnGkco53PnfSQnVafIMvFgnufjYIpOGJDuWK5ErlVD7cQw2vfcHFB3v_BJAheRYBwV-YSEOrkCYGlWW7Wz2uqI755JeNAxquIjyZ4vJP0jzrV4J9PL1Wdqtj6yAGRFgXTEoWMjiGgf4TP01hOiBBJgMaC409eNtVxmfC1vjcec6lS22rQFHeTgtsdDvhL5r7An5lK6TPXmYLKAXWmbmZW84uawtJFc0-g5agVeV'
