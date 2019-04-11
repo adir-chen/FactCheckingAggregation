@@ -591,4 +591,11 @@ def check_if_user_info_is_valid(user_info):
     return True, err
 
 
+def check_if_user_is_scraper(user_id):
+    user = User.objects.filter(id=user_id)
+    if len(user) == 0:
+        return False
+    user = user.first()
+    return len(Scrapers.objects.filter(scraper_id=user)) > 0
+
 

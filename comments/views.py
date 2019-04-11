@@ -4,7 +4,8 @@ from comments.models import Comment
 from claims.models import Claim
 from django.http import HttpResponse, Http404
 from logger.views import save_log_message
-from users.views import check_if_user_exists_by_user_id, get_all_scrapers_ids_arr, get_user_reputation
+from users.views import check_if_user_exists_by_user_id, get_all_scrapers_ids_arr, \
+    get_user_reputation, check_if_user_is_scraper
 from datetime import datetime
 from django.utils import timezone
 import requests
@@ -63,14 +64,15 @@ def check_if_comment_is_valid(comment_info):
     err = ''
     if 'tags' not in comment_info or not comment_info['tags']:
         comment_info['tags'] = ''
-    if 'g_recaptcha_response' not in comment_info or not check_g_recaptcha_response(comment_info['g_recaptcha_response']):
+    if 'user_id' not in comment_info or not comment_info['user_id']:
+        err += 'Missing value for user id'
+    elif not check_if_user_is_scraper(comment_info['user_id']) and ('g_recaptcha_response' not in comment_info
+                                                                or not check_g_recaptcha_response(comment_info['g_recaptcha_response'])):
         err += 'Invalid Captcha'
     elif not check_if_input_format_is_valid(comment_info['tags']):
         err += 'Incorrect format for tags'
     elif 'claim_id' not in comment_info or not comment_info['claim_id']:
         err += 'Missing value for claim id'
-    elif 'user_id' not in comment_info or not comment_info['user_id']:
-        err += 'Missing value for user id'
     elif 'title' not in comment_info or not comment_info['title']:
         err += 'Missing value for title'
     elif 'description' not in comment_info or not comment_info['description']:

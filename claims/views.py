@@ -8,7 +8,7 @@ from logger.models import Logger
 from tweets.models import Tweet
 from users.models import Users_Images, Scrapers, Users_Reputations
 from logger.views import save_log_message, check_duplicate_log_for_user
-from users.views import check_if_user_exists_by_user_id
+from users.views import check_if_user_exists_by_user_id, check_if_user_is_scraper
 from .models import Claim
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf import settings
@@ -68,12 +68,13 @@ def check_if_claim_is_valid(claim_info):
         claim_info['tags'] = ''
     if 'image_src' not in claim_info or not claim_info['image_src']:
         claim_info['image_src'] = static('claims/assets/images/claim_default_image.jpg')
-    if 'g_recaptcha_response' not in claim_info or not check_g_recaptcha_response(claim_info['g_recaptcha_response']):
+    if 'user_id' not in claim_info or not claim_info['user_id']:
+        err += 'Missing value for user id'
+    elif not check_if_user_is_scraper(claim_info['user_id']) and ('g_recaptcha_response' not in claim_info
+                                                                  or not check_g_recaptcha_response(claim_info['g_recaptcha_response'])):
         err += 'Invalid Captcha'
     elif not check_if_input_format_is_valid(claim_info['tags']):
         err += 'Incorrect format for tags'
-    elif 'user_id' not in claim_info or not claim_info['user_id']:
-        err += 'Missing value for user id'
     elif 'is_superuser' not in claim_info:
         err += 'Missing value for user type'
     elif 'claim' not in claim_info or not claim_info['claim']:

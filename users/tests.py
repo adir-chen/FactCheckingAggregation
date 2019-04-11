@@ -10,7 +10,7 @@ from users.views import check_if_user_exists_by_user_id, get_username_by_user_id
     add_true_label_to_scraper, delete_true_label_from_scraper, add_false_label_to_scraper, \
     delete_false_label_from_scraper, check_if_scraper_new_label_is_valid, \
     check_if_scraper_label_delete_is_valid, check_if_scraper_labels_already_exist, update_user_img, \
-    check_if_user_info_is_valid
+    check_if_user_info_is_valid, check_if_user_is_scraper
 import json
 import random
 import datetime
@@ -1143,3 +1143,12 @@ class UsersTest(TestCase):
         del self.update_user_image['user_img']
         self.assertFalse(check_if_user_info_is_valid(self.update_user_image)[0])
 
+    def test_check_if_user_is_scraper(self):
+        Scrapers.objects.create(scraper_id=self.new_scraper)
+        self.assertTrue(check_if_user_is_scraper(self.new_scraper.id))
+
+    def test_check_if_user_is_scraper_invalid_user(self):
+        self.assertFalse(check_if_user_is_scraper(self.num_of_saved_users + random.randint(1, 10)))
+
+    def test_check_if_user_is_scraper_not_scraper(self):
+        self.assertFalse(check_if_user_is_scraper(self.user_1.id))
