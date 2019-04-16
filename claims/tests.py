@@ -133,6 +133,8 @@ class ClaimTests(TestCase):
         self.test_file_invalid_header = SimpleUploadedFile("tests_invalid.csv", open(
             'claims/tests_invalid.csv', 'r', encoding='utf-8-sig').read().encode())
 
+        self.error_code = 404
+
     def tearDown(self):
         pass
 
@@ -183,7 +185,8 @@ class ClaimTests(TestCase):
         query_dict.update(self.new_claim_details)
         self.post_request.POST = query_dict
         self.post_request.user = self.user
-        self.assertRaises(Exception, add_claim, self.post_request)
+        response = add_claim(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         self.assertTrue(len(Claim.objects.all()) == len_claims)
         self.assertTrue(get_claim_by_id(self.num_of_saved_claims + 1) is None)
 
@@ -213,7 +216,8 @@ class ClaimTests(TestCase):
             query_dict.update(self.new_claim_details)
             self.post_request.POST = query_dict
             self.post_request.user = self.user
-            self.assertRaises(Exception, add_claim, self.post_request)
+            response = add_claim(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.assertTrue(len(Claim.objects.all()) == len_claims)
             self.assertTrue(get_claim_by_id(self.num_of_saved_claims + 1) is None)
             self.new_claim_details = dict_copy.copy()
@@ -1096,7 +1100,7 @@ class ClaimTests(TestCase):
         self.assertTrue(handler_403(HttpRequest()).status_code == 403)
 
     def test_handler_404(self):
-        self.assertTrue(handler_404(HttpRequest()).status_code == 404)
+        self.assertTrue(handler_404(HttpRequest(), 'error_msg').status_code == 404)
 
     def test_handler_500(self):
         self.assertTrue(handler_500(HttpRequest()).status_code == 500)
