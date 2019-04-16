@@ -1,5 +1,5 @@
 from django.contrib.auth import logout, authenticate
-from django.http import Http404, HttpRequest, QueryDict
+from django.http import Http404, HttpRequest, QueryDict, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from comments.models import Comment
 from comments.views import add_comment
@@ -13,6 +13,7 @@ from .models import Claim
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf import settings
 import math
+import json
 from django.contrib.staticfiles.templatetags.staticfiles import static
 
 
@@ -32,7 +33,7 @@ def add_claim(request):
     if not valid_claim:
         save_log_message(request.user.id, request.user.username,
                          'Adding a new claim. Error: ' + err_msg)
-        raise Http404(err_msg)
+        return HttpResponse(json.dumps({'error': err_msg}), content_type='application/json')
     claim = Claim(
         user_id=claim_info['user_id'],
         claim=claim_info['claim'],
