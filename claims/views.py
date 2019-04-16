@@ -514,8 +514,8 @@ def handler_403(request):
 
 
 # This function returns 404 error page
-def handler_404(request):
-    return render(request, 'claims/404.html', status=404)
+def handler_404(request, exception):
+    return render(request, 'claims/404.html', {exception}, status=404)
 
 
 # This function returns 500 error page
