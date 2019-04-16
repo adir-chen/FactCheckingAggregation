@@ -2,7 +2,7 @@
 
 {% block page_content %}
     <div class="page_wrapper">
-        <h1>{{ user.username }}'s Profile</h1>
+        <h1>{{ user.username }}'s profile</h1>
         <div class="comment_box" style="display: grid; padding: 20px; margin-top: 30px; grid-template-columns: 150px auto; grid-template-areas: 'user-profile-image user-profile-details';">
             <div style="grid-area: user-profile-image; position: relative;">
                 {% if logged_in %}
@@ -37,7 +37,7 @@
             <p id="success_msg_change_profile_image" style="color: dodgerblue; font-size: 12px;" hidden>Profile image updated succesfully.</p>
         {% endif %}
         <hr>
-        <h4> {{ user.username }}'s Claims:</h4>
+        <h4> {{ user.username }}'s claims:</h4>
         {% csrf_token %}
         <div class="headlines">
             <div id="claim_large_columns" style="width: 100%; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
@@ -64,7 +64,7 @@
             </div>
         </div>
         <hr>
-        <h4>{{ user.username }}'s Comments:</h4>
+        <h4>{{ user.username }}'s comments:</h4>
         <div class="headlines">
             <div id="comments" style="width: 100%; padding: 20px; border-radius: 10px; background: #aabfd6; margin: 0 auto;">
                 {% for comment, user  in user_comments.object_list|slice:"0:3" %}

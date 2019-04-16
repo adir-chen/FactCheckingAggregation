@@ -35,7 +35,7 @@
         <br>
         <div class="buttons_row">
         {% if claim.get_report_link %}
-            <a href="{{ claim.get_report_link }}" class="btn btn-info">Read Report</a>
+            <a href="{{ claim.get_report_link }}" class="btn btn-info">Link to report</a>
         {% endif %}
         {% if request.user.is_authenticated %}
                 {% if claim.user_id == request.user.id or request.user.is_superuser %}
@@ -44,7 +44,7 @@
                     <button id="{{ claim.id }}_claim_save" hidden="hidden" type="submit" class="btn btn-info">Save</button>
                     <button id="{{ claim.id }}_claim_delete" type="submit" class="btn btn-danger">Delete</button>
                 {% endif %}
-                <button id="{{ claim.id }}_claim_report_spam" type="submit" class="btn btn-danger">Report Spam</button>
+                <button id="{{ claim.id }}_claim_report_spam" type="submit" class="btn btn-danger">Report as spam</button>
         {% endif %}
         </div>
         {% load static %}
@@ -115,7 +115,7 @@
                     Tags (optional, separated by comma):
                     <p class="action_msg note_msg">Used for searching purpose.</p>
                     <input id="{{ claim.id }}_new_comment_tags" type="text"><br>
-                    <p id="add_new_comment" class="action_msg note_msg" >If you want to edit your comment you will be able to do so during the next 10 minutes from the time you added it.</p>
+                    <p id="add_new_comment" class="action_msg note_msg" >If you want to edit your comment you will be able to do so during the next 10 minutes from the moment you added it.</p>
                     <div class="g-recaptcha" data-sitekey="6Le4fp0UAAAAAJjD2ErEEZl8_G6uEl62Hon1g9Pv"></div>
 {#                    <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>#}
                     <div id="g-recaptcha-response" hidden></div>
@@ -240,7 +240,7 @@
         });
 
         $("#{{ claim.id }}_claim_delete").click(function(e){
-            if (confirm('Are you sure you want to delete this claim?')){
+            if (confirm('Are you sure that you want to delete this claim?')){
                 e.preventDefault();
                 $.ajax({
                     type: 'POST',

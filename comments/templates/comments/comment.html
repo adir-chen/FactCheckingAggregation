@@ -39,7 +39,6 @@
             <p id="success_msg_{{ comment.id }}_comment_vote" class="action_msg note_msg" hidden>Your vote has been accepted successfully</p>
             <p id="error_msg_{{ comment.id }}_comment_vote" class="action_msg error_msg" hidden></p>
             <div class="comment_voting_area">
-
                 {% if request.user.is_authenticated %}
                     <button id="{{ comment.id }}_arrow_up" class="arrow_up">▲</button>
                 {% else %}
@@ -115,7 +114,7 @@
                         <textarea id="{{ comment.id }}_new_reply_content" style="margin-right: 10px;">
 
                         </textarea><br>
-                        <button id="{{ comment.id }}_new_reply_save" type="submit" class="btn btn-info">Save</button>
+                        <button id="{{ comment.id }}_new_reply_save" type="submit" class="btn btn-info">Add reply</button>
                         <p id="error_msg_{{ comment.id }}_new_reply" class="action_msg error_msg" hidden></p>
                     </div>
                 {% endif %}
@@ -154,10 +153,10 @@
 
     function hide_all_msgs(){
         $("#success_msg_{{ comment.id }}_comment_vote").attr("hidden", true);
-        $("#success_msg_{{ comment.id }}comment_edit").attr("hidden", true);
+        $("#success_msg_{{ comment.id }}_comment_edit").attr("hidden", true);
 
         $("#error_msg_{{ comment.id }}_comment_vote").attr("hidden", true);
-        $("#error_msg_{{ comment.id }}comment_edit").attr("hidden", true);
+        $("#error_msg_{{ comment.id }}_comment_edit").attr("hidden", true);
     }
 
     $(document).ready(function () {
@@ -316,7 +315,7 @@
     });
 
     $("#comment_{{ comment.id }}_delete").click(function(e){
-        if (confirm('Are you sure you want to delete this comment?')){
+        if (confirm('Are you sure that you want to delete this comment?')){
             e.preventDefault();
             $.ajax({
                 type: 'POST',
@@ -330,6 +329,7 @@
                     window.location.reload();
                 },
                 error: function (request) {
+                    hide_all_msgs();
                     let err = request.responseJSON;
                     document.getElementById("error_msg_{{ comment.id }}_comment_edit").innerHTML =
                         'Error: <br>' + err;
@@ -409,7 +409,6 @@
         else if (result != 'error') {
             try {
                 if (result.title != "" && result.description != "" && result.src != "") {
-                    console.log('Yes')
                     $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
                     document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML = "<div class=\"comment_refrence_preview\">\n" +
                         "                        <div class=\"preview_img\">\n" +
@@ -434,6 +433,7 @@
             linkPreview(result)
         },
         error: function(e){
+            hide_all_msgs();
             linkPreview('error')
         }
     });
