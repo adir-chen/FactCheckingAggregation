@@ -90,7 +90,7 @@
                     error: function (request) {
                         hide_all_msgs();
                         console.log(request);
-                        let err = request.responseJSON.msg;
+                        let err = request.responseText.error;
                         document.getElementById("error_msg_add_new_claim").innerHTML =
                         'Error: <br>' + err;
                         $("#error_msg_add_new_claim").attr("hidden", false);
