@@ -32,7 +32,7 @@ def add_claim(request):
     if not valid_claim:
         save_log_message(request.user.id, request.user.username,
                          'Adding a new claim. Error: ' + err_msg)
-        raise Exception(err_msg)
+        raise Http404(err_msg)
     claim = Claim(
         user_id=claim_info['user_id'],
         claim=claim_info['claim'],
