@@ -87,12 +87,10 @@
                         $("html, body").animate({ scrollTop: 200 }, 0);
                         window.location.reload();
                     },
-                    error: function (request, error, e) {
+                    error: function (request) {
                         hide_all_msgs();
                         console.log(request);
-                        console.log(error);
-                        console.log(e);
-                        let err = request.responseText.split('\n')[1];
+                        let err = request.responseJSON.msg;
                         document.getElementById("error_msg_add_new_claim").innerHTML =
                         'Error: <br>' + err;
                         $("#error_msg_add_new_claim").attr("hidden", false);
