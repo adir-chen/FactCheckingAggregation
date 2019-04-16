@@ -15,8 +15,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.conf.urls import handler404, handler500, handler400, handler403
-
 from claims import views as claims_views
 
 urlpatterns = [
@@ -33,7 +31,7 @@ urlpatterns = [
     path('analytics/', include('analytics.urls', namespace='analytics')),
 ]
 
-# handler404 = claims_views.handler_404
-# handler500 = claims_views.handler_500
-# handler400 = claims_views.handler_400
-# handler403 = claims_views.handler_403
+handler400 = claims_views.handler_400
+handler403 = claims_views.handler_403
+handler404 = claims_views.handler_404
+handler500 = claims_views.handler_500
