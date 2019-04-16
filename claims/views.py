@@ -33,7 +33,7 @@ def add_claim(request):
     if not valid_claim:
         save_log_message(request.user.id, request.user.username,
                          'Adding a new claim. Error: ' + err_msg)
-        return HttpResponse(json.dumps({'error': err_msg}), content_type='application/json', status=404)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     claim = Claim(
         user_id=claim_info['user_id'],
         claim=claim_info['claim'],
