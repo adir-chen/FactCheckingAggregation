@@ -46,6 +46,7 @@ def add_claim(request):
     save_log_message(request.user.id, request.user.username,
                      'Adding a new claim', True)
     claim_info['claim_id'] = claim.id
+    claim_info['validate_g_recaptcha'] = True
     request.POST = claim_info
     if claim_info['add_comment'] == 'true':
         response = add_comment(request)

@@ -63,12 +63,15 @@ def check_if_comment_is_valid(comment_info):
     from claims.views import check_g_recaptcha_response, check_if_input_format_is_valid, is_english_input
     max_comments = 5
     err = ''
+    validate_g_recaptcha = False
+    if 'validate_g_recaptcha' in comment_info and comment_info['validate_g_recaptcha']:
+        validate_g_recaptcha = True
     if 'tags' not in comment_info or not comment_info['tags']:
         comment_info['tags'] = ''
     if 'user_id' not in comment_info or not comment_info['user_id']:
         err += 'Missing value for user id'
-    elif not check_if_user_is_scraper(comment_info['user_id']) and ('g_recaptcha_response' not in comment_info
-                                                                    or not check_g_recaptcha_response(comment_info['g_recaptcha_response'])):
+    elif not check_if_user_is_scraper(comment_info['user_id']) and not validate_g_recaptcha and \
+            ('g_recaptcha_response' not in comment_info or not check_g_recaptcha_response(comment_info['g_recaptcha_response'])):
         err += 'Invalid Captcha'
     elif not check_if_input_format_is_valid(comment_info['tags']):
         err += 'Incorrect format for tags'
