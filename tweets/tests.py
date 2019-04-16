@@ -69,6 +69,8 @@ class CommentTests(TestCase):
         self.test_file_invalid_header = SimpleUploadedFile("tests_invalid.csv", open(
             'tweets/tests_invalid.csv', 'r', encoding='utf-8-sig').read().encode())
 
+        self.error_code = 404
+
     def test_add_tweet(self):
         len_tweets = len(Tweet.objects.filter(claim_id=self.claim_1.id))
         add_tweet(self.new_tweet_details)
@@ -80,11 +82,13 @@ class CommentTests(TestCase):
 
     def test_add_tweet_missing_claim_id(self):
         del self.new_tweet_details['claim_id']
-        self.assertRaises(Exception, add_tweet, self.new_tweet_details)
+        response = add_tweet(self.new_tweet_details)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_comment_missing_tweet_link(self):
         del self.new_tweet_details['tweet_link']
-        self.assertRaises(Exception, add_tweet, self.new_tweet_details)
+        response = add_tweet(self.new_tweet_details)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_tweet_missing_args(self):
         for i in range(10):
@@ -95,7 +99,8 @@ class CommentTests(TestCase):
             for j in range(len(args_to_remove)):
                 del self.new_tweet_details[args_to_remove[j]]
             len_tweets = len(Tweet.objects.filter(claim_id=self.claim_1.id))
-            self.assertRaises(Exception, add_tweet, self.new_tweet_details)
+            response = add_tweet(self.new_tweet_details)
+            self.assertTrue(response.status_code == self.error_code)
             self.assertTrue(len(Tweet.objects.filter(claim_id=self.claim_1.id)) == len_tweets)
             self.new_tweet_details = dict_copy.copy()
 
@@ -162,7 +167,8 @@ class CommentTests(TestCase):
         self.post_request.POST = tweet_to_delete
         self.post_request.user = self.admin
         len_tweets = len(Tweet.objects.all())
-        self.assertRaises(Exception, delete_tweet, self.post_request)
+        response = delete_tweet(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         self.assertTrue(len(Tweet.objects.all()) == len_tweets)
 
     def test_delete_tweet_invalid_request(self):
@@ -212,7 +218,8 @@ class CommentTests(TestCase):
         query_dict.update(self.csv_fields)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, export_to_csv, self.post_request)
+        response = export_to_csv(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_export_to_csv_missing_args(self):
         for i in range(10):
@@ -226,7 +233,8 @@ class CommentTests(TestCase):
             query_dict.update(self.csv_fields)
             self.post_request.POST = query_dict
             self.post_request.user = self.admin
-            self.assertRaises(Exception, export_to_csv, self.post_request)
+            response = export_to_csv(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.csv_fields = dict_copy.copy()
 
     def test_export_to_csv_empty(self):

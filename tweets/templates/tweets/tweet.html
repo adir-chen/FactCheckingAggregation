@@ -34,8 +34,8 @@
                 success: function (page) {
                     window.location.reload();
                 },
-                error: function (error) {
-                    let err = error.responseText.split('\n')[1];
+                error: function (request) {
+                    let err = request.responseJSON;
                     document.getElementById("error_msg_{{ tweet.id }}_tweet_delete").innerHTML =
                         'Error: <br>' + err;
                     $("#error_msg_{{ tweet.id }}_tweet_delete").attr("hidden", false);

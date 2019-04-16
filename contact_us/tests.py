@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from django.http import HttpRequest, QueryDict
+from django.http import HttpRequest, QueryDict, Http404
 from django.test import TestCase
 from contact_us.views import contact_us_page, send_email, check_if_email_is_valid, check_for_spam
 import random
@@ -15,6 +15,8 @@ class ContactUsTest(TestCase):
         self.data = {'user_email': self.user_1.email,
                      'subject': 'subject',
                      'description': 'description'}
+
+        self.error_code = 404
 
     def tearDown(self):
         pass
@@ -35,7 +37,8 @@ class ContactUsTest(TestCase):
         query_dict.update(self.data)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, send_email, self.post_request)
+        response = send_email(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_send_email_invalid_email_user_not_authenticated(self):
         from django.contrib.auth.models import AnonymousUser
@@ -44,7 +47,8 @@ class ContactUsTest(TestCase):
         query_dict.update(self.data)
         self.post_request.POST = query_dict
         self.post_request.user = AnonymousUser()
-        self.assertRaises(Exception, send_email, self.post_request)
+        response = send_email(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_send_email_invalid_request(self):
         query_dict = QueryDict('', mutable=True)
@@ -52,7 +56,7 @@ class ContactUsTest(TestCase):
         query_dict.update(self.data)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, send_email, self.post_request)
+        self.assertRaises(Http404, send_email, self.post_request)
 
     def test_send_email_invalid_request_user_not_authenticated(self):
         from django.contrib.auth.models import AnonymousUser
@@ -61,7 +65,7 @@ class ContactUsTest(TestCase):
         query_dict.update(self.data)
         self.post_request.POST = query_dict
         self.post_request.user = AnonymousUser()
-        self.assertRaises(Exception, send_email, self.post_request)
+        self.assertRaises(Http404, send_email, self.post_request)
 
     def test_send_email_missing_args(self):
         from django.contrib.auth.models import AnonymousUser
@@ -80,7 +84,8 @@ class ContactUsTest(TestCase):
                 self.post_request.user = self.user_1
             else:
                 self.post_request.user = AnonymousUser()
-            self.assertRaises(Exception, send_email, self.post_request)
+            response = send_email(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.data = dict_copy.copy()
 
     def test_check_if_email_is_valid(self):

@@ -155,6 +155,8 @@ class CommentTests(TestCase):
         self.get_request = HttpRequest()
         self.get_request.method = 'GET'
 
+        self.error_code = 404
+
     def tearDown(self):
         pass
 
@@ -200,73 +202,86 @@ class CommentTests(TestCase):
         guest = User(id=self.num_of_saved_users + random.randint(1, 10), username='guest')
         self.post_request.POST = self.new_comment_details_user_1
         self.post_request.user = guest
-        self.assertRaises(Exception, add_comment, self.post_request)
+        response = add_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_comment_missing_claim_id(self):
         del self.new_comment_details_user_1['claim_id']
         self.post_request.POST = self.new_comment_details_user_1
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, add_comment, self.post_request)
+        response = add_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
         del self.new_comment_details_user_2['claim_id']
         self.post_request.POST = self.new_comment_details_user_2
         self.post_request.user = self.user_2
-        self.assertRaises(Exception, add_comment, self.post_request)
+        response = add_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_comment_missing_title(self):
         del self.new_comment_details_user_1['title']
         self.post_request.POST = self.new_comment_details_user_1
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, add_comment, self.post_request)
+        response = add_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
         del self.new_comment_details_user_2['title']
         self.post_request.POST = self.new_comment_details_user_2
         self.post_request.user = self.user_2
-        self.assertRaises(Exception, add_comment, self.post_request)
+        response = add_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_comment_missing_description(self):
         del self.new_comment_details_user_1['description']
         self.post_request.POST = self.new_comment_details_user_1
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, add_comment, self.post_request)
+        response = add_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
         del self.new_comment_details_user_2['description']
         self.post_request.POST = self.new_comment_details_user_2
         self.post_request.user = self.user_2
-        self.assertRaises(Exception, add_comment, self.post_request)
+        response = add_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_comment_missing_url(self):
         del self.new_comment_details_user_1['url']
         self.post_request.POST = self.new_comment_details_user_1
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, add_comment, self.post_request)
+        response = add_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
         del self.new_comment_details_user_2['url']
         self.post_request.POST = self.new_comment_details_user_2
         self.post_request.user = self.user_2
-        self.assertRaises(Exception, add_comment, self.post_request)
+        response = add_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_comment_missing_verdict_date(self):
         del self.new_comment_details_user_1['verdict_date']
         self.post_request.POST = self.new_comment_details_user_1
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, add_comment, self.post_request)
+        response = add_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
         del self.new_comment_details_user_2['verdict_date']
         self.post_request.POST = self.new_comment_details_user_2
         self.post_request.user = self.user_2
-        self.assertRaises(Exception, add_comment, self.post_request)
+        response = add_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_comment_missing_label(self):
         del self.new_comment_details_user_1['label']
         self.post_request.POST = self.new_comment_details_user_1
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, add_comment, self.post_request)
+        response = add_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
         del self.new_comment_details_user_2['label']
         self.post_request.POST = self.new_comment_details_user_2
         self.post_request.user = self.user_2
-        self.assertRaises(Exception, add_comment, self.post_request)
+        response = add_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_comment_missing_args(self):
         for i in range(10):
@@ -279,7 +294,8 @@ class CommentTests(TestCase):
             len_comments = len(Comment.objects.filter(claim_id=self.claim_1.id))
             self.post_request.POST = self.new_comment_details_user_1
             self.post_request.user = self.user_1
-            self.assertRaises(Exception, add_comment, self.post_request)
+            response = add_comment(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.assertTrue(len(Comment.objects.filter(claim_id=self.claim_1.id)) == len_comments)
             self.new_comment_details_user_1 = dict_copy.copy()
 
@@ -562,7 +578,8 @@ class CommentTests(TestCase):
         query_dict.update(self.update_comment_details)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_2
-        self.assertRaises(Exception, edit_comment, self.post_request)
+        response = edit_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         comment = Comment.objects.filter(id=self.comment_1.id).first()
         self.assertTrue(comment.title == self.comment_1.title)
         self.assertTrue(comment.description == self.comment_1.description)
@@ -578,7 +595,8 @@ class CommentTests(TestCase):
         query_dict.update(self.update_comment_details)
         self.post_request.POST = query_dict
         self.post_request.user = user
-        self.assertRaises(Exception, edit_comment, self.post_request)
+        response = edit_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         comment = Comment.objects.filter(id=self.comment_1.id).first()
         self.assertTrue(comment.title == self.comment_1.title)
         self.assertTrue(comment.description == self.comment_1.description)
@@ -593,7 +611,8 @@ class CommentTests(TestCase):
         query_dict.update(self.update_comment_details)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, edit_comment, self.post_request)
+        response = edit_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         comment = Comment.objects.filter(id=self.comment_1.id).first()
         self.assertTrue(comment.title == self.comment_1.title)
         self.assertTrue(comment.description == self.comment_1.description)
@@ -613,7 +632,8 @@ class CommentTests(TestCase):
             query_dict.update(self.update_comment_details)
             self.post_request.POST = query_dict
             self.post_request.user = self.user_1
-            self.assertRaises(Exception, edit_comment, self.post_request)
+            response = edit_comment(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.update_comment_details = dict_copy.copy()
 
     def test_edit_comment_invalid_request(self):
@@ -785,7 +805,8 @@ class CommentTests(TestCase):
         self.post_request.POST = comment_to_delete
         self.post_request.user = self.user_1
         len_comments = len(Comment.objects.all())
-        self.assertRaises(Exception, delete_comment, self.post_request)
+        response = delete_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         self.assertTrue(len(Comment.objects.all()) == len_comments)
 
     def test_delete_comment_by_invalid_user(self):
@@ -794,7 +815,8 @@ class CommentTests(TestCase):
         self.post_request.POST = comment_to_delete
         self.post_request.user = user
         len_comments = len(Comment.objects.all())
-        self.assertRaises(Exception, delete_comment, self.post_request)
+        response = delete_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         self.assertTrue(len(Comment.objects.all()) == len_comments)
 
     def test_delete_comment_by_not_authenticated_user(self):
@@ -811,7 +833,8 @@ class CommentTests(TestCase):
         self.post_request.POST = comment_to_delete
         self.post_request.user = self.user_1
         len_comments = len(Comment.objects.all())
-        self.assertRaises(Exception, delete_comment, self.post_request)
+        response = delete_comment(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         self.assertTrue(len(Comment.objects.all()) == len_comments)
 
     def test_delete_comment_invalid_request(self):
@@ -857,7 +880,8 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, up_vote, self.post_request)
+        response = up_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         Comment.objects.filter(id=self.comment_2.id).update(timestamp=datetime.datetime.now() -
                                                                       datetime.timedelta(minutes=11))
         response = up_vote(self.post_request)
@@ -871,7 +895,8 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, up_vote, self.post_request)
+        response = up_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         Comment.objects.filter(id=self.comment_2.id).update(timestamp=datetime.datetime.now() -
                                                                       datetime.timedelta(minutes=11))
         up_vote(self.post_request)
@@ -886,8 +911,10 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, down_vote, self.post_request)
-        self.assertRaises(Exception, up_vote, self.post_request)
+        response = down_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
+        response = up_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         Comment.objects.filter(id=self.comment_2.id).update(timestamp=datetime.datetime.now() -
                                                                       datetime.timedelta(minutes=11))
         down_vote(self.post_request)
@@ -912,7 +939,8 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = user
-        self.assertRaises(Exception, up_vote, self.post_request)
+        response = up_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_up_vote_invalid_request(self):
         comment_to_vote = {'comment_id': self.comment_2.id}
@@ -920,7 +948,7 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.get_request.POST = query_dict
         self.get_request.user = self.user_1
-        self.assertRaises(Exception, up_vote, self.get_request)
+        self.assertRaises(Http404, up_vote, self.get_request)
 
     def test_down_vote(self):
         comment_to_vote = {'comment_id': self.comment_1.id}
@@ -928,7 +956,8 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_2
-        self.assertRaises(Exception, down_vote, self.post_request)
+        response = down_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
                                                                       datetime.timedelta(minutes=11))
         response = down_vote(self.post_request)
@@ -942,7 +971,8 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_2
-        self.assertRaises(Exception, down_vote, self.post_request)
+        response = down_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
                                                                       datetime.timedelta(minutes=11))
         down_vote(self.post_request)
@@ -957,8 +987,10 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_2
-        self.assertRaises(Exception, up_vote, self.post_request)
-        self.assertRaises(Exception, down_vote, self.post_request)
+        response = up_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
+        response = down_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
                                                                       datetime.timedelta(minutes=11))
         up_vote(self.post_request)
@@ -983,7 +1015,8 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = user
-        self.assertRaises(Exception, down_vote, self.post_request)
+        response = down_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_down_vote_invalid_request(self):
         comment_to_vote = {'comment_id': self.comment_1.id}
@@ -991,7 +1024,7 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.get_request.POST = query_dict
         self.get_request.user = self.user_1
-        self.assertRaises(Exception, down_vote, self.get_request)
+        self.assertRaises(Http404, down_vote, self.get_request)
 
     def test_check_if_vote_is_valid(self):
         comment_to_vote = {'comment_id': self.comment_1.id,
@@ -1049,7 +1082,8 @@ class CommentTests(TestCase):
         query_dict.update(self.csv_fields)
         self.post_request.POST = query_dict
         self.post_request.user = admin
-        self.assertRaises(Exception, export_to_csv, self.post_request)
+        response = export_to_csv(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_export_to_csv_invalid_arg_for_field(self):
         import string
@@ -1061,7 +1095,8 @@ class CommentTests(TestCase):
         query_dict.update(self.csv_fields)
         self.post_request.POST = query_dict
         self.post_request.user = admin
-        self.assertRaises(Exception, export_to_csv, self.post_request)
+        response = export_to_csv(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_export_to_csv_missing_args(self):
         admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
@@ -1076,7 +1111,8 @@ class CommentTests(TestCase):
             query_dict.update(self.csv_fields)
             self.post_request.POST = query_dict
             self.post_request.user = admin
-            self.assertRaises(Exception, export_to_csv, self.post_request)
+            response = export_to_csv(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.csv_fields = dict_copy.copy()
 
     def test_export_to_csv_empty(self):
@@ -1429,7 +1465,8 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, down_vote, self.post_request)
+        response = down_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         Comment.objects.filter(id=self.comment_3.id).update(timestamp=datetime.datetime.now() -
                                                             datetime.timedelta(minutes=11))
         down_vote(self.post_request)
@@ -1445,7 +1482,8 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_2
-        self.assertRaises(Exception, up_vote, self.post_request)
+        response = up_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         Comment.objects.filter(id=self.comment_3.id).update(timestamp=datetime.datetime.now() -
                                                             datetime.timedelta(minutes=11))
         up_vote(self.post_request)
@@ -1461,7 +1499,8 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_2
-        self.assertRaises(Exception, up_vote, self.post_request)
+        response = up_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
                                                             datetime.timedelta(minutes=11))
         up_vote(self.post_request)
@@ -1476,7 +1515,8 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, up_vote, self.post_request)
+        response = up_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
                                                             datetime.timedelta(minutes=11))
         down_vote(self.post_request)
@@ -1492,7 +1532,8 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, down_vote, self.post_request)
+        response = down_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
                                                             datetime.timedelta(minutes=11))
         down_vote(self.post_request)
@@ -1500,7 +1541,8 @@ class CommentTests(TestCase):
         query_dict = QueryDict('', mutable=True)
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
-        self.assertRaises(Exception, down_vote, self.post_request)
+        response = down_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         Comment.objects.filter(id=self.comment_3.id).update(timestamp=datetime.datetime.now() -
                                                             datetime.timedelta(minutes=11))
         down_vote(self.post_request)

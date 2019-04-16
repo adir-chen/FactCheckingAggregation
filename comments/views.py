@@ -9,6 +9,7 @@ from users.views import check_if_user_exists_by_user_id, get_all_scrapers_ids_ar
 from datetime import datetime
 from django.utils import timezone
 import requests
+import json
 import math
 import csv
 
@@ -25,7 +26,7 @@ def add_comment(request):
     if not valid_comment:
         save_log_message(request.user.id, request.user.username,
                          'Adding a new comment on claim. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     build_comment(comment_info['claim_id'],
                   comment_info['user_id'],
                   comment_info['title'],
@@ -67,7 +68,7 @@ def check_if_comment_is_valid(comment_info):
     if 'user_id' not in comment_info or not comment_info['user_id']:
         err += 'Missing value for user id'
     elif not check_if_user_is_scraper(comment_info['user_id']) and ('g_recaptcha_response' not in comment_info
-                                                                or not check_g_recaptcha_response(comment_info['g_recaptcha_response'])):
+                                                                    or not check_g_recaptcha_response(comment_info['g_recaptcha_response'])):
         err += 'Invalid Captcha'
     elif not check_if_input_format_is_valid(comment_info['tags']):
         err += 'Incorrect format for tags'
@@ -172,7 +173,7 @@ def edit_comment(request):
     if not valid_new_comment:
         save_log_message(request.user.id, request.user.username,
                          'Editing a comment. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     Comment.objects.filter(id=new_comment_fields['comment_id']).update(
         title=new_comment_fields['comment_title'],
         description=new_comment_fields['comment_description'],
@@ -248,7 +249,7 @@ def delete_comment(request):
     if not valid_delete_claim:
         save_log_message(request.user.id, request.user.username,
                          'Deleting a comment. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
     claim_id = comment.claim_id
     update_reputation_for_user(comment.user_id, False, comment.up_votes.count())
@@ -292,7 +293,7 @@ def up_vote(request):
     if not valid_vote:
         save_log_message(request.user.id, request.user.username,
                          'Up voting a comment. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
     if comment.up_votes.filter(id=request.user.id).exists():
         comment.up_votes.remove(request.user.id)
@@ -321,7 +322,7 @@ def down_vote(request):
     if not valid_vote:
         save_log_message(request.user.id, request.user.username,
                          'Down voting a comment. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     comment = get_object_or_404(Comment, id=request.POST.get('comment_id'))
     if comment.down_votes.filter(id=request.user.id).exists():
         comment.down_votes.remove(request.user.id)
@@ -371,7 +372,7 @@ def export_to_csv(request):
     if not valid_csv_fields:
         save_log_message(request.user.id, request.user.username,
                          'Exporting website claims to a csv. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     fields_to_export = request.POST.getlist('fields_to_export[]')
     scrapers_ids = [int(scraper_id) for scraper_id in request.POST.getlist('scrapers_ids[]')]
     regular_users = bool(csv_fields['regular_users'])
@@ -381,7 +382,7 @@ def export_to_csv(request):
     if not valid_fields_and_scrapers_lists:
         save_log_message(request.user.id, request.user.username,
                          'Exporting website claims to a csv. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     df_claims = create_df_for_claims(fields_to_export, scrapers_ids, regular_users, verdict_date_start, verdict_date_end)
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="claims.csv"'

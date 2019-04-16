@@ -30,6 +30,8 @@ class Analytics(TestCase):
                            'end_date': str(self.today),
                            'n': str(random.randint(1, 10))}
 
+        self.error_code = 404
+
     def tearDown(self):
         pass
 
@@ -68,7 +70,8 @@ class Analytics(TestCase):
         query_dict.update(self.customized_analytics)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, view_customized_analytics, self.post_request)
+        response = view_customized_analytics(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_view_customized_analytics_missing_end_date(self):
         del self.customized_analytics['end_date']
@@ -77,14 +80,16 @@ class Analytics(TestCase):
         query_dict.update(self.customized_analytics)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, view_customized_analytics, self.post_request)
+        response = view_customized_analytics(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_view_customized_analytics_missing_dimensions(self):
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.customized_analytics)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, view_customized_analytics, self.post_request)
+        response = view_customized_analytics(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_view_customized_analytics_invalid_dates_range(self):
         self.customized_analytics['start_date'] = str(self.today)
@@ -94,9 +99,11 @@ class Analytics(TestCase):
         query_dict.update(self.customized_analytics)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, view_customized_analytics, self.post_request)
+        response = view_customized_analytics(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         self.customized_analytics['dimensions'] = self.days
-        self.assertRaises(Exception, view_customized_analytics, self.post_request)
+        response = view_customized_analytics(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_view_customized_analytics_missing_args(self):
         for i in range(10):
@@ -115,7 +122,8 @@ class Analytics(TestCase):
             query_dict.update(self.customized_analytics)
             self.post_request.POST = query_dict
             self.post_request.user = self.admin
-            self.assertRaises(Exception, view_customized_analytics, self.post_request)
+            response = view_customized_analytics(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.customized_analytics = dict_copy.copy()
 
     def test_check_if_customized_analytics_is_valid(self):
@@ -170,7 +178,8 @@ class Analytics(TestCase):
         query_dict.update(self.top_claims)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, view_top_n_claims, self.post_request)
+        response = view_top_n_claims(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_view_top_n_claims_missing_end_date(self):
         del self.top_claims['end_date']
@@ -178,7 +187,8 @@ class Analytics(TestCase):
         query_dict.update(self.top_claims)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, view_top_n_claims, self.post_request)
+        response = view_top_n_claims(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_view_top_n_claims_invalid_dates_range(self):
         self.top_claims['start_date'] = str(self.today)
@@ -187,7 +197,8 @@ class Analytics(TestCase):
         query_dict.update(self.top_claims)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, view_top_n_claims, self.post_request)
+        response = view_top_n_claims(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_view_top_n_claims_missing_num_of_claims(self):
         del self.top_claims['n']
@@ -195,11 +206,12 @@ class Analytics(TestCase):
         query_dict.update(self.top_claims)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, view_top_n_claims, self.post_request)
+        response = view_top_n_claims(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_view_top_n_claims_missing_args(self):
         for i in range(10):
-            self.top_claims['n'] = random.randint(1, 10)
+            self.top_claims['n'] = str(random.randint(1, 10))
             dict_copy = self.top_claims.copy()
             args_to_remove = []
             for j in range(random.randint(1, len(self.top_claims.keys()) - 1)):
@@ -210,7 +222,8 @@ class Analytics(TestCase):
             query_dict.update(self.top_claims)
             self.post_request.POST = query_dict
             self.post_request.user = self.admin
-            self.assertRaises(Exception, view_top_n_claims, self.post_request)
+            response = view_top_n_claims(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.top_claims = dict_copy.copy()
 
     def test_check_if_top_claims_is_valid(self):

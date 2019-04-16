@@ -1,4 +1,4 @@
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from comments.models import Comment
@@ -6,6 +6,7 @@ from logger.views import save_log_message
 from claims.views import view_claim, is_english_input, return_get_request_to_user
 from replies.models import Reply
 from users.views import check_if_user_exists_by_user_id
+import json
 
 
 # This function takes care of a request to add a new reply to a comment in the website
@@ -19,7 +20,7 @@ def add_reply(request):
     if not valid_reply:
         save_log_message(request.user.id, request.user.username,
                          'Adding a new reply on comment. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     build_reply(reply_info['comment_id'],
                 reply_info['user_id'],
                 reply_info['content'])
@@ -77,7 +78,7 @@ def edit_reply(request):
     if not valid_new_reply:
         save_log_message(request.user.id, request.user.username,
                          'Editing a reply. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     Reply.objects.filter(id=new_reply_fields['reply_id']).update(
         content=new_reply_fields['reply_content'])
     claim_id = Reply.objects.filter(id=new_reply_fields['reply_id']).first().comment.claim_id
@@ -126,7 +127,7 @@ def delete_reply(request):
     if not valid_delete_reply:
         save_log_message(request.user.id, request.user.username,
                          'Deleting a reply. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     comment = get_object_or_404(Comment, id=Reply.objects.filter(id=request.POST.get('reply_id')).first().comment_id)
     claim_id = comment.claim_id
     Reply.objects.filter(id=request.POST.get('reply_id')).delete()

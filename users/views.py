@@ -1,12 +1,13 @@
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import render
 from claims.models import Claim
 from comments.models import Comment
 from logger.views import save_log_message
 from users.models import Users_Images, Scrapers
 from users.models import Users_Reputations
+import json
 
 
 # This function returns true in case the user exists, otherwise false
@@ -27,7 +28,8 @@ def get_username_by_user_id(user_id):
 
 def get_user_reputation(user_id):
     if not check_if_user_exists_by_user_id(user_id):
-        raise Exception('User with id ' + str(user_id) + ' does not exists')
+        err_msg = 'User with id ' + str(user_id) + ' does not exists'
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     user_rep = Users_Reputations.objects.filter(user_id=User.objects.filter(id=user_id).first())
     if len(user_rep) == 0:
         new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=user_id).first())
@@ -236,7 +238,7 @@ def add_new_scraper(request):
     if not valid_scraper:
         save_log_message(request.user.id, request.user.username,
                          'Adding a new scraper. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     true_labels = scraper_info['scraper_true_labels'].lower().split()
     if 'true' not in true_labels:
         true_labels.append('true')
@@ -295,7 +297,8 @@ def check_if_scraper_info_is_valid(scraper_info):
 # This function updates a user's reputation
 def update_reputation_for_user(user_id, earn_points, num_of_points):
     if not check_if_user_exists_by_user_id(user_id):
-        raise Exception('User with id ' + str(user_id) + ' does not exist')
+        err_msg = 'User with id ' + str(user_id) + ' does not exist'
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     user = User.objects.filter(id=user_id).first()
     user_rep = Users_Reputations.objects.filter(user_id=user)
     if len(user_rep) == 0:  # user has no reputation
@@ -392,7 +395,7 @@ def add_true_label_to_scraper(request):
     if not valid_scraper_label:
         save_log_message(request.user.id, request.user.username,
                          'Adding a new label (T) for scraper. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
     true_labels = ''
     if scraper.true_labels:
@@ -415,13 +418,13 @@ def delete_true_label_from_scraper(request):
     if not valid_scraper_label:
         save_log_message(request.user.id, request.user.username,
                          'Deleting a label (T) from scraper. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     true_labels = request.POST.getlist('scraper_label[]')
     valid_true_labels, err_msg = check_if_scraper_labels_already_exist(scraper_info['scraper_id'], true_labels, True)
     if not valid_true_labels:
         save_log_message(request.user.id, request.user.username,
                          'Deleting a label (T) from scraper. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
     new_scraper_true_labels = []
     for true_label in scraper.true_labels.split(','):
@@ -444,7 +447,7 @@ def add_false_label_to_scraper(request):
     if not valid_scraper_label:
         save_log_message(request.user.id, request.user.username,
                          'Adding a new label (F) for scraper. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
     false_labels = ''
     if scraper.false_labels:
@@ -467,13 +470,13 @@ def delete_false_label_from_scraper(request):
     if not valid_scraper_label:
         save_log_message(request.user.id, request.user.username,
                          'Deleting a label (F) from scraper. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     false_labels = request.POST.getlist('scraper_label[]')
     valid_false_labels, err_msg = check_if_scraper_labels_already_exist(scraper_info['scraper_id'], false_labels, False)
     if not valid_false_labels:
         save_log_message(request.user.id, request.user.username,
                          'Deleting a label (F) from scraper. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
     new_scraper_false_labels = []
     for false_label in scraper.false_labels.split(','):
@@ -548,7 +551,8 @@ def check_if_scraper_labels_already_exist(scraper_id, labels_list, label):
 
 def update_scrapers_comments_verdicts(scraper_id):
     if not check_if_user_exists_by_user_id(scraper_id):
-        raise Exception('Scraper with id ' + str(scraper_id) + ' does not exists')
+        err_msg = 'Scraper with id ' + str(scraper_id) + ' does not exists'
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_id).first()).first()
     for comment in Comment.objects.filter(user_id=scraper_id):
         label = comment.label.lower().strip()
@@ -570,7 +574,7 @@ def update_user_img(request):
     if not valid_user_info:
         save_log_message(request.user.id, request.user.username,
                          'Editing user image. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     user = User.objects.filter(id=request.user.id).first()
     Users_Images.objects.filter(user_id=user).update(user_img=user_info['user_img'])
     save_log_message(request.user.id, request.user.username,

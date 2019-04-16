@@ -69,9 +69,9 @@
                 localStorage.setItem("success_msg_{{ reply.id }}_reply_edit", true);
                 window.location.reload();
             },
-            error: function (error) {
+            error: function (request) {
                 hide_all_msgs();
-                let err = error.responseText.split('\n')[1];
+                let err = request.responseJSON;
                 document.getElementById("error_msg_{{ reply.id }}_reply_edit").innerHTML =
                 'Error: <br>' + err;
                 $("#error_msg_{{ reply.id }}_reply_edit").attr("hidden", false);
@@ -89,12 +89,12 @@
                 data: {
                     reply_id: '{{ reply.id }}',
                 },
-                success: function (page) {
+                success: function (request) {
                     $("html, body").animate({ scrollTop: 200 }, 0);
                     window.location.reload();
                 },
-                error: function (error) {
-                    let err = error.responseText.split('\n')[1];
+                error: function (request) {
+                    let err = request.responseJSON;
                     document.getElementById("error_msg_{{ reply.id }}_reply_edit").innerHTML =
                         'Error: <br>' + err;
                     $("#error_msg_{{ reply.id }}_reply_edit").attr("hidden", false);

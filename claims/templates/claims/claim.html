@@ -201,9 +201,10 @@
                             scrollTop: $("#comment_box_{{ claim.max_comment_id }}").offset().top + 250
                         }, 0);
                     },
-                    error: function (error) {
+                    error: function (request) {
                         hide_all_msgs();
-                        let err = error.responseText.split('\n')[1];
+                        grecaptcha.reset();
+                        let err = request.responseJSON;
                         document.getElementById("error_msg_{{ claim.id }}_new_comment").innerHTML =
                         'Error: <br>' + err;
                         $("#error_msg_{{ claim.id }}_new_comment").attr("hidden", false);
@@ -228,9 +229,9 @@
                     localStorage.setItem("success_msg_{{ claim.id }}_claim_edit", true);
                     window.location.reload();
                 },
-                error: function (error) {
+                error: function (request) {
                     hide_all_msgs();
-                    let err = error.responseText.split('\n')[1];
+                    let err = request.responseJSON;
                     document.getElementById("error_msg_{{ claim.id }}_claim_edit").innerHTML =
                     'Error: <br>' + err;
                     $("#error_msg_{{ claim.id }}_claim_edit").attr("hidden", false);
@@ -251,9 +252,9 @@
                     success: function () {
                         location.href = 'http://{{ request.META.HTTP_HOST }}';
                     },
-                    error: function (error) {
+                    error: function (request) {
                         hide_all_msgs();
-                        let err = error.responseText.split('\n')[1];
+                        let err = request.responseJSON;
                         document.getElementById("error_msg_{{ claim.id }}_claim_edit").innerHTML =
                         'Error: <br>' + err;
                         $("#error_msg_{{ claim.id }}_claim_edit").attr("hidden", false);
@@ -275,9 +276,9 @@
                     localStorage.setItem("success_msg_{{ claim.id }}_claim_report_spam", true);
                     window.location.reload();
                 },
-                error: function (error) {
+                error: function (request) {
                     hide_all_msgs();
-                    let err = error.responseText.split('\n')[1];
+                    let err = request.responseJSON;
                     document.getElementById("error_msg_{{ claim.id }}_claim_report_spam").innerHTML =
                     'Error: <br>' + err;
                     $("#error_msg_{{ claim.id }}_claim_report_spam").attr("hidden", false);

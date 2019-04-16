@@ -7,6 +7,7 @@ from comments.views import is_valid_url
 from logger.views import save_log_message
 from tweets.models import Tweet
 from datetime import datetime
+import json
 import csv
 
 
@@ -14,7 +15,7 @@ import csv
 def add_tweet(tweet_info):
     valid_tweet, err_msg = check_if_tweet_is_valid(tweet_info)
     if not valid_tweet:
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     build_tweet(tweet_info['claim_id'],
                 tweet_info['tweet_link'])
 
@@ -54,7 +55,7 @@ def delete_tweet(request):
     if not valid_delete_tweet:
         save_log_message(request.user.id, request.user.username,
                          'Deleting a tweet. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     tweet = get_object_or_404(Tweet, id=request.POST.get('tweet_id'))
     claim_id = tweet.claim_id
     Tweet.objects.filter(id=request.POST.get('tweet_id')).delete()
@@ -88,7 +89,7 @@ def export_to_csv(request):
     if not valid_csv_fields:
         save_log_message(request.user.id, request.user.username,
                          'Exporting website tweets to a csv. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     fields_to_export = request.POST.getlist('fields_to_export[]')
     date_start = datetime.strptime(csv_fields['date_start'], '%d/%m/%Y').date()
     date_end = datetime.strptime(csv_fields['date_end'], '%d/%m/%Y').date()
@@ -96,7 +97,7 @@ def export_to_csv(request):
     if not valid_fields_list:
         save_log_message(request.user.id, request.user.username,
                          'Exporting website tweets to a csv. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     df_tweets = create_df_for_tweets(fields_to_export, date_start, date_end)
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="tweets.csv"'

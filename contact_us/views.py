@@ -1,5 +1,5 @@
 from datetime import datetime
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import render
 from django.core.mail import send_mail
 from validate_email import validate_email
@@ -7,8 +7,7 @@ from logger.models import Logger
 from logger.views import save_log_message
 from ipware import get_client_ip
 from claims.views import return_get_request_to_user
-from django.conf import settings
-import smtplib
+import json
 
 
 # This function return an HTML page for contact us
@@ -31,7 +30,7 @@ def send_email(request):
     if not valid_mail:
         save_log_message(request.user.id, request.user.username,
                          'Sending an email from ip - ' + ip + '. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     send_mail(mail_info['user_email'] + ': ' + mail_info['subject'],
               mail_info['description'],
               'wtfacteam@gmail.com',

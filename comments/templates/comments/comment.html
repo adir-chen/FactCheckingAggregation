@@ -202,9 +202,9 @@
                 }
                 $("#{{ comment.id }}_voteCount").text(up_count_{{ comment.id }}-down_count_{{ comment.id }});
             },
-            error: function (error) {
+            error: function (request) {
                 hide_all_msgs();
-                let err = error.responseText.split('\n')[1];
+                let err = request.responseJSON;
                 document.getElementById("error_msg_{{ comment.id }}_comment_vote").innerHTML =
                     'Error: <br>' + err;
                 $("#error_msg_{{ comment.id }}_comment_vote").attr("hidden", false);
@@ -239,9 +239,9 @@
                 }
                 $("#{{ comment.id }}_voteCount").text(up_count_{{ comment.id }}-down_count_{{ comment.id }});
             },
-            error: function (error) {
+            error: function (request) {
                 hide_all_msgs();
-                let err = error.responseText.split('\n')[1];
+                let err = request.responseJSON;
                 document.getElementById("error_msg_{{ comment.id }}_comment_vote").innerHTML =
                     'Error: <br>' + err;
                 $("#error_msg_{{ comment.id }}_comment_vote").attr("hidden", false);
@@ -305,9 +305,9 @@
                 localStorage.setItem("success_msg_{{ comment.id }}_comment_edit", true);
                 window.location.reload();
             },
-            error: function (error) {
+            error: function (request) {
                 hide_all_msgs();
-                let err = error.responseText.split('\n')[1];
+                let err = request.responseJSON;
                 document.getElementById("error_msg_{{ comment.id }}_comment_edit").innerHTML =
                 'Error: <br>' + err;
                 $("#error_msg_{{ comment.id }}_comment_edit").attr("hidden", false);
@@ -329,8 +329,8 @@
                     $("html, body").animate({ scrollTop: 200 }, 0);
                     window.location.reload();
                 },
-                error: function (error) {
-                    let err = error.responseText.split('\n')[1];
+                error: function (request) {
+                    let err = request.responseJSON;
                     document.getElementById("error_msg_{{ comment.id }}_comment_edit").innerHTML =
                         'Error: <br>' + err;
                     $("#error_msg_{{ comment.id }}_comment_edit").attr("hidden", false);
@@ -368,9 +368,9 @@
             success: function () {
                 window.location.reload();
             },
-            error: function (error) {
+            error: function (request) {
                 hide_all_msgs();
-                let err = error.responseText.split('\n')[1];
+                let err = request.responseJSON;
                 document.getElementById("error_msg_{{ comment.id }}_new_reply").innerHTML =
                 'Error: <br>' + err;
                 $("#error_msg_{{ comment.id }}_new_reply").attr("hidden", false);

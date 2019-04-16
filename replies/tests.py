@@ -74,6 +74,8 @@ class CommentTests(TestCase):
         self.get_request = HttpRequest()
         self.get_request.method = 'GET'
 
+        self.error_code = 404
+
     def tearDown(self):
         pass
 
@@ -111,29 +113,34 @@ class CommentTests(TestCase):
         guest = User(id=self.num_of_saved_users + random.randint(1, 10), username='guest')
         self.post_request.POST = self.new_reply_details_user_1
         self.post_request.user = guest
-        self.assertRaises(Exception, add_reply, self.post_request)
+        response = add_reply(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_reply_missing_comment_id(self):
         del self.new_reply_details_user_1['comment_id']
         self.post_request.POST = self.new_reply_details_user_1
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, add_reply, self.post_request)
+        response = add_reply(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
         del self.new_reply_details_user_2['comment_id']
         self.post_request.POST = self.new_reply_details_user_2
         self.post_request.user = self.user_2
-        self.assertRaises(Exception, add_reply, self.post_request)
+        response = add_reply(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_reply_missing_content(self):
         del self.new_reply_details_user_1['content']
         self.post_request.POST = self.new_reply_details_user_1
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, add_reply, self.post_request)
+        response = add_reply(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
         del self.new_reply_details_user_2['content']
         self.post_request.POST = self.new_reply_details_user_2
         self.post_request.user = self.user_2
-        self.assertRaises(Exception, add_reply, self.post_request)
+        response = add_reply(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_reply_missing_args(self):
         for i in range(10):
@@ -146,7 +153,8 @@ class CommentTests(TestCase):
             len_replies = len(Reply.objects.filter(comment_id=self.comment_2.id))
             self.post_request.POST = self.new_reply_details_user_1
             self.post_request.user = self.user_1
-            self.assertRaises(Exception, add_reply, self.post_request)
+            response = add_reply(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.assertTrue(len(Reply.objects.filter(comment_id=self.comment_2.id)) == len_replies)
             self.new_reply_details_user_1 = dict_copy.copy()
 
@@ -275,7 +283,8 @@ class CommentTests(TestCase):
         query_dict.update(self.update_reply_details)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_2
-        self.assertRaises(Exception, edit_reply, self.post_request)
+        response = edit_reply(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         reply = Reply.objects.filter(id=self.reply_1.id).first()
         self.assertTrue(reply.id == self.reply_1.id)
         self.assertTrue(reply.comment_id == self.reply_1.comment_id)
@@ -289,7 +298,8 @@ class CommentTests(TestCase):
         query_dict.update(self.update_reply_details)
         self.post_request.POST = query_dict
         self.post_request.user = user
-        self.assertRaises(Exception, edit_reply, self.post_request)
+        response = edit_reply(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         reply = Reply.objects.filter(id=self.reply_1.id).first()
         self.assertTrue(reply.id == self.reply_1.id)
         self.assertTrue(reply.comment_id == self.reply_1.comment_id)
@@ -302,7 +312,8 @@ class CommentTests(TestCase):
         query_dict.update(self.update_reply_details)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Exception, edit_reply, self.post_request)
+        response = edit_reply(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         reply = Reply.objects.filter(id=self.reply_1.id).first()
         self.assertTrue(reply.id == self.reply_1.id)
         self.assertTrue(reply.comment_id == self.reply_1.comment_id)
@@ -322,7 +333,8 @@ class CommentTests(TestCase):
             query_dict.update(self.update_reply_details)
             self.post_request.POST = query_dict
             self.post_request.user = self.user_1
-            self.assertRaises(Exception, edit_reply, self.post_request)
+            response = edit_reply(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.update_reply_details = dict_copy.copy()
 
     def test_edit_reply_invalid_request(self):
@@ -418,7 +430,8 @@ class CommentTests(TestCase):
         self.post_request.POST = reply_to_delete
         self.post_request.user = self.user_2
         len_replies = len(Reply.objects.all())
-        self.assertRaises(Exception, delete_reply, self.post_request)
+        response = delete_reply(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         self.assertTrue(len(Reply.objects.all()) == len_replies)
 
     def test_delete_reply_by_invalid_user(self):
@@ -427,7 +440,8 @@ class CommentTests(TestCase):
         self.post_request.POST = reply_to_delete
         self.post_request.user = user
         len_replies = len(Reply.objects.all())
-        self.assertRaises(Exception, delete_reply, self.post_request)
+        response = delete_reply(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         self.assertTrue(len(Reply.objects.all()) == len_replies)
 
     def test_delete_reply_by_not_authenticated_user(self):
@@ -444,7 +458,8 @@ class CommentTests(TestCase):
         self.post_request.POST = reply_to_delete
         self.post_request.user = self.user_1
         len_replies = len(Reply.objects.all())
-        self.assertRaises(Exception, delete_reply, self.post_request)
+        response = delete_reply(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         self.assertTrue(len(Reply.objects.all()) == len_replies)
 
     def test_delete_reply_invalid_request(self):

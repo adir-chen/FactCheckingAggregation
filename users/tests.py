@@ -76,6 +76,8 @@ class UsersTest(TestCase):
 
         self.update_user_image = {'user_img': 'newUserImg'}
 
+        self.error_code = 404
+
     def tearDown(self):
         pass
 
@@ -99,7 +101,8 @@ class UsersTest(TestCase):
         self.assertTrue(get_user_reputation(self.user_1.id) == self.rep)
 
     def test_get_user_reputation_invalid_user(self):
-        self.assertRaises(Exception, get_user_reputation, self.num_of_saved_users + 1)
+        response = get_user_reputation(self.num_of_saved_users + 1)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_get_user_reputation_for_valid_user_without_reputation(self):
         self.assertTrue(get_user_reputation(self.user_2.id) == 1)
@@ -300,8 +303,10 @@ class UsersTest(TestCase):
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.new_scraper_details)
         self.post_request.POST = query_dict
+        self.post_request.user = self.admin
         old_length = len(User.objects.all())
-        self.assertRaises(Exception, add_new_scraper, self.post_request)
+        response = add_new_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         self.assertTrue(len(User.objects.all()) == old_length)
 
     def test_add_new_scraper_missing_args(self):
@@ -317,7 +322,8 @@ class UsersTest(TestCase):
             query_dict.update(self.new_scraper_details)
             self.post_request.POST = query_dict
             self.post_request.user = self.admin
-            self.assertRaises(Exception, add_new_scraper, self.post_request)
+            response = add_new_scraper(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.assertTrue(len(User.objects.all()) == len_users)
             self.new_scraper_details = dict_copy.copy()
 
@@ -431,12 +437,13 @@ class UsersTest(TestCase):
         self.assertTrue(user_rep.user_rep == 1)
 
     def test_update_reputation_for_user_invalid_user(self):
-        self.assertRaises(Exception, update_reputation_for_user,
-                          self.num_of_saved_users + random.randint(1, 10),
-                          False, random.randint(1, 20))
-        self.assertRaises(Exception, update_reputation_for_user,
-                          self.num_of_saved_users + random.randint(1, 10),
-                          True, random.randint(1, 20))
+        response = update_reputation_for_user(self.num_of_saved_users + random.randint(1, 10),
+                                              False, random.randint(1, 20))
+        self.assertTrue(response.status_code == self.error_code)
+
+        response = update_reputation_for_user(self.num_of_saved_users + random.randint(1, 10),
+                                              True, random.randint(1, 20))
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_user_page_with_claim_and_comment(self):
         claim = Claim(user_id=self.user_1.id,
@@ -570,7 +577,8 @@ class UsersTest(TestCase):
         query_dict.update(self.new_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+        response = add_true_label_to_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_true_label_to_scraper_missing_scraper_label(self):
         Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -578,7 +586,8 @@ class UsersTest(TestCase):
         query_dict.update(self.new_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+        response = add_true_label_to_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_true_label_to_scraper_missing_args(self):
         Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -595,7 +604,8 @@ class UsersTest(TestCase):
             query_dict.update(self.new_label_for_scraper)
             self.post_request.POST = query_dict
             self.post_request.user = self.admin
-            self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+            response = add_true_label_to_scraper(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.new_label_for_scraper = dict_copy.copy()
 
     def test_add_true_label_to_scraper_invalid_label(self):
@@ -605,7 +615,8 @@ class UsersTest(TestCase):
         query_dict.update(self.new_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+        response = add_true_label_to_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_true_label_to_scraper_invalid_scraper_id(self):
         self.new_label_for_scraper['scraper_id'] = self.num_of_saved_users + random.randint(1, 10)
@@ -616,7 +627,8 @@ class UsersTest(TestCase):
         query_dict.update(self.new_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+        response = add_true_label_to_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_true_label_to_scraper_label_already_exists(self):
         scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -627,7 +639,8 @@ class UsersTest(TestCase):
         query_dict.update(self.new_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+        response = add_true_label_to_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_delete_true_label_from_scraper(self):
         scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -674,7 +687,8 @@ class UsersTest(TestCase):
         query_dict.update(self.delete_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, delete_true_label_from_scraper, self.post_request)
+        response = delete_true_label_from_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_delete_true_label_from_scraper_missing_scraper_label(self):
         Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -682,7 +696,8 @@ class UsersTest(TestCase):
         query_dict.update(self.delete_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, delete_true_label_from_scraper, self.post_request)
+        response = delete_true_label_from_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_delete_true_label_from_scraper_missing_args(self):
         scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -700,7 +715,8 @@ class UsersTest(TestCase):
             query_dict.update(self.delete_label_for_scraper)
             self.post_request.POST = query_dict
             self.post_request.user = self.admin
-            self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+            response = delete_true_label_from_scraper(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.delete_label_for_scraper = dict_copy.copy()
 
     def test_delete_true_label_from_scraper_invalid_label(self):
@@ -710,7 +726,8 @@ class UsersTest(TestCase):
         query_dict.update(self.delete_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, delete_true_label_from_scraper, self.post_request)
+        response = delete_true_label_from_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_delete_true_label_from_scraper_invalid_scraper_id(self):
         scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -722,7 +739,8 @@ class UsersTest(TestCase):
         query_dict.update(self.delete_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, delete_true_label_from_scraper, self.post_request)
+        response = delete_true_label_from_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_delete_true_label_from_scraper_label_does_not_exist(self):
         scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -734,7 +752,8 @@ class UsersTest(TestCase):
         query_dict.update(self.delete_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, delete_true_label_from_scraper, self.post_request)
+        response = delete_true_label_from_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_false_label_to_scraper(self):
         Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -775,7 +794,8 @@ class UsersTest(TestCase):
         query_dict.update(self.new_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, add_false_label_to_scraper, self.post_request)
+        response = add_false_label_to_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_false_label_to_scraper_missing_scraper_label(self):
         Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -783,7 +803,8 @@ class UsersTest(TestCase):
         query_dict.update(self.new_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, add_false_label_to_scraper, self.post_request)
+        response = add_false_label_to_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_false_label_to_scraper_missing_args(self):
         Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -800,7 +821,8 @@ class UsersTest(TestCase):
             query_dict.update(self.new_label_for_scraper)
             self.post_request.POST = query_dict
             self.post_request.user = self.admin
-            self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+            response = add_false_label_to_scraper(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.new_label_for_scraper = dict_copy.copy()
 
     def test_add_false_label_to_scraper_invalid_label(self):
@@ -810,7 +832,8 @@ class UsersTest(TestCase):
         query_dict.update(self.new_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, add_false_label_to_scraper, self.post_request)
+        response = add_false_label_to_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_false_label_to_scraper_invalid_scraper_id(self):
         self.new_label_for_scraper['scraper_id'] = self.num_of_saved_users + random.randint(1, 10)
@@ -821,7 +844,8 @@ class UsersTest(TestCase):
         query_dict.update(self.new_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, add_true_label_to_scraper, self.post_request)
+        response = add_false_label_to_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_add_false_label_to_scraper_label_already_exists(self):
         scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -832,7 +856,8 @@ class UsersTest(TestCase):
         query_dict.update(self.new_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, add_false_label_to_scraper, self.post_request)
+        response = add_false_label_to_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_delete_false_label_from_scraper(self):
         scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -878,7 +903,8 @@ class UsersTest(TestCase):
         query_dict.update(self.delete_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, delete_false_label_from_scraper, self.post_request)
+        response = delete_false_label_from_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_delete_false_label_from_scraper_missing_scraper_label(self):
         scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -887,7 +913,8 @@ class UsersTest(TestCase):
         query_dict.update(self.delete_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, delete_false_label_from_scraper, self.post_request)
+        response = delete_false_label_from_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_delete_false_label_from_scraper_missing_args(self):
         scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -905,7 +932,8 @@ class UsersTest(TestCase):
             query_dict.update(self.delete_label_for_scraper)
             self.post_request.POST = query_dict
             self.post_request.user = self.admin
-            self.assertRaises(Exception, delete_false_label_from_scraper, self.post_request)
+            response = delete_false_label_from_scraper(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.delete_label_for_scraper = dict_copy.copy()
 
     def test_delete_false_label_from_scraper_invalid_label(self):
@@ -915,7 +943,8 @@ class UsersTest(TestCase):
         query_dict.update(self.delete_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, delete_false_label_from_scraper, self.post_request)
+        response = delete_false_label_from_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_delete_false_label_from_scraper_invalid_scraper_id(self):
         scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -928,7 +957,8 @@ class UsersTest(TestCase):
         query_dict.update(self.delete_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, delete_false_label_from_scraper, self.post_request)
+        response = delete_false_label_from_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_delete_false_label_from_scraper_label_does_not_exist(self):
         scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -939,7 +969,8 @@ class UsersTest(TestCase):
         query_dict.update(self.delete_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, delete_false_label_from_scraper, self.post_request)
+        response = delete_false_label_from_scraper(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_check_if_scraper_new_label_is_valid_true_label_valid(self):
         Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -1126,7 +1157,8 @@ class UsersTest(TestCase):
         query_dict.update(self.update_user_image)
         self.post_request.POST = query_dict
         self.post_request.user = self.admin
-        self.assertRaises(Exception, update_user_img, self.post_request)
+        response = update_user_img(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_check_if_user_info_is_valid(self):
         self.update_user_image['user_id'] = str(self.user_1.id)

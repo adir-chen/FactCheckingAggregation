@@ -199,7 +199,8 @@ class ClaimTests(TestCase):
             query_dict.update(self.new_claim_details)
             self.post_request.POST = query_dict
             self.post_request.user = self.user
-            self.assertRaises(Exception, add_claim, self.post_request)
+            response = add_claim(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.assertTrue(len(Claim.objects.all()) == len_claims)
             self.assertTrue(get_claim_by_id(self.num_of_saved_claims + 1) is None)
 
@@ -413,12 +414,13 @@ class ClaimTests(TestCase):
         self.assertTrue(Claim.objects.filter(id=self.update_claim_details['claim_id'])[0].claim == self.claim_1.claim + '_new')
 
     def test_edit_claim_with_existing_claim(self):
-        self.update_claim_details['claim'] = self.claim_2
+        self.update_claim_details['claim'] = self.claim_2.claim
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.update_claim_details)
         self.post_request.POST = query_dict
         self.post_request.user = self.user
-        self.assertRaises(Exception, edit_claim, self.post_request)
+        response = edit_claim(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_edit_claim_with_user_not_authenticated(self):
         from django.contrib.auth.models import AnonymousUser
@@ -432,7 +434,8 @@ class ClaimTests(TestCase):
         query_dict.update(self.update_claim_details)
         self.post_request.POST = query_dict
         self.post_request.user = guest
-        self.assertRaises(Exception, edit_claim, self.post_request)
+        response = edit_claim(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_edit_claim_invalid_request(self):
         self.get_request.user = self.user
@@ -477,7 +480,8 @@ class ClaimTests(TestCase):
             query_dict.update(self.update_claim_details)
             self.post_request.POST = query_dict
             self.post_request.user = self.user
-            self.assertRaises(Exception, edit_claim, self.post_request)
+            response = edit_claim(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.update_claim_details = data_copy.copy()
 
     def test_check_claim_new_fields(self):
@@ -615,7 +619,8 @@ class ClaimTests(TestCase):
         self.post_request.POST = claim_to_delete
         self.post_request.user = self.user
         old_length = len(Claim.objects.all())
-        self.assertRaises(Exception, delete_claim, self.post_request)
+        response = delete_claim(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         self.assertTrue(len(Claim.objects.all()), old_length)
 
     def test_delete_claim_valid_claim_invalid_user(self):
@@ -624,7 +629,8 @@ class ClaimTests(TestCase):
         self.post_request.POST = claim_to_delete
         self.post_request.user = user
         old_length = len(Claim.objects.all())
-        self.assertRaises(Exception, delete_claim, self.post_request)
+        response = delete_claim(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         self.assertTrue(len(Claim.objects.all()), old_length)
 
     def test_delete_claim_valid_user_not_authenticated(self):
@@ -633,7 +639,7 @@ class ClaimTests(TestCase):
         self.post_request.POST = claim_to_delete
         self.post_request.user = AnonymousUser()
         old_length = len(Claim.objects.all())
-        self.assertRaises(Exception, delete_claim, self.post_request)
+        self.assertRaises(Http404, delete_claim, self.post_request)
         self.assertTrue(len(Claim.objects.all()), old_length)
 
     def test_delete_claim_invalid_request(self):
@@ -647,7 +653,8 @@ class ClaimTests(TestCase):
         self.post_request.POST = claim_to_delete
         self.post_request.user = self.user_2
         old_length = len(Claim.objects.all())
-        self.assertRaises(Exception, delete_claim, self.post_request)
+        response = delete_claim(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
         self.assertTrue(len(Claim.objects.all()), old_length)
 
     def test_check_if_delete_claim_is_valid(self):
@@ -693,30 +700,33 @@ class ClaimTests(TestCase):
         self.post_request.POST = claim_to_report_spam
         self.post_request.user = self.scraper
         self.assertTrue(report_spam(self.post_request).status_code == 200)
-        self.assertRaises(Exception, report_spam, self.post_request)
+        response = report_spam(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_report_spam_user_not_authenticated(self):
         from django.contrib.auth.models import AnonymousUser
         claim_to_report_spam = {'claim_id': self.claim_1.id}
         self.post_request.POST = claim_to_report_spam
         self.post_request.user = AnonymousUser()
-        self.assertRaises(Exception, report_spam, self.post_request)
+        self.assertRaises(Http404, report_spam, self.post_request)
 
     def test_report_spam_invalid_request(self):
         self.get_request.user = self.user
-        self.assertRaises(Exception, report_spam, self.get_request)
+        self.assertRaises(Http404, report_spam, self.get_request)
 
     def test_report_spam_missing_claim_id(self):
         self.post_request.POST = {}
         self.post_request.user = self.scraper
-        self.assertRaises(Exception, report_spam, self.post_request)
+        response = report_spam(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_report_spam_invalid_user(self):
         guest = User(id=self.num_of_saved_users + random.randint(1, 10), username='guest')
         claim_to_report_spam = {'claim_id': self.claim_1.id}
         self.post_request.POST = claim_to_report_spam
         self.post_request.user = guest
-        self.assertRaises(Exception, report_spam, self.post_request)
+        response = report_spam(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_check_if_spam_report_is_valid(self):
         claim_to_report_spam = {'claim_id': self.claim_1.id}

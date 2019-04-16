@@ -186,9 +186,9 @@
                     localStorage.setItem("success_msg_add_true_label", true);
                     window.location.reload()
                 },
-                error: function (error) {
+                error: function (request) {
                     hide_all_msgs();
-                    let err = error.responseText.split('\n')[1];
+                    let err = request.responseJSON;
                     document.getElementById("error_msg_add_true_label").innerHTML =
                     'Error: <br>' + err;
                     $("#error_msg_add_true_label").attr("hidden", false);
@@ -214,9 +214,9 @@
                     localStorage.setItem("success_msg_delete_true_label", true);
                     window.location.reload()
                 },
-                error: function (error) {
+                error: function (request) {
                     hide_all_msgs();
-                    let err = error.responseText.split('\n')[1];
+                    let err = request.responseJSON;
                     document.getElementById("error_msg_delete_true_label").innerHTML =
                     'Error: <br>' + err;
                     $("#error_msg_delete_true_label").attr("hidden", false);
@@ -238,9 +238,9 @@
                     localStorage.setItem("success_msg_add_false_label", true);
                     window.location.reload();
                 },
-                error: function (error) {
+                error: function (request) {
                     hide_all_msgs();
-                    let err = error.responseText.split('\n')[1];
+                    let err = request.responseJSON;
                     document.getElementById("error_msg_add_false_label").innerHTML =
                     'Error: <br>' + err;
                     $("#error_msg_add_false_label").attr("hidden", false);
@@ -266,9 +266,9 @@
                     localStorage.setItem("success_msg_delete_false_label", true);
                     window.location.reload()
                 },
-                error: function (error) {
+                error: function (request) {
                     hide_all_msgs();
-                    let err = error.responseText.split('\n')[1];
+                    let err = request.responseJSON;
                     document.getElementById("error_msg_delete_false_label").innerHTML =
                     'Error: <br>' + err;
                     $("#error_msg_delete_false_label").attr("hidden", false);
@@ -296,9 +296,9 @@
                     localStorage.setItem("success_msg_change_profile_image", true);
                     window.location.reload();
                 },
-                error: function (error) {
+                error: function (request) {
                     hide_all_msgs();
-                    let err = error.responseText.split('\n')[1];
+                    let err = request.responseJSON;
                     document.getElementById("error_msg_change_profile_image").innerHTML =
                     'Error: <br>' + err;
                     $("#error_msg_change_profile_image").attr("hidden", false);

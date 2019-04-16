@@ -54,6 +54,8 @@ class LoggerTest(TestCase):
             'date_start': [str(datetime.date.today() - datetime.timedelta(days=20))],
             'date_end': [str(datetime.date.today())]})
 
+        self.error_code = 404
+
     def tearDown(self):
         pass
 
@@ -132,7 +134,8 @@ class LoggerTest(TestCase):
         query_dict.update(self.csv_fields)
         self.post_request.POST = query_dict
         self.post_request.user = admin
-        self.assertRaises(Exception, export_to_csv, self.post_request)
+        response = export_to_csv(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_export_to_csv_missing_args(self):
         admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
@@ -147,7 +150,8 @@ class LoggerTest(TestCase):
             query_dict.update(self.csv_fields)
             self.post_request.POST = query_dict
             self.post_request.user = admin
-            self.assertRaises(Exception, export_to_csv, self.post_request)
+            response = export_to_csv(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
             self.csv_fields = dict_copy.copy()
 
     def test_export_to_csv_empty(self):

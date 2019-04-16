@@ -85,9 +85,9 @@
                     localStorage.setItem("success_msg", true);
                     window.location.reload()
                 },
-                error: function (error) {
+                error: function (request) {
                     $("#success_msg").attr("hidden", true);
-                    let err = error.responseText.split('\n')[1];
+                    let err = request.responseJSON;
                     document.getElementById("error_msg").innerHTML =
                     'Error: <br>' + err;
                     $("#error_msg").attr("hidden", false);

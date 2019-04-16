@@ -42,9 +42,9 @@
                     window.location.reload()
 
                 },
-                error: function (error) {
+                error: function (request) {
                     $("#success_msg_send_email").attr("hidden", true);
-                    let err = error.responseText.split('\n')[1];
+                    let err = request.responseJSON;
                     document.getElementById("error_msg_send_email").innerHTML =
                         'Error: <br>' + err;
                     $("#error_msg_send_email").attr("hidden", false);

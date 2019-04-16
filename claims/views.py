@@ -48,16 +48,16 @@ def add_claim(request):
     claim_info['claim_id'] = claim.id
     request.POST = claim_info
     if claim_info['add_comment'] == 'true':
-        try:
-            add_comment(request)
-        except Exception as e:
+        response = add_comment(request)
+        if response.status_code == 404:  # error case
             claim.delete()
+            err_msg = response.content.decode('utf-8')
             save_log_message(request.user.id, request.user.username,
                              'Adding a new comment on claim with id ' + str(
-                                 claim.id) + '. Error: ' + str(e) +
+                                 claim.id) + '. Error: ' + err_msg +
                              '. This claim has been deleted because ' +
                              'the user does not succeed to add a new claim with a comment on it.')
-            raise Exception(e)
+            return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     return view_claim(return_get_request_to_user(request.user), claim.id)
 
 
@@ -171,7 +171,7 @@ def edit_claim(request):
     if not valid_new_claim:
         save_log_message(request.user.id, request.user.username,
                          'Editing a claim. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     claim = get_object_or_404(Claim, id=request.POST.get('claim_id'))
     Claim.objects.filter(id=claim.id).update(
         claim=new_claim_fields['claim'],
@@ -236,7 +236,7 @@ def delete_claim(request):
     if not valid_delete_claim:
         save_log_message(request.user.id, request.user.username,
                          'Deleting a claim. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     from users.views import update_reputation_for_user
     for comment in Comment.objects.filter(claim_id=request.POST.get('claim_id')):
         update_reputation_for_user(comment.user_id, False, comment.up_votes.count())
@@ -278,7 +278,7 @@ def report_spam(request):
     if not valid_spam_report:
         save_log_message(request.user.id, request.user.username,
                          'Reporting a claim as spam. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     save_log_message(request.user.id, request.user.username,
                      'Reporting a claim with id ' + str(request.POST.get('claim_id')) + ' as spam', True)
 

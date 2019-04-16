@@ -40,7 +40,7 @@ def view_customized_analytics(request):
     if not valid_customized_analytics_info:
         save_log_message(request.user.id, request.user.username,
                          'Viewing customized analytics. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     reports = get_report_view_by_time(start_date=customized_analytics_info['start_date'],
                                       end_date=customized_analytics_info['end_date'],
                                       dimensions=customized_analytics_info['dimensions'])
@@ -79,7 +79,7 @@ def view_top_n_claims(request):
     if not valid_top_claims_info:
         save_log_message(request.user.id, request.user.username,
                          'Viewing top n claims. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     reports = get_report_top_n_claims(num_of_claims=int(top_claims_info['n']),
                                       start_date=top_claims_info['start_date'],
                                       end_date=top_claims_info['end_date'])

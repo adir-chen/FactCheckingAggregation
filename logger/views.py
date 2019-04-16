@@ -5,6 +5,7 @@ from logger.models import Logger
 from datetime import datetime
 from django.db.models import Q
 import operator
+import json
 import csv
 
 
@@ -43,7 +44,7 @@ def export_to_csv(request):
     if not valid_csv_fields:
         save_log_message(request.user.id, request.user.username,
                          'Exporting website logger to a csv. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     actions_to_export = request.POST.getlist('actions_to_export[]')
     date_start = datetime.strptime(csv_fields['date_start'], '%d/%m/%Y').date()
     date_end = datetime.strptime(csv_fields['date_end'], '%d/%m/%Y').date()
@@ -52,7 +53,7 @@ def export_to_csv(request):
     if not valid_actions_list:
         save_log_message(request.user.id, request.user.username,
                          'Exporting website logger to a csv. Error: ' + err_msg)
-        raise Exception(err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     df_logger = create_df_for_logger(actions_to_export, error, date_start, date_end)
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="logger.csv"'
