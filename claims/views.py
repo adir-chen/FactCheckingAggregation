@@ -245,9 +245,6 @@ def delete_claim(request):
     for comment in Comment.objects.filter(claim_id=request.POST.get('claim_id')):
         update_reputation_for_user(comment.user_id, False, comment.up_votes.count())
         update_reputation_for_user(comment.user_id, True, comment.down_votes.count())
-    for tweet in Tweet.objects.filter(claim_id=request.POST.get('claim_id')):
-        update_reputation_for_user(tweet.user_id, False, tweet.up_votes.count())
-        update_reputation_for_user(tweet.user_id, True, tweet.down_votes.count())
     Claim.objects.filter(id=request.POST.get('claim_id')).delete()
     save_log_message(request.user.id, request.user.username,
                      'Deleting a claim with id ' + str(request.POST.get('claim_id')), True)
