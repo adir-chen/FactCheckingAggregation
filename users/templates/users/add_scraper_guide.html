@@ -82,10 +82,10 @@
                     scraper_false_labels:  $("#scraper_false_labels").val(),
                 },
                 success: function (request) {
-                    localStorage.setItem("success_msg", true);
                     $('html, body').animate({
-                        scrollTop: $("#success_msg").offset().top + 200
+                        scrollTop: $("#add_scraper_submit").offset().top - 200
                     }, 0);
+                    localStorage.setItem("success_msg", true);
                     window.location.reload()
                 },
                 error: function (request) {
