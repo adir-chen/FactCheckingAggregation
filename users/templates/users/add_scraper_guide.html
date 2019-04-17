@@ -91,6 +91,9 @@
                     document.getElementById("error_msg").innerHTML =
                     'Error: <br>' + err;
                     $("#error_msg").attr("hidden", false);
+                    $('html, body').animate({
+                        scrollTop: $("#error_msg").offset().top
+                    }, 0);
                 }
             });
         });
