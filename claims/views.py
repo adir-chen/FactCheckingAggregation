@@ -213,7 +213,7 @@ def check_claim_new_fields(new_claim_fields):
     elif not check_if_user_exists_by_user_id(new_claim_fields['user_id']):
         err += 'User with id ' + str(new_claim_fields['user_id']) + ' does not exist'
     elif len(Claim.objects.filter(id=new_claim_fields['claim_id'])) == 0:
-        err += 'Claim with id ' + str(new_claim_fields['claim_id']) + ' does not exist'
+        err += 'Claim ' + str(new_claim_fields['claim_id']) + ' does not exist'
     elif (not new_claim_fields['is_superuser']) and len(Claim.objects.filter(id=new_claim_fields['claim_id'],
                                                                              user_id=new_claim_fields['user_id'])) == 0:
         err += 'Claim does not belong to user with id ' + str(new_claim_fields['user_id'])
@@ -259,12 +259,12 @@ def check_if_delete_claim_is_valid(request):
     if not request.POST.get('claim_id'):
         err += 'Missing value for claim id'
     elif len(Claim.objects.filter(id=request.POST.get('claim_id'))) == 0:
-        err += 'Claim with id ' + str(request.user.id) + ' does not exist'
+        err += 'Claim ' + str(request.user.id) + ' does not exist'
     elif not check_if_user_exists_by_user_id(request.user.id):
         err += 'User with id ' + str(request.user.id) + ' does not exist'
     elif not request.user.is_superuser and len(Claim.objects.filter(id=request.POST.get('claim_id'),
                                                                     user=request.user.id)) == 0:
-        err += 'Claim with id ' + str(request.POST.get('claim_id')) + ' does not belong to user with id ' + \
+        err += 'Claim ' + str(request.POST.get('claim_id')) + ' does not belong to user with id ' + \
                str(request.user.id)
     if len(err) > 0:
         return False, err
@@ -294,7 +294,7 @@ def check_if_spam_report_is_valid(request):
     if not request.POST.get('claim_id'):
         err += 'Missing value for claim id'
     elif len(Claim.objects.filter(id=request.POST.get('claim_id'))) == 0:
-        err += 'Claim with id ' + str(request.POST.get('claim_id')) + ' does not exist'
+        err += 'Claim ' + str(request.POST.get('claim_id')) + ' does not exist'
     elif not check_if_user_exists_by_user_id(request.user.id):
         err += 'User ' + str(request.user.id) + ' does not exist'
     elif check_duplicate_log_for_user(request.user.id, 'Reporting a claim with id ' + str(request.POST.get('claim_id')) + ' as spam'):
@@ -371,7 +371,7 @@ def get_users_images_for_claims(claims):
 def view_claim(request, claim_id):
     claim = get_claim_by_id(claim_id)
     if claim is None:
-        raise Http404('Claim with id ' + str(claim_id) + ' does not exist')
+        raise Http404('Claim ' + str(claim_id) + ' does not exist')
     elif request.method != "GET":
         raise Http404("Permission denied")
     comments = get_users_details_for_comments(Comment.objects.filter(claim_id=claim_id))

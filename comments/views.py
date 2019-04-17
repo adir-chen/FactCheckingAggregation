@@ -223,9 +223,9 @@ def check_comment_new_fields(new_comment_fields):
     elif not check_if_user_exists_by_user_id(new_comment_fields['user_id']):
         err += 'User with id ' + str(new_comment_fields['user_id']) + ' does not exist'
     elif len(Comment.objects.filter(id=new_comment_fields['comment_id'])) == 0:
-        err += 'Comment with id ' + str(new_comment_fields['comment_id']) + ' does not exist'
+        err += 'Comment ' + str(new_comment_fields['comment_id']) + ' does not exist'
     elif (not new_comment_fields['is_superuser']) and len(Comment.objects.filter(id=new_comment_fields['comment_id'], user_id=new_comment_fields['user_id'])) == 0:
-        err += 'Comment with id ' + str(new_comment_fields['comment_id']) + ' does not belong to user with id ' + \
+        err += 'Comment ' + str(new_comment_fields['comment_id']) + ' does not belong to user with id ' + \
                str(new_comment_fields['user_id'])
     elif (not new_comment_fields['is_superuser']) and (timezone.now() - Comment.objects.filter(id=new_comment_fields['comment_id']).first().timestamp).total_seconds() \
             / 60 > max_minutes_to_edit_comment:
@@ -272,11 +272,11 @@ def check_if_delete_comment_is_valid(request):
     if not request.POST.get('comment_id'):
         err += 'Missing value for comment id'
     elif len(Comment.objects.filter(id=request.POST.get('comment_id'))) == 0:
-        err += 'Comment with id ' + str(request.user.id) + ' does not exist'
+        err += 'Comment ' + str(request.user.id) + ' does not exist'
     elif not check_if_user_exists_by_user_id(request.user.id):
         err += 'User with id ' + str(request.user.id) + ' does not exist'
     elif not request.user.is_superuser and len(Comment.objects.filter(id=request.POST.get('comment_id'), user=request.user.id)) == 0:
-        err += 'Comment with id ' + str(request.POST.get('comment_id')) + ' does not belong to user with id ' + \
+        err += 'Comment ' + str(request.POST.get('comment_id')) + ' does not belong to user with id ' + \
                str(request.user.id)
     if len(err) > 0:
         return False, err
@@ -354,7 +354,7 @@ def check_if_vote_is_valid(vote_fields):
     elif 'comment_id' not in vote_fields or not vote_fields['comment_id']:
         err += 'Missing value for comment id'
     elif len(Comment.objects.filter(id=vote_fields['comment_id'])) == 0:
-        err += 'Comment with id ' + str(vote_fields['comment_id']) + ' does not exist'
+        err += 'Comment ' + str(vote_fields['comment_id']) + ' does not exist'
     elif (timezone.now() - Comment.objects.filter(id=vote_fields['comment_id']).first().timestamp).total_seconds() \
              / 60 <= max_minutes_to_vote_comment:
         err += 'You can not vote this comment yet. This comment has just been added, ' \
