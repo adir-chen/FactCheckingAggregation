@@ -110,7 +110,7 @@
                 {% if request.user.is_superuser or request.user.id not in comment.users_replied_ids %}
                     <button id="reply_{{ comment.id }}_add" type="submit" class="btn btn-info">Add new reply</button>
                     <div id="reply_{{ comment.id }}_add_form" style="padding: 20px;" hidden="hidden">
-                        Add Reply:<br>
+                        Your reply:<br>
                         <textarea id="{{ comment.id }}_new_reply_content" style="margin-right: 10px;">
 
                         </textarea><br>
