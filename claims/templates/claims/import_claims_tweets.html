@@ -20,7 +20,7 @@
         </div>
         </form>
         <h4>Import tweets:</h4>
-        <p class="action_msg note_msg">Expected Format: [claim Id, tweet link, author, author rank] - case insensitive</p>
+        <p class="action_msg note_msg">Expected Format: [claim Id, tweet link] - case insensitive</p>
         <form action="{% url "tweets:download_tweets_for_claims" %}" method="POST" enctype="multipart/form-data" class="form-horizontal">
         {% csrf_token %}
         <div class="form-group">

@@ -208,6 +208,9 @@
                         document.getElementById("error_msg_{{ claim.id }}_new_comment").innerHTML =
                         'Error: <br>' + err;
                         $("#error_msg_{{ claim.id }}_new_comment").attr("hidden", false);
+                        $('html, body').animate({
+                            scrollTop: $("#error_msg_{{ claim.id }}_new_comment").offset().top
+                        }, 0);
                     }
                 });
             }
