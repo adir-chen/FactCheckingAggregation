@@ -311,6 +311,18 @@
             {# for google --> 'http://google.com/search?q='#}
         }
 
+
+        function getYoutubeVideoId(url) {
+            let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            let match = url.match(regExp);
+
+            if (match && match[2].length == 11) {
+                return match[2];
+            } else {
+                return 'error';
+            }
+        }
+
         function getCookie(c_name) {
             if (document.cookie.length > 0) {
                 c_start = document.cookie.indexOf(c_name + "=");
@@ -327,5 +339,5 @@
 {% endblock %}
 
 {% block claim_head_title %}
-    FactCheckProject | user_page
+    FactCheckProject | {{ user.username }}
 {% endblock %}
