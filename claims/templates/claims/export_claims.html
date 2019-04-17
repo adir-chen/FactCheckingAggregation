@@ -1,5 +1,5 @@
 {% extends 'claims/layout.html' %}
-{#{% load mathfilters %}#}
+{% load mathfilters %}
 {% block page_content %}
     <div class="page_wrapper">
         <h3>Exporting claims to a csv file:</h3><br>
@@ -18,9 +18,10 @@
                 <input name="fields_to_export[]" class="fields_to_export[]" value="Authenticity Grade" type="checkbox" checked>Authenticity Grade<br>
                 <br><h6>Choose which scrapers you want to export claims from (default- all):</h6>
                 {% with scrapers_len = 0 %}
+                    {{ scrapers_len }}
                 {% for scraper in all_scrapers %}
                      <input name="scrapers_ids[]" class="scrapers_ids[]" value="{{ scraper.scraper_id.id }}" type="checkbox" checked>{{ scraper.scraper_name }}&nbsp&nbsp
-                     {{ scrapers_len|add:"1" }}
+{#                     {{ scrapers_len|add:"1" }}#}
 {#                     {% if scrapers_len|divisibleby:"9" %}#}
 {#                         <br>#}
 {#                     {% endif %}#}
