@@ -282,9 +282,10 @@ def check_if_scraper_info_is_valid(scraper_info):
     elif 'scraper_password_2' not in scraper_info or not scraper_info['scraper_password_2'] \
             or not scraper_info['scraper_password'] == scraper_info['scraper_password_2']:
         err += 'Passwords do not match'
-    elif 'scraper_icon' not in scraper_info or not scraper_info['scraper_icon'] \
-            or not is_valid_url(scraper_info['scraper_icon']):
+    elif 'scraper_icon' not in scraper_info or not scraper_info['scraper_icon']:
         err += 'Missing value for scraper\'s icon'
+    elif not is_valid_url(scraper_info['scraper_icon']):
+        err += 'Invalid value for scraper\'s icon'
     elif not is_english_input(scraper_info['scraper_name']) \
             or not is_english_input(scraper_info['scraper_true_labels']) \
             or not is_english_input(scraper_info['scraper_false_labels']):

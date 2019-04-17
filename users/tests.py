@@ -48,7 +48,7 @@ class UsersTest(TestCase):
         self.new_scraper_details = {'scraper_name': 'newScraper_2',
                                     'scraper_password': str(password),
                                     'scraper_password_2': str(password),
-                                    'scraper_icon': 'newScraperIcon',
+                                    'scraper_icon': 'https://www.google.com',
                                     'scraper_true_labels': '',
                                     'scraper_false_labels': ''}
         self.new_label_for_scraper = {'scraper_id': self.new_scraper.id}
@@ -374,6 +374,11 @@ class UsersTest(TestCase):
 
     def test_check_if_scraper_info_is_valid_missing_scraper_icon(self):
         del self.new_scraper_details['scraper_icon']
+        self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
+
+    def test_check_if_scraper_info_is_valid_invalid_scraper_icon(self):
+        import string
+        self.new_scraper_details['scraper_icon'] = ''.join(random.choices(string.ascii_uppercase + string.digits, k=random.randint(1, 20)))
         self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
 
     def test_check_if_scraper_info_is_valid_scraper_name_already_exists(self):
