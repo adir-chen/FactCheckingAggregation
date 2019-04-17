@@ -83,7 +83,7 @@
                 },
                 success: function (request) {
                     $('html, body').animate({
-                        scrollTop: 100
+                        scrollTop: $("#add_scraper_submit").offset().top - 700
                     }, 0);
                     localStorage.setItem("success_msg", true);
                     window.location.reload();

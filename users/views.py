@@ -269,6 +269,7 @@ def add_new_scraper(request):
 # The function returns true in case the info is valid, otherwise false and an error
 def check_if_scraper_info_is_valid(scraper_info):
     from claims.views import check_if_input_format_is_valid, is_english_input
+    from comments.views import is_valid_url
     err = ''
     if 'scraper_name' not in scraper_info or not scraper_info['scraper_name']:
         err += 'Missing value for scraper\'s name'
@@ -281,7 +282,8 @@ def check_if_scraper_info_is_valid(scraper_info):
     elif 'scraper_password_2' not in scraper_info or not scraper_info['scraper_password_2'] \
             or not scraper_info['scraper_password'] == scraper_info['scraper_password_2']:
         err += 'Passwords do not match'
-    elif 'scraper_icon' not in scraper_info or not scraper_info['scraper_icon']:
+    elif 'scraper_icon' not in scraper_info or not scraper_info['scraper_icon'] \
+            or not is_valid_url(scraper_info['scraper_icon']):
         err += 'Missing value for scraper\'s icon'
     elif not is_english_input(scraper_info['scraper_name']) \
             or not is_english_input(scraper_info['scraper_true_labels']) \
