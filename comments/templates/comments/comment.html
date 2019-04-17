@@ -66,9 +66,6 @@
                 <div id="comment_{{ comment.id }}_reference_preview" hidden="hidden">
 
                 </div>
-                <blockquote id="comment_{{ comment.id }}_reference_tweet" class="twitter-tweet item_preview" data-lang="en" hidden="hidden">
-                    <a target="_blank" href="{{ comment.url }}"></a>
-                </blockquote>
                 {% if comment.tags %}
                     Tags:
                     {% for tag in comment.tags_as_list %}
@@ -154,7 +151,7 @@
         localStorage.clear();
     }
 
-    function hide_all_msgs_{{ comment.id }}(){
+    function hide_all_msgs(){
         $("#success_msg_{{ comment.id }}_comment_vote").attr("hidden", true);
         $("#success_msg_{{ comment.id }}_comment_edit").attr("hidden", true);
 
@@ -205,7 +202,7 @@
                 $("#{{ comment.id }}_voteCount").text(up_count_{{ comment.id }}-down_count_{{ comment.id }});
             },
             error: function (request) {
-                hide_all_msgs_{{ comment.id }}();
+                hide_all_msgs();
                 let err = request.responseJSON;
                 document.getElementById("error_msg_{{ comment.id }}_comment_vote").innerHTML =
                     'Error: <br>' + err;
@@ -242,7 +239,7 @@
                 $("#{{ comment.id }}_voteCount").text(up_count_{{ comment.id }}-down_count_{{ comment.id }});
             },
             error: function (request) {
-                hide_all_msgs_{{ comment.id }}();
+                hide_all_msgs();
                 let err = request.responseJSON;
                 document.getElementById("error_msg_{{ comment.id }}_comment_vote").innerHTML =
                     'Error: <br>' + err;
@@ -308,7 +305,7 @@
                 window.location.reload();
             },
             error: function (request) {
-                hide_all_msgs_{{ comment.id }}();
+                hide_all_msgs();
                 let err = request.responseJSON;
                 document.getElementById("error_msg_{{ comment.id }}_comment_edit").innerHTML =
                 'Error: <br>' + err;
@@ -332,7 +329,7 @@
                     window.location.reload();
                 },
                 error: function (request) {
-                    hide_all_msgs_{{ comment.id }}();
+                    hide_all_msgs();
                     let err = request.responseJSON;
                     document.getElementById("error_msg_{{ comment.id }}_comment_edit").innerHTML =
                         'Error: <br>' + err;
@@ -372,7 +369,7 @@
                 window.location.reload();
             },
             error: function (request) {
-                hide_all_msgs_{{ comment.id }}();
+                hide_all_msgs();
                 let err = request.responseJSON;
                 document.getElementById("error_msg_{{ comment.id }}_new_reply").innerHTML =
                 'Error: <br>' + err;
@@ -392,11 +389,14 @@
         }
     }
 
-    function linkPreview(result){
+    function linkPreview_{{ comment.id }}(result){
         let comment_link = '{{ comment.url }}';
         if (comment_link.toLowerCase().startsWith("https://twitter.com/")){
             $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
-            $("#comment_{{ comment.id }}_reference_tweet").attr("hidden", false);
+             document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML = "<blockquote class=\"twitter-tweet item_preview\" data-lang=\"en\">\n" +
+                 "                    <a target=\"_blank\" href=\"{{ comment.url }}\"></a>\n" +
+                 "                </blockquote>";
+            $("#comment_{{ comment.id }}_reference_preview").attr("hidden", false);
         }
         else if (comment_link.toLowerCase().startsWith("https://www.youtube.com/") ||
                 comment_link.toLowerCase().startsWith("https://youtu.be/")){
@@ -430,11 +430,11 @@
     $.ajax({
         url: "https://api.linkpreview.net?key=5ca51d3319aea9e4745a6b2bdebae79fa8fbe2c83b7ca&q={{ comment.url }}",
         success: function(result){
-            linkPreview(result)
+            linkPreview_{{ comment.id }}(result)
         },
         error: function(e){
-            hide_all_msgs_{{ comment.id }}();
-            linkPreview('error')
+            hide_all_msgs();
+            linkPreview_{{ comment.id }}('error')
         }
     });
 </script>
