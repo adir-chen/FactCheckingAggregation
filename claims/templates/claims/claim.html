@@ -112,7 +112,7 @@
                 <div class="comment_footer">
                     Reference:
                     <input id="{{ claim.id }}_new_comment_url" type="text"><br>
-                    Tags (optional, separated by comma):
+                    Tags (optional, separated by comma. e.g. tag1,tag2,tag3):
                     <p class="action_msg note_msg">Used for searching purpose.</p>
                     <input id="{{ claim.id }}_new_comment_tags" type="text"><br>
                     <p id="add_new_comment" class="action_msg note_msg" >If you want to edit your comment you will be able to do so during the next 10 minutes from the moment you added it.</p>
@@ -196,10 +196,10 @@
                         label: document.querySelector('input[name="{{ claim.id }}_new_comment_label"]:checked').value,
                     },
                     success: function () {
-                        window.location.reload();
                         $('html, body').animate({
-                            scrollTop: $("#comment_box_{{ claim.max_comment_id }}").offset().top + 250
+                            scrollTop: $("#comment_box_{{ claim.max_comment_id }}").offset().top + 300
                         }, 0);
+                        window.location.reload();
                     },
                     error: function (request) {
                         hide_all_msgs();
