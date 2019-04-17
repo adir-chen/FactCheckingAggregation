@@ -83,6 +83,9 @@
                 },
                 success: function (request) {
                     localStorage.setItem("success_msg", true);
+                    $('html, body').animate({
+                        scrollTop: $("#success_msg").offset().top
+                    }, 0);
                     window.location.reload()
                 },
                 error: function (request) {
