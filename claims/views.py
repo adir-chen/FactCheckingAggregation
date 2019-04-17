@@ -66,14 +66,17 @@ def add_claim(request):
 # The function returns true in case the claim is valid, otherwise false and an error
 def check_if_claim_is_valid(claim_info):
     err = ''
+    validate_g_recaptcha = False
+    if 'validate_g_recaptcha' in claim_info and claim_info['validate_g_recaptcha']:
+        validate_g_recaptcha = True
     if 'tags' not in claim_info or not claim_info['tags']:
         claim_info['tags'] = ''
     if 'image_src' not in claim_info or not claim_info['image_src']:
         claim_info['image_src'] = static('claims/assets/images/claim_default_image.jpg')
     if 'user_id' not in claim_info or not claim_info['user_id']:
         err += 'Missing value for user id'
-    elif not check_if_user_is_scraper(claim_info['user_id']) and ('g_recaptcha_response' not in claim_info
-                                                                  or not check_g_recaptcha_response(claim_info['g_recaptcha_response'])):
+    elif not check_if_user_is_scraper(claim_info['user_id']) and not validate_g_recaptcha and \
+            ('g_recaptcha_response' not in claim_info or not check_g_recaptcha_response(claim_info['g_recaptcha_response'])):
         err += 'Invalid Captcha'
     elif not check_if_input_format_is_valid(claim_info['tags']):
         err += 'Incorrect format for tags'
@@ -327,7 +330,7 @@ def download_claims(request):
                       'url': claim['url'],
                       'verdict_date': claim['verdict_date'],
                       'label': claim['label'],
-                      'g_recaptcha_response': settings.TAP_KEY}
+                      'validate_g_recaptcha': True}
         post_request = HttpRequest()
         post_request.method = 'POST'
         post_request.user = request.user
