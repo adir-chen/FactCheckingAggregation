@@ -424,6 +424,7 @@ class UITests(StaticLiveServerTestCase):
         browser.find_element_by_id('tags').send_keys('tag3,tag4')
         browser.find_element_by_id('image_src').send_keys(self.claim_img)
         browser.find_element_by_id('submit_claim').click()
+        time.sleep(2)  # wait for claim to be added
         browser.get(browser.current_url)
 
         # check if claim is on home page
@@ -627,6 +628,7 @@ class UITests(StaticLiveServerTestCase):
         if filled < 2 and random.randint(0, 10) > 5:
             browser.find_element_by_id(str(self.claim_1.id) + '_new_comment_url').send_keys('http://url2/')
             filled += 1
+        time.sleep(1)
         browser.find_element_by_id(str(self.claim_1.id) + '_new_comment_save').click()
         time.sleep(4)   # wait 4 second for page to show the error
         self.assertTrue(
