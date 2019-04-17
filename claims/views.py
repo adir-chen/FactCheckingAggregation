@@ -298,7 +298,7 @@ def check_if_spam_report_is_valid(request):
     elif not check_if_user_exists_by_user_id(request.user.id):
         err += 'User ' + str(request.user.id) + ' does not exist'
     elif check_duplicate_log_for_user(request.user.id, 'Reporting a claim with id ' + str(request.POST.get('claim_id')) + ' as spam'):
-        err += 'You already reported claim as spam'
+        err += 'You already reported this claim as spam'
     if len(err) > 0:
         return False, err
     return True, err
