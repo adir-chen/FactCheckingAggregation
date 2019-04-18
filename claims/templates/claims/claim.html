@@ -127,6 +127,18 @@
     </div>
     <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
     <script>
+        window.onload = function() {
+            let image_{{ claim_id }} = document.getElementById("img_src_{{ claim.id }}");
+            if (!(image_{{ claim_id }}.complete && image_{{ claim_id }}.naturalHeight !== 0)) {
+                $("#img_src_{{ claim.id }}").attr("src", "/static/claims/assets/images/claim_default_image.jpg");
+            }
+            let users_images = document.getElementsByClassName('user_image');
+            for(let i = 0; i < users_images.length; i++) {
+                if (!(users_images[i].complete && users_images[i].naturalHeight !== 0)) {
+                    users_images[i].setAttribute('src', "/static/claims/assets/images/profile_default_image.jpg   ");
+                }
+            }
+        };
         let claim_timestamp = new Date('{{ claim.timestamp|date:"D, d M Y H:i:s" }}');
         {% if request.user.is_superuser %}
             $("#{{ claim.id }}_claim_edit").attr("hidden", false);

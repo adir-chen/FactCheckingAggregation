@@ -930,7 +930,8 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = AnonymousUser()
-        self.assertRaises(Http404, up_vote, self.post_request)
+        response = up_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_up_vote_invalid_user(self):
         user = User(id=self.num_of_saved_users + random.randint(1, 10), email="user@gmail.com")
@@ -948,7 +949,8 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.get_request.POST = query_dict
         self.get_request.user = self.user_1
-        self.assertRaises(Http404, up_vote, self.get_request)
+        response = up_vote(self.get_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_down_vote(self):
         comment_to_vote = {'comment_id': self.comment_1.id}
@@ -1006,7 +1008,8 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.post_request.POST = query_dict
         self.post_request.user = AnonymousUser()
-        self.assertRaises(Http404, down_vote, self.post_request)
+        response = down_vote(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_down_vote_invalid_user(self):
         user = User(id=self.num_of_saved_users + random.randint(1, 10), email="user@gmail.com")
@@ -1024,7 +1027,8 @@ class CommentTests(TestCase):
         query_dict.update(comment_to_vote)
         self.get_request.POST = query_dict
         self.get_request.user = self.user_1
-        self.assertRaises(Http404, down_vote, self.get_request)
+        response = up_vote(self.get_request)
+        self.assertTrue(response.status_code == self.error_code)
 
     def test_check_if_vote_is_valid(self):
         comment_to_vote = {'comment_id': self.comment_1.id,

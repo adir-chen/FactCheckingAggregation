@@ -287,7 +287,8 @@ def check_if_delete_comment_is_valid(request):
 def up_vote(request):
     from claims.views import return_get_request_to_user
     if not request.user.is_authenticated or request.method != "POST":
-        raise Http404("Permission denied")
+        err_msg = "Permission denied - you must sign in in order to vote on a comment"
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     from claims.views import view_claim
     from users.views import update_reputation_for_user
     vote_fields = request.POST.dict()
@@ -316,7 +317,8 @@ def up_vote(request):
 # This function decreases a comment's vote by 1
 def down_vote(request):
     if not request.user.is_authenticated or request.method != "POST":
-        raise Http404("Permission denied")
+        err_msg = "Permission denied - you must sign in in order to vote on a comment"
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     from claims.views import view_claim, return_get_request_to_user
     from users.views import update_reputation_for_user
     vote_fields = request.POST.dict()
