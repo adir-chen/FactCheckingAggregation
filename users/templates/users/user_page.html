@@ -12,7 +12,7 @@
                     <span style="height: 20px; width: 20px; background-color: #bbb; border-radius: 50%; display: inline-block; position: absolute; bottom: 0; right: 0;"></span>
                     {% endif %}
                 {% endif %}
-                <img src="{{ user_img }}" style="max-width: 100%; padding: 5px;">
+                <img id="user_profile_image" src="{{ user_img }}" style="max-width: 100%; padding: 5px;">
             </div>
             <div style="grid-area: user-profile-details; padding: 10px 20px 10px 50px;">
                 <h5>{{ user.username }}</h5>
@@ -159,6 +159,36 @@
             $("#success_msg_add_false_label").attr("hidden", false);
             localStorage.clear();
         }
+
+        window.onload = function() {
+            let claims_images = document.getElementsByClassName('claim_image');
+            for(let i = 0; i < claims_images.length; i++) {
+                if (!(claims_images[i].complete && claims_images[i].naturalHeight !== 0)) {
+                    claims_images[i].setAttribute('src', "/static/claims/assets/images/claim_default_image.jpg");
+                }
+            }
+
+            let users_images = document.getElementsByClassName('user_image');
+            for(let i = 0; i < users_images.length; i++) {
+                if (!(users_images[i].complete && users_images[i].naturalHeight !== 0)) {
+                    users_images[i].setAttribute('src', "/static/claims/assets/images/profile_default_image.jpg");
+                }
+            }
+
+            users_images = document.getElementsByClassName('comment_user_image');
+            for(let i = 0; i < users_images.length; i++) {
+                let user_img = users_images[i].getElementsByTagName('img')[0];
+                if (!(user_img.complete && user_img.naturalHeight !== 0)) {
+                    user_img.setAttribute('src', "/static/claims/assets/images/profile_default_image.jpg");
+                }
+            }
+
+            let profile_image = document.getElementById('user_profile_image');
+            if (!(profile_image.complete && profile_image.naturalHeight !== 0)) {
+                profile_image.setAttribute('src', "/static/claims/assets/images/profile_default_image.jpg");
+            }
+
+        };
 
         function hide_all_msgs(){
             $("#success_msg_add_true_label").attr("hidden", true);

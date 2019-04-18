@@ -31,18 +31,18 @@
 {#                Other Users will be able to comment their on verdicts.#}
             </p>
             <p style="width: 100%; margin: 10px;">Title:</p>
-            <input id="title" type="text" readonly style="width: 100%; margin: 10px;"><br>
+            <input id="title" type="text" disabled="disabled" style="width: 100%; margin: 10px;"><br>
             <p style="width: 100%; margin: 10px;">Description:</p>
-            <textarea id="description" readonly style="width: 100%; margin: 10px;"></textarea><br>
+            <textarea id="description" disabled="disabled" style="width: 100%; margin: 10px;"></textarea><br>
             <p style="width: 100%; margin: 10px;">Website Url:</p>
-            <input id="url" type="text" readonly style="width: 100%; margin: 10px;"><br>
+            <input id="url" type="text" disabled="disabled" style="width: 100%; margin: 10px;"><br>
             <p style="width: 100%; margin: 10px;">Verdict Date (according to source website):</p>
-            <input type="date" id="verdict_date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}" readonly style="width: 100%; margin: 10px;">
+            <input type="date" id="verdict_date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}" disabled="disabled" style="width: 100%; margin: 10px;">
             <p style="width: 100%; margin: 10px;">Label:</p>
             <div style="margin: 10px;">
-                <input type="radio" name="label" class="label" value="True" disabled>True<br>
-                <input type="radio" name="label" class="label" value="False" disabled>False<br>
-                <input type="radio" name="label" class="label" value="Unknown" disabled>Unknown<br>
+                <input type="radio" name="label" class="label" value="True" disabled="disabled">True<br>
+                <input type="radio" name="label" class="label" value="False" disabled="disabled">False<br>
+                <input type="radio" name="label" class="label" value="Unknown" disabled="disabled">Unknown<br>
             </div>
             <div id="g-recaptcha" class="g-recaptcha" data-sitekey="6Le4fp0UAAAAAJjD2ErEEZl8_G6uEl62Hon1g9Pv"></div>
 {#            <div id="g-recaptcha" class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>#}
@@ -102,17 +102,17 @@
 
         function enable_comment(){
             if (document.getElementById('add_comment').checked == true) {
-                $("#title").attr('readonly', false);
-                $("#description").attr('readonly', false);
-                $("#url").attr('readonly', false);
-                $("#verdict_date").attr('readonly', false);
+                $("#title").attr('disabled', false);
+                $("#description").attr('disabled', false);
+                $("#url").attr('disabled', false);
+                $("#verdict_date").attr('disabled', false);
                 $(".label").attr('disabled', false);
             }
             else{
-                $("#title").attr('readonly', true);
-                $("#description").attr('readonly', true);
-                $("#url").attr('readonly', true);
-                $("#verdict_date").attr('readonly', true);
+                $("#title").attr('disabled', true);
+                $("#description").attr('disabled', true);
+                $("#url").attr('disabled', true);
+                $("#verdict_date").attr('disabled', true);
                 $(".label").attr('disabled', true);
             }
         }

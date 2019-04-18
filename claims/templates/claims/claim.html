@@ -132,10 +132,11 @@
             if (!(image_{{ claim_id }}.complete && image_{{ claim_id }}.naturalHeight !== 0)) {
                 $("#img_src_{{ claim.id }}").attr("src", "/static/claims/assets/images/claim_default_image.jpg");
             }
-            let users_images = document.getElementsByClassName('user_image');
+            let users_images = document.getElementsByClassName('comment_user_image');
             for(let i = 0; i < users_images.length; i++) {
-                if (!(users_images[i].complete && users_images[i].naturalHeight !== 0)) {
-                    users_images[i].setAttribute('src', "/static/claims/assets/images/profile_default_image.jpg   ");
+                let user_img = users_images[i].getElementsByTagName('img')[0];
+                if (!(user_img.complete && user_img.naturalHeight !== 0)) {
+                    user_img.setAttribute('src', "/static/claims/assets/images/profile_default_image.jpg");
                 }
             }
         };

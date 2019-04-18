@@ -31,6 +31,24 @@
             {% endif %}
         </span>
     </div>
+    <script>
+        window.onload = function() {
+            let images = document.getElementsByClassName('claim_image');
+            for(let i = 0; i < images.length; i++) {
+                if (!(images[i].complete && images[i].naturalHeight !== 0)) {
+                    images[i].setAttribute('src', "/static/claims/assets/images/claim_default_image.jpg");
+                }
+            }
+
+            images = document.getElementsByClassName('user_image');
+            for(let i = 0; i < images.length; i++) {
+                if (!(images[i].complete && images[i].naturalHeight !== 0)) {
+                    images[i].setAttribute('src', "/static/claims/assets/images/profile_default_image.jpg");
+                }
+            }
+        };
+
+    </script>
 
 {% endblock %}
 
