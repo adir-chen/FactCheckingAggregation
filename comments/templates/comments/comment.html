@@ -42,7 +42,7 @@
                 {% if request.user.is_authenticated %}
                     <button id="{{ comment.id }}_arrow_up" class="arrow_up">▲</button>
                 {% else %}
-                    <button id="{{ comment.id }}_arrow_up" class="arrow_up" disabled>▲</button>
+                    <button id="{{ comment.id }}_arrow_up" class="arrow_up" disabled="disabled" title="Sign in and vote" style="color: #dddddd;">▲</button>
                 {% endif %}
                 <br>
                 <span id="{{ comment.id }}_voteCount" class="vote_count">{{ comment.up_votes.count|sub:comment.down_votes.count }}</span>
@@ -50,7 +50,7 @@
                 {% if request.user.is_authenticated %}
                     <button id="{{ comment.id }}_arrow_down" class="arrow_down">▼</button>
                 {% else %}
-                    <button id="{{ comment.id }}_arrow_down" class="arrow_down" disabled>▼</button>
+                    <button id="{{ comment.id }}_arrow_down" class="arrow_down" disabled="disabled" title="Sign in and vote" style="color: #dddddd;">▼</button>
                 {% endif %}
             </div>
         </div>
@@ -132,7 +132,7 @@
     let comment_timestamp_{{ comment.id }} = new Date('{{ comment.timestamp|date:"D, d M Y H:i:s" }}');
     {% if request.user.is_superuser %}
         $("#comment_{{ comment.id }}_edit").attr("hidden", false);
-    {% else %}
+    {% elif request.user.is_authenticated %}
         if (((new Date() - comment_timestamp_{{ comment.id }}) / 60000) <= max_minutes_to_edit_comment_{{ comment.id }}){
             $("#comment_{{ comment.id }}_edit").attr("hidden", false);
         }
@@ -141,7 +141,6 @@
             $("#{{ comment.id }}_arrow_down").attr("disabled", false);
         }
     {% endif %}
-
     if(localStorage.getItem("success_msg_{{ comment.id }}_comment_edit")){
         $("#success_msg_{{ comment.id }}_comment_edit").attr("hidden", false);
         localStorage.clear();

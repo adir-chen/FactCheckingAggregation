@@ -1,20 +1,20 @@
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.contrib.auth import logout, authenticate
 from django.http import Http404, HttpRequest, QueryDict, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from comments.models import Comment
 from comments.views import add_comment
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AnonymousUser
 from logger.models import Logger
 from tweets.models import Tweet
 from users.models import Users_Images, Scrapers, Users_Reputations
 from logger.views import save_log_message, check_duplicate_log_for_user
 from users.views import check_if_user_exists_by_user_id, check_if_user_is_scraper
 from .models import Claim
-from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf import settings
 import math
 import json
-from django.contrib.staticfiles.templatetags.staticfiles import static
 
 
 # This function adds a new claim to the website, may followed with a comment on it
@@ -476,6 +476,8 @@ def get_tags_for_claim(claim_id):
 # This function disconnects the user from the website
 def logout_view(request):
     logout(request)
+    request.session.flush()
+    request.user = AnonymousUser()
     return view_home(request)
 
 
