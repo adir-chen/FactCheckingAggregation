@@ -193,4 +193,5 @@ def download_tweets_for_claims(request):
             claim = get_object_or_404(Claim, id=tweet_fields[0])
             if claim:
                 build_tweet(claim.id, tweet_fields[1])
+                save_log_message(request.user.id, request.user.username, 'Adding a new tweet', True)
     return view_home(return_get_request_to_user(request.user))
