@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from comments.models import Comment
 from claims.models import Claim
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse
 from logger.views import save_log_message
 from users.views import check_if_user_exists_by_user_id, get_all_scrapers_ids_arr, \
     get_user_reputation, check_if_user_is_scraper
@@ -18,7 +19,7 @@ import csv
 def add_comment(request):
     from claims.views import view_claim, return_get_request_to_user
     if not request.user.is_authenticated or request.method != "POST":
-        raise Http404("Permission denied")
+        raise PermissionDenied
     comment_info = request.POST.copy()
     comment_info['user_id'] = request.user.id
     comment_info['is_superuser'] = request.user.is_superuser
@@ -167,7 +168,7 @@ def get_system_label_to_comment(comment_label, user_id):
 def edit_comment(request):
     from claims.views import return_get_request_to_user
     if not request.user.is_authenticated or request.method != "POST":
-        raise Http404("Permission denied")
+        raise PermissionDenied
     from claims.views import view_claim
     new_comment_fields = request.POST.dict()
     new_comment_fields['user_id'] = request.user.id
@@ -245,7 +246,7 @@ def check_comment_new_fields(new_comment_fields):
 def delete_comment(request):
     from claims.views import return_get_request_to_user
     if not request.user.is_authenticated or request.method != "POST":
-        raise Http404("Permission denied")
+        raise PermissionDenied
     from claims.views import view_claim
     from users.views import update_reputation_for_user
     valid_delete_claim, err_msg = check_if_delete_comment_is_valid(request)
@@ -371,7 +372,7 @@ def export_to_csv(request):
     if not request.user.is_superuser or request.method != "POST":
         save_log_message(request.user.id, request.user.username,
                          'Exporting website claims to a csv. Error: user does not have permissions')
-        raise Http404("Permission denied")
+        raise PermissionDenied
     csv_fields = request.POST.dict()
     valid_csv_fields, err_msg = check_if_csv_fields_are_valid(csv_fields)
     if not valid_csv_fields:

@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from claims.models import Claim
@@ -49,7 +50,7 @@ def check_if_tweet_is_valid(tweet_info):
 # This function deletes a tweet from the website
 def delete_tweet(request):
     if not request.user.is_superuser or request.method != "POST":
-        raise Http404("Permission denied")
+        raise PermissionDenied
     from claims.views import view_claim
     valid_delete_tweet, err_msg = check_if_delete_tweet_is_valid(request)
     if not valid_delete_tweet:
@@ -83,7 +84,7 @@ def export_to_csv(request):
     if not request.user.is_superuser or request.method != "POST":
         save_log_message(request.user.id, request.user.username,
                          'Exporting website tweets to a csv. Error: user does not have permissions')
-        raise Http404("Permission denied")
+        raise PermissionDenied
     csv_fields = request.POST.dict()
     valid_csv_fields, err_msg = check_if_csv_fields_are_valid(csv_fields)
     if not valid_csv_fields:
@@ -167,10 +168,10 @@ def create_df_for_tweets(fields_to_export, date_start, date_end):
     return df_tweets
 
 
-# This function return a HTML page for adding a new claim to the website
+# This function return a HTML page for exporting website tweets to a csv file
 def export_tweets_page(request):
-    if not request.user.is_authenticated or request.method != 'GET':
-        raise Http404("Permission denied")
+    if not request.user.is_superuser or request.method != 'GET':
+        raise PermissionDenied
     return render(request, 'tweets/export_tweets_page.html')
 
 
@@ -179,14 +180,14 @@ def download_tweets_for_claims(request):
     if not request.user.is_authenticated:  # TAP user
         if not request.POST.get('username') or not request.POST.get('password') or not \
                 authenticate(request, username=request.POST.get('username'), password=request.POST.get('password')):
-            raise Http404("Permission denied")
+            raise PermissionDenied
         request.user = authenticate(request, username=request.POST.get('username'), password=request.POST.get('password'))
     if not request.user.is_superuser or request.method != "POST" or 'csv_file' not in request.FILES:
-        raise Http404("Permission denied")
+        raise PermissionDenied
     tweets = request.FILES['csv_file'].read().decode('utf-8-sig')
     if [header.lower().strip() for header in tweets.split('\n')[0].split(',')] != \
             ['claim id', 'tweet link']:
-        raise Http404("Permission denied")
+        raise Http404("Error - invalid header file")
     for tweet in tweets.split('\n')[1:]:
         if tweet:
             tweet_fields = tweet.split(',')

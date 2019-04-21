@@ -1,6 +1,7 @@
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import User
-from django.http import HttpRequest, Http404, QueryDict
+from django.http import HttpRequest, QueryDict
+from django.core.exceptions import PermissionDenied
 from django.test import TestCase
 from analytics.views import view_analytics, view_customized_analytics, check_if_customized_analytics_is_valid, \
     check_valid_dates, view_top_n_claims, check_if_top_claims_is_valid, get_claim_as_json
@@ -41,11 +42,11 @@ class Analytics(TestCase):
 
     def test_view_analytics_invalid_user(self):
         self.get_request.user = self.user_1
-        self.assertRaises(Http404, view_analytics, self.get_request)
+        self.assertRaises(PermissionDenied, view_analytics, self.get_request)
 
     def test_view_analytics_invalid_request(self):
         self.post_request.user = self.admin
-        self.assertRaises(Http404, view_analytics, self.post_request)
+        self.assertRaises(PermissionDenied, view_analytics, self.post_request)
 
     def test_view_customized_analytics_by_months(self):
         self.customized_analytics['dimensions'] = self.months

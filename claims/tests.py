@@ -1,5 +1,6 @@
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpRequest, QueryDict, Http404
+from django.core.exceptions import PermissionDenied
 from django.test import TestCase, Client
 from claims.models import Claim
 from claims.views import add_claim, check_if_claim_is_valid, check_if_input_format_is_valid, is_english_input, \
@@ -160,7 +161,7 @@ class ClaimTests(TestCase):
         query_dict.update(self.new_claim_details)
         self.post_request.POST = query_dict
         self.post_request.user = AnonymousUser()
-        self.assertRaises(Http404, add_claim, self.post_request)
+        self.assertRaises(PermissionDenied, add_claim, self.post_request)
         self.assertTrue(len(Claim.objects.all()) == len_claims)
         self.assertTrue(get_claim_by_id(self.num_of_saved_claims + 1) is None)
 
@@ -225,7 +226,7 @@ class ClaimTests(TestCase):
 
     def test_add_claim_invalid_request(self):
         self.get_request.user = self.user
-        self.assertRaises(Http404, add_claim, self.get_request)
+        self.assertRaises(PermissionDenied, add_claim, self.get_request)
 
     def test_check_if_claim_is_valid(self):
         self.new_claim_details['user_id'] = self.user.id
@@ -426,7 +427,7 @@ class ClaimTests(TestCase):
         from django.contrib.auth.models import AnonymousUser
         self.post_request.POST = self.update_claim_details
         self.post_request.user = AnonymousUser()
-        self.assertRaises(Http404, edit_claim, self.post_request)
+        self.assertRaises(PermissionDenied, edit_claim, self.post_request)
 
     def test_edit_claim_with_invalid_user(self):
         guest = User(id=self.num_of_saved_users + random.randint(1, 10), username='guest')
@@ -439,7 +440,7 @@ class ClaimTests(TestCase):
 
     def test_edit_claim_invalid_request(self):
         self.get_request.user = self.user
-        self.assertRaises(Http404, edit_claim, self.get_request)
+        self.assertRaises(PermissionDenied, edit_claim, self.get_request)
 
     def test_edit_claim_valid_with_different_category(self):
         self.update_claim_details['category'] = self.claim_2.category
@@ -633,18 +634,18 @@ class ClaimTests(TestCase):
         self.assertTrue(response.status_code == self.error_code)
         self.assertTrue(len(Claim.objects.all()), old_length)
 
-    def test_delete_claim_valid_user_not_authenticated(self):
+    def test_delete_claim_user_not_authenticated(self):
         from django.contrib.auth.models import AnonymousUser
         claim_to_delete = {'claim_id': self.claim_1.id}
         self.post_request.POST = claim_to_delete
         self.post_request.user = AnonymousUser()
         old_length = len(Claim.objects.all())
-        self.assertRaises(Http404, delete_claim, self.post_request)
+        self.assertRaises(PermissionDenied, delete_claim, self.post_request)
         self.assertTrue(len(Claim.objects.all()), old_length)
 
     def test_delete_claim_invalid_request(self):
         self.get_request.user = self.user
-        self.assertRaises(Http404, delete_claim, self.get_request)
+        self.assertRaises(PermissionDenied, delete_claim, self.get_request)
 
     def test_delete_claim_of_another_user(self):
         self.user_2 = User(username="User2", email='user1@gmail.com')
@@ -708,11 +709,11 @@ class ClaimTests(TestCase):
         claim_to_report_spam = {'claim_id': self.claim_1.id}
         self.post_request.POST = claim_to_report_spam
         self.post_request.user = AnonymousUser()
-        self.assertRaises(Http404, report_spam, self.post_request)
+        self.assertRaises(PermissionDenied, report_spam, self.post_request)
 
     def test_report_spam_invalid_request(self):
         self.get_request.user = self.user
-        self.assertRaises(Http404, report_spam, self.get_request)
+        self.assertRaises(PermissionDenied, report_spam, self.get_request)
 
     def test_report_spam_missing_claim_id(self):
         self.post_request.POST = {}
@@ -776,7 +777,7 @@ class ClaimTests(TestCase):
         self.post_request.FILES['csv_file'] = self.test_file
         self.post_request.user = self.user
         len_claims = len(Claim.objects.all())
-        self.assertRaises(Http404, download_claims, self.post_request)
+        self.assertRaises(PermissionDenied, download_claims, self.post_request)
         self.assertTrue(len(Claim.objects.all()) == len_claims)
 
     def test_download_claims_user_not_authenticated(self):
@@ -784,20 +785,20 @@ class ClaimTests(TestCase):
         self.post_request.FILES['csv_file'] = self.test_file
         self.post_request.user = AnonymousUser()
         len_claims = len(Claim.objects.all())
-        self.assertRaises(Http404, download_claims, self.post_request)
+        self.assertRaises(PermissionDenied, download_claims, self.post_request)
         self.assertTrue(len(Claim.objects.all()) == len_claims)
 
     def test_download_claims_invalid_request(self):
         self.get_request.FILES['csv_file'] = self.test_file
         self.get_request.user = self.admin
         len_claims = len(Claim.objects.all())
-        self.assertRaises(Http404, download_claims, self.get_request)
+        self.assertRaises(PermissionDenied, download_claims, self.get_request)
         self.assertTrue(len(Claim.objects.all()) == len_claims)
 
     def test_download_claims_invalid_file(self):
         self.post_request.user = self.admin
         len_claims = len(Claim.objects.all())
-        self.assertRaises(Http404, download_claims, self.post_request)
+        self.assertRaises(PermissionDenied, download_claims, self.post_request)
         self.assertTrue(len(Claim.objects.all()) == len_claims)
 
     def test_download_claims_invalid_headers_in_file(self):
@@ -841,7 +842,7 @@ class ClaimTests(TestCase):
         self.assertTrue(response.status_code == 200)
 
     def test_view_home_not_valid_request(self):
-        self.assertRaises(Http404, view_home, self.post_request)
+        self.assertRaises(PermissionDenied, view_home, self.post_request)
 
     def test_get_users_images_for_claims_user_with_img(self):
         for claim, user_img in get_users_images_for_claims(Claim.objects.all()).items():
@@ -866,7 +867,7 @@ class ClaimTests(TestCase):
 
     def test_view_claim_invalid_request(self):
         self.post_request.user = self.user
-        self.assertRaises(Http404, view_claim, self.post_request, self.claim_1.id)
+        self.assertRaises(PermissionDenied, view_claim, self.post_request, self.claim_1.id)
 
     def test_view_claim_valid_user_not_authenticated(self):
         from django.contrib.auth.models import AnonymousUser
@@ -1070,21 +1071,21 @@ class ClaimTests(TestCase):
     def test_add_claim_page_user_not_authenticated(self):
         from django.contrib.auth.models import AnonymousUser
         self.get_request.user = AnonymousUser()
-        self.assertRaises(Http404, add_claim_page, self.get_request)
+        self.assertRaises(PermissionDenied, add_claim_page, self.get_request)
 
     def test_export_claims_page(self):
-        self.get_request.user = self.user
+        self.get_request.user = self.admin
         response = export_claims_page(self.get_request)
         self.assertTrue(response.status_code == 200)
 
     def test_export_claims_page_user_not_authenticated(self):
         from django.contrib.auth.models import AnonymousUser
         self.get_request.user = AnonymousUser()
-        self.assertRaises(Http404, export_claims_page, self.get_request)
+        self.assertRaises(PermissionDenied, export_claims_page, self.get_request)
 
     def test_export_claims_page_invalid_request(self):
         self.post_request.user = self.user
-        self.assertRaises(Http404, export_claims_page, self.post_request)
+        self.assertRaises(PermissionDenied, export_claims_page, self.post_request)
 
     def test_post_claims_tweets_page(self):
         self.get_request.user = self.user
@@ -1094,11 +1095,11 @@ class ClaimTests(TestCase):
     def test_post_claims_tweets_page_user_not_authenticated(self):
         from django.contrib.auth.models import AnonymousUser
         self.get_request.user = AnonymousUser()
-        self.assertRaises(Http404, post_claims_tweets_page, self.get_request)
+        self.assertRaises(PermissionDenied, post_claims_tweets_page, self.get_request)
 
     def test_post_claims_tweets_page_invalid_request(self):
         self.post_request.user = self.user
-        self.assertRaises(Http404, post_claims_tweets_page, self.post_request)
+        self.assertRaises(PermissionDenied, post_claims_tweets_page, self.post_request)
 
     def test_about_page(self):
         self.assertTrue(about_page(HttpRequest()).status_code == 200)
@@ -1107,7 +1108,7 @@ class ClaimTests(TestCase):
         self.assertTrue(handler_400(HttpRequest()).status_code == 400)
 
     def test_handler_403(self):
-        self.assertTrue(handler_403(HttpRequest()).status_code == 403)
+        self.assertTrue(handler_403(HttpRequest(), 'error_msg').status_code == 403)
 
     def test_handler_404(self):
         self.assertTrue(handler_404(HttpRequest(), 'error_msg').status_code == 404)

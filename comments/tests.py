@@ -1,4 +1,5 @@
-from django.http import HttpRequest, Http404, QueryDict
+from django.http import HttpRequest, QueryDict
+from django.core.exceptions import PermissionDenied
 from django.test import TestCase
 from django.utils.datastructures import MultiValueDict
 from claims.models import Claim
@@ -196,7 +197,7 @@ class CommentTests(TestCase):
         from django.contrib.auth.models import AnonymousUser
         self.post_request.POST = self.new_comment_details_user_1
         self.post_request.user = AnonymousUser()
-        self.assertRaises(Http404, add_comment, self.post_request)
+        self.assertRaises(PermissionDenied, add_comment, self.post_request)
 
     def test_add_comment_by_invalid_user(self):
         guest = User(id=self.num_of_saved_users + random.randint(1, 10), username='guest')
@@ -303,7 +304,7 @@ class CommentTests(TestCase):
         len_comments = len(Comment.objects.filter(claim_id=self.claim_2.id))
         self.get_request.POST = self.new_comment_details_user_1
         self.get_request.user = self.user_1
-        self.assertRaises(Http404, add_comment, self.get_request)
+        self.assertRaises(PermissionDenied, add_comment, self.get_request)
         self.assertTrue(len(Comment.objects.filter(claim_id=self.claim_2.id)) == len_comments)
 
     def test_build_comment_by_user(self):
@@ -643,7 +644,7 @@ class CommentTests(TestCase):
         query_dict.update(self.update_comment_details)
         self.get_request.POST = query_dict
         self.get_request.user = self.user_1
-        self.assertRaises(Http404, edit_comment, self.get_request)
+        self.assertRaises(PermissionDenied, edit_comment, self.get_request)
 
     def test_check_comment_new_fields(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)
@@ -825,7 +826,7 @@ class CommentTests(TestCase):
         self.post_request.POST = comment_to_delete
         self.post_request.user = AnonymousUser()
         len_comments = len(Comment.objects.all())
-        self.assertRaises(Http404, delete_comment, self.post_request)
+        self.assertRaises(PermissionDenied, delete_comment, self.post_request)
         self.assertTrue(len(Comment.objects.all()) == len_comments)
 
     def test_delete_comment_by_invalid_comment_id(self):
@@ -842,7 +843,7 @@ class CommentTests(TestCase):
         self.get_request.POST = comment_to_delete
         self.get_request.user = self.user_1
         len_comments = len(Comment.objects.all())
-        self.assertRaises(Http404, delete_comment, self.get_request)
+        self.assertRaises(PermissionDenied, delete_comment, self.get_request)
         self.assertTrue(len(Comment.objects.all()) == len_comments)
 
     def test_check_if_delete_comment_is_valid(self):
@@ -1137,14 +1138,14 @@ class CommentTests(TestCase):
         query_dict.update(self.csv_fields)
         self.post_request.POST = query_dict
         self.post_request.user = AnonymousUser()
-        self.assertRaises(Http404, export_to_csv, self.post_request)
+        self.assertRaises(PermissionDenied, export_to_csv, self.post_request)
 
     def test_export_to_csv_not_admin_user(self):
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.csv_fields)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Http404, export_to_csv, self.post_request)
+        self.assertRaises(PermissionDenied, export_to_csv, self.post_request)
 
     def test_check_if_csv_fields_are_valid(self):
         self.assertTrue(check_if_csv_fields_are_valid(self.csv_fields)[0])

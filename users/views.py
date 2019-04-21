@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.http import Http404, HttpResponse
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
 from claims.models import Claim
 from comments.models import Comment
@@ -44,7 +45,7 @@ def get_user_reputation(user_id):
 def add_all_scrapers(request):
     from claims.views import view_home, return_get_request_to_user
     if not request.user.is_superuser or request.method != 'GET':
-        raise Http404("Permission denied")
+        raise PermissionDenied
     try:
         password = User.objects.make_random_password()
         # print(password)
@@ -174,14 +175,14 @@ def add_all_scrapers(request):
                                      scraper_id=scraper_9)
         scraper_9_details.save()
     except Exception:
-        raise Http404("Permission denied - Scrapers already exist")
+        raise Http404("Error - scrapers already exist")
     return view_home(return_get_request_to_user(request.user))
 
 
 # This function returns all the scrapers' ids
 def get_all_scrapers_ids(request):
     if request.method != 'GET':
-        raise Http404("Permission denied")
+        raise PermissionDenied
     from django.http import JsonResponse
     scrapers = {}
     result = Scrapers.objects.all()
@@ -202,7 +203,7 @@ def get_all_scrapers_ids_arr():
 # This function returns a random claim for each scraper in the system for testing (the scrapers)
 def get_random_claims_from_scrapers(request):
     if not request.user.is_superuser or request.method != 'GET':
-        raise Http404("Permission denied")
+        raise PermissionDenied
     from django.http import JsonResponse
     claims = {}
     result = Scrapers.objects.all()
@@ -232,7 +233,7 @@ def add_scraper_guide(request):
 def add_new_scraper(request):
     from claims.views import return_get_request_to_user
     if not request.user.is_superuser or request.method != 'POST':
-        raise Http404("Permission denied")
+        raise PermissionDenied
     scraper_info = request.POST.dict()
     valid_scraper, err_msg = check_if_scraper_info_is_valid(scraper_info)
     if not valid_scraper:
@@ -321,10 +322,10 @@ def update_reputation_for_user(user_id, earn_points, num_of_points):
 def user_page(request, user_id):
     from django.contrib.sessions.models import Session
     if request.method != 'GET':
-        raise Http404("Permission denied")
+        raise PermissionDenied
     user = User.objects.filter(id=user_id)
     if len(user) == 0:
-        raise Http404('User with id ' + str(user_id) + ' does not exist')
+        raise Http404('Error - user with id ' + str(user_id) + ' does not exist')
     user = user.first()
     decoded_sessions = [s.get_decoded() for s in Session.objects.all()]
     logged_in_users = [int(s.get('_auth_user_id')) for s in decoded_sessions]
@@ -392,7 +393,7 @@ def get_false_labels(scraper_name):
 def add_true_label_to_scraper(request):
     from claims.views import return_get_request_to_user
     if not request.user.is_superuser or request.method != 'POST':
-        raise Http404("Permission denied")
+        raise PermissionDenied
     scraper_info = request.POST.dict()
     valid_scraper_label, err_msg = check_if_scraper_new_label_is_valid(scraper_info, True)
     if not valid_scraper_label:
@@ -415,7 +416,7 @@ def add_true_label_to_scraper(request):
 def delete_true_label_from_scraper(request):
     from claims.views import return_get_request_to_user
     if not request.user.is_superuser or request.method != 'POST':
-        raise Http404("Permission denied")
+        raise PermissionDenied
     scraper_info = request.POST.dict()
     valid_scraper_label, err_msg = check_if_scraper_label_delete_is_valid(scraper_info)
     if not valid_scraper_label:
@@ -444,7 +445,7 @@ def delete_true_label_from_scraper(request):
 def add_false_label_to_scraper(request):
     from claims.views import return_get_request_to_user
     if not request.user.is_superuser or request.method != 'POST':
-        raise Http404("Permission denied")
+        raise PermissionDenied
     scraper_info = request.POST.dict()
     valid_scraper_label, err_msg = check_if_scraper_new_label_is_valid(scraper_info, False)
     if not valid_scraper_label:
@@ -467,7 +468,7 @@ def add_false_label_to_scraper(request):
 def delete_false_label_from_scraper(request):
     from claims.views import return_get_request_to_user
     if not request.user.is_superuser or request.method != 'POST':
-        raise Http404("Permission denied")
+        raise PermissionDenied
     scraper_info = request.POST.dict()
     valid_scraper_label, err_msg = check_if_scraper_label_delete_is_valid(scraper_info)
     if not valid_scraper_label:
@@ -570,7 +571,7 @@ def update_scrapers_comments_verdicts(scraper_id):
 def update_user_img(request):
     from claims.views import return_get_request_to_user
     if not request.user.is_authenticated or request.method != 'POST':
-        raise Http404("Permission denied")
+        raise PermissionDenied
     user_info = request.POST.dict()
     user_info['user_id'] = request.user.id
     valid_user_info, err_msg = check_if_user_info_is_valid(user_info)

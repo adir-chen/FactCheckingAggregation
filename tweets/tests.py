@@ -1,3 +1,4 @@
+from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, Http404, QueryDict
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -159,7 +160,7 @@ class CommentTests(TestCase):
         self.post_request.POST = tweet_to_delete
         self.post_request.user = self.user
         len_tweets = len(Tweet.objects.all())
-        self.assertRaises(Http404, delete_tweet, self.post_request)
+        self.assertRaises(PermissionDenied, delete_tweet, self.post_request)
         self.assertTrue(len(Tweet.objects.all()) == len_tweets)
 
     def test_delete_tweet_by_invalid_tweet_id(self):
@@ -176,7 +177,7 @@ class CommentTests(TestCase):
         self.get_request.POST = tweet_to_delete
         self.get_request.user = self.admin
         len_tweets = len(Tweet.objects.all())
-        self.assertRaises(Http404, delete_tweet, self.get_request)
+        self.assertRaises(PermissionDenied, delete_tweet, self.get_request)
         self.assertTrue(len(Tweet.objects.all()) == len_tweets)
 
     def test_check_if_delete_tweet_is_valid(self):
@@ -253,14 +254,14 @@ class CommentTests(TestCase):
         query_dict.update(self.csv_fields)
         self.post_request.POST = query_dict
         self.post_request.user = AnonymousUser()
-        self.assertRaises(Http404, export_to_csv, self.post_request)
+        self.assertRaises(PermissionDenied, export_to_csv, self.post_request)
 
     def test_export_to_csv_not_admin_user(self):
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.csv_fields)
         self.post_request.POST = query_dict
         self.post_request.user = self.user
-        self.assertRaises(Http404, export_to_csv, self.post_request)
+        self.assertRaises(PermissionDenied, export_to_csv, self.post_request)
 
     def test_check_if_csv_fields_are_valid(self):
         self.assertTrue(check_if_csv_fields_are_valid(self.csv_fields)[0])
@@ -347,18 +348,18 @@ class CommentTests(TestCase):
                 self.assertTrue(row['Tweet Link'] == self.tweet_2.tweet_link)
 
     def test_export_claims_page(self):
-        self.get_request.user = self.user
+        self.get_request.user = self.admin
         response = export_tweets_page(self.get_request)
         self.assertTrue(response.status_code == 200)
 
     def test_export_claims_page_user_not_authenticated(self):
         from django.contrib.auth.models import AnonymousUser
         self.get_request.user = AnonymousUser()
-        self.assertRaises(Http404, export_tweets_page, self.get_request)
+        self.assertRaises(PermissionDenied, export_tweets_page, self.get_request)
 
     def test_export_claims_page_invalid_request(self):
-        self.post_request.user = self.user
-        self.assertRaises(Http404, export_tweets_page, self.post_request)
+        self.post_request.user = self.admin
+        self.assertRaises(PermissionDenied, export_tweets_page, self.post_request)
 
     def test_download_tweets_for_claims(self):
         self.post_request.FILES['csv_file'] = self.test_file
@@ -375,7 +376,7 @@ class CommentTests(TestCase):
         self.post_request.FILES['csv_file'] = self.test_file
         self.post_request.user = self.user
         len_tweets = len(Tweet.objects.all())
-        self.assertRaises(Http404, download_tweets_for_claims, self.post_request)
+        self.assertRaises(PermissionDenied, download_tweets_for_claims, self.post_request)
         self.assertTrue(len(Tweet.objects.all()) == len_tweets)
 
     def test_download_tweets_for_claims_user_not_authenticated(self):
@@ -383,7 +384,7 @@ class CommentTests(TestCase):
         self.post_request.FILES['csv_file'] = self.test_file
         self.post_request.user = AnonymousUser()
         len_tweets = len(Tweet.objects.all())
-        self.assertRaises(Http404, download_tweets_for_claims, self.post_request)
+        self.assertRaises(PermissionDenied, download_tweets_for_claims, self.post_request)
         self.assertTrue(len(Tweet.objects.all()) == len_tweets)
 
     def test_download_tweets_for_claims_user_authenticated(self):
@@ -404,13 +405,13 @@ class CommentTests(TestCase):
         self.get_request.FILES['csv_file'] = self.test_file
         self.get_request.user = self.admin
         len_tweets = len(Tweet.objects.all())
-        self.assertRaises(Http404, download_tweets_for_claims, self.get_request)
+        self.assertRaises(PermissionDenied, download_tweets_for_claims, self.get_request)
         self.assertTrue(len(Tweet.objects.all()) == len_tweets)
 
     def test_download_tweets_for_claims_invalid_file(self):
         self.post_request.user = self.admin
         len_tweets = len(Tweet.objects.all())
-        self.assertRaises(Http404, download_tweets_for_claims, self.post_request)
+        self.assertRaises(PermissionDenied, download_tweets_for_claims, self.post_request)
         self.assertTrue(len(Tweet.objects.all()) == len_tweets)
 
     def test_download_tweets_for_claims_invalid_headers_in_file(self):

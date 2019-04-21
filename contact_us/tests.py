@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
-from django.http import HttpRequest, QueryDict, Http404
+from django.core.exceptions import PermissionDenied
+from django.http import HttpRequest, QueryDict
 from django.test import TestCase
 from contact_us.views import contact_us_page, send_email, check_if_email_is_valid, check_for_spam
 import random
@@ -56,7 +57,7 @@ class ContactUsTest(TestCase):
         query_dict.update(self.data)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Http404, send_email, self.post_request)
+        self.assertRaises(PermissionDenied, send_email, self.post_request)
 
     def test_send_email_invalid_request_user_not_authenticated(self):
         from django.contrib.auth.models import AnonymousUser
@@ -65,7 +66,7 @@ class ContactUsTest(TestCase):
         query_dict.update(self.data)
         self.post_request.POST = query_dict
         self.post_request.user = AnonymousUser()
-        self.assertRaises(Http404, send_email, self.post_request)
+        self.assertRaises(PermissionDenied, send_email, self.post_request)
 
     def test_send_email_missing_args(self):
         from django.contrib.auth.models import AnonymousUser

@@ -1,4 +1,5 @@
-from django.http import Http404, HttpResponse
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from comments.models import Comment
@@ -12,7 +13,7 @@ import json
 # This function takes care of a request to add a new reply to a comment in the website
 def add_reply(request):
     if not request.user.is_authenticated or request.method != "POST":
-        raise Http404("Permission denied")
+        raise PermissionDenied
     reply_info = request.POST.copy()
     reply_info['user_id'] = request.user.id
     reply_info['is_superuser'] = request.user.is_superuser
@@ -70,7 +71,7 @@ def check_if_reply_is_valid(reply_info):
 # This function edits a reply in the website
 def edit_reply(request):
     if not request.user.is_authenticated or request.method != "POST":
-        raise Http404("Permission denied")
+        raise PermissionDenied
     new_reply_fields = request.POST.dict()
     new_reply_fields['user_id'] = request.user.id
     new_reply_fields['is_superuser'] = request.user.is_superuser
@@ -122,7 +123,7 @@ def check_reply_new_fields(new_reply_fields):
 # This function deletes a reply from the website
 def delete_reply(request):
     if not request.user.is_authenticated or request.method != "POST":
-        raise Http404("Permission denied")
+        raise PermissionDenied
     valid_delete_reply, err_msg = check_if_delete_reply_is_valid(request)
     if not valid_delete_reply:
         save_log_message(request.user.id, request.user.username,

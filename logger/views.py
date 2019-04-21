@@ -1,5 +1,6 @@
 from functools import reduce
-from django.http import Http404, HttpResponse
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse
 from django.shortcuts import render
 from logger.models import Logger
 from datetime import datetime
@@ -12,7 +13,7 @@ import csv
 # This function returns a HTML for the log page
 def view_log(request):
     if not request.user.is_superuser or request.method != "GET":
-        raise Http404("Permission denied")
+        raise PermissionDenied
     return render(request, 'logger/logger.html', {'logger': Logger.objects.all().order_by('-id')})
 
 
@@ -38,7 +39,7 @@ def export_to_csv(request):
     if not request.user.is_superuser or request.method != "POST":
         save_log_message(request.user.id, request.user.username,
                          'Exporting website logger to a csv. Error: user does not have permissions')
-        raise Http404("Permission denied")
+        raise PermissionDenied
     csv_fields = request.POST.dict()
     valid_csv_fields, err_msg = check_if_csv_fields_are_valid(csv_fields)
     if not valid_csv_fields:

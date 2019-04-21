@@ -1,4 +1,5 @@
-from django.http import HttpRequest, Http404, QueryDict
+from django.http import HttpRequest, QueryDict
+from django.core.exceptions import PermissionDenied
 from django.test import TestCase
 from claims.models import Claim
 from comments.models import Comment
@@ -107,7 +108,7 @@ class CommentTests(TestCase):
         from django.contrib.auth.models import AnonymousUser
         self.post_request.POST = self.new_reply_details_user_1
         self.post_request.user = AnonymousUser()
-        self.assertRaises(Http404, add_reply, self.post_request)
+        self.assertRaises(PermissionDenied, add_reply, self.post_request)
 
     def test_add_reply_by_invalid_user(self):
         guest = User(id=self.num_of_saved_users + random.randint(1, 10), username='guest')
@@ -162,7 +163,7 @@ class CommentTests(TestCase):
         len_replies = len(Reply.objects.filter(comment_id=self.comment_2.id))
         self.get_request.POST = self.new_reply_details_user_1
         self.get_request.user = self.user_1
-        self.assertRaises(Http404, add_reply, self.get_request)
+        self.assertRaises(PermissionDenied, add_reply, self.get_request)
         self.assertTrue(len(Reply.objects.filter(comment_id=self.comment_2.id)) == len_replies)
 
     def test_build_reply_by_user(self):
@@ -343,7 +344,7 @@ class CommentTests(TestCase):
         query_dict.update(self.update_reply_details)
         self.get_request.POST = query_dict
         self.get_request.user = self.user_1
-        self.assertRaises(Http404, edit_reply, self.get_request)
+        self.assertRaises(PermissionDenied, edit_reply, self.get_request)
 
     def test_check_reply_new_fields(self):
         self.update_reply_details['reply_id'] = str(self.reply_1.id)
@@ -450,7 +451,7 @@ class CommentTests(TestCase):
         self.post_request.POST = reply_to_delete
         self.post_request.user = AnonymousUser()
         len_replies = len(Reply.objects.all())
-        self.assertRaises(Http404, delete_reply, self.post_request)
+        self.assertRaises(PermissionDenied, delete_reply, self.post_request)
         self.assertTrue(len(Reply.objects.all()) == len_replies)
 
     def test_delete_reply_by_invalid_reply_id(self):
@@ -467,7 +468,7 @@ class CommentTests(TestCase):
         self.get_request.POST = reply_to_delete
         self.get_request.user = self.user_1
         len_replies = len(Reply.objects.all())
-        self.assertRaises(Http404, delete_reply, self.get_request)
+        self.assertRaises(PermissionDenied, delete_reply, self.get_request)
         self.assertTrue(len(Reply.objects.all()) == len_replies)
 
     def test_check_if_delete_reply_is_valid(self):

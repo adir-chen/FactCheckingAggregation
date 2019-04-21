@@ -1,3 +1,4 @@
+from django.core.exceptions import PermissionDenied
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.contrib.auth import logout, authenticate
@@ -20,11 +21,11 @@ import json
 # This function adds a new claim to the website, may followed with a comment on it
 def add_claim(request):
     if request.method != "POST":
-        raise Http404("Permission denied")
+        raise PermissionDenied
     if not request.user.is_authenticated:  # scraper case
         if not request.POST.get('username') or not request.POST.get('password') or not \
                 authenticate(request, username=request.POST.get('username'), password=request.POST.get('password')):
-            raise Http404("Permission denied")
+            raise PermissionDenied
         request.user = authenticate(request, username=request.POST.get('username'), password=request.POST.get('password'))
     claim_info = request.POST.dict()
     claim_info['user_id'] = request.user.id
@@ -167,7 +168,7 @@ def post_above_limit(user_id):
 # This function edits a claim in the website
 def edit_claim(request):
     if not request.user.is_authenticated or request.method != "POST":
-        raise Http404("Permission denied")
+        raise PermissionDenied
     new_claim_fields = request.POST.dict()
     new_claim_fields['user_id'] = request.user.id
     new_claim_fields['is_superuser'] = request.user.is_superuser
@@ -235,7 +236,7 @@ def check_claim_new_fields(new_claim_fields):
 # This function deletes a claim from the website
 def delete_claim(request):
     if not request.user.is_authenticated or request.method != "POST":
-        raise Http404("Permission denied")
+        raise PermissionDenied
     valid_delete_claim, err_msg = check_if_delete_claim_is_valid(request)
     if not valid_delete_claim:
         save_log_message(request.user.id, request.user.username,
@@ -274,7 +275,7 @@ def check_if_delete_claim_is_valid(request):
 # This function reports a claim as spam
 def report_spam(request):
     if not request.user.is_authenticated or request.method != "POST":
-        raise Http404("Permission denied")
+        raise PermissionDenied
     valid_spam_report, err_msg = check_if_spam_report_is_valid(request)
     if not valid_spam_report:
         save_log_message(request.user.id, request.user.username,
@@ -308,12 +309,12 @@ def check_if_spam_report_is_valid(request):
 def download_claims(request):
     import csv
     if not request.user.is_superuser or request.method != "POST" or 'csv_file' not in request.FILES:
-        raise Http404("Permission denied")
+        raise PermissionDenied
     claims = request.FILES['csv_file'].read().decode('utf-8-sig')
     if [header.lower().strip() for header in claims.split('\n')[0].split(',')] != \
             ['claim', 'category', 'tags', 'image_src', 'add_comment',
              'title', 'description', 'url', 'verdict_date', 'label']:
-        raise Http404(', '.join([header.lower().strip() for header in claims.split('\n')[0].split(',')]))
+        raise Http404("Error - invalid header file")
     reader = csv.DictReader(claims.splitlines())
     reader.fieldnames = [name.lower() for name in reader.fieldnames]
     for claim in reader:
@@ -342,7 +343,7 @@ def download_claims(request):
 @ensure_csrf_cookie
 def view_home(request):
     if request.method != "GET":
-        raise Http404("Permission denied")
+        raise PermissionDenied
     from django.core.paginator import Paginator
     claims = list(get_users_images_for_claims(Claim.objects.all().order_by('-id')).items())
     page = request.GET.get('page')
@@ -371,9 +372,9 @@ def get_users_images_for_claims(claims):
 def view_claim(request, claim_id):
     claim = get_claim_by_id(claim_id)
     if claim is None:
-        raise Http404('Claim ' + str(claim_id) + ' does not exist')
+        raise Http404('Error - claim ' + str(claim_id) + ' does not exist')
     elif request.method != "GET":
-        raise Http404("Permission denied")
+        raise PermissionDenied
     comments = get_users_details_for_comments(Comment.objects.filter(claim_id=claim_id))
     tweets = Tweet.objects.filter(claim_id=claim_id)
     user_img, user_rep = None, None
@@ -484,21 +485,21 @@ def logout_view(request):
 # This function return a HTML page for adding a new claim to the website
 def add_claim_page(request):
     if not request.user.is_authenticated or request.method != 'GET':
-        raise Http404("Permission denied")
+        raise PermissionDenied
     return render(request, 'claims/add_claim.html')
 
 
-# This function return a HTML page for adding a new claim to the website
+# This function return a HTML page for exporting website claims to a csv file
 def export_claims_page(request):
-    if not request.user.is_authenticated or request.method != 'GET':
-        raise Http404("Permission denied")
+    if not request.user.is_superuser or request.method != 'GET':
+        raise PermissionDenied
     return render(request, 'claims/export_claims.html', {'all_scrapers': Scrapers.objects.all()})
 
 
 # This function return a HTML page for posting new claims\tweets to the website
 def post_claims_tweets_page(request):
     if not request.user.is_authenticated or request.method != 'GET':
-        raise Http404("Permission denied")
+        raise PermissionDenied
     return render(request, 'claims/import_claims_tweets.html')
 
 
@@ -513,7 +514,7 @@ def handler_400(request):
 
 
 # This function returns 403 error page
-def handler_403(request):
+def handler_403(request, exception):
     return render(request, 'claims/403.html', status=403)
 
 

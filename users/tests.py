@@ -1,4 +1,5 @@
 from django.http import HttpRequest, QueryDict, Http404
+from django.core.exceptions import PermissionDenied
 from django.utils.datastructures import MultiValueDict
 from django.test import TestCase
 from users.models import User, Scrapers, Users_Reputations
@@ -129,7 +130,7 @@ class UsersTest(TestCase):
 
     def test_add_all_scrapers_user_not_admin(self):
         self.post_request.user = self.user_1
-        self.assertRaises(Http404, add_all_scrapers, self.post_request)
+        self.assertRaises(PermissionDenied, add_all_scrapers, self.post_request)
         self.assertFalse(check_if_user_exists_by_user_id(self.num_of_saved_users + 1))
         self.assertFalse(check_if_user_exists_by_user_id(self.num_of_saved_users + 2))
         self.assertFalse(check_if_user_exists_by_user_id(self.num_of_saved_users + 3))
@@ -173,7 +174,7 @@ class UsersTest(TestCase):
         self.get_request.user = self.admin
         self.assertTrue(add_all_scrapers(self.get_request).status_code == 200)
         self.post_request.user = self.admin
-        self.assertRaises(Http404, get_all_scrapers_ids, self.post_request)
+        self.assertRaises(PermissionDenied, get_all_scrapers_ids, self.post_request)
 
     def test_get_all_scrapers_ids_arr(self):
         self.get_request.user = self.admin
@@ -269,13 +270,13 @@ class UsersTest(TestCase):
         self.get_request.user = self.admin
         self.assertTrue(add_all_scrapers(self.get_request).status_code == 200)
         self.get_request.user = self.user_1
-        self.assertRaises(Http404, get_random_claims_from_scrapers, self.get_request)
+        self.assertRaises(PermissionDenied, get_random_claims_from_scrapers, self.get_request)
 
     def test_get_random_claims_from_scrapers_invalid_request(self):
         self.get_request.user = self.admin
         self.assertTrue(add_all_scrapers(self.get_request).status_code == 200)
         self.post_request.user = self.user_1
-        self.assertRaises(Http404, get_random_claims_from_scrapers, self.post_request)
+        self.assertRaises(PermissionDenied, get_random_claims_from_scrapers, self.post_request)
 
     def test_add_scraper_guide(self):
         self.assertTrue(add_scraper_guide(HttpRequest()).status_code == 200)
@@ -295,7 +296,7 @@ class UsersTest(TestCase):
         query_dict.update(self.new_scraper_details)
         self.post_request.POST = query_dict
         old_length = len(User.objects.all())
-        self.assertRaises(Http404, add_new_scraper, self.post_request)
+        self.assertRaises(PermissionDenied, add_new_scraper, self.post_request)
         self.assertTrue(len(User.objects.all()) == old_length)
 
     def test_add_existing_scraper(self):
@@ -331,7 +332,7 @@ class UsersTest(TestCase):
         request = HttpRequest()
         request.user = self.user_2
         request.method = 'GET'
-        self.assertRaises(Http404, add_new_scraper, request)
+        self.assertRaises(PermissionDenied, add_new_scraper, request)
 
     def test_check_if_scraper_info_is_valid(self):
         self.assertTrue(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
@@ -505,7 +506,7 @@ class UsersTest(TestCase):
 
     def test_user_page_invalid_request(self):
         self.post_request.user = self.user_1
-        self.assertRaises(Http404, user_page, self.post_request, self.user_1.id)
+        self.assertRaises(PermissionDenied, user_page, self.post_request, self.user_1.id)
 
     def test_test_get_scraper_url_for_user(self):
         self.assertTrue((get_scraper_url(self.user_1.username)) == '')
@@ -561,7 +562,7 @@ class UsersTest(TestCase):
         query_dict.update(self.new_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Http404, add_true_label_to_scraper, self.post_request)
+        self.assertRaises(PermissionDenied, add_true_label_to_scraper, self.post_request)
 
     def test_add_true_label_to_scraper_invalid_request(self):
         Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -571,7 +572,7 @@ class UsersTest(TestCase):
         query_dict.update(self.new_label_for_scraper)
         self.get_request.GET = query_dict
         self.get_request.user = self.admin
-        self.assertRaises(Http404, add_true_label_to_scraper, self.get_request)
+        self.assertRaises(PermissionDenied, add_true_label_to_scraper, self.get_request)
 
     def test_add_true_label_to_scraper_missing_scraper_id(self):
         Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -669,7 +670,7 @@ class UsersTest(TestCase):
         query_dict.update(self.delete_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Http404, delete_true_label_from_scraper, self.post_request)
+        self.assertRaises(PermissionDenied, delete_true_label_from_scraper, self.post_request)
 
     def test_delete_true_label_from_scraper_invalid_request(self):
         scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -680,7 +681,7 @@ class UsersTest(TestCase):
         query_dict.update(self.delete_label_for_scraper)
         self.get_request.GET = query_dict
         self.get_request.user = self.admin
-        self.assertRaises(Http404, delete_true_label_from_scraper, self.get_request)
+        self.assertRaises(PermissionDenied, delete_true_label_from_scraper, self.get_request)
 
     def test_delete_true_label_from_scraper_missing_scraper_id(self):
         scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -778,7 +779,7 @@ class UsersTest(TestCase):
         query_dict.update(self.new_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Http404, add_false_label_to_scraper, self.post_request)
+        self.assertRaises(PermissionDenied, add_false_label_to_scraper, self.post_request)
 
     def test_add_false_label_to_scraper_invalid_request(self):
         Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -788,7 +789,7 @@ class UsersTest(TestCase):
         query_dict.update(self.new_label_for_scraper)
         self.get_request.GET = query_dict
         self.get_request.user = self.admin
-        self.assertRaises(Http404, add_false_label_to_scraper, self.get_request)
+        self.assertRaises(PermissionDenied, add_false_label_to_scraper, self.get_request)
 
     def test_add_false_label_to_scraper_missing_scraper_id(self):
         Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -885,7 +886,7 @@ class UsersTest(TestCase):
         query_dict.update(self.delete_label_for_scraper)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Http404, delete_false_label_from_scraper, self.post_request)
+        self.assertRaises(PermissionDenied, delete_false_label_from_scraper, self.post_request)
 
     def test_delete_false_label_from_scraper_invalid_request(self):
         scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -896,7 +897,7 @@ class UsersTest(TestCase):
         query_dict.update(self.delete_label_for_scraper)
         self.get_request.GET = query_dict
         self.get_request.user = self.admin
-        self.assertRaises(Http404, delete_false_label_from_scraper, self.get_request)
+        self.assertRaises(PermissionDenied, delete_false_label_from_scraper, self.get_request)
 
     def test_delete_false_label_from_scraper_missing_scraper_id(self):
         scraper = Scrapers.objects.create(scraper_id=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -1147,14 +1148,14 @@ class UsersTest(TestCase):
         query_dict.update(self.update_user_image)
         self.post_request.POST = query_dict
         self.post_request.user = AnonymousUser()
-        self.assertRaises(Http404, update_user_img, self.post_request)
+        self.assertRaises(PermissionDenied, update_user_img, self.post_request)
 
     def test_update_user_img_invalid_request(self):
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.update_user_image)
         self.get_request.POST = query_dict
         self.get_request.user = self.admin
-        self.assertRaises(Http404, update_user_img, self.get_request)
+        self.assertRaises(PermissionDenied, update_user_img, self.get_request)
 
     def test_update_user_img_missing_img(self):
         del self.update_user_image['user_img']

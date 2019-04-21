@@ -1,3 +1,4 @@
+from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
 from analytics.GoogleAPI.AnalyticReports import get_report_view_by_time, get_report_top_n_claims
@@ -12,7 +13,7 @@ import datetime
 # This function returns analytics page
 def view_analytics(request):
     if not request.user.is_superuser or request.method != 'GET':
-        raise Http404("Permission denied")
+        raise PermissionDenied
     today = datetime.date.today()
     past = today - relativedelta(months=3)
     start_date_month = "{:04d}-{:02d}-{:02d}".format(past.year, past.month, past.day)

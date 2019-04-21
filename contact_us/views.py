@@ -1,5 +1,6 @@
 from datetime import datetime
-from django.http import Http404, HttpResponse
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.core.mail import send_mail
 from validate_email import validate_email
@@ -18,7 +19,7 @@ def contact_us_page(request):
 # This function sends an email from a website user
 def send_email(request):
     if request.method != "POST":
-        raise Http404("Permission denied")
+        raise PermissionDenied
     ip = get_client_ip(request)
     if ip[0] is None:
         ip = 'Unknown IP Address'

@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.utils import timezone
-from django.http import HttpRequest, Http404, QueryDict
+from django.http import HttpRequest, QueryDict
+from django.core.exceptions import PermissionDenied
 from django.test import TestCase
 from django.utils.datastructures import MultiValueDict
 from logger.models import Logger
@@ -66,7 +67,7 @@ class LoggerTest(TestCase):
 
     def test_view_log_invalid_user(self):
         self.post_request.user = self.user_1
-        self.assertRaises(Http404, view_log, self.post_request)
+        self.assertRaises(PermissionDenied, view_log, self.post_request)
 
     def test_save_log_message_success_action(self):
         user_id = random.randint(1, 10)
@@ -171,14 +172,14 @@ class LoggerTest(TestCase):
         query_dict.update(self.csv_fields)
         self.post_request.POST = query_dict
         self.post_request.user = AnonymousUser()
-        self.assertRaises(Http404, export_to_csv, self.post_request)
+        self.assertRaises(PermissionDenied, export_to_csv, self.post_request)
 
     def test_export_to_csv_not_admin_user(self):
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.csv_fields)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_1
-        self.assertRaises(Http404, export_to_csv, self.post_request)
+        self.assertRaises(PermissionDenied, export_to_csv, self.post_request)
 
     def test_check_if_csv_fields_are_valid(self):
         self.assertTrue(check_if_csv_fields_are_valid(self.csv_fields)[0])
