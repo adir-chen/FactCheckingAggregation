@@ -15,9 +15,10 @@ from django.conf import settings
 import math
 import json
 from django.contrib.staticfiles.templatetags.staticfiles import static
+from difflib import SequenceMatcher
 
 
-# This function adds a new claim to the website, may followed with a comment on it
+# This function adds a new claim to the website, may be followed with a comment on it
 def add_claim(request):
     if request.method != "POST":
         raise Http404("Permission denied")
@@ -42,13 +43,18 @@ def add_claim(request):
         authenticity_grade=0,
         image_src=claim_info['image_src']
     )
-    claim.save()
+    father_claim = get_similarity(claim)
+    if not father_claim:
+        claim.save()
     save_log_message(request.user.id, request.user.username,
                      'Adding a new claim', True)
     claim_info['claim_id'] = claim.id
     claim_info['validate_g_recaptcha'] = True
     request.POST = claim_info
     if claim_info['add_comment'] == 'true':
+        if father_claim:
+            claim_info['claim_id'] = father_claim
+            request.POST = claim_info
         response = add_comment(request)
         if response.status_code == 404:  # error case
             claim.delete()
@@ -532,3 +538,15 @@ def return_get_request_to_user(user):
     request.stats_code = 200
     request.method = 'GET'
     return request
+
+
+def get_similarity(claim):
+    claim_scores = {}
+    for c in Claim.objects.exclude(id=claim.id):
+        score = SequenceMatcher(None, claim.claim, c.claim).ratio()
+        if score > 0.6:
+            claim_scores[c.id] = score
+    if claim_scores:
+        return max(claim_scores, key=claim_scores.get)
+    else:
+        return None
