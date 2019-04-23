@@ -328,8 +328,8 @@ def user_page(request, user_id):
         raise Http404('Error - user with id ' + str(user_id) + ' does not exist')
     user = user.first()
     decoded_sessions = [s.get_decoded() for s in Session.objects.all()]
-    logged_in_users = [int(s.get('_auth_user_id')) for s in decoded_sessions]
-    logged_in = user.id in logged_in_users
+    logged_in_users = [s.get('_auth_user_id') for s in decoded_sessions]
+    logged_in = str(user.id) in logged_in_users
     from claims.views import get_users_images_for_claims, get_users_details_for_comments, \
         get_user_img_and_rep
     user_claims, user_comments, user_tweets = list(), list(), list()
