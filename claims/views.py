@@ -158,11 +158,12 @@ def is_english_input(user_input):
 # This function checks if a given user posted new claims above the maximum limit (per day).
 # The function returns true in case the user exceeded the maximum limit, otherwise false
 def post_above_limit(user_id):
-    limit = 10
-    from datetime import datetime
-    return len(Logger.objects.filter(date__date=datetime.today(),
-                                     user_id=user_id,
-                                     action__icontains='Adding a new claim')) >= limit
+    return False
+    # limit = 10
+    # from datetime import datetime
+    # return len(Logger.objects.filter(date__date=datetime.today(),
+    #                                  user_id=user_id,
+    #                                  action__icontains='Adding a new claim')) >= limit
 
 
 # This function edits a claim in the website
