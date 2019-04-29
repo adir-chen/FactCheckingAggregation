@@ -21,7 +21,7 @@ import json
 # This function adds a new claim to the website, may followed with a comment on it
 def add_claim(request):
     if request.method != "POST":
-        raise PermissionDenied
+        raise PermissionDenied('Not post')
     if not request.user.is_authenticated:  # scraper case
         if not request.POST.get('username') or not request.POST.get('password') or not \
                 authenticate(request, username=request.POST.get('username'), password=request.POST.get('password')):
