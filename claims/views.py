@@ -43,7 +43,7 @@ def add_claim(request):
         authenticity_grade=0,
         image_src=claim_info['image_src']
     )
-    father_claim = get_similarity(claim)
+    father_claim = get_most_similar_claim(claim)
     if not father_claim:
         claim.save()
     save_log_message(request.user.id, request.user.username,
@@ -540,13 +540,21 @@ def return_get_request_to_user(user):
     return request
 
 
-def get_similarity(claim):
+def get_most_similar_claim(claim):
     claim_scores = {}
     for c in Claim.objects.exclude(id=claim.id):
         score = SequenceMatcher(None, claim.claim, c.claim).ratio()
-        if score > 0.6:
+        #score = get_jaccard_sim(claim.claim,c.claim)
+        if score > 0.65:
             claim_scores[c.id] = score
     if claim_scores:
         return max(claim_scores, key=claim_scores.get)
     else:
         return None
+
+
+def get_jaccard_sim(str1, str2):
+    a = set(str1.split())
+    b = set(str2.split())
+    c = a.intersection(b)
+    return float(len(c)) / (len(a) + len(b) - len(c))
