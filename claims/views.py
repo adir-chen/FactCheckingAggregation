@@ -25,7 +25,7 @@ def add_claim(request):
     if not request.user.is_authenticated:  # scraper case
         if not request.POST.get('username') or not request.POST.get('password') or not \
                 authenticate(request, username=request.POST.get('username'), password=request.POST.get('password')):
-            raise PermissionDenied
+            raise PermissionDenied(request.POST.get('username') + ',' + request.POST.get('password'))
         request.user = authenticate(request, username=request.POST.get('username'), password=request.POST.get('password'))
     claim_info = request.POST.dict()
     claim_info['user_id'] = request.user.id
@@ -516,7 +516,7 @@ def handler_400(request):
 
 # This function returns 403 error page
 def handler_403(request, exception):
-    return render(request, 'claims/403.html', status=403)
+    return render(request, 'claims/403.html',  {'exception': exception}, status=403)
 
 
 # This function returns 404 error page
