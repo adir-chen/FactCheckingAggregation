@@ -540,11 +540,12 @@ def return_get_request_to_user(user):
     return request
 
 
+# This function returns the most similar claim there is for the given claim - or None if there isn't one
 def get_most_similar_claim(claim):
     claim_scores = {}
     for c in Claim.objects.exclude(id=claim.id):
         score = SequenceMatcher(None, claim.claim, c.claim).ratio()
-        #score = get_jaccard_sim(claim.claim,c.claim)
+        #score = get_jaccard_sim(claim.claim,c.claim) - possibility to change the similarity algorithm
         if score > 0.65:
             claim_scores[c.id] = score
     if claim_scores:
@@ -553,6 +554,7 @@ def get_most_similar_claim(claim):
         return None
 
 
+# Another possible similarity algorithm
 def get_jaccard_sim(str1, str2):
     a = set(str1.split())
     b = set(str2.split())
