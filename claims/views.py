@@ -52,11 +52,11 @@ def add_claim(request):
     if claim_info['add_comment'] == 'true':
         response = add_comment(request)
         if response.status_code == 404:  # error case
+            claim_id = str(claim.id)
             claim.delete()
             err_msg = response.content.decode('utf-8')
             save_log_message(request.user.id, request.user.username,
-                             'Adding a new comment on claim with id ' + str(
-                                 claim.id) + '. Error: ' + err_msg +
+                             'Adding a new comment on claim with id ' + claim_id + '. Error: ' + err_msg +
                              '. This claim has been deleted because ' +
                              'the user does not succeed to add a new claim with a comment on it.')
             return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
@@ -92,7 +92,7 @@ def check_if_claim_is_valid(claim_info):
     elif not check_if_user_exists_by_user_id(claim_info['user_id']):
         err += 'User ' + str(claim_info['user_id']) + ' does not exist'
     elif len(Claim.objects.filter(claim=claim_info['claim'], user_id=claim_info['user_id'])) > 0:
-        err += 'Claim ' + claim_info['claim'] + ' already exists'
+        err += 'Claim already exists'
     elif not is_english_input(claim_info['claim']) or \
             not is_english_input(claim_info['category']) or \
             not is_english_input(claim_info['tags']):
