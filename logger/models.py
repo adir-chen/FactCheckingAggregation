@@ -11,4 +11,4 @@ class Logger(models.Model):
     result = models.BooleanField(default=False)  # True for success and False for failure
 
     def __str__(self):
-        return self.username
+        return self.username + ' - ' + str(self.result)

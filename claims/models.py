@@ -14,7 +14,7 @@ class Claim(models.Model):
     timestamp = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return self.claim + ' - ' + self.category
+        return self.user.username + ' - ' + self.claim
 
     def users_commented_ids(self):
         from comments.models import Comment
