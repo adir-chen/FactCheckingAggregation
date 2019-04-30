@@ -160,9 +160,10 @@ def is_english_input(user_input):
 def post_above_limit(user_id):
     limit = 10
     from datetime import datetime
-    return len(Logger.objects.filter(date__date=datetime.today(),
-                                     user_id=user_id,
-                                     action__icontains='Adding a new claim')) >= limit
+    return not check_if_user_is_scraper(user_id) and \
+        len(Logger.objects.filter(date__date=datetime.today(),
+                                  user_id=user_id,
+                                  action__icontains='Adding a new claim')) >= limit
 
 
 # This function edits a claim in the website
