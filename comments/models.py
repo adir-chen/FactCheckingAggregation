@@ -76,10 +76,9 @@ class Comment(models.Model):
         import requests
         import json
         from bs4 import BeautifulSoup
-
-        response = requests.get(self.url)
-        metas = BeautifulSoup(response.text, features="html.parser").find_all('meta')
         try:
+            response = requests.get(self.url)
+            metas = BeautifulSoup(response.text, features="html.parser").find_all('meta')
             result = {'title': [meta.attrs['content'] for meta in metas if
                                 'property' in meta.attrs and meta.attrs['property'] == 'og:title'],
                       'description': [meta.attrs['content'] for meta in metas if
