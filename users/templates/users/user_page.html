@@ -48,7 +48,7 @@
             <div class="pagination">
                 <span class="step-links">
                     {% if user_claims.has_previous %}
-                        <a href="?page1=1" class="btn btn-info">&laquo; first</a>
+                        <a href="?page1=1" class="btn btn-info">&laquo; First</a>
                         <a href="?page1={{ user_claims.previous_page_number }}" class="btn btn-info">previous</a>
                     {% endif %}
 
@@ -57,8 +57,8 @@
                     </span>
 
                     {% if user_claims.has_next %}
-                        <a href="?page1={{ user_claims.next_page_number }}" class="btn btn-info">next</a>
-                        <a href="?page1={{ user_claims.paginator.num_pages }}" class="btn btn-info">last &raquo;</a>
+                        <a href="?page1={{ user_claims.next_page_number }}" class="btn btn-info">Next</a>
+                        <a href="?page1={{ user_claims.paginator.num_pages }}" class="btn btn-info">Last &raquo;</a>
                     {% endif %}
                 </span>
             </div>
@@ -79,7 +79,7 @@
             <span class="step-links">
                 {% if user_comments.has_previous %}
                     <a href="?page2=1" class="btn btn-info">&laquo; first</a>
-                    <a href="?page2={{ user_comments.previous_page_number }}" class="btn btn-info">previous</a>
+                    <a href="?page2={{ user_comments.previous_page_number }}" class="btn btn-info">Previous</a>
                 {% endif %}
 
                 <span class="current" style="padding: 10px 20px;">
@@ -87,8 +87,8 @@
                 </span>
 
                 {% if user_comments.has_next %}
-                    <a href="?page2={{ user_comments.next_page_number }}" class="btn btn-info">next</a>
-                    <a href="?page2={{ user_comments.paginator.num_pages }}" class="btn btn-info">last &raquo;</a>
+                    <a href="?page2={{ user_comments.next_page_number }}" class="btn btn-info">Next</a>
+                    <a href="?page2={{ user_comments.paginator.num_pages }}" class="btn btn-info">Last &raquo;</a>
                 {% endif %}
             </span>
         </div>

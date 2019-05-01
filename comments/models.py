@@ -78,13 +78,17 @@ class Comment(models.Model):
         from bs4 import BeautifulSoup
         try:
             response = requests.get(self.url)
-            metas = BeautifulSoup(response.text, features="html.parser").find_all('meta')
-            result = {'title': [meta.attrs['content'] for meta in metas if
-                                'property' in meta.attrs and meta.attrs['property'] == 'og:title'],
-                      'description': [meta.attrs['content'] for meta in metas if
-                                      'property' in meta.attrs and meta.attrs['property'] == 'og:description'],
-                      'src': [meta.attrs['content'] for meta in metas if
-                              'property' in meta.attrs and meta.attrs['property'] == 'og:image']}
+            metas = BeautifulSoup(response.text, features="html.parser")
+            title = metas.find("meta", property="og:title")
+            if title:
+                title = title['content']
+            description = metas.find("meta", property="og:description")
+            if description:
+                description = description['content']
+            src = metas.find("meta", property="og:image")
+            if src:
+                src = src['content']
+            result = {'title': title, 'description': description, 'src': src}
             return json.dumps(result)
         except:
             return False

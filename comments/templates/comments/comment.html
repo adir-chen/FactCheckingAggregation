@@ -417,8 +417,7 @@
         }
     }
     $(document).ready(function() {
-        let comment_preview_{{ comment.id }} = '{{ comment.get_preview|safe }}';
-        console.log(comment_preview_{{ comment.id }});
+        let comment_preview_{{ comment.id }} = unescape('{{ comment.get_preview | safe | escapejs}}');
         if (comment_preview_{{ comment.id }} !== 'False') {
             comment_preview_{{ comment.id }} = JSON.parse(comment_preview_{{ comment.id }});
         }
