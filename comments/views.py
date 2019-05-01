@@ -534,21 +534,3 @@ def update_authenticity_grade(claim_id):
         weighted_sum_false_label /= num_of_false_labels
     authenticity_grade = max(0, (weighted_sum_true_label - weighted_sum_false_label) * 100)
     Claim.objects.filter(id=claim_id).update(authenticity_grade=authenticity_grade)
-
-
-# def get_preview(url_link):
-#     import requests
-#     from bs4 import BeautifulSoup
-#
-#     response = requests.get(url_link)
-#     metas = BeautifulSoup(response.text, features="html.parser").find_all('meta')
-#     class Object:
-#         pass
-#     result = Object()
-#     result.title = [meta.attrs['content'] for meta in metas if
-#                     'property' in meta.attrs and meta.attrs['property'] == 'og:title']
-#     result.description = [meta.attrs['content'] for meta in metas if
-#                           'property' in meta.attrs and meta.attrs['property'] == 'og:description']
-#     result.src = [meta.attrs['content'] for meta in metas if
-#                   'property' in meta.attrs and meta.attrs['property'] == 'og:image']
-#     return result

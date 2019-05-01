@@ -396,13 +396,13 @@
                     "\" frameborder=\"0\" allow=\"accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>\n"
             $("#comment_{{ comment.id }}_reference_preview").attr("hidden", false);
         }
-        else if (result != 'error') {
+        else if (result !== 'False') {
             try {
                 if (result.title != "" && result.description != "" && result.src != "") {
                     $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
                     document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML = "<div class=\"comment_refrence_preview\">\n" +
                         "                        <div class=\"preview_img\">\n" +
-                        "                            <a target=\"_blank\" href={{ comment.url }}><img src=\"" + result.image + "\"></a>\n" +
+                        "                            <a target=\"_blank\" href={{ comment.url }}><img src=\"" + result.src + "\"></a>\n" +
                         "                        </div>\n" +
                         "                        <div class=\"preview_details\">\n" +
                         "                            <a target=\"_blank\" href=\"{{ comment.url }}\"><h5>" + result.title+ "</h5></a>\n" +
@@ -416,15 +416,9 @@
             }
         }
     }
-
-    $.ajax({
-        url: "https://api.linkpreview.net?key=5ca51d3319aea9e4745a6b2bdebae79fa8fbe2c83b7ca&q={{ comment.url }}",
-        success: function(result){
-            linkPreview_{{ comment.id }}(result)
-        },
-        error: function(e){
-            hide_all_msgs();
-            linkPreview_{{ comment.id }}('error')
-        }
-    });
+    let comment_preview_{{ comment.id }} = '{{ comment.get_preview|safe }}';
+    if (comment_preview_{{ comment.id }} !== 'False'){
+        comment_preview_{{ comment.id }} = JSON.parse('{{ comment.get_preview|safe }}');
+    }
+    linkPreview_{{ comment.id }}(comment_preview_{{ comment.id }});
 </script>
