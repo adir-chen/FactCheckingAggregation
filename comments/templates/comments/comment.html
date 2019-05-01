@@ -39,6 +39,7 @@
             <p id="success_msg_{{ comment.id }}_comment_vote" class="action_msg note_msg" hidden>Your vote has been accepted successfully</p>
             <p id="error_msg_{{ comment.id }}_comment_vote" class="action_msg error_msg" hidden></p>
             <div class="comment_voting_area">
+                <span style="font-size: 12px; color: #C0C0C0;">Agree</span>
                 {% if request.user.is_authenticated %}
                     <button id="{{ comment.id }}_arrow_up" class="arrow_up">▲</button>
                 {% else %}
@@ -52,6 +53,7 @@
                 {% else %}
                     <button id="{{ comment.id }}_arrow_down" class="arrow_down" disabled="disabled" title="Sign in and vote" style="color: #dddddd;">▼</button>
                 {% endif %}
+                <span style="font-size: 12px; color: #C0C0C0;">Disagree</span>
             </div>
         </div>
         <div id="comment_content_{{ comment.id }}_edit" hidden="hidden" class="comment_content_edit">

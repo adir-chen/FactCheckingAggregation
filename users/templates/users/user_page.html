@@ -31,7 +31,7 @@
         {% if request.user.is_superuser or request.user.is_authenticated and user.id == request.user.id %}
             <br>
             <button id="change_profile_image" type="submit" class="btn btn-info">Change profile image</button>
-            <input id="profile_image_input" value="{{ user_img }}" type="text" placeholder="{{ user_img }}" style="width: 80%;" hidden="hidden">
+            <input id="profile_image_input" value="{{ user_img }}" type="text" placeholder="" style="width: 80%;" hidden="hidden">
             <button id="save_profile_image" type="submit" class="btn btn-info" hidden="hidden">Save</button>
             <p id="error_msg_change_profile_image" style="color: red; font-size: 12px;" hidden></p>
             <p id="success_msg_change_profile_image" style="color: dodgerblue; font-size: 12px;" hidden>Profile image updated succesfully.</p>
@@ -370,4 +370,16 @@
 
 {% block claim_head_title %}
     FactCheckProject | {{ user.username }}
+{% endblock %}
+
+{% block meta_title %}
+    {{ user.username }}'s profile
+{% endblock %}
+
+{% block meta_description %}
+    Determine whether a claim is True or False
+{% endblock %}
+
+{% block meta_src %}
+    {{ user_img }}
 {% endblock %}

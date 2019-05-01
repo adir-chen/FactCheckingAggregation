@@ -51,6 +51,17 @@ class Claim(models.Model):
                 max_comment_id = comment.id
         return max_comment_id
 
+    def get_claim_user_img(self):
+        from users.models import Users_Images
+        user_img = Users_Images.objects.filter(user_id=self.user_id)
+        if len(user_img) == 0:
+            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=self.user_id).first())
+            new_user_img.save()
+            user_img = new_user_img.user_img
+        else:
+            user_img = user_img.first().user_img
+        return user_img
+
 
 class Claims_Reports(models.Model):
     claim = models.ForeignKey(Claim, on_delete=models.CASCADE)

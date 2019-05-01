@@ -22,6 +22,11 @@
                         <h5>Category: {{ claim.category }}</h5>
                     </div>
             </div>
+
+            Published by:<br>
+            <img src="{{ claim.get_claim_user_img }}" style="max-width: 90px; max-height: 50px;">
+            <a href="/users/{{ claim.user.id }}" target="_blank">{{ claim.user.username }}</a>
+
             <p id="success_msg_{{ claim.id }}_claim_edit" class="action_msg note_msg" hidden>Claim was edited successfully</p>
             <p id="error_msg_{{ claim.id }}_claim_edit" class="action_msg error_msg" hidden></p>
             <p id="success_msg_{{ claim.id }}_claim_report_spam" class="action_msg note_msg" hidden>Claim was reported as spam successfully</p>
@@ -358,4 +363,16 @@
 
 {% block claim_head_title %}
     FactCheckProject | {{ claim.id }}
+{% endblock %}
+
+{% block meta_title %}
+    {{ claim.claim }}
+{% endblock %}
+
+{% block meta_description %}
+    {{ claim.category }}
+{% endblock %}
+
+{% block meta_src %}
+    {{ claim.image_src }}
 {% endblock %}

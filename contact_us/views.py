@@ -32,13 +32,10 @@ def send_email(request):
         save_log_message(request.user.id, request.user.username,
                          'Sending an email from ip - ' + ip + '. Error: ' + err_msg)
         return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
-    try:
-        send_mail(mail_info['user_email'] + ': ' + mail_info['subject'],
-                  mail_info['description'],
-                  'wtfacteam@gmail.com',
-                  ['wtfacteam@gmail.com'])
-    except Exception as e:
-        return HttpResponse(json.dumps(str(e)), content_type='application/json', status=404)
+    send_mail(mail_info['user_email'] + ': ' + mail_info['subject'],
+              mail_info['description'],
+              'wtfacteam@gmail.com',
+              ['wtfacteam@gmail.com'])
     save_log_message(request.user.id, request.user.username, 'Sending an email from ip - ' + ip)
     return contact_us_page(return_get_request_to_user(request.user))
 
