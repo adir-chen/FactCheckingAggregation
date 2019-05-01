@@ -416,9 +416,12 @@
             }
         }
     }
-    let comment_preview_{{ comment.id }} = '{{ comment.get_preview|safe }}';
-    if (comment_preview_{{ comment.id }} !== 'False'){
-        comment_preview_{{ comment.id }} = JSON.parse('{{ comment.get_preview|safe }}');
-    }
-    linkPreview_{{ comment.id }}(comment_preview_{{ comment.id }});
+    $(document).ready(function() {
+        let comment_preview_{{ comment.id }} = '{{ comment.get_preview|safe }}';
+        console.log(comment_preview_{{ comment.id }});
+        if (comment_preview_{{ comment.id }} !== 'False') {
+            comment_preview_{{ comment.id }} = JSON.parse(comment_preview_{{ comment.id }});
+        }
+        linkPreview_{{ comment.id }}(comment_preview_{{ comment.id }});
+    });
 </script>
