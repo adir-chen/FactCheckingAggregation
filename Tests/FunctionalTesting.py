@@ -687,7 +687,7 @@ class UITests(StaticLiveServerTestCase):
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
         vote_count = int(browser.find_element_by_class_name('vote_count').text)
         browser.find_element_by_class_name('arrow_up').click()
-        time.sleep(2)  # wait 2 second for vote_count to update
+        time.sleep(3)  # wait 3 second for vote_count to update
         self.assertEqual(
             int(browser.find_element_by_class_name('vote_count').text),
             vote_count + 1
@@ -698,9 +698,9 @@ class UITests(StaticLiveServerTestCase):
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
         vote_count = int(browser.find_element_by_class_name('vote_count').text)
         browser.find_element_by_class_name('arrow_up').click()
-        time.sleep(2)  # wait 2 second for vote_count to update
+        time.sleep(3)  # wait 3 second for vote_count to update
         browser.find_element_by_class_name('arrow_up').click()
-        time.sleep(2)  # wait 2 second for vote_count to update
+        time.sleep(3)  # wait 3 second for vote_count to update
         self.assertEqual(
             int(browser.find_element_by_class_name('vote_count').text),
             vote_count
@@ -711,7 +711,7 @@ class UITests(StaticLiveServerTestCase):
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
         vote_count = int(browser.find_element_by_class_name('vote_count').text)
         browser.find_element_by_class_name('arrow_down').click()
-        time.sleep(2)  # wait 2 second for vote_count to update
+        time.sleep(3)  # wait 3 second for vote_count to update
         self.assertEqual(
             int(browser.find_element_by_class_name('vote_count').text),
             vote_count - 1
@@ -722,9 +722,9 @@ class UITests(StaticLiveServerTestCase):
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
         vote_count = int(browser.find_element_by_class_name('vote_count').text)
         browser.find_element_by_class_name('arrow_down').click()
-        time.sleep(2)  # wait 2 second for vote_count to update
+        time.sleep(3)  # wait 3 second for vote_count to update
         browser.find_element_by_class_name('arrow_down').click()
-        time.sleep(2)  # wait 2 second for vote_count to update
+        time.sleep(3)  # wait 3 second for vote_count to update
         self.assertEqual(
             int(browser.find_element_by_class_name('vote_count').text),
             vote_count
@@ -735,9 +735,9 @@ class UITests(StaticLiveServerTestCase):
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
         vote_count = int(browser.find_element_by_class_name('vote_count').text)
         browser.find_element_by_class_name('arrow_up').click()
-        time.sleep(2)  # wait 2 second for vote_count to update
+        time.sleep(3)  # wait 3 second for vote_count to update
         browser.find_element_by_class_name('arrow_down').click()
-        time.sleep(2)  # wait 2 second for vote_count to update
+        time.sleep(3)  # wait 3 second for vote_count to update
         self.assertEqual(
             int(browser.find_element_by_class_name('vote_count').text),
             vote_count - 1
@@ -748,9 +748,9 @@ class UITests(StaticLiveServerTestCase):
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
         vote_count = int(browser.find_element_by_class_name('vote_count').text)
         browser.find_element_by_class_name('arrow_down').click()
-        time.sleep(2)  # wait 2 second for vote_count to update
+        time.sleep(3)  # wait 3 second for vote_count to update
         browser.find_element_by_class_name('arrow_up').click()
-        time.sleep(2)  # wait 2 second for vote_count to update
+        time.sleep(3)  # wait 3 second for vote_count to update
         self.assertEqual(
             int(browser.find_element_by_class_name('vote_count').text),
             vote_count + 1
