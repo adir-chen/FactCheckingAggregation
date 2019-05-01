@@ -7,8 +7,6 @@ from comments.models import Comment
 import random
 from claims.views import add_claim, edit_claim, delete_claim
 from comments.views import export_to_csv, up_vote, down_vote, add_comment, edit_comment, delete_comment
-from contact_us.views import send_email
-from users.views import add_new_scraper
 
 
 class SystemTesting(TestCase):
@@ -32,11 +30,12 @@ class SystemTesting(TestCase):
         self.claim_1.save()
         self.claim_2.save()
         self.num_of_saved_claims = 2
+        self.url = 'https://www.snopes.com/fact-check/page/'
         self.comment_1 = Comment(claim_id=self.claim_1.id,
                                  user_id=self.claim_1.user_id,
                                  title='title1',
                                  description='description1',
-                                 url='http://url1/',
+                                 url=self.url + str(random.randint(1, 10)),
                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
                                  label='True')
         self.comment_1.save()
@@ -45,24 +44,27 @@ class SystemTesting(TestCase):
         self.new_claim_with_comment_details = {'claim': 'claim3',
                                                'title': 'title3',
                                                'description': 'description3',
-                                               'url': 'http://url3/',
+                                               'url': self.url + str(random.randint(1, 10)),
                                                'add_comment': 'true',
                                                'verdict_date': datetime.datetime.strptime(str(datetime.date.today() - datetime.timedelta(days=random.randint(0, 10))), '%Y-%m-%d').strftime('%d/%m/%Y'),
                                                'tags': 'tag4,tag5',
                                                'category': 'category3',
                                                'label': 'False',
-                                               'image_src': 'image3'}
+                                               'image_src': 'image3',
+                                               'validate_g_recaptcha': True}
 
         self.new_claim_details = {'claim': 'claim4',
                                   'add_comment': 'false',
                                   'category': 'category4',
-                                  'image_src': 'image4'}
+                                  'image_src': 'image4',
+                                  'validate_g_recaptcha': True}
 
         self.new_comment_details = {'title': 'commentTitle',
                                     'description': 'commentDescription',
-                                    'url': 'http://commentUrl/',
+                                    'url': self.url + str(random.randint(1, 10)),
                                     'verdict_date': datetime.datetime.strptime(str(datetime.date.today() - datetime.timedelta(days=random.randint(0, 10))), '%Y-%m-%d').strftime('%d/%m/%Y'),
-                                    'label': 'True'}
+                                    'label': 'True',
+                                    'validate_g_recaptcha': True}
 
         self.update_claim_details = {'claim': 'claim3',
                                      'category': 'newCategory3',
@@ -71,7 +73,7 @@ class SystemTesting(TestCase):
 
         self.update_comment_details = {'comment_title': 'newCommentTitle',
                                        'comment_description': 'commentDescription',
-                                       'comment_reference': 'http://newCommentUrl/',
+                                       'comment_reference': self.url + str(random.randint(1, 10)),
                                        'comment_tags': 'newCommentTag1,newCommentTag2',
                                        'comment_verdict_date': self.new_comment_details['verdict_date'],
                                        'comment_label': 'False'}
@@ -130,28 +132,32 @@ class SystemTesting(TestCase):
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.update_claim_details)
         self.post_request.POST = query_dict
-        self.assertRaises(Exception, edit_claim, self.post_request)
+        response = edit_claim(self.post_request)
+        self.assertTrue(response.status_code == 404)
 
         self.update_claim_details = self.update_claim_details_copy.copy()
         del self.update_claim_details['claim']
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.update_claim_details)
         self.post_request.POST = query_dict
-        self.assertRaises(Exception, edit_claim, self.post_request)
+        response = edit_claim(self.post_request)
+        self.assertTrue(response.status_code == 404)
 
         self.update_claim_details = self.update_claim_details_copy.copy()
         del self.update_claim_details['category']
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.update_claim_details)
         self.post_request.POST = query_dict
-        self.assertRaises(Exception, edit_claim, self.post_request)
+        response = edit_claim(self.post_request)
+        self.assertTrue(response.status_code == 404)
 
         self.update_claim_details = self.update_claim_details_copy.copy()
         del self.update_claim_details['image_src']
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.update_claim_details)
         self.post_request.POST = query_dict
-        self.assertRaises(Exception, edit_claim, self.post_request)
+        response = edit_claim(self.post_request)
+        self.assertTrue(response.status_code == 200)
 
         self.update_claim_details = self.update_claim_details_copy.copy()
         del self.update_claim_details['tags']
@@ -160,13 +166,16 @@ class SystemTesting(TestCase):
         self.post_request.POST = query_dict
         self.assertTrue(edit_claim(self.post_request).status_code == 200)
 
-        import time
-        time.sleep(60 * 5)  # sleep for 5 minutes
+        # import time
+        # time.sleep(60 * 11)  # sleep for 11 minutes
+        Claim.objects.filter(id=self.num_of_saved_claims).update(timestamp=datetime.datetime.now() -
+                                                                 datetime.timedelta(minutes=11))
         self.update_claim_details = self.update_claim_details_copy.copy()
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.update_claim_details)
         self.post_request.POST = query_dict
-        self.assertRaises(Exception, edit_claim, self.post_request)
+        response = edit_claim(self.post_request)
+        self.assertTrue(response.status_code == 404)
 
         len_claims = len(Claim.objects.all())
         len_comments = len(Comment.objects.all())
@@ -222,28 +231,32 @@ class SystemTesting(TestCase):
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.update_comment_details)
         self.post_request.POST = query_dict
-        self.assertRaises(Exception, edit_comment, self.post_request)
+        response = edit_comment(self.post_request)
+        self.assertTrue(response.status_code == 404)
 
         self.update_comment_details = self.update_comment_details_copy.copy()
         del self.update_comment_details['comment_title']
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.update_comment_details)
         self.post_request.POST = query_dict
-        self.assertRaises(Exception, edit_comment, self.post_request)
+        response = edit_comment(self.post_request)
+        self.assertTrue(response.status_code == 404)
 
         self.update_comment_details = self.update_comment_details_copy.copy()
         del self.update_comment_details['comment_description']
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.update_comment_details)
         self.post_request.POST = query_dict
-        self.assertRaises(Exception, edit_comment, self.post_request)
+        response = edit_comment(self.post_request)
+        self.assertTrue(response.status_code == 404)
 
         self.update_comment_details = self.update_comment_details_copy.copy()
         del self.update_comment_details['comment_reference']
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.update_comment_details)
         self.post_request.POST = query_dict
-        self.assertRaises(Exception, edit_comment, self.post_request)
+        response = edit_comment(self.post_request)
+        self.assertTrue(response.status_code == 404)
 
         self.update_comment_details = self.update_comment_details_copy.copy()
         del self.update_comment_details['comment_tags']
@@ -257,21 +270,30 @@ class SystemTesting(TestCase):
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.update_comment_details)
         self.post_request.POST = query_dict
-        self.assertRaises(Exception, edit_comment, self.post_request)
+        response = edit_comment(self.post_request)
+        self.assertTrue(response.status_code == 404)
 
         self.update_comment_details = self.update_comment_details_copy.copy()
         del self.update_comment_details['comment_label']
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.update_comment_details)
         self.post_request.POST = query_dict
-        self.assertRaises(Exception, edit_comment, self.post_request)
+        response = edit_comment(self.post_request)
+        self.assertTrue(response.status_code == 404)
 
-        time.sleep(60 * 5)  # sleep for 5 minutes
+        # time.sleep(60 * 11)  # sleep for 11 minutes
+        Comment.objects.filter(id=self.num_of_saved_comments).update(timestamp=datetime.datetime.now() -
+                                                                     datetime.timedelta(minutes=11))
+        Comment.objects.filter(id=self.num_of_saved_comments - 1).update(timestamp=datetime.datetime.now() -
+                                                                         datetime.timedelta(minutes=11))
+        Comment.objects.filter(id=self.comment_1.id).update(timestamp=datetime.datetime.now() -
+                                                            datetime.timedelta(minutes=11))
         self.update_comment_details = self.update_comment_details_copy.copy()
         query_dict = QueryDict('', mutable=True)
         query_dict.update(self.update_comment_details)
         self.post_request.POST = query_dict
-        self.assertRaises(Exception, edit_comment, self.post_request)
+        response = edit_comment(self.post_request)
+        self.assertTrue(response.status_code == 404)
 
         len_comments = len(Comment.objects.all())
         self.post_request.POST = {'comment_id': self.num_of_saved_comments}
