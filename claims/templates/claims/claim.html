@@ -365,14 +365,14 @@
     FactCheckProject | {{ claim.id }}
 {% endblock %}
 
-{#{% block meta_title %}#}
-{#    {{ claim.claim }}#}
-{#{% endblock %}#}
-{##}
-{#{% block meta_description %}#}
-{#    {{ claim.category }}#}
-{#{% endblock %}#}
-{##}
-{#{% block meta_src %}#}
-{#    {{ claim.image_src }}#}
-{#{% endblock %}#}
+{% block meta_title %}
+    {{ claim.claim }}
+{% endblock %}
+
+{% block meta_description %}
+    {{ claim.category }}
+{% endblock %}
+
+{% block meta_src %}
+    {{ claim.image_src }}
+{% endblock %}

@@ -371,14 +371,14 @@
     FactCheckProject | {{ user.username }}
 {% endblock %}
 
-{#{% block meta_title %}#}
-{#    {{ user.username }}'s profile#}
-{#{% endblock %}#}
-{##}
-{#{% block meta_description %}#}
-{#    Determine whether a claim is True or False#}
-{#{% endblock %}#}
-{##}
-{#{% block meta_src %}#}
-{#    {{ user_img }}#}
-{#{% endblock %}#}
+{% block meta_title %}
+    {{ user.username }}'s profile
+{% endblock %}
+
+{% block meta_description %}
+    Determine whether a claim is True or False
+{% endblock %}
+
+{% block meta_src %}
+    {{ user_img }}
+{% endblock %}

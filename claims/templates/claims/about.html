@@ -37,15 +37,15 @@
     FactCheckProject | About
 {% endblock %}
 
-{#{% block meta_title %}#}
-{#    WhatTheFact | About us#}
-{#{% endblock %}#}
-{##}
-{#{% block meta_description %}#}
-{#    Determine whether a claim is True or False#}
-{#{% endblock %}#}
-{##}
-{#{% block meta_src %}#}
-{#    {% load static %}#}
-{#    {% static 'claims/assets/images/site_logo.png' %}#}
-{#{% endblock %}#}
+{% block meta_title %}
+    WhatTheFact | About us
+{% endblock %}
+
+{% block meta_description %}
+    Determine whether a claim is True or False
+{% endblock %}
+
+{% block meta_src %}
+    {% load static %}
+    {% static 'claims/assets/images/site_logo.png' %}
+{% endblock %}
