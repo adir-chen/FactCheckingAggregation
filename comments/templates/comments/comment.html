@@ -417,9 +417,6 @@
         }
     }
 
-</script>
-
-<script type="text/javascript">
     $(document).ready(function() {
         let comment_preview_{{ comment.id }} = '{{ comment.get_preview | escapejs}}';
         if (comment_preview_{{ comment.id }} !== 'False') {
@@ -427,4 +424,5 @@
         }
         linkPreview_{{ comment.id }}(comment_preview_{{ comment.id }});
     });
+
 </script>
