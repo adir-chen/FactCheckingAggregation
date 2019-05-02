@@ -91,7 +91,6 @@ class Comment(models.Model):
             result = {'title': title, 'description': description, 'src': src}
             return json.dumps(result, ensure_ascii=False)
         except:
-            print('Error')
             return False
 
 
