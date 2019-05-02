@@ -89,7 +89,7 @@ class Comment(models.Model):
             if src:
                 src = src['content']
             result = {'title': title, 'description': description, 'src': src}
-            return json.dumps(result)
+            return json.dumps(result, encoding='utf-8', ensure_ascii=False)
         except:
             return False
 
