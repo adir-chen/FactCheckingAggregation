@@ -419,10 +419,6 @@
 
     $(document).ready(function() {
         let comment_preview_{{ comment.id }} = '{{ comment.get_preview | escapejs}}';
-        if (comment_preview_{{ comment.id }} !== 'False') {
-            comment_preview_{{ comment.id }} = JSON.parse(comment_preview_{{ comment.id }});
-        }
-        linkPreview_{{ comment.id }}(comment_preview_{{ comment.id }});
     });
 
 </script>
