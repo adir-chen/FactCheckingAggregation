@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib import auth
 
 
+# This function returns the user image
 def get_user_image(self):
     user_img = Users_Images.objects.filter(user=self)
     if len(user_img) == 0:
