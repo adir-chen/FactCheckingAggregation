@@ -90,12 +90,12 @@
                 <div class="comment_header">
                     <div class="comment_user_image">
                         {% load static %}
-                        <img src="{{ user_img.image_url }}">
+                        <img src="{{ request.user.get_user_image.image_url }}">
                     </div>
                     <div class="comment_user_details">
                         User: <a href="/users/{{ request.user.username }}">{{ request.user.username }}</a><br>
                         {% load static %}
-                        {% for i in 'i'|rjust:user_rep %}
+                        {% for i in 'i'|rjust:request.user.get_user_rep.get_reputation %}
                             <img src="{% static 'claims/assets/images/star.png' %}">
                         {% endfor %}
                         <br>
@@ -137,19 +137,6 @@
             if (!(image_{{ claim_id }}.complete && image_{{ claim_id }}.naturalHeight !== 0)) {
                 $("#img_src_{{ claim.id }}").attr("src", "/static/claims/assets/images/claim_default_image.jpg");
             }
-
-            let publisher_img = document.getElementById("publisher_img");
-            if (!(publisher_img.complete && publisher_img.naturalHeight !== 0)) {
-                $("#publisher_img").attr("src", "images/profile_default_image.jpg");
-            }
-
-            let users_images = document.getElementsByClassName('comment_user_image');
-            for(let i = 0; i < users_images.length; i++) {
-                let user_img = users_images[i].getElementsByTagName('img')[0];
-                if (!(user_img.complete && user_img.naturalHeight !== 0)) {
-                    user_img.setAttribute('src', "images/profile_default_image.jpg");
-                }
-             }
         };
         let claim_timestamp = new Date('{{ claim.timestamp|date:"D, d M Y H:i:s" }}');
         {% if request.user.is_superuser %}

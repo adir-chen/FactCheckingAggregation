@@ -5,34 +5,27 @@
         <h1>{{ user.username }}'s profile</h1>
         <div class="comment_box" style="display: grid; padding: 20px; margin-top: 30px; grid-template-columns: 150px auto; grid-template-areas: 'user-profile-image user-profile-details';">
             <div style="grid-area: user-profile-image; position: relative;">
-                {% if logged_in %}
-                    <span style="height: 20px; width: 20px; background-color: #00d700; border-radius: 50%; display: inline-block; position: absolute; bottom: 0; right: 0;"></span>
-                {% else %}
-                    {% if not user.id in scrapers_ids %}
-                    <span style="height: 20px; width: 20px; background-color: #bbb; border-radius: 50%; display: inline-block; position: absolute; bottom: 0; right: 0;"></span>
-                    {% endif %}
-                {% endif %}
-                <img id="user_profile_image" src="{{ user_img.image_url }}" style="max-width: 100%; padding: 5px;">
+                <img id="user_profile_image" src="{{ user.get_user_image.image_url }}" style="max-width: 100%; padding: 5px;">
             </div>
             <div style="grid-area: user-profile-details; padding: 10px 20px 10px 50px;">
                 <h5>{{ user.username }}</h5>
                 {% load static %}
-                {% for i in 'i'|rjust:user_rep %}
+                {% for i in 'i'|rjust:user.get_user_rep.get_reputation %}
                     <img src="{% static 'claims/assets/images/star.png' %}" style="width: 20px; height: 20px;">
                 {% endfor %}
                 <br><br>
-                {% if user.id in scrapers_ids %}
-                    <br>Website: <a href="{{ scraper_url }}" target="_blank">{{ scraper_url }}</a>
-                {% else %}
-                    Last Login: {{ user.last_login|date:"d/m/Y H:i" }}
-                {% endif %}
+                {% with scraper=user.get_scraper %}
+                    {% if scraper %}
+                        <br>Website: <a href="{{scraper.scraper_url }}" target="_blank">{{ scraper.scraper_url }}</a>
+                    {% else %}
+                        Last Login: {{ user.last_login|date:"d/m/Y H:i" }}
+                    {% endif %}
+                {% endwith %}
             </div>
         </div>
         {% if request.user.is_superuser or request.user.is_authenticated and user.id == request.user.id %}
             <br>
             <button id="change_profile_image" type="submit" class="btn btn-info">Change profile image</button>
-            <input id="profile_image_input" value="{{ user_img }}" type="text" placeholder="" style="width: 80%;" hidden="hidden">
-            <button id="save_profile_image" type="submit" class="btn btn-info" hidden="hidden">Save</button>
             <p id="error_msg_change_profile_image" style="color: red; font-size: 12px;" hidden></p>
             <p id="success_msg_change_profile_image" style="color: dodgerblue; font-size: 12px;" hidden>Profile image updated succesfully.</p>
 
@@ -48,8 +41,8 @@
         {% csrf_token %}
         <div class="headlines">
             <div id="claim_large_columns" style="width: 100%; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
-                {% for claim, img in user_claims.object_list|slice:"0:4" %}
-                    {% include 'claims/claimbox_large.html' with claim=claim img=img %}
+                {% for claim in user_claims|slice:"0:4" %}
+                    {% include 'claims/claimbox_large.html' with claim=claim %}
                 {% endfor %}
             </div>
             <div class="pagination">
@@ -74,9 +67,9 @@
         <h4>{{ user.username }}'s comments:</h4>
         <div class="headlines">
             <div id="comments" style="width: 100%; padding: 20px; border-radius: 10px; background: #aabfd6; margin: 0 auto;">
-                {% for comment, user  in user_comments.object_list|slice:"0:3" %}
+                {% for comment  in user_comments|slice:"0:3" %}
                     Commented at {{ comment.timestamp }} on: <a href="/claim/{{ comment.claim_id }}">{{ comment.claim.claim }}</a>
-                    {% include 'comments/comment.html' with comment=comment user_details=user show_replies=False request=request only %}
+                    {% include 'comments/comment.html' with comment=comment show_replies=False request=request only %}
                     <br>
                 {% endfor %}
             </div>
@@ -99,54 +92,55 @@
                 {% endif %}
             </span>
         </div>
-
-        {% if user.id in scrapers_ids and request.user.is_superuser %}
-            <div class="comment_box" style="padding: 30px;">
-            <h5>True Labels:</h5>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 20px; max-width: 550px; margin-top: 20px;">
-                <div id="true_labels">
-                    <p id="error_msg_delete_true_label" style="color: red; font-size: 12px;" hidden> </p>
-                    <p id="success_msg_delete_true_label" style="color: dodgerblue; font-size: 12px;" hidden>True label(s) deleted successfully</p>
-                    {% for true_label in true_labels %}
-                        <label><input name="true_labels[]" class="true_labels[]" type="checkbox" value="{{ true_label }}">{{ true_label }}</label><br>
-                    {% endfor %}
-                    <br>
-                    <button id="delete_true_label_submit" class="btn btn-danger">Delete true label(s)</button>
-                </div>
-                <div>
-                    <p id="error_msg_add_true_label" style="color: red; font-size: 12px;" hidden> </p>
-                    <p id="success_msg_add_true_label" style="color: dodgerblue; font-size: 12px;" hidden>True label added successfully</p>
-                    <h6>Add true label:</h6>
-                    <input id="true_label" type="text" placeholder="Label's name" style="width: 70%; margin-top: 10px; margin-bottom: 10px;"><br>
-                    <button id="add_true_label_submit" type="submit" class="btn btn-info" style="margin: 10px 0;">Add</button>
-                </div>
-            </div>
-
-            <br>
-            <hr>
-            <br>
-
-            <h5>False Labels:</h5>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 20px; max-width: 550px; margin-top: 20px;">
-                <div id="false_labels">
-                    <p id="error_msg_delete_false_label" style="color: red; font-size: 12px;" hidden> </p>
-                    <p id="success_msg_delete_false_label" style="color: dodgerblue; font-size: 12px;" hidden>False label(s) deleted successfully</p>
-                    {% for false_label in false_labels %}
-                        <label><input type="checkbox" name="false_labels[]" class="false_labels[]" value="{{ false_label }}">{{ false_label }}</label><br>
-                    {% endfor %}
-                    <br>
-                    <button id="delete_false_label_submit" class="btn btn-danger">Delete false label(s)</button>
-                </div>
-                    <div>
-                        <p id="error_msg_add_false_label" style="color: red; font-size: 12px;" hidden> </p>
-                        <p id="success_msg_add_false_label" style="color: dodgerblue; font-size: 12px;" hidden>False label added successfully</p>
-                        <h6>Add false label:</h6>
-                        <input id="false_label" type="text" placeholder="Label's name" style="width: 70%; margin-top: 10px; margin-bottom: 10px;"><br>
-                        <button id="add_false_label_submit" type="submit" class="btn btn-info" style="margin: 10px 0;">Add</button>
+        {% with scraper=user.get_scraper %}
+            {% if scraper %}
+                <div class="comment_box" style="padding: 30px;">
+                <h5>True Labels:</h5>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 20px; max-width: 550px; margin-top: 20px;">
+                    <div id="true_labels">
+                        <p id="error_msg_delete_true_label" style="color: red; font-size: 12px;" hidden> </p>
+                        <p id="success_msg_delete_true_label" style="color: dodgerblue; font-size: 12px;" hidden>True label(s) deleted successfully</p>
+                        {% for true_label in scraper.get_true_labels %}
+                            <label><input name="true_labels[]" class="true_labels[]" type="checkbox" value="{{ true_label }}">{{ true_label }}</label><br>
+                        {% endfor %}
+                        <br>
+                        <button id="delete_true_label_submit" class="btn btn-danger">Delete true label(s)</button>
                     </div>
-            </div>
-            </div>
-        {% endif %}
+                    <div>
+                        <p id="error_msg_add_true_label" style="color: red; font-size: 12px;" hidden> </p>
+                        <p id="success_msg_add_true_label" style="color: dodgerblue; font-size: 12px;" hidden>True label added successfully</p>
+                        <h6>Add true label:</h6>
+                        <input id="true_label" type="text" placeholder="Label's name" style="width: 70%; margin-top: 10px; margin-bottom: 10px;"><br>
+                        <button id="add_true_label_submit" type="submit" class="btn btn-info" style="margin: 10px 0;">Add</button>
+                    </div>
+                </div>
+
+                <br>
+                <hr>
+                <br>
+
+                <h5>False Labels:</h5>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 20px; max-width: 550px; margin-top: 20px;">
+                    <div id="false_labels">
+                        <p id="error_msg_delete_false_label" style="color: red; font-size: 12px;" hidden> </p>
+                        <p id="success_msg_delete_false_label" style="color: dodgerblue; font-size: 12px;" hidden>False label(s) deleted successfully</p>
+                        {% for false_label in scraper.get_false_labels %}
+                            <label><input type="checkbox" name="false_labels[]" class="false_labels[]" value="{{ false_label }}">{{ false_label }}</label><br>
+                        {% endfor %}
+                        <br>
+                        <button id="delete_false_label_submit" class="btn btn-danger">Delete false label(s)</button>
+                    </div>
+                        <div>
+                            <p id="error_msg_add_false_label" style="color: red; font-size: 12px;" hidden> </p>
+                            <p id="success_msg_add_false_label" style="color: dodgerblue; font-size: 12px;" hidden>False label added successfully</p>
+                            <h6>Add false label:</h6>
+                            <input id="false_label" type="text" placeholder="Label's name" style="width: 70%; margin-top: 10px; margin-bottom: 10px;"><br>
+                            <button id="add_false_label_submit" type="submit" class="btn btn-info" style="margin: 10px 0;">Add</button>
+                        </div>
+                </div>
+                </div>
+            {% endif %}
+        {% endwith %}
     </div>
     <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
     <script>
@@ -180,19 +174,6 @@
                 if (!(users_images[i].complete && users_images[i].naturalHeight !== 0)) {
                     users_images[i].setAttribute('src', "/static/claims/assets/images/profile_default_image.jpg");
                 }
-            }
-
-            users_images = document.getElementsByClassName('comment_user_image');
-            for(let i = 0; i < users_images.length; i++) {
-                let user_img = users_images[i].getElementsByTagName('img')[0];
-                if (!(user_img.complete && user_img.naturalHeight !== 0)) {
-                    user_img.setAttribute('src', "/static/claims/assets/images/profile_default_image.jpg");
-                }
-            }
-
-            let profile_image = document.getElementById('user_profile_image');
-            if (!(profile_image.complete && profile_image.naturalHeight !== 0)) {
-                profile_image.setAttribute('src', "/static/claims/assets/images/profile_default_image.jpg");
             }
 
         };
@@ -317,8 +298,6 @@
             $("#upload_user_img").attr("hidden", false);
             $("#upload_user_img_cancel").attr("hidden", false);
             $("#change_profile_image").attr("hidden", true);
-            {#$("#profile_image_input").attr("hidden", false);#}
-            {#$("#save_profile_image").attr("hidden", false);#}
         });
 
         function upload_user_img_cancel(){
@@ -326,30 +305,6 @@
             $("#upload_user_img_cancel").attr("hidden", true);
             $("#change_profile_image").attr("hidden", false);
         }
-
-        {#$("#save_profile_image").click(function(e){#}
-        {#    e.preventDefault();#}
-        {#    $.ajax({#}
-        {#        type: 'POST',#}
-        {#        url: "{% url 'users:update_user_img' %}",#}
-        {#        headers: { "X-CSRFToken": getCookie('csrftoken')},#}
-        {#        data: {#}
-        {#            user_id: '{{ user.id }}',#}
-        {#            user_img: $("#profile_image_input").val(),#}
-        {#        },#}
-        {#        success: function (request) {#}
-        {#            localStorage.setItem("success_msg_change_profile_image", true);#}
-        {#            window.location.reload();#}
-        {#        },#}
-        {#        error: function (request) {#}
-        {#            hide_all_msgs();#}
-        {#            let err = request.responseJSON;#}
-        {#            document.getElementById("error_msg_change_profile_image").innerHTML =#}
-        {#            'Error: <br>' + err;#}
-        {#            $("#error_msg_change_profile_image").attr("hidden", false);#}
-        {#        }#}
-        {#    });#}
-        {#});#}
 
         function search_on_twitter(tag){
             window.open('https://twitter.com/search?q=' + tag, '_blank');

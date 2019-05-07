@@ -903,23 +903,23 @@ class ClaimTests(TestCase):
         self.get_request.user = self.user
         self.assertRaises(Http404, view_claim, self.get_request, self.num_of_saved_claims + random.randint(1, 10))
 
-    def test_get_users_details_for_comments_for_user(self):
-        user_1_comment = Comment.objects.filter(claim_id=self.claim_1.id, user_id=self.user.id).first()
-        user_2_comment = Comment.objects.filter(claim_id=self.claim_2.id, user_id=self.user.id).first()
-        user_3_comment = Comment.objects.filter(claim_id=self.claim_3.id, user_id=self.user.id).first()
-        comments_with_details = get_users_details_for_comments(Comment.objects.filter(user_id=self.user.id).order_by('-id'))
-        self.assertTrue(len(comments_with_details) == self.num_of_saved_comments)
-        self.assertTrue(comments_with_details[user_3_comment]['user'] == self.user)
-        self.assertTrue(comments_with_details[user_3_comment]['user_img'] == self.user_image)
-        self.assertTrue(comments_with_details[user_3_comment]['user_rep'] == math.ceil(self.rep / 20))
-
-        self.assertTrue(comments_with_details[user_2_comment]['user'] == self.user)
-        self.assertTrue(comments_with_details[user_2_comment]['user_img'] == self.user_image)
-        self.assertTrue(comments_with_details[user_2_comment]['user_rep'] == math.ceil(self.rep / 20))
-
-        self.assertTrue(comments_with_details[user_1_comment]['user'] == self.user)
-        self.assertTrue(comments_with_details[user_1_comment]['user_img'] == self.user_image)
-        self.assertTrue(comments_with_details[user_1_comment]['user_rep'] == math.ceil(self.rep / 20))
+    # def test_get_users_details_for_comments_for_user(self):
+    #     user_1_comment = Comment.objects.filter(claim_id=self.claim_1.id, user_id=self.user.id).first()
+    #     user_2_comment = Comment.objects.filter(claim_id=self.claim_2.id, user_id=self.user.id).first()
+    #     user_3_comment = Comment.objects.filter(claim_id=self.claim_3.id, user_id=self.user.id).first()
+    #     comments_with_details = get_users_details_for_comments(Comment.objects.filter(user_id=self.user.id).order_by('-id'))
+    #     self.assertTrue(len(comments_with_details) == self.num_of_saved_comments)
+    #     self.assertTrue(comments_with_details[user_3_comment]['user'] == self.user)
+    #     self.assertTrue(comments_with_details[user_3_comment]['user_img'] == self.user_image)
+    #     self.assertTrue(comments_with_details[user_3_comment]['user_rep'] == math.ceil(self.rep / 20))
+    #
+    #     self.assertTrue(comments_with_details[user_2_comment]['user'] == self.user)
+    #     self.assertTrue(comments_with_details[user_2_comment]['user_img'] == self.user_image)
+    #     self.assertTrue(comments_with_details[user_2_comment]['user_rep'] == math.ceil(self.rep / 20))
+    #
+    #     self.assertTrue(comments_with_details[user_1_comment]['user'] == self.user)
+    #     self.assertTrue(comments_with_details[user_1_comment]['user_img'] == self.user_image)
+    #     self.assertTrue(comments_with_details[user_1_comment]['user_rep'] == math.ceil(self.rep / 20))
 
     def test_get_all_claims(self):
         self.assertTrue(len(get_all_claims()) == self.num_of_saved_claims)

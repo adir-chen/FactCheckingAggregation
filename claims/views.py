@@ -429,9 +429,7 @@ def view_claim(request, claim_id):
         raise Http404('Error - claim ' + str(claim_id) + ' does not exist')
     elif request.method != "GET":
         raise PermissionDenied
-    return render(request, 'claims/claim.html', {
-        'claim': claim,
-    })
+    return render(request, 'claims/claim.html', {'claim': claim})
 
 
 # This function returns all the claims in the website

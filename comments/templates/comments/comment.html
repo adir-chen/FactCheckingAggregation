@@ -8,7 +8,7 @@
             <div class="comment_user_details">
                 User: <a href="/users/{{ comment.user.id }}">{{ comment.user.username }}</a><br>
                 {% load static %}
-                {% for i in 'i'|rjust:comment.user.get_user_rep %}
+                {% for i in 'i'|rjust:comment.user.get_user_rep.get_reputation %}
                     <img src="{% static 'claims/assets/images/star.png' %}">
                 {% endfor %}
                 <br>

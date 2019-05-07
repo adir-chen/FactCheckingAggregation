@@ -3,6 +3,8 @@ from django.core.paginator import Paginator
 from django.http import Http404, HttpResponse
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
+from django.views.decorators.csrf import ensure_csrf_cookie
+
 from claims.models import Claim
 from comments.models import Comment
 from logger.views import save_log_message
@@ -314,6 +316,7 @@ def update_reputation_for_user(user_id, earn_points, num_of_points):
 
 
 # This function returns a HTML for a user's profile
+@ensure_csrf_cookie
 def user_page(request, user_id):
     from django.contrib.sessions.models import Session
     if request.method != 'GET':
@@ -325,16 +328,8 @@ def user_page(request, user_id):
     decoded_sessions = [s.get_decoded() for s in Session.objects.all()]
     logged_in_users = [s.get('_auth_user_id') for s in decoded_sessions]
     logged_in = str(user.id) in logged_in_users
-    from claims.views import get_users_images_for_claims, get_users_details_for_comments, \
-        get_user_img_and_rep
-    user_claims, user_comments, user_tweets = list(), list(), list()
-    claims = Claim.objects.filter(user=user.id)
-    if len(claims) > 0:
-        user_claims = list(get_users_images_for_claims(claims).items())
-    comments = Comment.objects.filter(user=user.id)
-    if len(comments) > 0:
-        user_comments = list(get_users_details_for_comments(comments).items())
-    user_img, user_rep = get_user_img_and_rep(user.id)
+    user_claims = Claim.objects.filter(user=user.id).order_by('-id')
+    user_comments = Comment.objects.filter(user=user.id).order_by('-id')
     page = request.GET.get('page1')
     paginator = Paginator(user_claims, 4)
     page_2 = request.GET.get('page2')
@@ -345,12 +340,6 @@ def user_page(request, user_id):
         'logged_in': logged_in,
         'user_claims': paginator.get_page(page),
         'user_comments': paginator_2.get_page(page_2),
-        'user_img': user_img,
-        'user_rep': user_rep,
-        'scrapers_ids': get_all_scrapers_ids_arr(),
-        'scraper_url': get_scraper_url(user.username),
-        'true_labels': get_true_labels(user.username),
-        'false_labels': get_false_labels(user.username),
         'form': form
     })
 
@@ -362,28 +351,6 @@ def get_scraper_url(scraper_name):
     if len(scraper) > 0:
         scraper_url = scraper.first().scraper_url
     return scraper_url
-
-
-# This function returns all true labels of the given scraper
-def get_true_labels(scraper_name):
-    scraper = Scrapers.objects.filter(scraper_name=scraper_name)
-    true_labels = []
-    if len(scraper) > 0:
-        true_labels = scraper.first().true_labels.split(',')
-        if len(true_labels) == 1 and not true_labels[0]:  # without labels
-            true_labels = []
-    return true_labels
-
-
-# This function returns all false labels of the given scraper
-def get_false_labels(scraper_name):
-    scraper = Scrapers.objects.filter(scraper_name=scraper_name)
-    false_labels = []
-    if len(scraper) > 0:
-        false_labels = scraper.first().false_labels.split(',')
-        if len(false_labels) == 1 and not false_labels[0]:  # without labels
-            false_labels = []
-    return false_labels
 
 
 # This function adds a true label to the scraper

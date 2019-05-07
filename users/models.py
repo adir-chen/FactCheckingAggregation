@@ -21,8 +21,16 @@ def get_user_rep(self):
     return user_rep
 
 
+def get_scraper(self):
+    scraper = Scrapers.objects.filter(id=self.id)
+    if len(scraper) == 0:
+        return None
+    return scraper.first()
+
+
 auth.models.User.add_to_class('get_user_image', get_user_image)
 auth.models.User.add_to_class('get_user_rep', get_user_rep)
+auth.models.User.add_to_class('get_scraper', get_scraper)
 
 
 def upload_to(instance, filename):
@@ -31,7 +39,7 @@ def upload_to(instance, filename):
 
 class Users_Images(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    profile_img = models.ImageField(upload_to=upload_to)
+    profile_img = models.ImageField(upload_to=upload_to, blank=True)
 
     def image_url(self):
         if self.profile_img and hasattr(self.profile_img, 'url'):
@@ -47,6 +55,10 @@ class Users_Reputations(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     reputation = models.IntegerField(default=1)
 
+    def get_reputation(self):
+        import math
+        return math.ceil(self.reputation / 20)
+
     def __str__(self):
         return self.user.username + ' - ' + str(self.reputation)
 
@@ -57,6 +69,20 @@ class Scrapers(models.Model):
     scraper_url = models.CharField(max_length=50)
     true_labels = models.TextField(default='true')
     false_labels = models.TextField(default='false')
+
+    # This function returns all false labels of the given scraper
+    def get_false_labels(self):
+        false_labels = self.false_labels.split(',')
+        if len(false_labels) == 1 and not false_labels[0]:  # without labels
+            false_labels = []
+        return false_labels
+
+    # This function returns all true labels of the given scraper
+    def get_true_labels(self):
+        true_labels = self.true_labels.split(',')
+        if len(true_labels) == 1 and not true_labels[0]:  # without labels
+            true_labels = []
+        return true_labels
 
     def __str__(self):
         return self.scraper_name
