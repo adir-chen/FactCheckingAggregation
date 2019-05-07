@@ -4,9 +4,9 @@
     <div class="page_wrapper">
         <h3>Search Results for {{ request.GET.search_keywords }}:</h3>
         <div id="claim_columns">
-            {% if search_result.object_list|length > 0 %}
-                {% for claim, img in search_result.object_list %}
-                    {% include 'claims/claimbox.html' with claim=claim img=img %}
+            {% if search_result|length > 0 %}
+                {% for claim in search_result %}
+                    {% include 'claims/claimbox.html' with claim=claim %}
                 {% endfor %}
             {% else %}
                 Your search didn't match any claims

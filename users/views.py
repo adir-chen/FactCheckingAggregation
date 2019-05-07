@@ -6,6 +6,7 @@ from django.shortcuts import render
 from claims.models import Claim
 from comments.models import Comment
 from logger.views import save_log_message
+from users.forms import ImageUploadForm
 from users.models import Users_Images, Scrapers
 from users.models import Users_Reputations
 import json
@@ -31,14 +32,15 @@ def get_user_reputation(user_id):
     if not check_if_user_exists_by_user_id(user_id):
         err_msg = 'User with id ' + str(user_id) + ' does not exists'
         return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
-    user_rep = Users_Reputations.objects.filter(user_id=User.objects.filter(id=user_id).first())
+    user = User.objects.filter(id=user_id).first()
+    user_rep = Users_Reputations.objects.filter(user=user)
     if len(user_rep) == 0:
-        new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=user_id).first())
+        new_user_rep = Users_Reputations.objects.create(user=user)
         new_user_rep.save()
         user_rep = new_user_rep
     else:
         user_rep = user_rep.first()
-    return user_rep.user_rep
+    return user_rep.reputation
 
 
 # This function adds all the scrapers as users to the website
@@ -51,14 +53,14 @@ def add_all_scrapers(request):
         # print(password)
         scraper_1 = User.objects.create_user(username='Snopes', password=password)
         scraper_1.save()
-        scraper_1_img = Users_Images(user_id=scraper_1, user_img='https://www.snopes.com/content/themes/snopes/dist/images/logo-s-crop-on.svg')
+        scraper_1_img = Users_Images(user=scraper_1)
         scraper_1_img.save()
-        scraper_1_rep = Users_Reputations(user_id=scraper_1)
+        scraper_1_rep = Users_Reputations(user=scraper_1)
         scraper_1_rep.save()
         true_labels = ['true', 'probably true', 'partly true', 'correct attribution', 'mostly true']
         false_labels = ['false', 'not true', 'mostly false', 'fiction', 'legend', 'scam', 'miscaptioned']
         scraper_1_details = Scrapers(scraper_name=scraper_1.username,
-                                     scraper_id=scraper_1,
+                                     scraper=scraper_1,
                                      true_labels=','.join(true_labels),
                                      false_labels=','.join(false_labels))
         scraper_1_details.save()
@@ -66,14 +68,14 @@ def add_all_scrapers(request):
         password = User.objects.make_random_password()
         scraper_2 = User.objects.create_user(username='Polygraph', password=password)
         scraper_2.save()
-        scraper_2_img = Users_Images(user_id=scraper_2, user_img='https://www.polygraph.info/Content/responsive/RFE/en-Poly/img/logo.png')
+        scraper_2_img = Users_Images(user=scraper_2)
         scraper_2_img.save()
-        scraper_2_rep = Users_Reputations(user_id=scraper_2)
+        scraper_2_rep = Users_Reputations(user=scraper_2)
         scraper_2_rep.save()
         true_labels = ['true', 'partially true', 'likely true']
         false_labels = ['false', 'mostly false', 'highly misleading', 'misleading', 'likely false', 'partially false']
         scraper_2_details = Scrapers(scraper_name=scraper_2.username,
-                                     scraper_id=scraper_2,
+                                     scraper=scraper_2,
                                      true_labels=','.join(true_labels),
                                      false_labels=','.join(false_labels))
         scraper_2_details.save()
@@ -81,15 +83,15 @@ def add_all_scrapers(request):
         password = User.objects.make_random_password()
         scraper_3 = User.objects.create_user(username='TruthOrFiction', password=password)
         scraper_3.save()
-        scraper_3_img = Users_Images(user_id=scraper_3, user_img='https://dn.truthorfiction.com/wp-content/uploads/2018/10/25032229/truth-or-fiction-logo-tagline.png')
+        scraper_3_img = Users_Images(user=scraper_3)
         scraper_3_img.save()
-        scraper_3_rep = Users_Reputations(user_id=scraper_3)
+        scraper_3_rep = Users_Reputations(user=scraper_3)
         scraper_3_rep.save()
         true_labels = ['true', 'truth', 'truth!', 'mostly truth!', 'authorship confirmed!', 'correct attribution!', 'correctly attributed!']
         false_labels = ['false', 'not true', 'fiction', 'fiction!', 'mostly fiction!', 'reported fiction!',
                         'incorrect attribution!', 'misleading!', 'misattributed', 'decontextualized']
         scraper_3_details = Scrapers(scraper_name=scraper_3.username,
-                                     scraper_id=scraper_3,
+                                     scraper=scraper_3,
                                      true_labels=','.join(true_labels),
                                      false_labels=','.join(false_labels))
         scraper_3_details.save()
@@ -97,14 +99,14 @@ def add_all_scrapers(request):
         password = User.objects.make_random_password()
         scraper_4 = User.objects.create_user(username='Politifact', password=password)
         scraper_4.save()
-        scraper_4_img = Users_Images(user_id=scraper_4, user_img='https://static.politifact.com/images/POLITIFACT_logo_rgb141x25.png')
+        scraper_4_img = Users_Images(user=scraper_4)
         scraper_4_img.save()
-        scraper_4_rep = Users_Reputations(user_id=scraper_4)
+        scraper_4_rep = Users_Reputations(user=scraper_4)
         scraper_4_rep.save()
         true_labels = ['true', 'mostly true', 'no flip']
         false_labels = ['false', 'mostly false', 'full flop', 'pants on fire!']
         scraper_4_details = Scrapers(scraper_name=scraper_4.username,
-                                     scraper_id=scraper_4,
+                                     scraper=scraper_4,
                                      true_labels=','.join(true_labels),
                                      false_labels=','.join(false_labels))
         scraper_4_details.save()
@@ -112,14 +114,14 @@ def add_all_scrapers(request):
         password = User.objects.make_random_password()
         scraper_5 = User.objects.create_user(username='GossipCop', password=password)
         scraper_5.save()
-        scraper_5_img = Users_Images(user_id=scraper_5, user_img='https://s3.gossipcop.com/thm/gossipcop/images/horizontal-logo.png')
+        scraper_5_img = Users_Images(user=scraper_5)
         scraper_5_img.save()
-        scraper_5_rep = Users_Reputations(user_id=scraper_5)
+        scraper_5_rep = Users_Reputations(user=scraper_5)
         scraper_5_rep.save()
         true_labels = [str(i + 6) for i in range(5)]
         false_labels = [str(i) for i in range(5)]
         scraper_5_details = Scrapers(scraper_name=scraper_5.username,
-                                     scraper_id=scraper_5,
+                                     scraper=scraper_5,
                                      true_labels=','.join(true_labels),
                                      false_labels=','.join(false_labels))
         scraper_5_details.save()
@@ -127,14 +129,14 @@ def add_all_scrapers(request):
         password = User.objects.make_random_password()
         scraper_6 = User.objects.create_user(username='ClimateFeedback', password=password)
         scraper_6.save()
-        scraper_6_img = Users_Images(user_id=scraper_6, user_img='https://climatefeedback.org/wp-content/themes/wordpress-theme/dist/images/Climate_Feedback_logo_s.png')
+        scraper_6_img = Users_Images(user=scraper_6)
         scraper_6_img.save()
-        scraper_6_rep = Users_Reputations(user_id=scraper_6)
+        scraper_6_rep = Users_Reputations(user=scraper_6)
         scraper_6_rep.save()
         true_labels = ['true', 'accurate', 'mostly_correct', 'correct']
         false_labels = ['false', 'unsupported', 'incorrect', 'inaccurate', 'misleading', 'flawed_reasoning']
         scraper_6_details = Scrapers(scraper_name=scraper_6.username,
-                                     scraper_id=scraper_6,
+                                     scraper=scraper_6,
                                      true_labels=','.join(true_labels),
                                      false_labels=','.join(false_labels))
         scraper_6_details.save()
@@ -142,14 +144,14 @@ def add_all_scrapers(request):
         password = User.objects.make_random_password()
         scraper_7 = User.objects.create_user(username='FactScan', password=password)
         scraper_7.save()
-        scraper_7_img = Users_Images(user_id=scraper_7, user_img='http://factscan.ca/test/wp-content/uploads/2015/02/web-logo.png')
+        scraper_7_img = Users_Images(user=scraper_7)
         scraper_7_img.save()
-        scraper_7_rep = Users_Reputations(user_id=scraper_7)
+        scraper_7_rep = Users_Reputations(user=scraper_7)
         scraper_7_rep.save()
         true_labels = ['true']
         false_labels = ['false', 'misleading', 'farcical']
         scraper_7_details = Scrapers(scraper_name=scraper_7.username,
-                                     scraper_id=scraper_7,
+                                     scraper=scraper_7,
                                      true_labels=','.join(true_labels),
                                      false_labels=','.join(false_labels))
         scraper_7_details.save()
@@ -157,22 +159,22 @@ def add_all_scrapers(request):
         password = User.objects.make_random_password()
         scraper_8 = User.objects.create_user(username='AfricaCheck', password=password)
         scraper_8.save()
-        scraper_8_img = Users_Images(user_id=scraper_8, user_img='https://upload.wikimedia.org/wikipedia/en/2/2f/Africa_Check_Website_logo.png')
+        scraper_8_img = Users_Images(user=scraper_8)
         scraper_8_img.save()
-        scraper_8_rep = Users_Reputations(user_id=scraper_8)
+        scraper_8_rep = Users_Reputations(user=scraper_8)
         scraper_8_rep.save()
-        scraper_8_details = Scrapers(scraper_name=scraper_8.username, scraper_id=scraper_8)
+        scraper_8_details = Scrapers(scraper_name=scraper_8.username, scraper=scraper_8)
         scraper_8_details.save()
 
         password = User.objects.make_random_password()
         scraper_9 = User.objects.create_user(username='CNN', password=password)
         scraper_9.save()
-        scraper_9_img = Users_Images(user_id=scraper_9, user_img='https://cdn.cnn.com/cnn/.e1mo/img/4.0/logos/CNN_logo_400x400.png')
+        scraper_9_img = Users_Images(user=scraper_9)
         scraper_9_img.save()
-        scraper_9_rep = Users_Reputations(user_id=scraper_9)
+        scraper_9_rep = Users_Reputations(user=scraper_9)
         scraper_9_rep.save()
         scraper_9_details = Scrapers(scraper_name=scraper_9.username,
-                                     scraper_id=scraper_9)
+                                     scraper=scraper_9)
         scraper_9_details.save()
     except Exception:
         raise Http404("Error - scrapers already exist")
@@ -187,16 +189,15 @@ def get_all_scrapers_ids(request):
     scrapers = {}
     result = Scrapers.objects.all()
     for scraper in result:
-        scrapers[scraper.scraper_name] = scraper.scraper_id.id
+        scrapers[scraper.scraper_name] = scraper.scraper.id
     return JsonResponse(scrapers)
 
 
 # This function returns all the scrapers' ids in an array
 def get_all_scrapers_ids_arr():
     all_scrapers_ids = []
-    result = Scrapers.objects.all()
-    for scraper in result:
-        all_scrapers_ids.append(scraper.scraper_id.id)
+    for scraper in Scrapers.objects.all():
+        all_scrapers_ids.append(scraper.scraper.id)
     return all_scrapers_ids
 
 
@@ -210,7 +211,7 @@ def get_random_claims_from_scrapers(request):
     from claims.models import Claim
     from comments.models import Comment
     for scraper in result:
-        claim_comment = Comment.objects.all().filter(user_id=scraper.scraper_id.id).order_by('-id')
+        claim_comment = Comment.objects.all().filter(user=scraper.scraper.id).order_by('-id')
         if len(claim_comment):
             claim_comment = claim_comment.first()
             claim_details = Claim.objects.filter(id=claim_comment.claim_id).first()
@@ -249,15 +250,14 @@ def add_new_scraper(request):
     new_scraper = User.objects.create_user(username=scraper_info['scraper_name'],
                                            password=scraper_info['scraper_password'])
     new_scraper.save()
-    new_scraper_img = Users_Images(user_id=new_scraper,
-                                   user_img=scraper_info['scraper_icon'])
+    new_scraper_img = Users_Images(user=new_scraper)
     new_scraper_img.save()
 
-    new_scraper_rep = Users_Reputations(user_id=new_scraper)
+    new_scraper_rep = Users_Reputations(user=new_scraper)
     new_scraper_rep.save()
 
     new_scraper_img_details = Scrapers(scraper_name=new_scraper.username,
-                                       scraper_id=new_scraper,
+                                       scraper=new_scraper,
                                        true_labels=','.join(true_labels),
                                        false_labels=','.join(false_labels))
     new_scraper_img_details.save()
@@ -270,7 +270,6 @@ def add_new_scraper(request):
 # The function returns true in case the info is valid, otherwise false and an error
 def check_if_scraper_info_is_valid(scraper_info):
     from claims.views import check_if_input_format_is_valid, is_english_input
-    from comments.views import is_valid_url
     err = ''
     if 'scraper_name' not in scraper_info or not scraper_info['scraper_name']:
         err += 'Missing value for scraper\'s name'
@@ -283,10 +282,6 @@ def check_if_scraper_info_is_valid(scraper_info):
     elif 'scraper_password_2' not in scraper_info or not scraper_info['scraper_password_2'] \
             or not scraper_info['scraper_password'] == scraper_info['scraper_password_2']:
         err += 'Passwords do not match'
-    elif 'scraper_icon' not in scraper_info or not scraper_info['scraper_icon']:
-        err += 'Missing value for scraper\'s icon'
-    elif not is_valid_url(scraper_info['scraper_icon']):
-        err += 'Invalid value for scraper\'s icon'
     elif not is_english_input(scraper_info['scraper_name']) \
             or not is_english_input(scraper_info['scraper_true_labels']) \
             or not is_english_input(scraper_info['scraper_false_labels']):
@@ -304,18 +299,18 @@ def update_reputation_for_user(user_id, earn_points, num_of_points):
         err_msg = 'User with id ' + str(user_id) + ' does not exist'
         return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     user = User.objects.filter(id=user_id).first()
-    user_rep = Users_Reputations.objects.filter(user_id=user)
+    user_rep = Users_Reputations.objects.filter(user=user)
     if len(user_rep) == 0:  # user has no reputation
-        new_user_rep = Users_Reputations(user_id=user)
+        new_user_rep = Users_Reputations(user=user)
         new_user_rep.save()
         reputation = 1
     else:
-        reputation = user_rep.first().user_rep
+        reputation = user_rep.first().reputation
     if earn_points:
         reputation = min(100, reputation + num_of_points)
     else:
         reputation = max(1, reputation - num_of_points)
-    Users_Reputations.objects.filter(user_id=user).update(user_rep=reputation)
+    Users_Reputations.objects.filter(user=user).update(reputation=reputation)
 
 
 # This function returns a HTML for a user's profile
@@ -344,6 +339,7 @@ def user_page(request, user_id):
     paginator = Paginator(user_claims, 4)
     page_2 = request.GET.get('page2')
     paginator_2 = Paginator(user_comments, 4)
+    form = ImageUploadForm(initial={'user_id': user_id})
     return render(request, 'users/user_page.html', {
         'user': user,
         'logged_in': logged_in,
@@ -354,7 +350,8 @@ def user_page(request, user_id):
         'scrapers_ids': get_all_scrapers_ids_arr(),
         'scraper_url': get_scraper_url(user.username),
         'true_labels': get_true_labels(user.username),
-        'false_labels': get_false_labels(user.username)
+        'false_labels': get_false_labels(user.username),
+        'form': form
     })
 
 
@@ -400,16 +397,16 @@ def add_true_label_to_scraper(request):
         save_log_message(request.user.id, request.user.username,
                          'Adding a new label (T) for scraper. Error: ' + err_msg)
         return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
-    scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
+    scraper = Scrapers.objects.filter(scraper=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
     true_labels = ''
     if scraper.true_labels:
         true_labels = scraper.true_labels + ','
     Scrapers.objects.filter(id=scraper.id).update(true_labels=true_labels +
                                                   scraper_info['scraper_label'])
-    update_scrapers_comments_verdicts(scraper.scraper_id.id)
+    update_scrapers_comments_verdicts(scraper.scraper.id)
     save_log_message(request.user.id, request.user.username,
                      'Adding a new label (T) for scraper - ' + scraper.scraper_name)
-    return user_page(return_get_request_to_user(request.user), scraper.scraper_id.id)
+    return user_page(return_get_request_to_user(request.user), scraper.scraper.id)
 
 
 # This function deletes the specified true label from the scraper
@@ -429,16 +426,16 @@ def delete_true_label_from_scraper(request):
         save_log_message(request.user.id, request.user.username,
                          'Deleting a label (T) from scraper. Error: ' + err_msg)
         return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
-    scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
+    scraper = Scrapers.objects.filter(scraper=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
     new_scraper_true_labels = []
     for true_label in scraper.true_labels.split(','):
         if true_label not in true_labels:
             new_scraper_true_labels.append(true_label)
     Scrapers.objects.filter(id=scraper.id).update(true_labels=','.join(new_scraper_true_labels))
-    update_scrapers_comments_verdicts(scraper.scraper_id.id)
+    update_scrapers_comments_verdicts(scraper.scraper.id)
     save_log_message(request.user.id, request.user.username,
                      'Deleting a label (T) from scraper - ' + scraper.scraper_name)
-    return user_page(return_get_request_to_user(request.user), scraper.scraper_id.id)
+    return user_page(return_get_request_to_user(request.user), scraper.scraper.id)
 
 
 # This function adds a false label to the scraper
@@ -452,16 +449,16 @@ def add_false_label_to_scraper(request):
         save_log_message(request.user.id, request.user.username,
                          'Adding a new label (F) for scraper. Error: ' + err_msg)
         return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
-    scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
+    scraper = Scrapers.objects.filter(scraper=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
     false_labels = ''
     if scraper.false_labels:
         false_labels = scraper.false_labels + ','
     Scrapers.objects.filter(id=scraper.id).update(false_labels=false_labels +
                                                   scraper_info['scraper_label'])
-    update_scrapers_comments_verdicts(scraper.scraper_id.id)
+    update_scrapers_comments_verdicts(scraper.scraper.id)
     save_log_message(request.user.id, request.user.username,
                      'Adding a new label (F) for scraper - ' + scraper.scraper_name)
-    return user_page(return_get_request_to_user(request.user), scraper.scraper_id.id)
+    return user_page(return_get_request_to_user(request.user), scraper.scraper.id)
 
 
 # This function deletes the specified false label from the scraper
@@ -481,16 +478,16 @@ def delete_false_label_from_scraper(request):
         save_log_message(request.user.id, request.user.username,
                          'Deleting a label (F) from scraper. Error: ' + err_msg)
         return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
-    scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
+    scraper = Scrapers.objects.filter(scraper=User.objects.filter(id=scraper_info['scraper_id']).first()).first()
     new_scraper_false_labels = []
     for false_label in scraper.false_labels.split(','):
         if false_label not in false_labels:
             new_scraper_false_labels.append(false_label)
     Scrapers.objects.filter(id=scraper.id).update(false_labels=','.join(new_scraper_false_labels))
-    update_scrapers_comments_verdicts(scraper.scraper_id.id)
+    update_scrapers_comments_verdicts(scraper.scraper.id)
     save_log_message(request.user.id, request.user.username,
                      'Deleting a label (F) from scraper - ' + scraper.scraper_name)
-    return user_page(return_get_request_to_user(request.user), scraper.scraper_id.id)
+    return user_page(return_get_request_to_user(request.user), scraper.scraper.id)
 
 
 # This function checks if a given scraper's info (for adding a new label) is valid,
@@ -508,10 +505,10 @@ def check_if_scraper_new_label_is_valid(scraper_info, add_label):
     elif len(User.objects.filter(id=scraper_info['scraper_id'])) == 0:
         err += 'Scraper with id ' + str(scraper_info['scraper_id']) + ' does not exist'
     elif add_label and any(scraper_info['scraper_label'].lower() == label
-                           for label in Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first().true_labels.split(',')):
+                           for label in Scrapers.objects.filter(scraper=User.objects.filter(id=scraper_info['scraper_id']).first()).first().true_labels.split(',')):
         err += 'Label ' + scraper_info['scraper_label'] + ' already belongs to scraper\'s true labels'
     elif not add_label and any(scraper_info['scraper_label'].lower() == label
-                               for label in Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_info['scraper_id']).first()).first().false_labels.split(',')):
+                               for label in Scrapers.objects.filter(scraper=User.objects.filter(id=scraper_info['scraper_id']).first()).first().false_labels.split(',')):
         err += 'Label ' + scraper_info['scraper_label'] + ' already belongs to scraper\'s false labels'
     if len(err) > 0:
         return False, err
@@ -540,12 +537,12 @@ def check_if_scraper_labels_already_exist(scraper_id, labels_list, label):
     err = ''
     if label:  # true label case
         scraper_true_labels_list = Scrapers.objects.filter(
-            scraper_id=User.objects.filter(id=scraper_id).first()).first().true_labels.split(',')
+            scraper=User.objects.filter(id=scraper_id).first()).first().true_labels.split(',')
         if not all(true_label in scraper_true_labels_list for true_label in labels_list):
             err += 'Label(s) does not(do not) belong to scraper\'s true labels'
     else:  # false label case
         scraper_false_labels_list = Scrapers.objects.filter(
-            scraper_id=User.objects.filter(id=scraper_id).first()).first().false_labels.split(',')
+            scraper=User.objects.filter(id=scraper_id).first()).first().false_labels.split(',')
         if not all(false_label in scraper_false_labels_list for false_label in labels_list):
             err += 'Label(s) does not(do not) belong to scraper\'s false labels'
     if len(err) > 0:
@@ -553,12 +550,13 @@ def check_if_scraper_labels_already_exist(scraper_id, labels_list, label):
     return True, err
 
 
+# This function updates scrapers comments verdicts after scrapers labels were updated
 def update_scrapers_comments_verdicts(scraper_id):
     if not check_if_user_exists_by_user_id(scraper_id):
         err_msg = 'Scraper with id ' + str(scraper_id) + ' does not exists'
         return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
-    scraper = Scrapers.objects.filter(scraper_id=User.objects.filter(id=scraper_id).first()).first()
-    for comment in Comment.objects.filter(user_id=scraper_id):
+    scraper = Scrapers.objects.filter(scraper=User.objects.filter(id=scraper_id).first()).first()
+    for comment in Comment.objects.filter(user=scraper_id):
         label = comment.label.lower().strip()
         if label in scraper.true_labels:
             Comment.objects.filter(id=comment.id).update(system_label='True')
@@ -568,42 +566,32 @@ def update_scrapers_comments_verdicts(scraper_id):
             Comment.objects.filter(id=comment.id).update(system_label='Unknown')
 
 
-def update_user_img(request):
-    from claims.views import return_get_request_to_user
-    if not request.user.is_authenticated or request.method != 'POST':
-        raise PermissionDenied
-    user_info = request.POST.dict()
-    user_info['user_id'] = request.user.id
-    valid_user_info, err_msg = check_if_user_info_is_valid(user_info)
-    if not valid_user_info:
-        save_log_message(request.user.id, request.user.username,
-                         'Editing user image. Error: ' + err_msg)
-        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
-    user = User.objects.filter(id=request.user.id).first()
-    Users_Images.objects.filter(user_id=user).update(user_img=user_info['user_img'])
-    save_log_message(request.user.id, request.user.username,
-                     'Editing user image of ' + user.username)
-    return user_page(return_get_request_to_user(request.user), request.user.id)
-
-
-def check_if_user_info_is_valid(user_info):
-    err = ''
-    if 'user_id' not in user_info or not user_info['user_id']:
-        err += 'Missing value for user id'
-    elif 'user_img' not in user_info:
-        err += 'Missing value for user image'
-    elif not check_if_user_exists_by_user_id(user_info['user_id']):
-        err += 'User with id ' + str(user_info['user_id']) + ' does not exist'
-    if len(err) > 0:
-        return False, err
-    return True, err
-
-
+# This function checks if a given user is a scraper
 def check_if_user_is_scraper(user_id):
     user = User.objects.filter(id=user_id)
     if len(user) == 0:
         return False
     user = user.first()
-    return len(Scrapers.objects.filter(scraper_id=user)) > 0
+    return len(Scrapers.objects.filter(scraper=user)) > 0
 
 
+# This function uploads an image for a user
+def upload_user_img(request):
+    if not request.user.is_authenticated or request.method != "POST":
+        raise PermissionDenied
+    from claims.views import return_get_request_to_user
+    user_id = request.POST.get('user_id')
+    file = request.FILES.get('profile_img')
+    user = User.objects.filter(id=user_id).first()
+    user_img = Users_Images.objects.filter(user=user).first()
+    form = ImageUploadForm(request.POST,
+                           request.FILES,
+                           instance=user_img)
+    if form.is_valid():
+        import shutil
+        shutil.rmtree("media/images/{}".format(user_id))
+        user_and_img = form.save(commit=False)
+        user_and_img.user = user
+        user_and_img.profile_img = file
+        user_and_img.save()
+    return user_page(return_get_request_to_user(request.user), user_id)

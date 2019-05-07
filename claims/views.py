@@ -12,7 +12,7 @@ from tweets.models import Tweet
 from users.models import Users_Images, Scrapers, Users_Reputations
 from logger.views import save_log_message, check_duplicate_log_for_user
 from users.views import check_if_user_exists_by_user_id, check_if_user_is_scraper
-from .models import Claim
+from .models import Claim, Merging_Suggestions
 from django.conf import settings
 import math
 import json
@@ -340,32 +340,85 @@ def download_claims(request):
     return view_home(return_get_request_to_user(request.user))
 
 
+# This function merges two claims that have been found as identical
+def merging_claims(request):
+    if not request.user.is_superuser or request.method != "POST":
+        raise PermissionDenied
+    from comments.views import update_authenticity_grade
+    merge_claims_info = request.POST.copy()
+    merge_claims_info['user_id'] = request.user.id
+    merge_claims_info['is_superuser'] = request.user.is_superuser
+    valid_merging, err_msg = check_if_suggestion_is_valid(merge_claims_info)
+    if not valid_merging:
+        save_log_message(request.user.id, request.user.username,
+                         'Merging claims. Error: ' + err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
+    Comment.objects.filter(claim_id=merge_claims_info['claim_id_to_merge']).update(claim_id=merge_claims_info['claim_id'])
+    update_authenticity_grade(merge_claims_info['claim_id'])
+    Claim.objects.filter(id=merge_claims_info['claim_id_to_merge']).delete()
+    save_log_message(request.user.id, request.user.username,
+                     'Merging claim with id ' + merge_claims_info['claim_id_to_merge'] +
+                     ' with claim with id ' + merge_claims_info['claim_id'], True)
+    return merging_claims_page(return_get_request_to_user(request.user))
+
+
+# This function checks if the given fields for merging two claims are valid,
+# i.e. the fields are with the correct format.
+# The function returns true in case the fields are valid, otherwise false and an error
+def check_if_suggestion_is_valid(merge_claims_info):
+    err = ''
+    if 'claim_id' not in merge_claims_info or not merge_claims_info['claim_id']:
+        err += 'Missing value for claim id'
+    elif 'claim_id_to_merge' not in merge_claims_info or not merge_claims_info['claim_id_to_merge']:
+        err += 'Missing value for claim id to be merge'
+    elif 'user_id' not in merge_claims_info or not merge_claims_info['user_id']:
+        err += 'Missing value for user id'
+    elif 'is_superuser' not in merge_claims_info:
+        err += 'Missing value for user type'
+    elif len(Claim.objects.filter(id=merge_claims_info['claim_id'])) == 0:
+        err += 'Claim ' + str(merge_claims_info['claim_id']) + ' does not exist'
+    elif len(Claim.objects.filter(id=merge_claims_info['claim_id_to_merge'])) == 0:
+        err += 'Claim ' + str(merge_claims_info['claim_id_to_merge']) + ' does not exist'
+    elif not check_if_user_exists_by_user_id(merge_claims_info['user_id']):
+        err += 'User with id ' + str(merge_claims_info['user_id']) + ' does not exist'
+    elif not merge_claims_info['is_superuser']:
+        err += 'Permission Denied'
+    if len(err) > 0:
+        return False, err
+    return True, err
+
+
+# This function deletes a suggestion for merging two claims
+def delete_suggestion_for_merging_claims(request):
+    if not request.user.is_superuser or request.method != "POST":
+        raise PermissionDenied
+    suggestion_to_delete = request.POST.copy()
+    suggestion_to_delete['user_id'] = request.user.id
+    suggestion_to_delete['is_superuser'] = request.user.is_superuser
+    valid_suggestion_to_delete, err_msg = check_if_suggestion_is_valid(suggestion_to_delete)
+    if not valid_suggestion_to_delete:
+        save_log_message(request.user.id, request.user.username,
+                         'Deleting a suggestion for merging claims. Error: ' + err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
+    Merging_Suggestions.objects.filter(claim_id=suggestion_to_delete['claim_id'],
+                                       claim_to_merge_id=suggestion_to_delete['claim_id_to_merge']).delete()
+    save_log_message(request.user.id, request.user.username,
+                     'Deleting a suggestion for merging claims - claim with id ' +
+                     suggestion_to_delete['claim_id'] +
+                     ' with claim with id ' + suggestion_to_delete['claim_id_to_merge'], True)
+    return merging_claims_page(return_get_request_to_user(request.user))
+
+
 # This function returns the home page of the website
 @ensure_csrf_cookie
 def view_home(request):
     if request.method != "GET":
         raise PermissionDenied
     from django.core.paginator import Paginator
-    claims = list(get_users_images_for_claims(Claim.objects.all().order_by('-id')).items())
+    claims = Claim.objects.all().order_by('-id')
     page = request.GET.get('page')
     paginator = Paginator(claims, 24)
     return render(request, 'claims/index.html', {'claims': paginator.get_page(page)})
-
-
-# This function returns a dict with pairs of (claim, user_image)
-# where user_image is a link to user's profile image who posts the claim
-def get_users_images_for_claims(claims):
-    headlines = {}
-    for claim in claims:
-        user_img = Users_Images.objects.filter(user_id=User.objects.filter(id=claim.user_id).first())
-        if len(user_img) == 0:
-            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=claim.user_id).first())
-            new_user_img.save()
-            user_img = new_user_img
-        else:
-            user_img = user_img.first()
-        headlines[claim] = user_img.user_img
-    return headlines
 
 
 # This function returns a claim page of a given claim id
@@ -376,63 +429,9 @@ def view_claim(request, claim_id):
         raise Http404('Error - claim ' + str(claim_id) + ' does not exist')
     elif request.method != "GET":
         raise PermissionDenied
-    comments = get_users_details_for_comments(Comment.objects.filter(claim_id=claim_id))
-    tweets = Tweet.objects.filter(claim_id=claim_id)
-    user_img, user_rep = None, None
-    if request.user.is_authenticated:
-        user_img, user_rep = get_user_img_and_rep(request.user.id)
     return render(request, 'claims/claim.html', {
         'claim': claim,
-        'comments': comments,
-        'tweets': tweets,
-        'user_img': user_img,
-        'user_rep': user_rep
     })
-
-
-# This function returns for each comment the user's image and user's reputation for the user that posted the comment
-def get_users_details_for_comments(comment_objects):
-    comments = {}
-    for comment in comment_objects:
-        user_img = Users_Images.objects.filter(user_id=comment.user_id)
-        if len(user_img) == 0:
-            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
-            new_user_img.save()
-            user_img = new_user_img
-        else:
-            user_img = user_img.first()
-        user_rep = Users_Reputations.objects.filter(user_id=comment.user_id)
-        if len(user_rep) == 0:
-            new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=comment.user_id).first())
-            new_user_rep.save()
-            user_rep = new_user_rep
-        else:
-            user_rep = user_rep.first()
-        comments[comment] = {'user': User.objects.filter(id=comment.user_id).first(),
-                             'user_img': user_img,
-                             'user_rep': math.ceil(user_rep.user_rep / 20)}
-    return comments
-
-
-# This function returns user's image and user's reputation for a given user's id
-def get_user_img_and_rep(user_id):
-    user_img = Users_Images.objects.filter(user_id=user_id)
-    if len(user_img) == 0:
-        new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=user_id).first())
-        new_user_img.save()
-        user_img = new_user_img
-    else:
-        user_img = user_img.first()
-    user_img = user_img.user_img
-    user_rep = Users_Reputations.objects.filter(user_id=user_id)
-    if len(user_rep) == 0:
-        new_user_rep = Users_Reputations.objects.create(user_id=User.objects.filter(id=user_id).first())
-        new_user_rep.save()
-        user_rep = new_user_rep
-    else:
-        user_rep = user_rep.first()
-    user_rep = math.ceil(user_rep.user_rep / 20)
-    return user_img, user_rep
 
 
 # This function returns all the claims in the website
@@ -502,6 +501,13 @@ def post_claims_tweets_page(request):
     if not request.user.is_authenticated or request.method != 'GET':
         raise PermissionDenied
     return render(request, 'claims/import_claims_tweets.html')
+
+
+# This function return a HTML page for posting new claims\tweets to the website
+def merging_claims_page(request):
+    if not request.user.is_superuser or request.method != 'GET':
+        raise PermissionDenied
+    return render(request, 'claims/merging_claims_page.html', {'suggestions': Merging_Suggestions.objects.all()})
 
 
 # This function returns about page

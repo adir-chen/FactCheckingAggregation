@@ -3,12 +3,12 @@
     <div class="comment_box" id="comment_box_{{ comment.id }}">
         <div class="comment_header">
             <div class="comment_user_image">
-                <img src="{{ user_details.user_img.user_img }}">
+                <img src="{{ comment.user.get_user_image.image_url }}">
             </div>
             <div class="comment_user_details">
-                User: <a href="/users/{{ user_details.user.id }}">{{ user_details.user.username }}</a><br>
+                User: <a href="/users/{{ comment.user.id }}">{{ comment.user.username }}</a><br>
                 {% load static %}
-                {% for i in 'i'|rjust:user_details.user_rep %}
+                {% for i in 'i'|rjust:comment.user.get_user_rep %}
                     <img src="{% static 'claims/assets/images/star.png' %}">
                 {% endfor %}
                 <br>

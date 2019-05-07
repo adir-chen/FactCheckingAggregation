@@ -24,7 +24,7 @@
             </div>
 
             Published by:<br>
-            <img src="{{ claim.get_claim_user_img }}" style="max-width: 90px; max-height: 50px;">
+            <a href="/users/{{ claim.user.id }}" target="_blank"><img id="publisher_img" src="{{ claim.user.get_user_image.image_url }}" style="max-width: 90px; max-height: 50px;"></a><br>
             <a href="/users/{{ claim.user.id }}" target="_blank">{{ claim.user.username }}</a>
             <br>
             <p id="success_msg_{{ claim.id }}_claim_edit" class="action_msg note_msg" hidden>Claim was edited successfully</p>
@@ -64,8 +64,8 @@
         <div id="tweets">
             <h3>Related tweets:</h3>
             <br>
-            {% for tweet  in tweets %}
-                {% include 'tweets/tweet.html' with claim=claim tweet=tweet request=request only %}
+            {% for tweet in claim.get_tweets_for_claim %}
+                {% include 'tweets/tweet.html' with claim=claim request=request only %}
             {% endfor %}
         </div>
         <br>
@@ -75,8 +75,8 @@
         {% if comments %}
             <h3>Users' verdicts:</h3>
             <br>
-            {% for comment, user_details in comments.items %}
-                {% include 'comments/comment.html' with comment=comment user_details=user_details show_replies=True request=request only %}
+            {% for comment in claim.get_comments_for_claim %}
+                {% include 'comments/comment.html' with comment=comment show_replies=True request=request only %}
             {% endfor %}
         {% else %}
             <h3>No verdicts yet.</h3>
@@ -90,7 +90,7 @@
                 <div class="comment_header">
                     <div class="comment_user_image">
                         {% load static %}
-                        <img src="{{ user_img }}">
+                        <img src="{{ user_img.image_url }}">
                     </div>
                     <div class="comment_user_details">
                         User: <a href="/users/{{ request.user.username }}">{{ request.user.username }}</a><br>
@@ -137,13 +137,19 @@
             if (!(image_{{ claim_id }}.complete && image_{{ claim_id }}.naturalHeight !== 0)) {
                 $("#img_src_{{ claim.id }}").attr("src", "/static/claims/assets/images/claim_default_image.jpg");
             }
+
+            let publisher_img = document.getElementById("publisher_img");
+            if (!(publisher_img.complete && publisher_img.naturalHeight !== 0)) {
+                $("#publisher_img").attr("src", "images/profile_default_image.jpg");
+            }
+
             let users_images = document.getElementsByClassName('comment_user_image');
             for(let i = 0; i < users_images.length; i++) {
                 let user_img = users_images[i].getElementsByTagName('img')[0];
                 if (!(user_img.complete && user_img.naturalHeight !== 0)) {
-                    user_img.setAttribute('src', "/static/claims/assets/images/profile_default_image.jpg");
+                    user_img.setAttribute('src', "images/profile_default_image.jpg");
                 }
-            }
+             }
         };
         let claim_timestamp = new Date('{{ claim.timestamp|date:"D, d M Y H:i:s" }}');
         {% if request.user.is_superuser %}

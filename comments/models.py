@@ -54,14 +54,15 @@ class Comment(models.Model):
         from users.models import Users_Images
         replies = {}
         for reply in reply_objects:
-            user_img = Users_Images.objects.filter(user_id=reply.user_id)
+            user = User.objects.filter(id=reply.user_id).first()
+            user_img = Users_Images.objects.filter(user=reply.user)
             if len(user_img) == 0:
-                new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=reply.user_id).first())
+                new_user_img = Users_Images.objects.create(user=user)
                 new_user_img.save()
                 user_img = new_user_img
             else:
                 user_img = user_img.first()
-            replies[reply] = {'user': User.objects.filter(id=reply.user_id).first(),
+            replies[reply] = {'user': user,
                               'user_img': user_img}
         return replies
 

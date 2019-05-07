@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.staticfiles.templatetags.staticfiles import static
 
 
+
 class Claim(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     claim = models.CharField(max_length=150)
@@ -15,6 +16,14 @@ class Claim(models.Model):
 
     def __str__(self):
         return self.user.username + ' - ' + self.claim
+
+    def get_comments_for_claim(self):
+        from comments.models import Comment
+        return Comment.objects.filter(claim_id=self.id)
+
+    def get_tweets_for_claim(self):
+        from tweets.models import Tweet
+        return Tweet.objects.filter(claim_id=self.id)
 
     def users_commented_ids(self):
         from comments.models import Comment
@@ -51,16 +60,16 @@ class Claim(models.Model):
                 max_comment_id = comment.id
         return max_comment_id
 
-    def get_claim_user_img(self):
-        from users.models import Users_Images
-        user_img = Users_Images.objects.filter(user_id=self.user_id)
-        if len(user_img) == 0:
-            new_user_img = Users_Images.objects.create(user_id=User.objects.filter(id=self.user_id).first())
-            new_user_img.save()
-            user_img = new_user_img.user_img
-        else:
-            user_img = user_img.first().user_img
-        return user_img
+    # def get_claim_user_img(self):
+    #     from users.models import Users_Images
+    #     user_img = Users_Images.objects.filter(user=self.user_id)
+    #     if len(user_img) == 0:
+    #         new_user_img = Users_Images.objects.create(user=User.objects.filter(id=self.user_id).first())
+    #         new_user_img.save()
+    #         user_img = new_user_img
+    #     else:
+    #         user_img = user_img.first()
+    #     return user_img
 
 
 class Claims_Reports(models.Model):
@@ -69,3 +78,11 @@ class Claims_Reports(models.Model):
 
     def __str__(self):
         return str(self.claim.id) + ' - ' + str(self.report_id)
+
+
+class Merging_Suggestions(models.Model):
+    claim = models.ForeignKey(Claim, related_name='claim_suggestion', on_delete=models.CASCADE)
+    claim_to_merge = models.ForeignKey(Claim, related_name='claim_to_merge_suggestion', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.claim.id) + ' - ' + str(self.claim_to_merge.id)

@@ -55,7 +55,7 @@ def check_if_reply_is_valid(reply_info):
     elif 'content' not in reply_info or not reply_info['content']:
         err += 'Missing value for content'
     elif len(Comment.objects.filter(id=reply_info['comment_id'])) == 0:
-        err += 'Comment ' + str(reply_info['comment_id']) + 'does not exist'
+        err += 'Comment ' + str(reply_info['comment_id']) + ' does not exist'
     elif not check_if_user_exists_by_user_id(reply_info['user_id']):
         err += 'User with id ' + str(reply_info['user_id']) + ' does not exist'
     elif (not reply_info['is_superuser']) and len(Reply.objects.filter(comment_id=reply_info['comment_id'],

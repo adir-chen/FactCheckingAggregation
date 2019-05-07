@@ -33,7 +33,7 @@ class SearchTest(TestCase):
     def test_search_many_claims(self):
         self.user = User(username="User1", email='user1@gmail.com')
         self.user.save()
-        self.user_image = Users_Images(user_id=self.user, user_img='user_img')
+        self.user_image = Users_Images(user=self.user)
         self.user_image.save()
         for i in range(1, 24):
             claim = Claim(user_id=self.user.id,

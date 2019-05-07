@@ -16,6 +16,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from claims import views as claims_views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -30,6 +32,9 @@ urlpatterns = [
     path('logger/', include('logger.urls', namespace='logger')),
     path('analytics/', include('analytics.urls', namespace='analytics')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 handler400 = claims_views.handler_400
 handler403 = claims_views.handler_403

@@ -22,20 +22,20 @@ class CommentTests(TestCase):
         self.user_2 = User(username="User2", email='user2@gmail.com')
         self.user_1.save()
         self.user_2.save()
-        self.user_1_rep = Users_Reputations(user_id=self.user_1, user_rep=100)
-        self.user_2_rep = Users_Reputations(user_id=self.user_2, user_rep=1)
+        self.user_1_rep = Users_Reputations(user=self.user_1, reputation=100)
+        self.user_2_rep = Users_Reputations(user=self.user_2, reputation=1)
         self.user_1_rep.save()
         self.user_2_rep.save()
         self.new_scraper_1 = User(username="newScraper1")
         self.new_scraper_1.save()
         self.new_scraper_scraper_1 = Scrapers(scraper_name=self.new_scraper_1.username,
-                                              scraper_id=self.new_scraper_1)
+                                              scraper=self.new_scraper_1)
         self.new_scraper_scraper_1.save()
 
         self.new_scraper_2 = User(username="newScraper2")
         self.new_scraper_2.save()
         self.new_scraper_scraper_2 = Scrapers(scraper_name=self.new_scraper_2.username,
-                                              scraper_id=self.new_scraper_2)
+                                              scraper=self.new_scraper_2)
         self.new_scraper_scraper_2.save()
         self.num_of_saved_users = 4
         self.num_of_saved_scrapers = 2
@@ -552,10 +552,10 @@ class CommentTests(TestCase):
         add_all_scrapers(self.get_request)
         for scraper in Scrapers.objects.all():
             for true_label in scraper.true_labels.split(','):
-                self.assertTrue('True' == get_system_label_to_comment(true_label, scraper.scraper_id.id))
+                self.assertTrue('True' == get_system_label_to_comment(true_label, scraper.scraper.id))
             for false_label in scraper.false_labels.split(','):
-                self.assertTrue('False' == get_system_label_to_comment(false_label, scraper.scraper_id.id))
-            self.assertTrue('Unknown' == get_system_label_to_comment('Unknown', scraper.scraper_id.id))
+                self.assertTrue('False' == get_system_label_to_comment(false_label, scraper.scraper.id))
+            self.assertTrue('Unknown' == get_system_label_to_comment('Unknown', scraper.scraper.id))
 
     def test_edit_comment(self):
         self.update_comment_details['comment_id'] = str(self.comment_1.id)

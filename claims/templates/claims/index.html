@@ -5,23 +5,23 @@
     {% if claims.number == 1 %}
         <div class="headlines">
             <div id="claim_large_columns" style="max-width: 1150px; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
-                {% for claim, img in claims.object_list|slice:"0:4" %}
-                    {% include 'claims/claimbox_large.html' with claim=claim img=img %}
+                {% for claim in claims|slice:"0:4" %}
+                    {% include 'claims/claimbox_large.html' with claim=claim %}
                 {% endfor %}
             </div>
         </div>
         <div class="page_wrapper">
             <div id="claim_columns">
-                {% for claim, img in claims.object_list|slice:"4:" %}
-                    {% include 'claims/claimbox.html' with claim=claim img=img %}
+                {% for claim in claims|slice:"4:" %}
+                    {% include 'claims/claimbox.html' with claim=claim %}
                 {% endfor %}
             </div>
         </div>
     {% else %}
         <div class="page_wrapper">
             <div id="claim_columns">
-                {% for claim, img in claims.object_list %}
-                    {% include 'claims/claimbox.html' with claim=claim img=img %}
+                {% for claim in claims %}
+                    {% include 'claims/claimbox.html' with claim=claim %}
                 {% endfor %}
             </div>
         </div>
@@ -48,20 +48,12 @@
     <script>
         window.onload = function() {
             let images = document.getElementsByClassName('claim_image');
-            for(let i = 0; i < images.length; i++) {
+            for (let i = 0; i < images.length; i++) {
                 if (!(images[i].complete && images[i].naturalHeight !== 0)) {
                     images[i].setAttribute('src', "/static/claims/assets/images/claim_default_image.jpg");
                 }
             }
-
-            images = document.getElementsByClassName('user_image');
-            for(let i = 0; i < images.length; i++) {
-                if (!(images[i].complete && images[i].naturalHeight !== 0)) {
-                    images[i].setAttribute('src', "/static/claims/assets/images/profile_default_image.jpg");
-                }
-            }
         };
-
     </script>
 {% endblock %}
 

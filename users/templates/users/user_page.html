@@ -12,7 +12,7 @@
                     <span style="height: 20px; width: 20px; background-color: #bbb; border-radius: 50%; display: inline-block; position: absolute; bottom: 0; right: 0;"></span>
                     {% endif %}
                 {% endif %}
-                <img id="user_profile_image" src="{{ user_img }}" style="max-width: 100%; padding: 5px;">
+                <img id="user_profile_image" src="{{ user_img.image_url }}" style="max-width: 100%; padding: 5px;">
             </div>
             <div style="grid-area: user-profile-details; padding: 10px 20px 10px 50px;">
                 <h5>{{ user.username }}</h5>
@@ -35,6 +35,13 @@
             <button id="save_profile_image" type="submit" class="btn btn-info" hidden="hidden">Save</button>
             <p id="error_msg_change_profile_image" style="color: red; font-size: 12px;" hidden></p>
             <p id="success_msg_change_profile_image" style="color: dodgerblue; font-size: 12px;" hidden>Profile image updated succesfully.</p>
+
+            <form id="upload_user_img" action="{% url "users:upload_user_img" %}" method="POST" enctype="multipart/form-data" hidden="hidden">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <input type="hidden" name="user_id" value="{{ user.id }}">
+                <button type="submit" class="btn btn-info">Upload</button>
+            </form>
         {% endif %}
         <hr>
         <h4> {{ user.username }}'s claims:</h4>
@@ -307,34 +314,42 @@
         });
 
         $("#change_profile_image").click(function(e){
+            $("#upload_user_img").attr("hidden", false);
+            $("#upload_user_img_cancel").attr("hidden", false);
             $("#change_profile_image").attr("hidden", true);
-            $("#profile_image_input").attr("hidden", false);
-            $("#save_profile_image").attr("hidden", false);
+            {#$("#profile_image_input").attr("hidden", false);#}
+            {#$("#save_profile_image").attr("hidden", false);#}
         });
 
-        $("#save_profile_image").click(function(e){
-            e.preventDefault();
-            $.ajax({
-                type: 'POST',
-                url: "{% url 'users:update_user_img' %}",
-                headers: { "X-CSRFToken": getCookie('csrftoken')},
-                data: {
-                    user_id: '{{ user.id }}',
-                    user_img: $("#profile_image_input").val(),
-                },
-                success: function (request) {
-                    localStorage.setItem("success_msg_change_profile_image", true);
-                    window.location.reload();
-                },
-                error: function (request) {
-                    hide_all_msgs();
-                    let err = request.responseJSON;
-                    document.getElementById("error_msg_change_profile_image").innerHTML =
-                    'Error: <br>' + err;
-                    $("#error_msg_change_profile_image").attr("hidden", false);
-                }
-            });
-        });
+        function upload_user_img_cancel(){
+            $("#upload_user_img").attr("hidden", true);
+            $("#upload_user_img_cancel").attr("hidden", true);
+            $("#change_profile_image").attr("hidden", false);
+        }
+
+        {#$("#save_profile_image").click(function(e){#}
+        {#    e.preventDefault();#}
+        {#    $.ajax({#}
+        {#        type: 'POST',#}
+        {#        url: "{% url 'users:update_user_img' %}",#}
+        {#        headers: { "X-CSRFToken": getCookie('csrftoken')},#}
+        {#        data: {#}
+        {#            user_id: '{{ user.id }}',#}
+        {#            user_img: $("#profile_image_input").val(),#}
+        {#        },#}
+        {#        success: function (request) {#}
+        {#            localStorage.setItem("success_msg_change_profile_image", true);#}
+        {#            window.location.reload();#}
+        {#        },#}
+        {#        error: function (request) {#}
+        {#            hide_all_msgs();#}
+        {#            let err = request.responseJSON;#}
+        {#            document.getElementById("error_msg_change_profile_image").innerHTML =#}
+        {#            'Error: <br>' + err;#}
+        {#            $("#error_msg_change_profile_image").attr("hidden", false);#}
+        {#        }#}
+        {#    });#}
+        {#});#}
 
         function search_on_twitter(tag){
             window.open('https://twitter.com/search?q=' + tag, '_blank');

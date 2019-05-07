@@ -13,5 +13,6 @@ urlpatterns = [
     path('add_false_label_to_scraper', views.add_false_label_to_scraper, name='add_false_label_to_scraper'),
     path('delete_false_label_from_scraper', views.delete_false_label_from_scraper, name='delete_false_label_from_scraper'),
     path('<int:user_id>', views.user_page, name='user_page'),
-    path('update_user_img', views.update_user_img, name='update_user_img'),
+    path('upload_user_img', views.upload_user_img, name='upload_user_img'),
+
 ]

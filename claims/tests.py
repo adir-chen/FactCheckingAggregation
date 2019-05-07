@@ -5,11 +5,11 @@ from django.test import TestCase, Client
 from claims.models import Claim
 from claims.views import add_claim, check_if_claim_is_valid, check_if_input_format_is_valid, is_english_input, \
     post_above_limit, edit_claim, check_claim_new_fields, delete_claim, check_if_delete_claim_is_valid, \
-    report_spam, check_if_spam_report_is_valid, download_claims, view_home, get_users_images_for_claims, \
-    view_claim, get_users_details_for_comments, get_user_img_and_rep, get_all_claims, get_newest_claims, \
-    get_claim_by_id, get_category_for_claim, get_tags_for_claim, logout_view, add_claim_page, \
+    report_spam, check_if_spam_report_is_valid, download_claims, view_home, \
+    view_claim, get_all_claims, get_newest_claims, get_claim_by_id, \
+    get_category_for_claim, get_tags_for_claim, logout_view, add_claim_page, \
     export_claims_page, post_claims_tweets_page, about_page, handler_400, handler_403, handler_404, \
-    handler_500, return_get_request_to_user
+    handler_500, return_get_request_to_user, merging_claims
 from comments.models import Comment
 from users.models import User, Users_Images, Scrapers, Users_Reputations
 import random
@@ -26,15 +26,15 @@ class ClaimTests(TestCase):
         self.user.save()
         self.password = User.objects.make_random_password()
         self.scraper = User.objects.create_user(username='Scraper', password=self.password)
-        self.user_image = Users_Images(user_id=self.user, user_img='user_img')
+        self.user_image = Users_Images(user=self.user)
         self.user_image.save()
         self.rep = random.randint(1, 50)
-        self.user_rep = Users_Reputations(user_id=self.user, user_rep=self.rep)
+        self.user_rep = Users_Reputations(user=self.user, reputation=self.rep)
         self.user_rep.save()
 
-        self.scraper_image = Users_Images(user_id=self.scraper, user_img='scraper_img')
+        self.scraper_image = Users_Images(user=self.scraper)
         self.scraper_image.save()
-        self.scraper_details = Scrapers(scraper_name=self.scraper.username, scraper_id=self.scraper)
+        self.scraper_details = Scrapers(scraper_name=self.scraper.username, scraper=self.scraper)
         self.scraper_details.save()
 
         self.num_of_saved_users = 3
@@ -829,6 +829,32 @@ class ClaimTests(TestCase):
         response = view_home(self.get_request)
         self.assertTrue(response.status_code == 200)
 
+    # def test_merging_claims(self):
+    #     claim_id_to_merge = self.claim_2.id
+    #     merging_claims(self.claim_1.id, self.claim_2.id)
+    #     self.assertTrue(len(Claim.objects.filter(id=claim_id_to_merge)) == 0)
+    #     self.assertTrue(len(Comment.objects.filter(claim_id=self.claim_1.id)) == 2)
+    #
+    # def test_merging_claims_after_adding_new_comment(self):
+    #     comment_for_claim_2 = Comment(claim_id=self.claim_2.id,
+    #                                   user_id=self.claim_1.user_id,
+    #                                   title='title' + str(self.num_of_saved_comments + 1),
+    #                                   description='description' + str(self.num_of_saved_comments + 1),
+    #                                   url=self.url + str(random.randint(1, 10)),
+    #                                   verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
+    #                                   label='True')
+    #     comment_for_claim_2.save()
+    #     claim_id_to_merge = self.claim_2.id
+    #     merging_claims(self.claim_1.id, self.claim_2.id)
+    #     self.assertTrue(len(Claim.objects.filter(id=claim_id_to_merge)) == 0)
+    #     self.assertTrue(len(Comment.objects.filter(claim_id=self.claim_1.id)) == 3)
+    #
+    # def test_merging_claims_by_not_admin_user(self):
+    #     claim_id_to_merge = self.claim_2.id
+    #     merging_claims(self.claim_1.id, self.claim_2.id)
+    #     self.assertTrue(len(Claim.objects.filter(id=claim_id_to_merge)) == 0)
+    #     self.assertTrue(len(Comment.objects.filter(claim_id=self.claim_1.id)) == 2)
+
     def test_view_home_valid_user_authenticated(self):
         client = Client()
         user_1 = User.objects.create_user(username='user1', email='user1@gmail.com', password='user1')
@@ -843,22 +869,6 @@ class ClaimTests(TestCase):
 
     def test_view_home_not_valid_request(self):
         self.assertRaises(PermissionDenied, view_home, self.post_request)
-
-    def test_get_users_images_for_claims_user_with_img(self):
-        for claim, user_img in get_users_images_for_claims(Claim.objects.all()).items():
-            self.assertTrue(user_img == self.user_image.user_img)
-
-    def test_get_users_images_for_claims_user_without_img(self):
-        len_users_images = len(Users_Images.objects.all())
-        self.user_2 = User(username="User2", email='user2@gmail.com')
-        self.user_2.save()
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(self.new_claim_details)
-        self.post_request.POST = query_dict
-        self.post_request.user = self.user_2
-        add_claim(self.post_request)
-        get_users_images_for_claims(Claim.objects.all())
-        self.assertTrue(len(Users_Images.objects.all()) == len_users_images + 1)
 
     def test_view_claim_valid(self):
         self.get_request.user = self.user
@@ -910,49 +920,6 @@ class ClaimTests(TestCase):
         self.assertTrue(comments_with_details[user_1_comment]['user'] == self.user)
         self.assertTrue(comments_with_details[user_1_comment]['user_img'] == self.user_image)
         self.assertTrue(comments_with_details[user_1_comment]['user_rep'] == math.ceil(self.rep / 20))
-
-    def test_get_users_details_for_comments_with_new_user_and_comment(self):
-        user_2 = User(username='User2', email='user2@gmail.com')
-        user_2.save()
-        new_user_comment = Comment(claim_id=self.claim_1.id,
-                                   user_id=user_2.id,
-                                   title='title2',
-                                   description='description2',
-                                   url='url2',
-                                   verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
-                                   label='False')
-        new_user_comment.save()
-        user_1_comment = Comment.objects.filter(claim_id=self.claim_1.id, user_id=self.user.id).first()
-        from django.db.models import Q
-        comments_with_details = get_users_details_for_comments(Comment.objects.filter(claim_id=self.claim_1.id).filter(
-            Q(user_id=self.user.id) | Q(user_id=user_2.id)).order_by('-id'))
-        self.assertTrue(len(comments_with_details) == 2)
-        user_2_img = Users_Images.objects.filter(user_id=user_2).first()
-        self.assertTrue(comments_with_details[new_user_comment]['user'] == user_2)
-        self.assertTrue(comments_with_details[new_user_comment]['user_img'] == user_2_img)
-        self.assertTrue(comments_with_details[new_user_comment]['user_rep'] == 1)
-        self.assertTrue(comments_with_details[user_1_comment]['user'] == self.user)
-        self.assertTrue(comments_with_details[user_1_comment]['user_img'] == self.user_image)
-        self.assertTrue(comments_with_details[user_1_comment]['user_rep'] == math.ceil(self.rep / 20))
-
-    def test_get_users_details_for_empty_comments(self):
-        Comment.objects.all().delete()
-        comments_with_details = get_users_details_for_comments(Comment.objects.all())
-        self.assertTrue(len(comments_with_details) == 0)
-
-    def test_get_user_img_and_rep_for_existing_user(self):
-        user_img, user_rep = get_user_img_and_rep(self.user.id)
-        self.assertTrue(user_img == self.user_image.user_img)
-        self.assertTrue(user_rep == math.ceil(self.user_rep.user_rep / 20))
-
-    def test_get_user_img_and_rep_for_new_user(self):
-        user_2 = User(username='User2', email='user2@gmail.com')
-        user_2.save()
-        self.get_request.user = user_2
-        user_img, user_rep = get_user_img_and_rep(user_2.id)
-
-        self.assertTrue(user_img == Users_Images.objects.filter(user_id=user_2).first().user_img)
-        self.assertTrue(user_rep == math.ceil((Users_Reputations.objects.filter(user_id=user_2).first().user_rep) / 20))
 
     def test_get_all_claims(self):
         self.assertTrue(len(get_all_claims()) == self.num_of_saved_claims)
@@ -1120,4 +1087,5 @@ class ClaimTests(TestCase):
         request = return_get_request_to_user(self.user)
         self.assertTrue(request.user == self.user)
         self.assertTrue(request.method == 'GET')
+
 

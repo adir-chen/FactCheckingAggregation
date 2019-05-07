@@ -439,6 +439,27 @@ span.authenticity_grade{
     border: 1px solid #000;
 }
 
+table.merging_suggestions_table{
+    border-collapse: collapse;
+    border: 1px solid #8e8e8e;
+    width: 100%;
+    margin: auto;
+}
+
+.merging_suggestions_table td{
+    padding: 3px 12px;
+    border: 1px solid #8e8e8e;
+    position: relative;
+    vertical-align: top;
+}
+
+.merging_suggestions_table th{
+    padding: 3px 12px;
+    border: 1px solid #8e8e8e;
+}
+
+.merging_suggestions_table tr:nth-child(even){background-color: #e2e2e2;}
+
 /*################
     COMMENTS
 ################*/
