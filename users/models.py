@@ -46,7 +46,7 @@ class Users_Images(models.Model):
         if self.profile_img and hasattr(self.profile_img, 'url'):
             return self.profile_img.url
         else:
-            return 'https://wtfact.ise.ac.il/media/profile_default_image.jpg'
+            return 'https://wtfact.ise.bgu.ac.il/media/profile_default_image.jpg'
 
     def __str__(self):
         return self.user.username
