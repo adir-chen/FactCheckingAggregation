@@ -23,7 +23,7 @@ def get_user_rep(self):
 
 
 def get_scraper(self):
-    scraper = Scrapers.objects.filter(user=self)
+    scraper = Scrapers.objects.filter(scraper=self)
     if len(scraper) == 0:
         return None
     return scraper.first()
