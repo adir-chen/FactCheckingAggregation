@@ -59,28 +59,32 @@
             <a id="{{ claim.id }}_claim_whatsApp_share" class="btn whatsApp-share-button" href="whatsapp://send?text={{ request.META.HTTP_HOST }}{{ request.path }}%20"
             data-size="large"><img src="{% static 'claims/assets/images/whatsApp_icon.png' %}"> Share claim on WhatsApp</a>
         {% endif %}
-        {% if tweets %}
-        <hr><br>
-        <div id="tweets">
-            <h3>Related tweets:</h3>
+        {% with tweets=claim.get_tweets_for_claim %}
+            {% if tweets %}
+            <hr><br>
+            <div id="tweets">
+                <h3>Related tweets:</h3>
+                <br>
+                {% for tweet in tweets %}
+                    {% include 'tweets/tweet.html' with claim=claim request=request only %}
+                {% endfor %}
+            </div>
             <br>
-            {% for tweet in claim.get_tweets_for_claim %}
-                {% include 'tweets/tweet.html' with claim=claim request=request only %}
-            {% endfor %}
-        </div>
-        <br>
-        {% endif %}
+            {% endif %}
+        {% endwith %}
         <br><hr><br>
         <div id="comments">
-        {% if comments %}
-            <h3>Users' verdicts:</h3>
-            <br>
-            {% for comment in claim.get_comments_for_claim %}
-                {% include 'comments/comment.html' with comment=comment show_replies=True request=request only %}
-            {% endfor %}
-        {% else %}
-            <h3>No verdicts yet.</h3>
-        {%  endif %}
+        {% with comments=claim.get_comments_for_claim %}
+            {% if comments %}
+                <h3>Users' verdicts:</h3>
+                <br>
+                {% for comment in comments %}
+                    {% include 'comments/comment.html' with comment=comment show_replies=True request=request only %}
+                {% endfor %}
+            {% else %}
+                <h3>No verdicts yet.</h3>
+            {%  endif %}
+        {% endwith %}
         </div>
         {% if request.user.is_authenticated and request.user.id not in claim.users_commented_ids %}
             <br><hr>
