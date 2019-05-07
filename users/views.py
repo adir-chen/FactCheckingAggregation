@@ -556,7 +556,9 @@ def upload_user_img(request):
                            instance=user_img)
     if form.is_valid():
         import shutil
-        shutil.rmtree("media/images/{}".format(user_id))
+        import os
+        if os.path.exists("media/images/{}".format(user_id)):
+            shutil.rmtree("media/images/{}".format(user_id))
         user_and_img = form.save(commit=False)
         user_and_img.user = user
         user_and_img.profile_img = file
