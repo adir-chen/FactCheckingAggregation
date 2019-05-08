@@ -97,7 +97,7 @@
                         <img src="{{ request.user.get_user_image.image_url }}">
                     </div>
                     <div class="comment_user_details">
-                        User: <a href="/users/{{ request.user.username }}">{{ request.user.username }}</a><br>
+                        User: <a href="/users/{{ request.user.id }}">{{ request.user.username }}</a><br>
                         {% load static %}
                         {% for i in 'i'|rjust:request.user.get_user_rep.get_reputation %}
                             <img src="{% static 'claims/assets/images/star.png' %}">

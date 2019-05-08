@@ -420,3 +420,11 @@ class CommentTests(TestCase):
         len_tweets = len(Tweet.objects.all())
         self.assertRaises(Http404, download_tweets_for_claims, self.post_request)
         self.assertTrue(len(Tweet.objects.all()) == len_tweets)
+
+    ################
+    # Models Tests #
+    ################
+
+    def test_tweet_str(self):
+        self.assertTrue(self.tweet_1.__str__() == str(self.tweet_1.claim.id) + ' - ' + self.tweet_1.tweet_link)
+        self.assertTrue(self.tweet_2.__str__() == str(self.tweet_2.claim.id) + ' - ' + self.tweet_2.tweet_link)

@@ -96,12 +96,12 @@
     </div>
     {% if show_replies %}
         <div class="replies_area">
-            {% for reply, user_details  in comment.get_replies_with_images.items %}
-                {% include 'replies/reply.html' with reply=reply user_details=user_details request=request only %}
+            {% for reply in comment.get_first_two_replies %}
+                {% include 'replies/reply.html' with reply=reply request=request only %}
             {% endfor %}
             <div id="{{ comment.id }}_more_replies" hidden="hidden">
-                {% for reply, user_details  in comment.get_more_replies_with_images.items %}
-                    {% include 'replies/reply.html' with reply=reply user_details=user_details request=request only %}
+                {% for reply in comment.get_more_replies %}
+                    {% include 'replies/reply.html' with reply=reply request=request only %}
                 {% endfor %}
             </div>
             {% if comment.has_more_replies %}

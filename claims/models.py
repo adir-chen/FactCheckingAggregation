@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 from django.contrib.staticfiles.templatetags.staticfiles import static
 
 
-
 class Claim(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     claim = models.CharField(max_length=150)
@@ -34,42 +33,25 @@ class Claim(models.Model):
                 users_with_num_of_comments[comment.user_id] = 1
             else:
                 users_with_num_of_comments[comment.user_id] += 1
-        user_ids = [user_id for user_id in users_with_num_of_comments if users_with_num_of_comments[user_id] > max_comments]
+        user_ids = [user_id for user_id in users_with_num_of_comments if users_with_num_of_comments[user_id] >=
+                    max_comments]
         return user_ids
 
-    def users_tweeted_ids(self):
-        from tweets.models import Tweet
-        user_ids = []
-        for tweet in Tweet.objects.filter(claim_id=self.id):
-            user_ids.append(tweet.user_id)
-        return user_ids
-
-    def get_report_link(self):
-        tap_url = ''
-        report = Claims_Reports.objects.filter(claim_id=self.id)
-        if len(report) > 0:
-            return tap_url + '/' + str(report.first().id)
-        else:
-            return None
-
-    def max_comment_id(self):
-        from comments.models import Comment
-        max_comment_id = -1
-        for comment in Comment.objects.filter(claim_id=self.id):
-            if comment.id > max_comment_id:
-                max_comment_id = comment.id
-        return max_comment_id
-
-    # def get_claim_user_img(self):
-    #     from users.models import Users_Images
-    #     user_img = Users_Images.objects.filter(user=self.user_id)
-    #     if len(user_img) == 0:
-    #         new_user_img = Users_Images.objects.create(user=User.objects.filter(id=self.user_id).first())
-    #         new_user_img.save()
-    #         user_img = new_user_img
+    # def get_report_link(self):
+    #     tap_url = ''
+    #     report = Claims_Reports.objects.filter(claim_id=self.id)
+    #     if len(report) > 0:
+    #         return tap_url + '/' + str(report.first().id)
     #     else:
-    #         user_img = user_img.first()
-    #     return user_img
+    #         return None
+
+    # def max_comment_id(self):
+    #     from comments.models import Comment
+    #     max_comment_id = -1
+    #     for comment in Comment.objects.filter(claim_id=self.id):
+    #         if comment.id > max_comment_id:
+    #             max_comment_id = comment.id
+    #     return max_comment_id
 
 
 class Claims_Reports(models.Model):

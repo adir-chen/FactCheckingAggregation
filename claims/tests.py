@@ -5,17 +5,18 @@ from django.test import TestCase, Client
 from claims.models import Claim
 from claims.views import add_claim, check_if_claim_is_valid, check_if_input_format_is_valid, is_english_input, \
     post_above_limit, edit_claim, check_claim_new_fields, delete_claim, check_if_delete_claim_is_valid, \
-    report_spam, check_if_spam_report_is_valid, download_claims, view_home, \
-    view_claim, get_all_claims, get_newest_claims, get_claim_by_id, \
+    report_spam, check_if_spam_report_is_valid, download_claims, \
+    merging_claims, check_if_suggestion_is_valid, delete_suggestion_for_merging_claims, \
+    view_home, view_claim, get_all_claims, get_newest_claims, get_claim_by_id, \
     get_category_for_claim, get_tags_for_claim, logout_view, add_claim_page, \
-    export_claims_page, post_claims_tweets_page, about_page, handler_400, handler_403, handler_404, \
-    handler_500, return_get_request_to_user, merging_claims
+    export_claims_page, post_claims_tweets_page, merging_claims_page, about_page,\
+    handler_400, handler_403, handler_404, handler_500, \
+    return_get_request_to_user
 from comments.models import Comment
 from users.models import User, Users_Images, Scrapers, Users_Reputations
 import random
 import datetime
 import string
-import math
 
 
 class ClaimTests(TestCase):
@@ -134,6 +135,11 @@ class ClaimTests(TestCase):
         self.test_file_invalid_header = SimpleUploadedFile("tests_invalid.csv", open(
             'claims/tests_invalid.csv', 'r', encoding='utf-8-sig').read().encode())
 
+        self.merging_claims = {'claim_id': self.claim_1.id,
+                               'claim_id_to_merge': self.claim_2.id,
+                               'user_id': self.admin.id,
+                               'is_superuser': True}
+
         self.error_code = 404
 
     def tearDown(self):
@@ -151,7 +157,7 @@ class ClaimTests(TestCase):
         claim_4 = get_claim_by_id(self.num_of_saved_claims + 1)
         self.assertTrue(claim_4.claim == self.new_claim_details['claim'])
         self.assertTrue(claim_4.category == self.new_claim_details['category'])
-        self.assertTrue(claim_4.tags == ','.join(self.new_claim_details['tags'].split()))
+        self.assertTrue(claim_4.tags == ','.join(self.new_claim_details['tags'].split(',')))
         self.assertTrue(claim_4.authenticity_grade == 0)
 
     def test_add_claim_by_user_not_authenticated(self):
@@ -808,6 +814,146 @@ class ClaimTests(TestCase):
         self.assertRaises(Http404, download_claims, self.post_request)
         self.assertTrue(len(Claim.objects.all()) == len_claims)
 
+    def test_merging_claims(self):
+        claim_2_id = self.claim_2.id
+        self.post_request.POST = self.merging_claims
+        self.post_request.user = self.admin
+        response = merging_claims(self.post_request)
+        self.assertTrue(response.status_code == 200)
+        self.assertTrue(len(Claim.objects.filter(id=claim_2_id)) == 0)
+        self.assertTrue(len(Comment.objects.filter(claim_id=self.claim_1.id)) == 2)
+
+    def test_merging_claims_by_not_admin_user(self):
+        self.post_request.POST = self.merging_claims
+        self.post_request.user = self.user
+        self.assertRaises(PermissionDenied, merging_claims, self.post_request)
+
+    def test_merging_claims_invalid_request(self):
+        self.get_request.POST = self.merging_claims
+        self.get_request.user = self.admin
+        self.assertRaises(PermissionDenied, merging_claims, self.get_request)
+
+    def test_merging_claims_invalid_claim_id(self):
+        self.merging_claims['claim_id'] = self.num_of_saved_claims + random.randint(1, 10)
+        self.post_request.POST = self.merging_claims
+        self.post_request.user = self.admin
+        response = merging_claims(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
+
+    def test_merging_claims_invalid_claim_id_to_merge(self):
+        self.merging_claims['claim_id_to_merge'] = self.num_of_saved_claims + random.randint(1, 10)
+        self.post_request.POST = self.merging_claims
+        self.post_request.user = self.admin
+        response = merging_claims(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
+
+    def test_merging_claims_missing_args(self):
+        del self.merging_claims['user_id']
+        del self.merging_claims['is_superuser']
+        for i in range(10):
+            dict_copy = self.merging_claims.copy()
+            args_to_remove = []
+            for j in range(random.randint(1, len(self.merging_claims.keys()) - 1)):
+                args_to_remove.append(list(self.merging_claims.keys())[j])
+            for j in range(len(args_to_remove)):
+                del self.merging_claims[args_to_remove[j]]
+            query_dict = QueryDict('', mutable=True)
+            query_dict.update(self.merging_claims)
+            self.post_request.POST = query_dict
+            self.post_request.user = self.admin
+            response = merging_claims(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
+            self.merging_claims = dict_copy.copy()
+
+    def test_check_if_suggestion_is_valid(self):
+        self.assertTrue(check_if_suggestion_is_valid(self.merging_claims)[0])
+
+    def test_check_if_suggestion_is_valid_missing_claim_id(self):
+        del self.merging_claims['claim_id']
+        self.assertFalse(check_if_suggestion_is_valid(self.merging_claims)[0])
+
+    def test_check_if_suggestion_is_valid_invalid_claim_id(self):
+        self.merging_claims['claim_id'] = self.num_of_saved_claims + random.randint(1, 10)
+        self.assertFalse(check_if_suggestion_is_valid(self.merging_claims)[0])
+
+    def test_check_if_suggestion_is_valid_missing_claim_id_to_merge(self):
+        del self.merging_claims['claim_id_to_merge']
+        self.assertFalse(check_if_suggestion_is_valid(self.merging_claims)[0])
+
+    def test_check_if_suggestion_is_valid_invalid_claim_id_to_merge(self):
+        self.merging_claims['claim_id_to_merge'] = self.num_of_saved_claims + random.randint(1, 10)
+        self.assertFalse(check_if_suggestion_is_valid(self.merging_claims)[0])
+
+    def test_check_if_suggestion_is_valid_missing_user_id(self):
+        del self.merging_claims['user_id']
+        self.assertFalse(check_if_suggestion_is_valid(self.merging_claims)[0])
+
+    def test_check_if_suggestion_is_valid_invalid_user_id(self):
+        self.merging_claims['user_id'] = self.num_of_saved_users + random.randint(1, 10)
+        self.assertFalse(check_if_suggestion_is_valid(self.merging_claims)[0])
+
+    def test_check_if_suggestion_is_valid_missing_user_type(self):
+        del self.merging_claims['is_superuser']
+        self.assertFalse(check_if_suggestion_is_valid(self.merging_claims)[0])
+
+    def test_check_if_suggestion_is_valid_not_admin_user(self):
+        self.merging_claims['user_id'] = self.user.id
+        self.merging_claims['is_superuser'] = False
+        self.assertFalse(check_if_suggestion_is_valid(self.merging_claims)[0])
+
+    def test_delete_suggestion_for_merging_claims(self):
+        claim_2_id = self.claim_2.id
+        self.post_request.POST = self.merging_claims
+        self.post_request.user = self.admin
+        response = delete_suggestion_for_merging_claims(self.post_request)
+        self.assertTrue(response.status_code == 200)
+        self.assertTrue(len(Claim.objects.filter(id=claim_2_id)) == 1)
+        self.assertTrue(len(Claim.objects.filter(id=self.claim_1.id)) == 1)
+        self.assertTrue(len(Comment.objects.filter(claim_id=self.claim_1.id)) == 1)
+        self.assertTrue(len(Comment.objects.filter(claim_id=claim_2_id)) == 1)
+
+    def test_delete_suggestion_for_merging_claims_by_not_admin_user(self):
+        self.post_request.POST = self.merging_claims
+        self.post_request.user = self.user
+        self.assertRaises(PermissionDenied, delete_suggestion_for_merging_claims, self.post_request)
+
+    def test_delete_suggestion_for_merging_claims_invalid_request(self):
+        self.get_request.POST = self.merging_claims
+        self.get_request.user = self.admin
+        self.assertRaises(PermissionDenied, merging_claims, self.get_request)
+
+    def test_delete_suggestion_for_merging_claims_invalid_claim_id(self):
+        self.merging_claims['claim_id'] = self.num_of_saved_claims + random.randint(1, 10)
+        self.post_request.POST = self.merging_claims
+        self.post_request.user = self.admin
+        response = delete_suggestion_for_merging_claims(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
+
+    def test_delete_suggestion_for_merging_claims_invalid_claim_id_to_merge(self):
+        self.merging_claims['claim_id_to_merge'] = self.num_of_saved_claims + random.randint(1, 10)
+        self.post_request.POST = self.merging_claims
+        self.post_request.user = self.admin
+        response = delete_suggestion_for_merging_claims(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
+
+    def test_delete_suggestion_for_merging_claims_missing_args(self):
+        del self.merging_claims['user_id']
+        del self.merging_claims['is_superuser']
+        for i in range(10):
+            dict_copy = self.merging_claims.copy()
+            args_to_remove = []
+            for j in range(random.randint(1, len(self.merging_claims.keys()) - 1)):
+                args_to_remove.append(list(self.merging_claims.keys())[j])
+            for j in range(len(args_to_remove)):
+                del self.merging_claims[args_to_remove[j]]
+            query_dict = QueryDict('', mutable=True)
+            query_dict.update(self.merging_claims)
+            self.post_request.POST = query_dict
+            self.post_request.user = self.admin
+            response = delete_suggestion_for_merging_claims(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
+            self.merging_claims = dict_copy.copy()
+
     def test_view_home_many_claims(self):
         for i in range(4, 24):
             claim = Claim(user_id=self.user.id,
@@ -902,24 +1048,6 @@ class ClaimTests(TestCase):
     def test_view_claim_invalid_claim(self):
         self.get_request.user = self.user
         self.assertRaises(Http404, view_claim, self.get_request, self.num_of_saved_claims + random.randint(1, 10))
-
-    # def test_get_users_details_for_comments_for_user(self):
-    #     user_1_comment = Comment.objects.filter(claim_id=self.claim_1.id, user_id=self.user.id).first()
-    #     user_2_comment = Comment.objects.filter(claim_id=self.claim_2.id, user_id=self.user.id).first()
-    #     user_3_comment = Comment.objects.filter(claim_id=self.claim_3.id, user_id=self.user.id).first()
-    #     comments_with_details = get_users_details_for_comments(Comment.objects.filter(user_id=self.user.id).order_by('-id'))
-    #     self.assertTrue(len(comments_with_details) == self.num_of_saved_comments)
-    #     self.assertTrue(comments_with_details[user_3_comment]['user'] == self.user)
-    #     self.assertTrue(comments_with_details[user_3_comment]['user_img'] == self.user_image)
-    #     self.assertTrue(comments_with_details[user_3_comment]['user_rep'] == math.ceil(self.rep / 20))
-    #
-    #     self.assertTrue(comments_with_details[user_2_comment]['user'] == self.user)
-    #     self.assertTrue(comments_with_details[user_2_comment]['user_img'] == self.user_image)
-    #     self.assertTrue(comments_with_details[user_2_comment]['user_rep'] == math.ceil(self.rep / 20))
-    #
-    #     self.assertTrue(comments_with_details[user_1_comment]['user'] == self.user)
-    #     self.assertTrue(comments_with_details[user_1_comment]['user_img'] == self.user_image)
-    #     self.assertTrue(comments_with_details[user_1_comment]['user_rep'] == math.ceil(self.rep / 20))
 
     def test_get_all_claims(self):
         self.assertTrue(len(get_all_claims()) == self.num_of_saved_claims)
@@ -1068,6 +1196,24 @@ class ClaimTests(TestCase):
         self.post_request.user = self.user
         self.assertRaises(PermissionDenied, post_claims_tweets_page, self.post_request)
 
+    def test_merging_claims_page(self):
+        self.get_request.user = self.admin
+        response = merging_claims_page(self.get_request)
+        self.assertTrue(response.status_code == 200)
+
+    def test_merging_claims_page_user_not_admin(self):
+        self.get_request.user = self.user
+        self.assertRaises(PermissionDenied, merging_claims_page, self.get_request)
+
+    def test_merging_claims_page_user_not_authenticated(self):
+        from django.contrib.auth.models import AnonymousUser
+        self.get_request.user = AnonymousUser()
+        self.assertRaises(PermissionDenied, merging_claims_page, self.get_request)
+
+    def test_merging_claims_page_invalid_request(self):
+        self.post_request.user = self.admin
+        self.assertRaises(PermissionDenied, merging_claims_page, self.post_request)
+
     def test_about_page(self):
         self.assertTrue(about_page(HttpRequest()).status_code == 200)
 
@@ -1088,4 +1234,134 @@ class ClaimTests(TestCase):
         self.assertTrue(request.user == self.user)
         self.assertTrue(request.method == 'GET')
 
+    ################
+    # Models Tests #
+    ################
 
+    def test_claim_str(self):
+        self.assertTrue(self.claim_1.__str__() == self.claim_1.user.username + ' - ' + self.claim_1.claim)
+        self.assertTrue(self.claim_2.__str__() == self.claim_2.user.username + ' - ' + self.claim_2.claim)
+        self.assertTrue(self.claim_3.__str__() == self.claim_3.user.username + ' - ' + self.claim_3.claim)
+
+    def test_get_comments_for_claim(self):
+        claim_1_comments = self.claim_1.get_comments_for_claim()
+        self.assertTrue(len(claim_1_comments) == 1)
+        comment = claim_1_comments.first()
+        self.assertTrue(comment.id == self.comment_1.id)
+        self.assertTrue(comment.claim_id == self.comment_1.claim_id)
+        self.assertTrue(comment.user_id == self.comment_1.user_id)
+        self.assertTrue(comment.title == self.comment_1.title)
+        self.assertTrue(comment.description == self.comment_1.description)
+        self.assertTrue(comment.url == self.comment_1.url)
+        self.assertTrue(comment.verdict_date == self.comment_1.verdict_date)
+        self.assertTrue(comment.label == self.comment_1.label)
+
+        claim_2_comments = self.claim_2.get_comments_for_claim()
+        self.assertTrue(len(claim_2_comments) == 1)
+        comment = claim_2_comments.first()
+        self.assertTrue(comment.id == self.comment_2.id)
+        self.assertTrue(comment.claim_id == self.comment_2.claim_id)
+        self.assertTrue(comment.user_id == self.comment_2.user_id)
+        self.assertTrue(comment.title == self.comment_2.title)
+        self.assertTrue(comment.description == self.comment_2.description)
+        self.assertTrue(comment.url == self.comment_2.url)
+        self.assertTrue(comment.verdict_date == self.comment_2.verdict_date)
+        self.assertTrue(comment.label == self.comment_2.label)
+
+        claim_3_comments = self.claim_3.get_comments_for_claim()
+        self.assertTrue(len(claim_3_comments) == 1)
+        comment = claim_3_comments.first()
+        self.assertTrue(comment.id == self.comment_3.id)
+        self.assertTrue(comment.claim_id == self.comment_3.claim_id)
+        self.assertTrue(comment.user_id == self.comment_3.user_id)
+        self.assertTrue(comment.title == self.comment_3.title)
+        self.assertTrue(comment.description == self.comment_3.description)
+        self.assertTrue(comment.url == self.comment_3.url)
+        self.assertTrue(comment.verdict_date == self.comment_3.verdict_date)
+        self.assertTrue(comment.label == self.comment_3.label)
+
+    def test_get_tweets_for_claim(self):
+        from tweets.models import Tweet
+        tweet_link = 'https://twitter.com/'
+        tweet_1 = Tweet.objects.create(claim=self.claim_1,
+                                       tweet_link=tweet_link)
+        tweet_2 = Tweet.objects.create(claim=self.claim_2,
+                                       tweet_link=tweet_link)
+        claim_1_tweets = self.claim_1.get_tweets_for_claim()
+        self.assertTrue(len(claim_1_tweets) == 1)
+        tweet = claim_1_tweets.first()
+        self.assertTrue(tweet.id == tweet_1.id)
+        self.assertTrue(tweet.tweet_link == tweet_link)
+
+        claim_2_tweets = self.claim_2.get_tweets_for_claim()
+        self.assertTrue(len(claim_2_tweets) == 1)
+        tweet = claim_2_tweets.first()
+        self.assertTrue(tweet.id == tweet_2.id)
+        self.assertTrue(tweet.tweet_link == tweet_link)
+
+        claim_3_tweets = self.claim_3.get_tweets_for_claim()
+        self.assertTrue(len(claim_3_tweets) == 0)
+
+    def test_users_commented_ids(self):
+        user_2 = User(username='User2', email='user2@gmail.com')
+        user_2.save()
+        user_3 = User(username='User3', email='user3@gmail.com')
+        user_3.save()
+        user_4 = User(username='User4', email='user4@gmail.com')
+        user_4.save()
+        for i in range(5):
+            comment = Comment(claim_id=self.claim_1.id,
+                              user_id=user_2.id,
+                              title='title' + str(i),
+                              description='description' + str(i),
+                              url=self.url + str(random.randint(1, 10)),
+                              verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
+                              label='True')
+            comment.save()
+            comment = Comment(claim_id=self.claim_1.id,
+                              user_id=user_3.id,
+                              title='title' + str(i),
+                              description='description' + str(i),
+                              url=self.url + str(random.randint(1, 10)),
+                              verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
+                              label='True')
+            comment.save()
+            comment = Comment(claim_id=self.claim_2.id,
+                              user_id=user_3.id,
+                              title='title' + str(i),
+                              description='description' + str(i),
+                              url=self.url + str(random.randint(1, 10)),
+                              verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
+                              label='True')
+            comment.save()
+            if i % 2 == 0:
+                comment = Comment(claim_id=self.claim_2.id,
+                                  user_id=user_4.id,
+                                  title='title' + str(i),
+                                  description='description' + str(i),
+                                  url=self.url + str(random.randint(1, 10)),
+                                  verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
+                                  label='True')
+                comment.save()
+        claim_1_users_commented_ids = self.claim_1.users_commented_ids()
+        self.assertTrue(len(claim_1_users_commented_ids) == 2)
+        self.assertTrue(user_2.id in claim_1_users_commented_ids)
+        self.assertTrue(user_3.id in claim_1_users_commented_ids)
+
+        claim_2_users_commented_ids = self.claim_2.users_commented_ids()
+        self.assertTrue(len(claim_2_users_commented_ids) == 1)
+        self.assertTrue(user_3.id in claim_2_users_commented_ids)
+
+        claim_3_users_commented_ids = self.claim_3.users_commented_ids()
+        self.assertTrue(len(claim_3_users_commented_ids) == 0)
+
+    def test_claim_report_str(self):
+        from claims.models import Claims_Reports
+        report_id = random.randint(1, 10)
+        claim_report = Claims_Reports.objects.create(claim=self.claim_1, report_id=report_id)
+        self.assertTrue(claim_report.__str__() == str(self.claim_1.id) + ' - ' + str(report_id))
+
+    def test_merging_suggestion_str(self):
+        from claims.models import Merging_Suggestions
+        merging_suggestion = Merging_Suggestions.objects.create(claim=self.claim_1, claim_to_merge=self.claim_2)
+        self.assertTrue(merging_suggestion.__str__() == str(self.claim_1.id) + ' - ' + str(self.claim_2.id))

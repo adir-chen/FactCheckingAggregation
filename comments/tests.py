@@ -10,6 +10,7 @@ from comments.views import add_comment, build_comment, check_if_comment_is_valid
     export_to_csv, check_if_csv_fields_are_valid, check_if_fields_and_scrapers_lists_valid, \
     create_df_for_claims, get_all_comments_for_user_id, get_all_comments_for_claim_id, \
     update_authenticity_grade
+from replies.models import Reply
 from users.models import User, Scrapers, Users_Reputations
 import datetime
 import string
@@ -118,6 +119,20 @@ class CommentTests(TestCase):
         self.comment_5.save()
         self.comment_6.save()
         self.num_of_saved_comments = 4
+
+        self.reply_1 = Reply(user_id=self.user_1.id,
+                             comment_id=self.comment_1.id,
+                             content='content')
+        self.reply_1.save()
+        self.reply_2 = Reply(user_id=self.user_1.id,
+                             comment_id=self.comment_1.id,
+                             content='content')
+        self.reply_2.save()
+        self.reply_3 = Reply(user_id=self.user_2.id,
+                             comment_id=self.comment_2.id,
+                             content='content')
+        self.reply_3.save()
+        self.num_of_saved_replies = 3
 
         self.SITE_KEY_TEST = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
 
@@ -1553,3 +1568,158 @@ class CommentTests(TestCase):
         down_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
         self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 0)
+
+    ################
+    # Models Tests #
+    ################
+
+    def test__str__(self):
+        self.assertTrue(self.comment_1.__str__() == self.comment_1.user.username + ' - ' + self.comment_1.title)
+        self.assertTrue(self.comment_2.__str__() == self.comment_2.user.username + ' - ' + self.comment_2.title)
+        self.assertTrue(self.comment_5.__str__() == self.comment_5.user.username + ' - ' + self.comment_5.title)
+        self.assertTrue(self.comment_6.__str__() == self.comment_6.user.username + ' - ' + self.comment_6.title)
+
+    def test_tags_as_list(self):
+        self.assertTrue(self.comment_1.tags_as_list() == self.comment_1.tags.split(','))
+        self.assertTrue(self.comment_2.tags_as_list() == self.comment_2.tags.split(','))
+        self.assertTrue(self.comment_5.tags_as_list() == self.comment_5.tags.split(','))
+        self.assertTrue(self.comment_6.tags_as_list() == self.comment_6.tags.split(','))
+
+    def test_users_commented_ids(self):
+        user_2 = User(username='User_2', email='user_2@gmail.com')
+        user_2.save()
+        user_3 = User(username='User_3', email='user_3@gmail.com')
+        user_3.save()
+        user_4 = User(username='User_4', email='user_4@gmail.com')
+        user_4.save()
+
+        for i in range(5):
+            reply = Reply(user_id=user_2.id,
+                          comment_id=self.comment_1.id,
+                          content='content' + str(i))
+            reply.save()
+            reply = Reply(user_id=user_3.id,
+                          comment_id=self.comment_1.id,
+                          content='content' + str(i))
+            reply.save()
+            reply = Reply(user_id=user_4.id,
+                          comment_id=self.comment_2.id,
+                          content='content' + str(i))
+            reply.save()
+            if i % 2 == 0:
+                reply = Reply(user_id=user_4.id,
+                              comment_id=self.comment_2.id,
+                              content='content' + str(i))
+                reply.save()
+        comment_1_users_replies_ids = self.comment_1.users_replied_ids()
+        self.assertTrue(len(comment_1_users_replies_ids) == 2)
+        self.assertTrue(user_2.id in comment_1_users_replies_ids)
+        self.assertTrue(user_3.id in comment_1_users_replies_ids)
+
+        comment_2_users_replies_ids = self.comment_2.users_replied_ids()
+        self.assertTrue(len(comment_2_users_replies_ids) == 1)
+        self.assertTrue(user_4.id in comment_2_users_replies_ids)
+
+        comment_3_users_replies_ids = self.comment_3.users_replied_ids()
+        self.assertTrue(len(comment_3_users_replies_ids) == 0)
+
+    def test_get_replies(self):
+        comment_1_replies = self.comment_1.get_replies()
+        reply = comment_1_replies[0]
+        self.assertTrue(reply.id == self.reply_1.id)
+        self.assertTrue(reply.comment_id == self.reply_1.comment_id)
+        self.assertTrue(reply.content == self.reply_1.content)
+        reply = comment_1_replies[1]
+        self.assertTrue(reply.id == self.reply_2.id)
+        self.assertTrue(reply.comment_id == self.reply_2.comment_id)
+        self.assertTrue(reply.content == self.reply_2.content)
+
+        comment_2_replies = self.comment_2.get_replies()
+        reply = comment_2_replies[0]
+        self.assertTrue(reply.id == self.reply_3.id)
+        self.assertTrue(reply.comment_id == self.reply_3.comment_id)
+        self.assertTrue(reply.content == self.reply_3.content)
+
+    def test_get_first_two_replies(self):
+        user_3 = User(username='User_3', email='user_3@gmail.com')
+        user_3.save()
+        comment_1_replies = self.comment_1.get_first_two_replies()
+        self.assertTrue(len(comment_1_replies) == 2)
+        reply = comment_1_replies[0]
+        self.assertTrue(reply.id == self.reply_1.id)
+        self.assertTrue(reply.comment_id == self.reply_1.comment_id)
+        self.assertTrue(reply.content == self.reply_1.content)
+        reply = comment_1_replies[1]
+        self.assertTrue(reply.id == self.reply_2.id)
+        self.assertTrue(reply.comment_id == self.reply_2.comment_id)
+        self.assertTrue(reply.content == self.reply_2.content)
+        reply = Reply(user_id=user_3.id,
+                      comment_id=self.comment_1.id,
+                      content='content')
+        reply.save()
+        comment_1_replies = self.comment_1.get_first_two_replies()
+        self.assertTrue(len(comment_1_replies) == 2)
+        reply = comment_1_replies[0]
+        self.assertTrue(reply.id == self.reply_1.id)
+        self.assertTrue(reply.comment_id == self.reply_1.comment_id)
+        self.assertTrue(reply.content == self.reply_1.content)
+        reply = comment_1_replies[1]
+        self.assertTrue(reply.id == self.reply_2.id)
+        self.assertTrue(reply.comment_id == self.reply_2.comment_id)
+        self.assertTrue(reply.content == self.reply_2.content)
+
+        comment_2_replies = self.comment_2.get_first_two_replies()
+        self.assertTrue(len(comment_2_replies) == 1)
+        reply = comment_2_replies[0]
+        self.assertTrue(reply.id == self.reply_3.id)
+        self.assertTrue(reply.comment_id == self.reply_3.comment_id)
+        self.assertTrue(reply.content == self.reply_3.content)
+
+    def test_get_more_replies(self):
+        user_3 = User(username='User_3', email='user_3@gmail.com')
+        user_3.save()
+        comment_1_replies = self.comment_1.get_more_replies()
+        self.assertTrue(len(comment_1_replies) == 0)
+        reply = Reply(user_id=user_3.id,
+                      comment_id=self.comment_1.id,
+                      content='content')
+        reply.save()
+        comment_1_replies = self.comment_1.get_more_replies()
+        self.assertTrue(len(comment_1_replies) == 1)
+        reply = comment_1_replies[0]
+        self.assertTrue(reply.id == reply.id)
+        self.assertTrue(reply.comment_id == reply.comment_id)
+        self.assertTrue(reply.content == reply.content)
+
+        comment_2_replies = self.comment_2.get_more_replies()
+        self.assertTrue(len(comment_2_replies) == 0)
+
+    def test_has_more_replies(self):
+        user_3 = User(username='User_3', email='user_3@gmail.com')
+        user_3.save()
+        self.assertFalse(self.comment_1.has_more_replies())
+        reply = Reply(user_id=user_3.id,
+                      comment_id=self.comment_1.id,
+                      content='content')
+        reply.save()
+        self.assertTrue(self.comment_1.has_more_replies())
+        self.assertFalse(self.comment_2.has_more_replies())
+
+    def test_get_preview(self):
+        import json
+        url = 'https://www.snopes.com/fact-check/bella-ramsey-break-dancing/'
+        comment = Comment(claim_id=self.claim_1.id,
+                          user_id=self.user_2.id,
+                          title=self.claim_2.claim,
+                          description='description1',
+                          url=url,
+                          tags='tag1',
+                          verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
+                          label='label1')
+        comment.save()
+        comment_preview = comment.get_preview()
+        preview = {'title': "FACT CHECK: Does a Viral Video Really Show \'Game of Thrones\' Actress Bella Ramsey Break-Dancing?",
+                   'description': 'The English actress may have moves on the battlefield, but does she have moves on the dance floor?',
+                   'src': 'https://www.snopes.com/tachyon/2019/05/bella-ramsey-getty-british-academy-childrens-awards-2018.jpg?fit=1200,628'}
+        self.assertTrue(json.dumps(preview) == comment_preview)
+

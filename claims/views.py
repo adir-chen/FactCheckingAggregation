@@ -357,8 +357,8 @@ def merging_claims(request):
     update_authenticity_grade(merge_claims_info['claim_id'])
     Claim.objects.filter(id=merge_claims_info['claim_id_to_merge']).delete()
     save_log_message(request.user.id, request.user.username,
-                     'Merging claim with id ' + merge_claims_info['claim_id_to_merge'] +
-                     ' with claim with id ' + merge_claims_info['claim_id'], True)
+                     'Merging claim with id ' + str(merge_claims_info['claim_id_to_merge']) +
+                     ' with claim with id ' + str(merge_claims_info['claim_id']), True)
     return merging_claims_page(return_get_request_to_user(request.user))
 
 
@@ -404,8 +404,8 @@ def delete_suggestion_for_merging_claims(request):
                                        claim_to_merge_id=suggestion_to_delete['claim_id_to_merge']).delete()
     save_log_message(request.user.id, request.user.username,
                      'Deleting a suggestion for merging claims - claim with id ' +
-                     suggestion_to_delete['claim_id'] +
-                     ' with claim with id ' + suggestion_to_delete['claim_id_to_merge'], True)
+                     str(suggestion_to_delete['claim_id']) +
+                     ' with claim with id ' + str(suggestion_to_delete['claim_id_to_merge']), True)
     return merging_claims_page(return_get_request_to_user(request.user))
 
 

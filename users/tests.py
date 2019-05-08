@@ -2,7 +2,7 @@ from django.http import HttpRequest, QueryDict, Http404
 from django.core.exceptions import PermissionDenied
 from django.utils.datastructures import MultiValueDict
 from django.test import TestCase
-from users.models import User, Scrapers, Users_Reputations
+from users.models import User, Scrapers, Users_Reputations, Users_Images
 from claims.models import Claim
 from comments.models import Comment
 from users.views import check_if_user_exists_by_user_id, get_username_by_user_id, get_user_reputation, add_all_scrapers, \
@@ -10,7 +10,8 @@ from users.views import check_if_user_exists_by_user_id, get_username_by_user_id
     check_if_scraper_info_is_valid, update_reputation_for_user, user_page, get_scraper_url, \
     add_true_label_to_scraper, delete_true_label_from_scraper, add_false_label_to_scraper, \
     delete_false_label_from_scraper, check_if_scraper_new_label_is_valid, \
-    check_if_scraper_label_delete_is_valid, check_if_scraper_labels_already_exist, check_if_user_is_scraper
+    check_if_scraper_label_delete_is_valid, check_if_scraper_labels_already_exist, \
+    check_if_user_is_scraper
 import json
 import random
 import datetime
@@ -72,8 +73,6 @@ class UsersTest(TestCase):
 
         self.comment_1.save()
         self.num_of_saved_comments = 1
-
-        self.update_user_image = {'user_img': 'newUserImg'}
 
         self.error_code = 404
 
@@ -507,31 +506,6 @@ class UsersTest(TestCase):
         Scrapers.objects.filter(id=scraper.id).update(scraper_url='http://wwww.' + self.new_scraper.username + '.com')
         scraper_url = get_scraper_url(self.new_scraper.username)
         self.assertTrue(scraper_url == 'http://wwww.' + self.new_scraper.username + '.com')
-
-    # def test_get_true_labels_for_user(self):
-    #     self.assertTrue(len(get_true_labels(self.user_1.username)) == 0)
-    #
-    # def test_get_true_labels_for_scraper(self):
-    #     scraper = Scrapers.objects.create(scraper=self.new_scraper, scraper_name=self.new_scraper.username)
-    #     true_labels = get_true_labels(self.new_scraper.username)
-    #     self.assertTrue(len(true_labels) == 1)
-    #     self.assertTrue(true_labels[0] == 'true')
-    #     Scrapers.objects.filter(id=scraper.id).update(true_labels='true,mostly true')
-    #     true_labels = get_true_labels(self.new_scraper.username)
-    #     self.assertTrue(len(true_labels) == 2)
-    #     self.assertTrue(true_labels[0] == 'true')
-    #     self.assertTrue(true_labels[1] == 'mostly true')
-
-    # def test_get_false_labels_for_scraper(self):
-    #     scraper = Scrapers.objects.create(scraper=self.new_scraper, scraper_name=self.new_scraper.username)
-    #     false_labels = get_false_labels(self.new_scraper.username)
-    #     self.assertTrue(len(false_labels) == 1)
-    #     self.assertTrue(false_labels[0] == 'false')
-    #     Scrapers.objects.filter(id=scraper.id).update(false_labels='false,mostly false')
-    #     false_labels = get_false_labels(self.new_scraper.username)
-    #     self.assertTrue(len(false_labels) == 2)
-    #     self.assertTrue(false_labels[0] == 'false')
-    #     self.assertTrue(false_labels[1] == 'mostly false')
 
     def test_add_true_label_to_scraper(self):
         Scrapers.objects.create(scraper=self.new_scraper, scraper_name=self.new_scraper.username)
@@ -1133,3 +1107,98 @@ class UsersTest(TestCase):
 
     def test_check_if_user_is_scraper_not_scraper(self):
         self.assertFalse(check_if_user_is_scraper(self.user_1.id))
+
+    ################
+    # Models Tests #
+    ################
+
+    def test_get_user_image(self):
+        user_1_img = Users_Images(user=self.user_1)
+        user_1_img.save()
+        self.assertTrue(self.user_1.get_user_image() == user_1_img)
+        self.assertTrue(len(Users_Images.objects.filter(user=self.user_2)) == 0)
+        self.assertTrue(self.user_2.get_user_image() ==
+                        Users_Images.objects.filter(user=self.user_2).first())
+
+    def test_get_user_rep(self):
+        self.assertTrue(self.user_1.get_user_rep() == self.user_1_rep)
+        self.assertTrue(len(Users_Reputations.objects.filter(user=self.user_2)) == 0)
+        self.assertTrue(self.user_2.get_user_rep() == Users_Reputations.objects.filter(user=self.user_2).first())
+
+    def test_get_scraper(self):
+        self.assertTrue(self.user_1.get_scraper() is None)
+        self.assertTrue(self.user_2.get_scraper() is None)
+        self.assertTrue(self.new_scraper.get_scraper() == Scrapers.objects.filter(scraper=self.new_scraper).first())
+
+    def test_upload_to(self):
+        user_1_img = Users_Images(user=self.user_1)
+        user_1_img.save()
+        from users.models import upload_to
+        file = 'file' + str(random.randint(1, 10))
+        self.assertTrue(upload_to(user_1_img, file) ==
+                        "images/" + str(self.user_1.id) + "/" + file)
+
+    def test_image_url(self):
+        default_media = 'https://wtfact.ise.bgu.ac.il/media/profile_default_image.jpg'
+        import tempfile
+        image = tempfile.NamedTemporaryFile(suffix=".jpg").name
+        user_1_img = Users_Images(user=self.user_1, profile_img=image)
+        user_1_img.save()
+        self.assertTrue(user_1_img.image_url() == user_1_img.profile_img.url)
+        user_2_img = Users_Images(user=self.user_2)
+        user_2_img.save()
+        self.assertTrue(user_2_img.image_url() == default_media)
+
+    def test_user_image_str(self):
+        user_1_img = Users_Images(user=self.user_1)
+        user_1_img.save()
+        self.assertTrue(user_1_img.__str__() == self.user_1.username)
+
+    def test_get_reputation(self):
+        import math
+        self.assertTrue(self.user_1_rep.get_reputation() == math.ceil(self.rep / 20))
+
+    def test_user_reputation_str(self):
+        self.assertTrue(self.user_1_rep.__str__() == self.user_1.username + ' - ' + str(self.rep))
+
+    def test_get_true_labels_for_user(self):
+        scraper = Scrapers.objects.create(scraper=self.new_scraper, scraper_name=self.new_scraper.username)
+        true_labels = scraper.get_true_labels()
+        self.assertTrue(len(true_labels) == 1)
+        self.assertTrue(true_labels[0] == 'true')
+
+        random_label = ['accurate', 'correct', 'mostly correct']
+        index = random.randint(0, 2)
+        self.new_label_for_scraper['scraper_label'] = random_label[index]
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertTrue(add_true_label_to_scraper(self.post_request).status_code == 200)
+        true_labels = Scrapers.objects.filter(scraper=self.new_scraper).first().get_true_labels()
+        self.assertTrue(len(true_labels) == 2)
+        self.assertTrue(true_labels[0] == 'true')
+        self.assertTrue(true_labels[1] == random_label[index])
+
+    def test_get_false_labels_for_user(self):
+        scraper = Scrapers.objects.create(scraper=self.new_scraper, scraper_name=self.new_scraper.username)
+        false_labels = scraper.get_false_labels()
+        self.assertTrue(len(false_labels) == 1)
+        self.assertTrue(false_labels[0] == 'false')
+
+        random_label = ['mostly false', 'incorrect', 'mostly incorrect']
+        index = random.randint(0, 2)
+        self.new_label_for_scraper['scraper_label'] = random_label[index]
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.new_label_for_scraper)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertTrue(add_false_label_to_scraper(self.post_request).status_code == 200)
+        false_labels = Scrapers.objects.filter(scraper=self.new_scraper).first().get_false_labels()
+        self.assertTrue(len(false_labels) == 2)
+        self.assertTrue(false_labels[0] == 'false')
+        self.assertTrue(false_labels[1] == random_label[index])
+
+    def test_scraper_str(self):
+        scraper = Scrapers.objects.create(scraper=self.new_scraper, scraper_name=self.new_scraper.username)
+        self.assertTrue(scraper.__str__() == self.new_scraper.username)

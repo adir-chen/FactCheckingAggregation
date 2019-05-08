@@ -500,4 +500,11 @@ class CommentTests(TestCase):
         self.post_request.user = self.user_2
         self.assertFalse(check_if_delete_reply_is_valid(self.post_request)[0])
 
+    ################
+    # Models Tests #
+    ################
+
+    def test__str__(self):
+        self.assertTrue(self.reply_1.__str__() == self.reply_1.user.username + ' replied to comment ' + str(self.reply_1.comment.id))
+
 

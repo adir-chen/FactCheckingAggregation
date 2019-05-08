@@ -33,7 +33,7 @@ class Comment(models.Model):
                 users_with_num_of_replies[reply.user_id] = 1
             else:
                 users_with_num_of_replies[reply.user_id] += 1
-        user_ids = [user_id for user_id in users_with_num_of_replies if users_with_num_of_replies[user_id] > max_replies]
+        user_ids = [user_id for user_id in users_with_num_of_replies if users_with_num_of_replies[user_id] >= max_replies]
         return user_ids
 
     def get_replies(self):
@@ -43,43 +43,21 @@ class Comment(models.Model):
     def get_first_two_replies(self):
         return self.get_replies()[:2]
 
-    def has_more_replies(self):
-        return len(self.get_replies()) > 2
-
     def get_more_replies(self):
         return self.get_replies()[2:]
 
-    @staticmethod
-    def get_replies_images(reply_objects):
-        from users.models import Users_Images
-        replies = {}
-        for reply in reply_objects:
-            user = User.objects.filter(id=reply.user_id).first()
-            user_img = Users_Images.objects.filter(user=reply.user)
-            if len(user_img) == 0:
-                new_user_img = Users_Images.objects.create(user=user)
-                new_user_img.save()
-                user_img = new_user_img
-            else:
-                user_img = user_img.first()
-            replies[reply] = {'user': user,
-                              'user_img': user_img}
-        return replies
+    def has_more_replies(self):
+        return len(self.get_replies()) > 2
 
-    def get_replies_with_images(self):
-        return Comment.get_replies_images(self.get_first_two_replies())
-
-    def get_more_replies_with_images(self):
-        return Comment.get_replies_images(self.get_more_replies())
-
-    @property
     def get_preview(self):
         import requests
         import json
         from bs4 import BeautifulSoup
         try:
             response = requests.get(self.url)
-            metas = BeautifulSoup(response.text, features="html.parser")
+            encoding = response.encoding if 'charset' in response.headers.get('content-type', '').lower() else None
+            metas = BeautifulSoup(response.content, from_encoding=encoding, features="html.parser")
+            # metas = BeautifulSoup(response.text, features="html.parser")
             title = metas.find("meta", property="og:title")
             if title:
                 title = title['content']
@@ -90,7 +68,7 @@ class Comment(models.Model):
             if src:
                 src = src['content']
             result = {'title': title, 'description': description, 'src': src}
-            return json.dumps(result, encoding='utf-8', ensure_ascii=False)
+            return json.dumps(result)
         except:
             return False
 

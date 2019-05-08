@@ -339,3 +339,13 @@ class LoggerTest(TestCase):
                                          datetime.datetime.strptime(datetime.datetime.strptime(self.csv_fields.get('date_end'),
                                                                     '%Y-%m-%d').strftime('%d/%m/%Y'), '%d/%m/%Y').date())
         self.assertTrue(len(df_logger) == 0)
+
+    ################
+    # Models Tests #
+    ################
+
+    def test_log_str(self):
+        self.assertTrue(self.log_1.__str__() == self.log_1.username + ' - ' + str(self.log_1.result))
+        self.assertTrue(self.log_2.__str__() == self.log_2.username + ' - ' + str(self.log_2.result))
+        self.assertTrue(self.log_3.__str__() == self.log_3.username + ' - ' + str(self.log_3.result))
+        self.assertTrue(self.log_4.__str__() == self.log_4.username + ' - ' + str(self.log_4.result))
