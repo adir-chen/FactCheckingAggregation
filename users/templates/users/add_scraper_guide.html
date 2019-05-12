@@ -48,6 +48,8 @@
             <input id="scraper_password" type="password" style="max-width: 350px; width: 100%; margin: 10px;"><br>
             Enter scraper's password again:<br>
             <input id="scraper_password_2" type="password" style="max-width: 350px; width: 100%; margin: 10px;"><br>
+            Scraper's url:<br>
+            <input id="scraper_url" type="text" style="width: 100%; margin: 10px;"><br>
             Scraper's true labels (separated by comma):<br>
             <p class="action_msg note_msg">Used for labeling scraper's claims as True (default- true).</p>
             <input id="scraper_true_labels" type="text" style="width: 100%; margin: 10px;"><br>
@@ -75,6 +77,7 @@
                     scraper_name: $("#scraper_name").val(),
                     scraper_password: $("#scraper_password").val(),
                     scraper_password_2: $("#scraper_password_2").val(),
+                    scraper_url: $("#scraper_url").val(),
                     scraper_true_labels:  $("#scraper_true_labels").val(),
                     scraper_false_labels:  $("#scraper_false_labels").val(),
                 },

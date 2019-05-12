@@ -260,6 +260,7 @@ def add_new_scraper(request):
 
     new_scraper_img_details = Scrapers(scraper_name=new_scraper.username,
                                        scraper=new_scraper,
+                                       scraper_url=scraper_info['scraper_url'],
                                        true_labels=','.join(true_labels),
                                        false_labels=','.join(false_labels))
     new_scraper_img_details.save()
@@ -272,6 +273,7 @@ def add_new_scraper(request):
 # The function returns true in case the info is valid, otherwise false and an error
 def check_if_scraper_info_is_valid(scraper_info):
     from claims.views import check_if_input_format_is_valid, is_english_input
+    from comments.views import is_valid_url
     err = ''
     if 'scraper_name' not in scraper_info or not scraper_info['scraper_name']:
         err += 'Missing value for scraper\'s name'
@@ -284,6 +286,9 @@ def check_if_scraper_info_is_valid(scraper_info):
     elif 'scraper_password_2' not in scraper_info or not scraper_info['scraper_password_2'] \
             or not scraper_info['scraper_password'] == scraper_info['scraper_password_2']:
         err += 'Passwords do not match'
+    elif 'scraper_url' not in scraper_info or not scraper_info['scraper_url'] \
+            or not is_valid_url(scraper_info['scraper_url']):
+        err += 'Invalid url'
     elif not is_english_input(scraper_info['scraper_name']) \
             or not is_english_input(scraper_info['scraper_true_labels']) \
             or not is_english_input(scraper_info['scraper_false_labels']):
