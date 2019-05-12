@@ -114,7 +114,6 @@
                     <div id="reply_{{ comment.id }}_add_form" style="padding: 20px;" hidden="hidden">
                         Your reply:<br>
                         <textarea id="{{ comment.id }}_new_reply_content" style="margin-right: 10px;">
-
                         </textarea><br>
                         <button id="{{ comment.id }}_new_reply_save" type="submit" class="btn btn-info">Add reply</button>
                         <p id="error_msg_{{ comment.id }}_new_reply" class="action_msg error_msg" hidden></p>
@@ -417,17 +416,12 @@
         }
     }
 
-    // $(document).ready(function() {
-    //     try {
-    //         let comment_preview_{{ comment.id }} = "{{comment.get_preview|escapejs}}";
-    //         if (comment_preview_{{ comment.id }} !== 'False') {
-    //             comment_preview_{{ comment.id }} = JSON.parse(comment_preview_{{ comment.id }});
-    //         }
-    //         linkPreview_{{ comment.id }}(comment_preview_{{ comment.id }});
-    //     }
-    //     catch (error) {
-    //         console.log(error)
-    //     }
-    // });
+    {#$(document).ready(function() {#}
+    {#     let comment_preview_{{ comment.id }} = "{{comment.get_preview}}".replace(/&quot;/g,"\"");#}
+    {#     if (comment_preview_{{ comment.id }} !== 'False') {#}
+    {#         comment_preview_{{ comment.id }} = JSON.parse(comment_preview_{{ comment.id }});#}
+    {#     }#}
+    {#     linkPreview_{{ comment.id }}(comment_preview_{{ comment.id }});#}
+    {#});#}
 
 </script>

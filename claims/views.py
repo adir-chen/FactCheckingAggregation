@@ -6,15 +6,13 @@ from django.http import Http404, HttpRequest, QueryDict, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from comments.models import Comment
 from comments.views import add_comment
-from django.contrib.auth.models import User, AnonymousUser
+from django.contrib.auth.models import AnonymousUser
 from logger.models import Logger
-from tweets.models import Tweet
-from users.models import Users_Images, Scrapers, Users_Reputations
+from users.models import Scrapers
 from logger.views import save_log_message, check_duplicate_log_for_user
 from users.views import check_if_user_exists_by_user_id, check_if_user_is_scraper
 from .models import Claim, Merging_Suggestions
 from django.conf import settings
-import math
 import json
 
 
@@ -60,6 +58,7 @@ def add_claim(request):
                              '. This claim has been deleted because ' +
                              'the user does not succeed to add a new claim with a comment on it.')
             return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
+    check_for_similar_claims(claim)
     return view_claim(return_get_request_to_user(request.user), claim.id)
 
 
@@ -540,3 +539,13 @@ def return_get_request_to_user(user):
     request.stats_code = 200
     request.method = 'GET'
     return request
+
+
+# This function add all similar claim there is for the given claim to the DB
+def check_for_similar_claims(claim):
+    from difflib import SequenceMatcher
+    from claims.models import Merging_Suggestions
+    for c in Claim.objects.exclude(id=claim.id):
+        score = SequenceMatcher(None, claim.claim, c.claim).ratio()
+        if score > 0.65:
+            Merging_Suggestions.objects.create(claim=c, claim_to_merge=claim)

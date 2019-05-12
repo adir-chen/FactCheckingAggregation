@@ -1723,3 +1723,20 @@ class CommentTests(TestCase):
                    'src': 'https://www.snopes.com/tachyon/2019/05/bella-ramsey-getty-british-academy-childrens-awards-2018.jpg?fit=1200,628'}
         self.assertTrue(json.dumps(preview) == comment_preview)
 
+    def test_vote_on_comment(self):
+        from django.utils import timezone
+        self.assertFalse(self.comment_1.vote_on_comment())
+        comment = Comment.objects.create(claim_id=self.claim_4.id,
+                                         user_id=self.claim_4.user_id,
+                                         title=self.claim_4.claim,
+                                         description='description6',
+                                         url=self.url + str(random.randint(1, 10)),
+                                         tags='',
+                                         verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
+                                         label='label6',
+                                         timestamp=(timezone.now() - datetime.timedelta(minutes=11)))
+        comment.save()
+        self.assertTrue(comment.vote_on_comment())
+
+
+

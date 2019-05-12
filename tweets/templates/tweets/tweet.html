@@ -3,7 +3,7 @@
         <a href="{{ tweet.tweet_link }}"></a>
     </blockquote>
     {% if request.user.is_authenticated %}
-        {% if request.user.id not in claim.users_commented_ids %}
+        {% if request.user.id not in claim.users_commented_ids or request.user.is_superuser%}
             <button id="{{ tweet.id }}_add_comment_on_tweet" type="submit" class="btn btn-info">Use as comment reference</button>
         {% endif %}
         {% if request.user.is_superuser %}
@@ -12,12 +12,12 @@
         {% endif %}
     {% endif %}
 </div>
-
+<br><br>
 <script>
     $("#{{ tweet.id }}_add_comment_on_tweet").click(function(e){
-        document.getElementById("{{ claim.id }}_new_comment_url").value = '{{ tweet.tweet_link }}';
+        document.getElementById("{{ tweet.claim.id }}_new_comment_url").value = '{{ tweet.tweet_link }}';
         $('html, body').animate({
-            scrollTop: $("#{{ claim.id }}_new_comment_url").offset().top
+            scrollTop: $("#{{ tweet.claim.id }}_new_comment_url").offset().top
         }, 0);
     });
 

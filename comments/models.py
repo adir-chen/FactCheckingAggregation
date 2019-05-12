@@ -72,5 +72,9 @@ class Comment(models.Model):
         except:
             return False
 
+    def vote_on_comment(self):
+        max_minutes_to_vote_comment = 10
+        return (timezone.now() - self.timestamp).total_seconds() / 60 > max_minutes_to_vote_comment
+
 
 

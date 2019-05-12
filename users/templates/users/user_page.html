@@ -32,6 +32,7 @@
             <form id="upload_user_img" action="{% url "users:upload_user_img" %}" method="POST" enctype="multipart/form-data" hidden="hidden">
                 {% csrf_token %}
                 {{ form.as_p }}
+                <p class="action_msg note_msg">By uploading this file, you certify that you have the right to distribute this image and that it is not pornographic.</p>
                 <input type="hidden" name="user_id" value="{{ user.id }}">
                 <button type="submit" class="btn btn-info">Upload</button>
             </form>
@@ -168,14 +169,6 @@
                     claims_images[i].setAttribute('src', "/static/claims/assets/images/claim_default_image.jpg");
                 }
             }
-
-            let users_images = document.getElementsByClassName('user_image');
-            for(let i = 0; i < users_images.length; i++) {
-                if (!(users_images[i].complete && users_images[i].naturalHeight !== 0)) {
-                    users_images[i].setAttribute('src', "/static/claims/assets/images/profile_default_image.jpg");
-                }
-            }
-
         };
 
         function hide_all_msgs(){

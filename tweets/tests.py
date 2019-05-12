@@ -7,7 +7,8 @@ from claims.models import Claim
 from tweets.views import add_tweet, build_tweet, check_if_tweet_is_valid, \
     delete_tweet, check_if_delete_tweet_is_valid, \
     export_to_csv, check_if_csv_fields_are_valid, check_if_fields_list_valid, create_df_for_tweets, \
-    export_tweets_page, download_tweets_for_claims
+    export_tweets_page, download_tweets_for_claims, check_tweets_for_claim_in_twitter, \
+    check_claim_before_extracting_tweets
 from tweets.models import Tweet
 from users.models import User
 import datetime
@@ -420,6 +421,20 @@ class CommentTests(TestCase):
         len_tweets = len(Tweet.objects.all())
         self.assertRaises(Http404, download_tweets_for_claims, self.post_request)
         self.assertTrue(len(Tweet.objects.all()) == len_tweets)
+
+    def test_check_tweets_for_claim_in_twitter(self):
+        pass
+
+    def test_check_claim_before_extracting_tweets(self):
+        tweet_details = {'claim_id': self.claim_1.id}
+        self.assertTrue(check_claim_before_extracting_tweets(tweet_details)[0])
+
+    def test_check_claim_before_extracting_tweets_missing_claim_id(self):
+        self.assertFalse(check_claim_before_extracting_tweets({})[0])
+
+    def test_check_claim_before_extracting_tweets_invalid_claim_id(self):
+        tweet_details = {'claim_id': self.num_of_saved_claims + random.randint(1, 10)}
+        self.assertFalse(check_claim_before_extracting_tweets(tweet_details)[0])
 
     ################
     # Models Tests #

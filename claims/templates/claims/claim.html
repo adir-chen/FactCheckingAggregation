@@ -61,15 +61,18 @@
         {% endif %}
         {% with tweets=claim.get_tweets_for_claim %}
             {% if tweets %}
-            <hr><br>
-            <div id="tweets">
-                <h3>Related tweets:</h3>
-                <br>
-                {% for tweet in tweets %}
-                    {% include 'tweets/tweet.html' with claim=claim request=request only %}
-                {% endfor %}
-            </div>
-            <br>
+                <hr><br>
+                <div id="tweets">
+                    <h3>Related tweets:</h3>
+                    <br>
+                    {% for tweet in tweets %}
+                        {% include 'tweets/tweet.html' with tweet=tweet request=request only %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                    <button type="submit" id="{{ claim.id }}_check_tweets_for_claim_in_twitter" class="btn twitter-share-btn" style="margin: 10px 0;"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"> Search for tweets (about this claim) in twitter</button>
+                    <p id="error_msg_{{ claim.id }}_claim_extracting_tweets" class="action_msg error_msg" hidden></p>
+                    <br>
             {% endif %}
         {% endwith %}
         <br><hr><br>
@@ -79,7 +82,9 @@
                 <h3>Users' verdicts:</h3>
                 <br>
                 {% for comment in comments %}
-                    {% include 'comments/comment.html' with comment=comment show_replies=True request=request only %}
+                    {% if comment.vote_on_comment or request.user.is_superuser or request.user.id == comment.user.id %}
+                        {% include 'comments/comment.html' with comment=comment show_replies=True request=request only %}
+                    {% endif %}
                 {% endfor %}
             {% else %}
                 <h3>No verdicts yet.</h3>
@@ -194,7 +199,7 @@
         }
 
         $("#{{ claim.id }}_new_comment_save").click(function(){
-            let debug_mode = '{% is_debug_mode %}' == 'True';
+            let debug_mode = '{% is_debug_mode %}' === 'True';
             if (debug_mode || (!debug_mode && check_recaptcha())){
                 $.ajax({
                     type: 'POST',
@@ -319,6 +324,27 @@
                 return 'error';
             }
         }
+
+        $("#{{ claim.id }}_check_tweets_for_claim_in_twitter").click(function(e){
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'tweets:check_tweets_for_claim_in_twitter' %}",
+                headers: { "X-CSRFToken": '{{ csrf_token }}' },
+                data: {
+                    claim_id: '{{ claim.id }}',
+                },
+                success: function () {
+                    window.location.reload();
+                },
+                error: function (request) {
+                    hide_all_msgs();
+                    document.getElementById("error_msg_{{ claim.id }}_claim_extracting_tweets").innerHTML =
+                        request.responseJSON
+                    $("#error_msg_{{ claim.id }}_claim_extracting_tweets").attr("hidden", false);
+                }
+            });
+        });
 
         function check_recaptcha() {
             if (grecaptcha === undefined) {

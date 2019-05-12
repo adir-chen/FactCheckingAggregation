@@ -196,3 +196,57 @@ def download_tweets_for_claims(request):
                 build_tweet(claim.id, tweet_fields[1])
                 save_log_message(request.user.id, request.user.username, 'Adding a new tweet', True)
     return view_home(return_get_request_to_user(request.user))
+
+
+def check_tweets_for_claim_in_twitter(request):
+    import tweepy
+    from tweepy import OAuthHandler
+    from FactCheckingAggregation import settings
+    from claims.views import view_claim, return_get_request_to_user
+    if request.method != 'POST':
+        raise PermissionDenied
+    claim_info = request.POST.copy()
+    valid_claim, err_msg = check_claim_before_extracting_tweets(claim_info)
+    if not valid_claim:
+        save_log_message(request.user.id, request.user.username,
+                         'Extracting tweets for a claim. Error: ' + err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
+    claim = Claim.objects.filter(id=claim_info['claim_id']).first()
+    if not claim.tags:
+        keywords = ' AND '.join(claim.claim.split())
+    else:
+        keywords = ' AND '.join(claim.tags.split(','))
+    auth = OAuthHandler(settings.twitter_consumer_key, settings.twitter_consumer_secret)
+    auth.set_access_token(settings.twitter_access_token, settings.twitter_access_secret)
+    api = tweepy.API(auth)
+    try:
+        tweets = api.search(q=keywords,
+                            count=3,
+                            include_entities=True,
+                            result_type='popular',
+                            lang="en")
+        if len(tweets) > 0:
+            for tweet in tweets:
+                tweet_link = 'https://twitter.com/{}/status/{}'.format(tweet.user.screen_name, tweet.id)
+                build_tweet(claim.id, tweet_link)
+            save_log_message(request.user.id, request.user.username,
+                             'Extracting tweets for a claim with id ' + str(claim.id), True)
+            return view_claim(return_get_request_to_user(request.user), claim.id)
+    except tweepy.TweepError as e:
+        pass
+    err_msg = 'No tweets found'
+    return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
+
+
+# This function checks if the given fields for extracting tweets for a claim are valid,
+# i.e. the fields are with the correct format.
+# The function returns true in case the fields are valid, otherwise false and an error
+def check_claim_before_extracting_tweets(claim_info):
+    err = ''
+    if 'claim_id' not in claim_info or not claim_info['claim_id']:
+        err += 'Missing value for claim id'
+    elif len(Claim.objects.filter(id=claim_info['claim_id'])) == 0:
+        err += 'Claim ' + str(claim_info['claim_id']) + ' does not exist'
+    if len(err) > 0:
+        return False, err
+    return True, err

@@ -1,0 +1,28 @@
+{% extends 'claims/layout.html' %}
+
+{% block page_content %}
+    <div id="merging_claims_page" class="page_wrapper">
+        <h4>Suggestions for merging claims:</h4>
+        <div class="claim_box" style="width: 75%; padding: 20px 40px 20px 20px; height: 650px; overflow: auto; position: absolute; ">
+            <p id="success_msg_merging_claims" class="action_msg note_msg" hidden>Claims have been merged successfully</p>
+            <p id="error_msg_merging_claims" class="action_msg error_msg" hidden></p>
+            <p id="success_msg_deleting_suggestion" class="action_msg note_msg" hidden>Suggestion was deleted successfully</p>
+            <p id="error_msg_deleting_suggestion" class="action_msg error_msg" hidden></p>
+            <table class="merging_suggestions_table">
+              <tr>
+                  <th>Claim</th>
+                  <th>Claim to merge</th>
+                  <th>Actions</th>
+              </tr>
+                {% for suggestion in suggestions %}
+                    {% include 'claims/merging_claims_row.html' with suggestion=suggestion request=request only %}
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block claim_head_title %}
+    FactCheckProject | Suggestions for merging claims
+{% endblock %}
