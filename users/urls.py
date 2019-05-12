@@ -14,5 +14,8 @@ urlpatterns = [
     path('delete_false_label_from_scraper', views.delete_false_label_from_scraper, name='delete_false_label_from_scraper'),
     path('<int:user_id>', views.user_page, name='user_page'),
     path('upload_user_img', views.upload_user_img, name='upload_user_img'),
+    path('notifications', views.notifications_page, name='notifications_page'),
+    path('read_notification', views.read_notification, name='read_notification'),
+    path('delete_notification', views.delete_notification, name='delete_notification'),
 
 ]

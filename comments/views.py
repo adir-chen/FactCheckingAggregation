@@ -38,6 +38,10 @@ def add_comment(request):
                   comment_info['label'])
     save_log_message(request.user.id, request.user.username,
                      'Adding a new comment on claim with id ' + str(request.POST.get("claim_id")), True)
+    user = Claim.objects.filter(id=comment_info['claim_id']).first().user
+    if user.id != comment_info['user_id']:
+        from notifications.signals import notify
+        notify.send(request.user, recipient=user, verb='Commented on your claim https://wtfact.ise.bgu.ac.il/claim/' + str(comment_info['claim_id']))
     return view_claim(return_get_request_to_user(request.user), request.POST.get('claim_id'))
 
 

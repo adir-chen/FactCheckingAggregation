@@ -40,7 +40,17 @@
             </div>
             <div class="header-tools">
                 {% if request.user.is_authenticated %}
-                    <p>Welcome <a href="/users/{{ request.user.id }}">{{request.user.username}}</a></p>
+                    <p>
+                        Welcome <a href="/users/{{ request.user.id }}">{{request.user.username}}</a>
+                        {% load notifications_tags %}
+                        <a href="/users/notifications" class="notification">
+                            <span><i class="fa fa-bell" style="margin-left: 10px;"></i></span>
+                            {% notifications_unread as unread_count %}
+                            {% if unread_count %}
+                                <span class="badge">{{ unread_count }}</span>
+                            {% endif %}
+                        </a> <span style="font-size: 14px;">Notifications</span>
+                    </p>
                     <a href="/logout" style="font-size: 14px;">Sign Out</a>
                 {% else %}
                     <p>Welcome guest.</p>

@@ -1,0 +1,80 @@
+{% if notification.unread %}
+    <tr id="{{notification.id}}_notification" class="log_table" style="font-weight: bold;">
+{% else %}
+    <tr id="{{notification.id}}_notification" class="log_table">
+{% endif %}
+        <td>{{ notification.timestamp }}</td>
+        <td>{{ notification.actor }}</td>
+        <td>{{ notification.verb }}</td>
+        <td>
+            {% if notification.unread %}
+            <button id="{{ notification.id }}_read" type="submit" class="btn btn-info">Mark as read</button>
+            <br><br>
+            {% endif %}
+            <button id="{{ notification.id }}_delete" type="submit" class="btn btn-danger">Delete</button>
+        </td>
+    </tr>
+
+<script>
+    if(localStorage.getItem("success_msg_deleting_notification")){
+        $("#success_msg_deleting_notification").attr("hidden", false);
+        localStorage.clear();
+    }
+
+    $("#{{ notification.id }}_read").click(function(){
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'users:read_notification' %}",
+            headers: { "X-CSRFToken": getCookie('csrftoken') },
+            data: {
+                notification_id: '{{ notification.id }}',
+            },
+            success: function () {
+                hide_all_msgs()
+                document.getElementById("{{ notification.id }}_notification").style.fontWeight = "normal";
+                $("#{{ notification.id }}_read").attr("hidden", true);
+            },
+            error: function (request) {
+                hide_all_msgs();
+            }
+        });
+    });
+
+    $("#{{ notification.id }}_delete").click(function(e){
+        if (confirm('Are you sure that you want to delete this message?')){
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'users:delete_notification' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken') },
+            data: {
+                notification_id: '{{ notification.id }}',
+            },
+                success: function () {
+                    localStorage.setItem("success_msg_deleting_notification", true);
+                    window.location.reload();
+                },
+                error: function (request) {
+                    hide_all_msgs();
+                    let err = request.responseJSON;
+                    document.getElementById("error_msg_deleting_notification").innerHTML =
+                    'Error: <br>' + err;
+                    $("#error_msg_deleting_notification").attr("hidden", false);
+                }
+            });
+        }
+    });
+
+    function getCookie(c_name) {
+        if (document.cookie.length > 0) {
+            c_start = document.cookie.indexOf(c_name + "=");
+            if (c_start != -1) {
+                c_start = c_start + c_name.length + 1;
+                c_end = document.cookie.indexOf(";", c_start);
+                if (c_end == -1) c_end = document.cookie.length;
+                return unescape(document.cookie.substring(c_start, c_end));
+            }
+        }
+        return "";
+    }
+</script>

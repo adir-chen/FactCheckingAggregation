@@ -4,6 +4,7 @@ from django.http import Http404, HttpResponse
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
 from django.views.decorators.csrf import ensure_csrf_cookie
+from notifications.models import Notification
 
 from claims.models import Claim
 from comments.models import Comment
@@ -569,3 +570,65 @@ def upload_user_img(request):
         user_and_img.profile_img = file
         user_and_img.save()
     return user_page(return_get_request_to_user(request.user), user_id)
+
+
+# This function return an HTML page for adding a new scraper
+def notifications_page(request):
+    return render(request, 'users/notifications.html')
+
+
+# This function marks user's notification as read
+def read_notification(request):
+    from claims.views import return_get_request_to_user
+    if not request.user.is_authenticated or request.method != 'POST':
+        raise PermissionDenied
+    notification_info = request.POST.dict()
+    notification_info["user_id"] = request.user.id
+    valid_notification, err_msg = check_if_notification_is_valid(notification_info)
+    if not valid_notification:
+        save_log_message(request.user.id, request.user.username,
+                         'Marking notification as read. Error: ' + err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
+    Notification.objects.filter(id=notification_info["notification_id"]).mark_all_as_read()
+    save_log_message(request.user.id, request.user.username,
+                     'Marking notification with id ' + str(notification_info["notification_id"]) + ' as read', True)
+    return notifications_page(return_get_request_to_user(request.user))
+
+
+# This function deletes user's notification
+def delete_notification(request):
+    from claims.views import return_get_request_to_user
+    if not request.user.is_authenticated or request.method != 'POST':
+        raise PermissionDenied
+    notification_info = request.POST.dict()
+    notification_info["user_id"] = request.user.id
+    valid_notification, err_msg = check_if_notification_is_valid(notification_info)
+    if not valid_notification:
+        save_log_message(request.user.id, request.user.username,
+                         'Deleteing notification. Error: ' + err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
+    Notification.objects.filter(id=notification_info["notification_id"]).delete()
+    save_log_message(request.user.id, request.user.username,
+                     'Deleting notification with id ' + str(notification_info["notification_id"]), True)
+    return notifications_page(return_get_request_to_user(request.user))
+
+
+# This function checks if a given notification's info is valid,
+# i.e. the info has all the fields with the correct format.
+# The function returns true in case the info is valid, otherwise false and an error
+def check_if_notification_is_valid(notification_info):
+    err = ''
+    if 'notification_id' not in notification_info or not notification_info['notification_id']:
+        err += 'Missing value for notification id'
+    elif 'user_id' not in notification_info or not notification_info['user_id']:
+        err += 'Missing value for user id'
+    elif len(Notification.objects.filter(id=notification_info['notification_id'])) == 0:
+        err += 'Notification ' + str(notification_info['notification_id']) + ' does not exist'
+    elif not check_if_user_exists_by_user_id(notification_info['user_id']):
+        err += 'User ' + str(notification_info['notification_id']) + ' does not exist'
+    elif len(Notification.objects.filter(id=notification_info['notification_id'], recipient=User.objects.filter(id=notification_info['user_id']).first())) == 0:
+        err += 'Notification ' + str(notification_info['notification_id']) + ' does not belong to user with id ' + \
+               str(notification_info['user_id'])
+    if len(err) > 0:
+        return False, err
+    return True, err

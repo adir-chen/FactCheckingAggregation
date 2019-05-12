@@ -7,7 +7,7 @@
             <div style="grid-area: user-profile-image; position: relative;">
                 <img id="user_profile_image" src="{{ user.get_user_image.image_url }}" style="max-width: 100%; padding: 5px;">
             </div>
-            <div style="grid-area: user-profile-details; padding: 10px 20px 10px 50px; word-break: break-all;">
+            <div style="grid-area: user-profile-details; padding: 10px 20px 10px 50px;">
                 <h5>{{ user.username }}</h5>
                 {% load static %}
                 {% for i in 'i'|rjust:user.get_user_rep.get_reputation %}

@@ -26,14 +26,6 @@
         localStorage.clear();
     }
 
-    function hide_all_msgs(){
-        $("#success_msg_merging_claims").attr("hidden", true);
-        $("#success_msg_deleting_suggestion").attr("hidden", true);
-
-        $("#error_msg_merging_claims").attr("hidden", true);
-        $("#error_msg_deleting_suggestion").attr("hidden", true);
-    }
-
     $("#{{ suggestion.claim.id }}_{{ suggestion.claim_to_merge.id }}_merging_claims").click(function(){
         $.ajax({
             type: 'POST',

@@ -15,9 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls import url
 from claims import views as claims_views
 from django.conf import settings
 from django.conf.urls.static import static
+import notifications.urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,6 +33,7 @@ urlpatterns = [
     path('contact_us/', include('contact_us.urls', namespace='contact_us')),
     path('logger/', include('logger.urls', namespace='logger')),
     path('analytics/', include('analytics.urls', namespace='analytics')),
+    url('^inbox/notifications/', include(notifications.urls, namespace='notifications')),
 ]
 
 if settings.DEBUG:

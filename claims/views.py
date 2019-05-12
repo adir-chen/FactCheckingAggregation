@@ -274,6 +274,8 @@ def check_if_delete_claim_is_valid(request):
 
 # This function reports a claim as spam
 def report_spam(request):
+    from django.contrib.auth.models import User
+    from notifications.signals import notify
     if not request.user.is_authenticated or request.method != "POST":
         raise PermissionDenied
     valid_spam_report, err_msg = check_if_spam_report_is_valid(request)
@@ -283,7 +285,8 @@ def report_spam(request):
         return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     save_log_message(request.user.id, request.user.username,
                      'Reporting a claim with id ' + str(request.POST.get('claim_id')) + ' as spam', True)
-
+    superusers = User.objects.filter(is_superuser=True)
+    notify.send(request.user, recipient=superusers, verb='Report claim https://wtfact.ise.bgu.ac.il/claim/' + str(request.POST.get('claim_id')) + ' as spam')
     return view_claim(return_get_request_to_user(request.user), request.POST.get('claim_id'))
 
 

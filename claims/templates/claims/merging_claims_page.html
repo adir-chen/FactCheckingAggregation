@@ -20,6 +20,15 @@
             </table>
         </div>
     </div>
+    <script>
+        function hide_all_msgs(){
+            $("#success_msg_merging_claims").attr("hidden", true);
+            $("#success_msg_deleting_suggestion").attr("hidden", true);
+
+            $("#error_msg_merging_claims").attr("hidden", true);
+            $("#error_msg_deleting_suggestion").attr("hidden", true);
+        }
+    </script>
 
 {% endblock %}
 

@@ -1,0 +1,45 @@
+{% extends 'claims/layout.html' %}
+
+{% block page_content %}
+    <div id="logger_page" class="page_wrapper">
+        <h4>Notifications</h4>
+        <div class="claim_box" style="width: 100%; padding: 20px 40px 20px 20px; height: 600px; overflow: auto;">
+            <p id="success_msg_deleting_notification" class="action_msg note_msg" hidden>Message was deleted successfully</p>
+            <p id="error_msg_deleting_notification" class="action_msg error_msg" hidden></p>
+            <table class="log_table" style="">
+              <tr>
+                  <th>Date</th>
+                  <th>User</th>
+                  <th>Message</th>
+                  <th>Actions</th>
+              </tr>
+                {% for notification in request.user.get_notifications %}
+                    {% include 'users/notification_row.html' with notification=notification request=request only %}
+                {% endfor %}
+
+            </table>
+        </div>
+    </div>
+    <script>
+        function hide_all_msgs(){
+            $("#success_msg_deleting_notification").attr("hidden", true);
+            $("#error_msg_deleting_notification").attr("hidden", true);
+        }
+    </script>
+{% endblock %}
+
+{% block claim_head_title %}
+    FactCheckProject | {{ user.username }}'s notifications
+{% endblock %}
+
+{% block meta_title %}
+    {{ user.username }}'s notifications
+{% endblock %}
+
+{% block meta_description %}
+    Determine whether a claim is True or False
+{% endblock %}
+
+{% block meta_src %}
+    {{ user_img }}
+{% endblock %}

@@ -29,9 +29,15 @@ def get_scraper(self):
     return scraper.first()
 
 
+def get_notifications(self):
+    from notifications.models import Notification
+    return Notification.objects.filter(recipient=self)
+
+
 auth.models.User.add_to_class('get_user_image', get_user_image)
 auth.models.User.add_to_class('get_user_rep', get_user_rep)
 auth.models.User.add_to_class('get_scraper', get_scraper)
+auth.models.User.add_to_class('get_notifications', get_notifications)
 
 
 def upload_to(instance, filename):
