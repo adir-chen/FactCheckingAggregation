@@ -1218,7 +1218,7 @@ class ClaimTests(TestCase):
         self.assertTrue(about_page(HttpRequest()).status_code == 200)
 
     def test_handler_400(self):
-        self.assertTrue(handler_400(HttpRequest()).status_code == 400)
+        self.assertTrue(handler_400(HttpRequest(), 'error_msg').status_code == 400)
 
     def test_handler_403(self):
         self.assertTrue(handler_403(HttpRequest(), 'error_msg').status_code == 403)
