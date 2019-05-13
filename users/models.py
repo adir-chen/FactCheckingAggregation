@@ -34,6 +34,12 @@ def get_notifications(self):
     return Notification.objects.filter(recipient=self)
 
 
+def get_last_notifications(self):
+    from notifications.models import Notification
+    num_of_notifications = 5
+    return Notification.objects.filter(recipient=self)[:num_of_notifications]
+
+
 auth.models.User.add_to_class('get_user_image', get_user_image)
 auth.models.User.add_to_class('get_user_rep', get_user_rep)
 auth.models.User.add_to_class('get_scraper', get_scraper)
