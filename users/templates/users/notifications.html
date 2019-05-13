@@ -6,6 +6,10 @@
         <div class="claim_box" style="width: 100%; padding: 20px 40px 20px 20px; height: 600px; overflow: auto;">
             <p id="success_msg_deleting_notification" class="action_msg note_msg" hidden>Message was deleted successfully</p>
             <p id="error_msg_deleting_notification" class="action_msg error_msg" hidden></p>
+            {% if unread_count %}
+                <a class="btn btn-info" href="/users/read_all_notifications">Mark all as read</a>
+                <br><br>
+            {% endif %}
             <table class="log_table" style="">
               <tr>
                   <th>Date</th>

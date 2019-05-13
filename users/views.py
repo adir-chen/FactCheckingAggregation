@@ -581,6 +581,15 @@ def notifications_page(request):
     return render(request, 'users/notifications.html')
 
 
+def read_all_notifications(request):
+    from claims.views import return_get_request_to_user
+    if not request.user.is_authenticated:
+        raise PermissionDenied
+    Notification.objects.mark_all_as_read(request.user)
+    from claims.views import view_home
+    return view_home(return_get_request_to_user(request.user))
+
+
 # This function marks user's notification as read
 def read_notification(request):
     from claims.views import return_get_request_to_user

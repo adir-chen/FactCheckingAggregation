@@ -286,7 +286,7 @@ def report_spam(request):
     save_log_message(request.user.id, request.user.username,
                      'Reporting a claim with id ' + str(request.POST.get('claim_id')) + ' as spam', True)
     superusers = User.objects.filter(is_superuser=True)
-    notify.send(request.user, recipient=superusers, verb='Report claim https://wtfact.ise.bgu.ac.il/claim/' + str(request.POST.get('claim_id')) + ' as spam')
+    notify.send(request.user, recipient=superusers, verb='Report claim https://wtfact.ise.bgu.ac.il/claim/' + str(request.POST.get('claim_id')) + ' as spam', target=Claim.objects.filter(id=request.POST.get('claim_id')).first())
     return view_claim(return_get_request_to_user(request.user), request.POST.get('claim_id'))
 
 
@@ -516,7 +516,7 @@ def about_page(request):
 
 
 # This function returns 400 error page
-def handler_400(request):
+def handler_400(request, exception):
     return render(request, 'claims/400.html', status=400)
 
 

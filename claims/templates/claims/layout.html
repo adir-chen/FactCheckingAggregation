@@ -29,7 +29,9 @@
 
         gtag('config', 'UA-137817705-1');
     </script>
-
+    {% load notifications_tags %}
+    <script src="{% static 'notifications/notify.js' %}" type="text/javascript"></script>
+    {% register_notify_callbacks callbacks='fill_notification_list,fill_notification_badge' %}
 </head>
 <body>
     <header id="header">
@@ -42,15 +44,34 @@
                 {% if request.user.is_authenticated %}
                     <p>
                         Welcome <a href="/users/{{ request.user.id }}">{{request.user.username}}</a>
-                        {% load notifications_tags %}
-                        <a href="/users/notifications" class="notification">
+                        <a style="color: #fff;" class="notification" onclick="showNotifiactions()">
                             <span><i class="fa fa-bell" style="margin-left: 10px;"></i></span>
                             {% notifications_unread as unread_count %}
                             {% if unread_count %}
-                                <span class="badge">{{ unread_count }}</span>
+                                <span class="badge">{% live_notify_badge %}</span>
                             {% endif %}
                         </a> <span style="font-size: 14px;">Notifications</span>
                     </p>
+                    <div id="last-notifications" class="last-notifications">
+                        <div style="background: #eee; padding: 10px; margin: 0;">
+                            <a href="/users/read_all_notifications">Mark all as read</a>
+                        </div>
+                        <div>
+                            <ul style="margin: 0;">
+                                {% for notification in request.user.get_notifications %}
+                                    {% if notification.unread %}
+                                        <li class="unread_notification"><a href="/claim/{{ notification.target.id }}" onclick="">{{ notification.actor }} {{ notification.verb }}</a></li>
+                                    {% else %}
+                                        <li><a href="/claim/{{ notification.target.id }}">{{ notification.actor }} {{ notification.verb }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+<!--                                {% live_notify_list %}-->
+                            </ul>
+                        </div>
+                        <div style="background: #eee; padding: 10px;">
+                            <a href="/users/notifications">See all notifications</a>
+                        </div>
+                    </div>
                     <a href="/logout" style="font-size: 14px;">Sign Out</a>
                 {% else %}
                     <p>Welcome guest.</p>
@@ -122,13 +143,32 @@
                 x.className = "topnav";
             }
         }
-        {#grecaptcha.ready(function() {#}
-        {# for grecaptcha v3 #}
-        {#    grecaptcha.execute('6LftCZsUAAAAAKmuIi7qSDZTr1enYj2gjsk_3c0c', {action: 'botsChecking'}).then(function (token) {#}
-        {#        console.log(token);#}
-        {#        document.getElementById('g-recaptcha-response').value = token;#}
-        {#    });#}
-        {#});#}
+
+        function showNotifiactions() {
+          var x = document.getElementById("last-notifications");
+          if (x.style.display === "none") {
+            x.style.display = "block";
+          } else {
+            x.style.display = "none";
+          }
+        }
+
+        $(document).mouseup(function(e)
+        {
+            var container = $("#last-notifications");
+            if (!container.is(e.target) && container.has(e.target).length === 0)
+            {
+                container.hide();
+            }
+        });
+
+        // {#grecaptcha.ready(function() {#}
+        // {# for grecaptcha v3 #}
+        // {#    grecaptcha.execute('6LftCZsUAAAAAKmuIi7qSDZTr1enYj2gjsk_3c0c', {action: 'botsChecking'}).then(function (token) {#}
+        // {#        console.log(token);#}
+        // {#        document.getElementById('g-recaptcha-response').value = token;#}
+        // {#    });#}
+        // {#});#}
     </script>
 
 </body>

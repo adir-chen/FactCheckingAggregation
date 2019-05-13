@@ -842,3 +842,33 @@ div.chart_wrapper{
     color: white;
     font-size: 14px;
 }
+
+div.last-notifications {
+    display: none;
+    z-index: 10;
+    position: absolute;
+    background: #fff;
+    font-size: 14px;
+    width: 280px;
+    border: 1px solid #ccc;
+}
+
+.last-notifications a{
+    color: #555;
+}
+
+.last-notifications li {
+    padding: 5px 10px;
+    display: block;
+    border-top: 1px solid #ddd;
+    height: auto;
+    margin: 0;
+}
+
+.last-notifications li:last-child {
+    border-bottom: 1px solid #ddd;
+}
+
+.unread_notification {
+    font-weight: bold;
+}

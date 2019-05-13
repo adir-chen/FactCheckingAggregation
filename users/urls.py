@@ -17,5 +17,5 @@ urlpatterns = [
     path('notifications', views.notifications_page, name='notifications_page'),
     path('read_notification', views.read_notification, name='read_notification'),
     path('delete_notification', views.delete_notification, name='delete_notification'),
-
+    path('read_all_notifications', views.read_all_notifications, name='read_all_notifications'),
 ]
