@@ -516,7 +516,7 @@ def about_page(request):
 
 
 # This function returns 400 error page
-def handler_400(request):
+def handler_400(request, exception):
     return render(request, 'claims/400.html', status=400)
 
 
