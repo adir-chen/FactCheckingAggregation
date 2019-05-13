@@ -230,6 +230,8 @@ def get_random_claims_from_scrapers(request):
 
 # This function return an HTML page for adding a new scraper
 def add_scraper_guide(request):
+    if not request.user.is_superuser or request.method != 'GET':
+        raise PermissionDenied
     return render(request, 'users/add_scraper_guide.html')
 
 
@@ -574,6 +576,8 @@ def upload_user_img(request):
 
 # This function return an HTML page for adding a new scraper
 def notifications_page(request):
+    if not request.user.is_authenticated or request.method != 'GET':
+        raise PermissionDenied
     return render(request, 'users/notifications.html')
 
 
@@ -614,7 +618,7 @@ def delete_notification(request):
     valid_notification, err_msg = check_if_notification_is_valid(notification_info)
     if not valid_notification:
         save_log_message(request.user.id, request.user.username,
-                         'Deleteing notification. Error: ' + err_msg)
+                         'Deleting notification. Error: ' + err_msg)
         return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     Notification.objects.filter(id=notification_info["notification_id"]).delete()
     save_log_message(request.user.id, request.user.username,

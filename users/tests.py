@@ -1,7 +1,10 @@
+from django.contrib.auth.models import AnonymousUser
 from django.http import HttpRequest, QueryDict, Http404
 from django.core.exceptions import PermissionDenied
 from django.utils.datastructures import MultiValueDict
 from django.test import TestCase
+from notifications.models import Notification
+from notifications.signals import notify
 from users.models import User, Scrapers, Users_Reputations, Users_Images
 from claims.models import Claim
 from comments.models import Comment
@@ -11,7 +14,9 @@ from users.views import check_if_user_exists_by_user_id, get_username_by_user_id
     add_true_label_to_scraper, delete_true_label_from_scraper, add_false_label_to_scraper, \
     delete_false_label_from_scraper, check_if_scraper_new_label_is_valid, \
     check_if_scraper_label_delete_is_valid, check_if_scraper_labels_already_exist, \
-    check_if_user_is_scraper
+    check_if_user_is_scraper, notifications_page, read_notification, delete_notification, \
+    check_if_notification_is_valid
+from users.models import get_user_image, get_user_rep, get_scraper, get_notifications
 import json
 import random
 import datetime
@@ -46,9 +51,11 @@ class UsersTest(TestCase):
         self.get_request = HttpRequest()
         self.get_request.method = 'GET'
         password = User.objects.make_random_password()
+        self.url = 'https://www.google.com'
         self.new_scraper_details = {'scraper_name': 'newScraper_2',
                                     'scraper_password': str(password),
                                     'scraper_password_2': str(password),
+                                    'scraper_url': self.url,
                                     'scraper_true_labels': '',
                                     'scraper_false_labels': ''}
         self.new_label_for_scraper = {'scraper_id': self.new_scraper.id}
@@ -74,6 +81,11 @@ class UsersTest(TestCase):
         self.comment_1.save()
         self.num_of_saved_comments = 1
 
+        notify.send(self.user_1, recipient=self.user_2, verb='some msg')
+        self.notification = Notification.objects.get(recipient=self.user_2)
+        self.num_of_saved_notifications = 1
+        self.notification_info = {'notification_id': self.notification.id,
+                                  'user_id': self.user_2.id}
         self.error_code = 404
 
     def tearDown(self):
@@ -276,7 +288,16 @@ class UsersTest(TestCase):
         self.assertRaises(PermissionDenied, get_random_claims_from_scrapers, self.post_request)
 
     def test_add_scraper_guide(self):
-        self.assertTrue(add_scraper_guide(HttpRequest()).status_code == 200)
+        self.get_request.user = self.admin
+        self.assertTrue(add_scraper_guide(self.get_request).status_code == 200)
+
+    def test_add_scraper_guide_by_not_admin_user(self):
+        self.get_request.user = self.user_1
+        self.assertRaises(PermissionDenied, add_scraper_guide, self.get_request)
+
+    def test_add_scraper_guide_invalid_request(self):
+        self.post_request.user = self.admin
+        self.assertRaises(PermissionDenied, add_scraper_guide, self.post_request)
 
     def test_add_new_scraper_valid(self):
         query_dict = QueryDict('', mutable=True)
@@ -336,6 +357,14 @@ class UsersTest(TestCase):
 
     def test_check_if_scraper_info_is_valid_missing_scraper_name(self):
         del self.new_scraper_details['scraper_name']
+        self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
+
+    def test_check_if_scraper_info_is_valid_missing_scraper_url(self):
+        del self.new_scraper_details['scraper_url']
+        self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
+
+    def test_check_if_scraper_info_is_valid_invalid_scraper_url(self):
+        self.new_scraper_details['scraper_url'] = 'invalid_url'
         self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
 
     def test_check_if_scraper_info_is_valid_invalid_format_scrapers_true_labels(self):
@@ -1108,6 +1137,148 @@ class UsersTest(TestCase):
     def test_check_if_user_is_scraper_not_scraper(self):
         self.assertFalse(check_if_user_is_scraper(self.user_1.id))
 
+    def test_notifications_page(self):
+        self.get_request.user = self.user_1
+        self.assertTrue(notifications_page(self.get_request).status_code == 200)
+
+    def test_notifications_page_by_anonymous_user(self):
+        self.get_request.user = AnonymousUser()
+        self.assertRaises(PermissionDenied, notifications_page, self.get_request)
+
+    def test_notifications_page_invalid_request(self):
+        self.post_request.user = self.user_1
+        self.assertRaises(PermissionDenied, notifications_page, self.post_request)
+
+    def test_read_notification(self):
+        self.notification.mark_as_unread()
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id).read()) == 0)
+        notification_info = {'notification_id': self.notification.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(notification_info)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_2
+        self.assertTrue(read_notification(self.post_request).status_code == 200)
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id).read()) == 1)
+
+    def test_read_notification_missing_notification_id(self):
+        self.notification.mark_as_unread()
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id).read()) == 0)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update({})
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_2
+        response = read_notification(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id).read()) == 0)
+
+    def test_read_notification_invalid_notification_id(self):
+        self.notification.mark_as_unread()
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id).read()) == 0)
+        notification_info = {'notification_id': self.num_of_saved_notifications + random.randint(1, 10)}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(notification_info)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_2
+        response = read_notification(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id).read()) == 0)
+
+    def test_read_notification_by_anonymous_user(self):
+        self.notification.mark_as_unread()
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id).read()) == 0)
+        notification_info = {'notification_id': self.notification.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(notification_info)
+        self.post_request.POST = query_dict
+        self.post_request.user = AnonymousUser()
+        self.assertRaises(PermissionDenied, read_notification, self.post_request)
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id).read()) == 0)
+
+    def test_read_notification_invalid_request(self):
+        self.notification.mark_as_unread()
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id).read()) == 0)
+        notification_info = {'notification_id': self.notification.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(notification_info)
+        self.get_request.POST = query_dict
+        self.get_request.user = self.user_2
+        self.assertRaises(PermissionDenied, read_notification, self.get_request)
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id).read()) == 0)
+
+    def test_delete_notification(self):
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id)) == 1)
+        notification_info = {'notification_id': self.notification.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(notification_info)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_2
+        self.assertTrue(delete_notification(self.post_request).status_code == 200)
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id)) == 0)
+
+    def test_delete_notification_missing_notification_id(self):
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id)) == 1)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update({})
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_2
+        response = delete_notification(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id)) == 1)
+
+    def test_delete_notification_invalid_notification_id(self):
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id)) == 1)
+        notification_info = {'notification_id': self.num_of_saved_notifications + random.randint(1, 10)}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(notification_info)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_2
+        response = read_notification(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id)) == 1)
+
+    def test_delete_notification_by_anonymous_user(self):
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id)) == 1)
+        notification_info = {'notification_id': self.notification.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(notification_info)
+        self.post_request.POST = query_dict
+        self.post_request.user = AnonymousUser()
+        self.assertRaises(PermissionDenied, read_notification, self.post_request)
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id)) == 1)
+
+    def test_delete_notification_invalid_request(self):
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id)) == 1)
+        notification_info = {'notification_id': self.notification.id}
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(notification_info)
+        self.get_request.POST = query_dict
+        self.get_request.user = self.user_2
+        self.assertRaises(PermissionDenied, read_notification, self.get_request)
+        self.assertTrue(len(Notification.objects.filter(id=self.notification.id)) == 1)
+
+    def test_check_if_notification_is_valid(self):
+        self.assertTrue(check_if_notification_is_valid(self.notification_info)[0])
+
+    def test_check_if_notification_is_valid_missing_notification_id(self):
+        del self.notification_info['notification_id']
+        self.assertFalse(check_if_notification_is_valid(self.notification_info)[0])
+
+    def test_check_if_notification_is_valid_invalid_notification_id(self):
+        self.notification_info['notification_id'] = self.num_of_saved_notifications + random.randint(1, 10)
+        self.assertFalse(check_if_notification_is_valid(self.notification_info)[0])
+
+    def test_check_if_notification_is_valid_missing_user_id(self):
+        del self.notification_info['user_id']
+        self.assertFalse(check_if_notification_is_valid(self.notification_info)[0])
+
+    def test_check_if_notification_is_valid_invalid_user_id(self):
+        self.notification_info['user_id'] = self.num_of_saved_users + random.randint(1, 10)
+        self.assertFalse(check_if_notification_is_valid(self.notification_info)[0])
+
+    def test_check_if_notification_is_valid_notification_of_another_user(self):
+        self.notification_info['user_id'] = self.user_3.id
+        self.assertFalse(check_if_notification_is_valid(self.notification_info)[0])
+
     ################
     # Models Tests #
     ################
@@ -1129,6 +1300,10 @@ class UsersTest(TestCase):
         self.assertTrue(self.user_1.get_scraper() is None)
         self.assertTrue(self.user_2.get_scraper() is None)
         self.assertTrue(self.new_scraper.get_scraper() == Scrapers.objects.filter(scraper=self.new_scraper).first())
+
+    def test_get_notifications(self):
+        self.assertTrue(len(self.user_1.get_notifications()) == 0)
+        self.assertTrue(len(self.user_2.get_notifications()) == 1)
 
     def test_upload_to(self):
         user_1_img = Users_Images(user=self.user_1)
