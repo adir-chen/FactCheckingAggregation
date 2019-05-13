@@ -93,8 +93,10 @@
         </div>
         {% if request.user.is_authenticated and request.user.id not in claim.users_commented_ids %}
             <br><hr>
-            <h3>Add new comment:</h3>
-            <br>
+            <h3>Add new comment:</h3><br>
+                        <p style="width: 100%; margin: 10px;">In order to add your verdict on this claim, you should add your comment attached with title, description, website url, verdict date and label- True or False.
+                In case you have more details on the claim, but you couldn't decide its label, set the label as Unknown.</p>
+
             <div class="comment_box" id="add_new_comment_box">
                 <div class="comment_header">
                     <div class="comment_user_image">
