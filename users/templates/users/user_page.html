@@ -26,9 +26,16 @@
         {% if request.user.is_superuser or request.user.is_authenticated and user.id == request.user.id %}
             <br>
             <button id="change_profile_image" type="submit" class="btn btn-info">Change profile image</button>
+            <br>
             <p id="error_msg_change_profile_image" style="color: red; font-size: 12px;" hidden></p>
-            <p id="success_msg_change_profile_image" style="color: dodgerblue; font-size: 12px;" hidden>Profile image updated succesfully.</p>
-
+            <p id="success_msg_change_profile_image" style="color: dodgerblue; font-size: 12px;" hidden>Profile image updated successfully.</p>
+            {% if messages %}
+            <div class="messages" >
+                {% for message in messages %}
+                <p{% if message.tags %} class="{{ message.tags }}" style="color: red; font-size: 12px;"{% endif %}>Error:<br>{{ message }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
             <form id="upload_user_img" action="{% url "users:upload_user_img" %}" method="POST" enctype="multipart/form-data" hidden="hidden">
                 {% csrf_token %}
                 {{ form.as_p }}
@@ -161,7 +168,6 @@
             $("#success_msg_add_false_label").attr("hidden", false);
             localStorage.clear();
         }
-
         window.onload = function() {
             let claims_images = document.getElementsByClassName('claim_image');
             for(let i = 0; i < claims_images.length; i++) {

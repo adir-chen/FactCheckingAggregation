@@ -17,7 +17,7 @@ class ImageUploadForm(forms.ModelForm):
         image = self.cleaned_data.get('profile_img', False)
         if image:
             if image.size > megabyte_limit * 1024 * 1024:
-                raise ValidationError("Image file too large ( should be up to 10 MB )")
+                raise ValidationError("Image file too large (should be up to 10 MB)")
             return image
         else:
             raise ValidationError("Couldn't read uploaded image")
