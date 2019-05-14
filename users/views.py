@@ -5,7 +5,6 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
 from django.views.decorators.csrf import ensure_csrf_cookie
 from notifications.models import Notification
-
 from claims.models import Claim
 from comments.models import Comment
 from logger.views import save_log_message

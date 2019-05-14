@@ -8,6 +8,8 @@
             <p id="error_msg_merging_claims" class="action_msg error_msg" hidden></p>
             <p id="success_msg_deleting_suggestion" class="action_msg note_msg" hidden>Suggestion was deleted successfully</p>
             <p id="error_msg_deleting_suggestion" class="action_msg error_msg" hidden></p>
+            <p id="success_msg_switching_claims" class="action_msg note_msg" hidden>Switching was done successfully</p>
+            <p id="error_msg_switching_claims" class="action_msg error_msg" hidden></p>
             <table class="merging_suggestions_table">
               <tr>
                   <th>Claim</th>
@@ -27,6 +29,9 @@
 
             $("#error_msg_merging_claims").attr("hidden", true);
             $("#error_msg_deleting_suggestion").attr("hidden", true);
+
+            $("#success_msg_switching_claims").attr("hidden", true);
+            $("#error_msg_switching_claims").attr("hidden", true);
         }
     </script>
 
