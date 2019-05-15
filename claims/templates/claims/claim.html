@@ -91,7 +91,7 @@
             {%  endif %}
         {% endwith %}
         </div>
-        <p id="{{ claim.id }}_offset" hidden="hidden"></p>
+        <span id="{{ claim.id }}_offset"></span>
         {% if request.user.is_authenticated and request.user.id not in claim.users_commented_ids %}
             <br><hr>
             <h3>Add new comment:</h3>
@@ -219,8 +219,9 @@
                     },
                     success: function () {
                         $('html, body').animate({
-                            scrollTop: $("{{ claim.id }}_offset").offset().top + 300
+                            scrollTop: $("#{{ claim.id }}_offset").offset().top - 300
                         }, 0);
+
                         window.location.reload();
                     },
                     error: function (request) {
@@ -371,18 +372,6 @@
             return true;
         }
 
-        function getCookie(c_name) {
-            if (document.cookie.length > 0) {
-                c_start = document.cookie.indexOf(c_name + "=");
-                if (c_start != -1) {
-                    c_start = c_start + c_name.length + 1;
-                    c_end = document.cookie.indexOf(";", c_start);
-                    if (c_end == -1) c_end = document.cookie.length;
-                    return unescape(document.cookie.substring(c_start, c_end));
-                }
-            }
-            return "";
-        }
     </script>
 {% endblock %}
 
