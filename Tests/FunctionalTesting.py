@@ -56,15 +56,15 @@ class UITests(StaticLiveServerTestCase):
         self.browser.implicitly_wait(10)
         self.client = Client()
 
+    def tearDown(self):
+        self.browser.close()
+
     def add_tweet(self, user_id):
         tweet_1 = Tweet(claim_id=self.claim_1.id,
                         tweet_link='http://url1/',)
         tweet_1.save()
         time.sleep(1)
         return tweet_1
-
-    def tearDown(self):
-        self.browser.close()
 
     def test_guest_navbar_links(self):
         self.browser.get(self.live_server_url)
@@ -162,7 +162,7 @@ class UITests(StaticLiveServerTestCase):
         self.assertEqual(
             browser.find_element_by_class_name('comment_user_image').find_element_by_tag_name('img').get_attribute(
                 'src'),
-            self.live_server_url + '/static/claims/assets/images/profile_default_image.jpg'
+            'https://wtfact.ise.bgu.ac.il/media/profile_default_image.jpg'
         )
         self.assertEqual(
             browser.find_element_by_class_name('comment_user_details').find_element_by_tag_name('a').text,
@@ -213,7 +213,7 @@ class UITests(StaticLiveServerTestCase):
         self.assertEqual(
             self.browser.find_element_by_class_name('reply_img').find_element_by_tag_name('img').get_attribute(
                 'src'),
-            self.live_server_url + '/static/claims/assets/images/profile_default_image.jpg'
+            'https://wtfact.ise.bgu.ac.il/media/profile_default_image.jpg'
         )
         self.assertEqual(
             self.browser.find_element_by_class_name('reply_img').find_element_by_tag_name('a').text,
@@ -524,7 +524,7 @@ class UITests(StaticLiveServerTestCase):
         self.assertEqual(
             browser.find_element_by_class_name('comment_user_image').find_element_by_tag_name('img').get_attribute(
                 'src'),
-            self.live_server_url + '/static/claims/assets/images/profile_default_image.jpg'
+            'https://wtfact.ise.bgu.ac.il/media/profile_default_image.jpg'
         )
         self.assertEqual(
             browser.find_element_by_class_name('comment_user_details').find_element_by_tag_name('a').text,
@@ -584,7 +584,7 @@ class UITests(StaticLiveServerTestCase):
         self.assertEqual(
             browser.find_elements_by_class_name('comment_user_image')[1].find_element_by_tag_name('img').get_attribute(
                 'src'),
-            self.live_server_url + '/static/claims/assets/images/profile_default_image.jpg'
+            'https://wtfact.ise.bgu.ac.il/media/profile_default_image.jpg'
         )
         self.assertEqual(
             browser.find_elements_by_class_name('comment_box')[1].find_element_by_class_name('comment_user_details').find_element_by_tag_name('a').text,
@@ -765,7 +765,7 @@ class UITests(StaticLiveServerTestCase):
     #         self.browser.find_element_by_class_name('arrow_down').is_enabled()
     #     )
 
-    def test_user_cannot_vote_for_new_comment(self):
+    def test_new_comment_not_shown_before_10_minutes_passed(self):
         comment_2 = Comment(claim_id=self.claim_1.id,
                                  user_id=self.user2.id,
                                  title='title2',
@@ -777,13 +777,9 @@ class UITests(StaticLiveServerTestCase):
         comment_2.save()
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user1)
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
-        if random.randint(0, 10) > 5:
-            browser.find_elements_by_class_name('arrow_up')[1].click()
-        else:
-            browser.find_elements_by_class_name('arrow_down')[1].click()
-        time.sleep(2)  # wait 2 second for vote_count to update
-        self.assertTrue(
-            'Error' in browser.find_element_by_id('error_msg_' + str(comment_2.id) + '_comment_vote').text
+        self.assertEqual(
+            len(browser.find_elements_by_class_name('comment_box')),
+            2
         )
 
     def test_search_by_tags(self):
