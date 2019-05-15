@@ -34,8 +34,8 @@
         <div id="claim_edit" hidden="hidden" class="claim_edit">
             Claim: <input id="{{ claim.id }}_claim" value="{{ claim.claim }}" type="text" placeholder="{{ claim.claim }}" class="claim_edit"><br>
             Category: <input id="{{ claim.id }}_category" value="{{ claim.category }}" type="text" placeholder="{{ claim.category }}" class="claim_edit"><br>
-            Tags: <input id="{{ claim.id }}_tags" value="{{ claim.tags }}" type="text" placeholder="{{ claim.tags }}" class="claim_edit"><br>
-            Image Url: <input id="{{ claim.id }}_image_src" value="{{ claim.image_src }}" type="text" placeholder="{{ claim.image_src }}" class="claim_edit">
+            Tags (optional, separated by comma. e.g. tag1,tag2,tag3): <input id="{{ claim.id }}_tags" value="{{ claim.tags }}" type="text" placeholder="{{ claim.tags }}" class="claim_edit"><br>
+            Image Url (optional): <input id="{{ claim.id }}_image_src" value="{{ claim.image_src }}" type="text" placeholder="{{ claim.image_src }}" class="claim_edit">
         </div>
         <br>
         <div class="buttons_row">
@@ -55,6 +55,8 @@
         {% load static %}
         <a id="{{ claim.id }}_claim_twitter_share" class="btn twitter-share-btn" href="https://twitter.com/intent/tweet?text=http://{{ request.META.HTTP_HOST }}{{ request.path }}%20"
         target="_blank" data-size="large"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"> Share claim on Twitter</a>
+        <button type="submit" id="{{ claim.id }}_check_tweets_for_claim_in_twitter" class="btn twitter-share-btn" style="margin: 10px 0;"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"> Search for tweets (about this claim) in Twitter</button>
+        <p id="error_msg_{{ claim.id }}_claim_extracting_tweets" class="action_msg error_msg" hidden></p>
         {% with tweets=claim.get_tweets_for_claim %}
             {% if tweets %}
                 <hr><br>
@@ -65,10 +67,6 @@
                         {% include 'tweets/tweet.html' with tweet=tweet request=request only %}
                     {% endfor %}
                 </div>
-            {% else %}
-                    <button type="submit" id="{{ claim.id }}_check_tweets_for_claim_in_twitter" class="btn twitter-share-btn" style="margin: 10px 0;"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"> Search for tweets (about this claim) in Twitter</button>
-                    <p id="error_msg_{{ claim.id }}_claim_extracting_tweets" class="action_msg error_msg" hidden></p>
-                    <br>
             {% endif %}
         {% endwith %}
         {% if 'Android' in request.META.HTTP_USER_AGENT %}
@@ -95,6 +93,7 @@
         {% if request.user.is_authenticated and request.user.id not in claim.users_commented_ids %}
             <br><hr>
             <h3>Add new comment:</h3>
+            <h5>(For claim {{ claim.claim }})</h5>
             <p style="width: 100%; margin: 10px;">In order to add your verdict on this claim, you should add your comment attached with title, description, website url, verdict date and label- True or False.
                 In case you have more details on the claim, but you couldn't decide its label, set the label as Unknown.</p>
             <div class="comment_box" id="add_new_comment_box">
@@ -121,13 +120,13 @@
                 <hr>
                 <div class="comment_content_edit">
                     <p id="error_msg_{{ claim.id }}_new_comment" class="action_msg error_msg" hidden></p>
+                    Reference:
+                    <input id="{{ claim.id }}_new_comment_url" type="text"><br>
                     Title: <input id="{{ claim.id }}_new_comment_title" type="text"><br>
-                    Description:<br>
+                    Description (describe how the reference supports the label you have chosen - True/False/Unknown):<br>
                     <textarea id="{{ claim.id }}_new_comment_description"></textarea>
                 </div>
                 <div class="comment_footer">
-                    Reference:
-                    <input id="{{ claim.id }}_new_comment_url" type="text"><br>
                     Tags (optional, separated by comma. e.g. tag1,tag2,tag3):
                     <p class="action_msg note_msg">Used for searching purpose.</p>
                     <input id="{{ claim.id }}_new_comment_tags" type="text"><br>

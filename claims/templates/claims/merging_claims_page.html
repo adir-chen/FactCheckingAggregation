@@ -10,10 +10,11 @@
             <p id="error_msg_deleting_suggestion" class="action_msg error_msg" hidden></p>
             <p id="success_msg_switching_claims" class="action_msg note_msg" hidden>Switching was done successfully</p>
             <p id="error_msg_switching_claims" class="action_msg error_msg" hidden></p>
+            <p class="action_msg note_msg">After pressing "merge claims" all the comments from the similar claim will be moved to the original claim's comments, and the similar claim will be removed.</p>
             <table class="merging_suggestions_table">
               <tr>
-                  <th>Claim</th>
-                  <th>Claim to merge</th>
+                  <th>Original claim</th>
+                  <th>Similar claim</th>
                   <th>Actions</th>
               </tr>
                 {% for suggestion in suggestions %}

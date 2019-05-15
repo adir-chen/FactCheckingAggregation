@@ -35,6 +35,14 @@
             while (list.hasChildNodes()) {
               list.removeChild(list.firstChild);
             }
+            if (data.unread_list.length > 0){
+                $("#notify_badge").attr("hidden", false);
+                $("#mark_all").attr("hidden", false);
+            }
+            else{
+                $("#notify_badge").attr("hidden", true);
+                $("#mark_all").attr("hidden", true);
+            }
             for (var i=0; i < data.unread_list.length; i++) {
                 var element = document.createElement('li');
                 var actor = data.unread_list[i].actor;
@@ -54,22 +62,19 @@
         <div id="header-wrapper">
             <div class="site-logo">
                 <a href="/"><img src="{% static 'claims/assets/images/site_logo.png' %}"></a><br>
-                <h6><i>Determine whether a claim is True or False</i></h6>
+                <h6><i>Rate the Facts</i></h6>
             </div>
             <div class="header-tools">
                 {% if request.user.is_authenticated %}
                     <p>
-                        Welcome <a href="/users/{{ request.user.id }}">{{request.user.username}}</a>
+                        <span style="font-weight: bold;">Welcome </span><a href="/users/{{ request.user.id }}">{{request.user.username}}</a>
                         <a href="#" class="notification" onclick="showNotifiactions()">
                             <span><i class="fa fa-bell" style="margin-left: 10px;"></i></span>
-                            {% notifications_unread as unread_count %}
-                            {% if unread_count %}
-                                <span class="badge">{% live_notify_badge %}</span>
-                            {% endif %}
+                            <span id="notify_badge" class="badge" hidden="hidden">{% live_notify_badge %}</span>
                         </a> <span style="font-size: 14px;">Notifications</span>
                     </p>
                     <div id="last-notifications" class="last-notifications">
-                        <div style="background: #eee; padding: 10px; margin: 0;">
+                        <div id="mark_all" style="background: #eee; padding: 10px; margin: 0;" hidden="hidden">
                             <a href="/users/read_all_notifications">Mark all as read</a>
                             <button onclick="showNotifiactions()" style="border: 1px solid #ccc; background: none; float: right;">X</button>
                         </div>

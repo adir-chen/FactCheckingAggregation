@@ -572,7 +572,7 @@ def upload_user_img(request):
         user_and_img.profile_img = file
         user_and_img.save()
     else:
-        messages.error(request, 'Some error occurred. Please, make sure you upload an image file up to 10 MB')
+        messages.error(request, 'Some error occurred. Please, make sure you upload an image file up to 0.5 MB')
         return HttpResponseRedirect('/users/' + user_id)
     return user_page(return_get_request_to_user(request.user), user_id)
 
@@ -645,6 +645,49 @@ def check_if_notification_is_valid(notification_info):
     elif len(Notification.objects.filter(id=notification_info['notification_id'], recipient=User.objects.filter(id=notification_info['user_id']).first())) == 0:
         err += 'Notification ' + str(notification_info['notification_id']) + ' does not belong to user with id ' + \
                str(notification_info['user_id'])
+    if len(err) > 0:
+        return False, err
+    return True, err
+
+
+# This function changes user's name
+def change_username(request):
+    from claims.views import return_get_request_to_user
+    if not request.user.is_authenticated or request.method != 'POST':
+        raise PermissionDenied
+    user_info = request.POST.dict()
+    user_info['request_user_id'] = request.user.id
+    user_info['is_superuser'] = request.user.is_superuser
+    valid_username, err_msg = check_if_user_info_is_valid(user_info)
+    if not valid_username:
+        save_log_message(request.user.id, request.user.username,
+                         'Changing username. Error: ' + err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
+    User.objects.filter(id=user_info['user_id']).update(username=user_info['new_username'])
+    save_log_message(request.user.id, request.user.username,
+                     'Changing username of user with id ' + str(user_info["user_id"]), True)
+    return notifications_page(return_get_request_to_user(request.user))
+
+
+# This function checks if a given user info is valid,
+# i.e. the info has all the fields with the correct format.
+# The function returns true in case the info is valid, otherwise false and an error
+def check_if_user_info_is_valid(user_info):
+    err = ''
+    if 'user_id' not in user_info or not user_info['user_id']:
+        err += 'Missing value for user id'
+    elif 'new_username' not in user_info or not user_info['new_username']:
+        err += 'Missing value for new user name'
+    elif 'request_user_id' not in user_info or not user_info['request_user_id']:
+        err += 'Missing value for user id'
+    elif 'is_superuser' not in user_info:
+        err += 'Missing value for new user type'
+    elif not check_if_user_exists_by_user_id(user_info['user_id']):
+        err += 'User ' + str(user_info['user_id']) + ' does not exist'
+    elif not check_if_user_exists_by_user_id(user_info['request_user_id']):
+        err += 'User ' + str(user_info['request_user_id']) + ' does not exist'
+    elif (not user_info['user_id'] != user_info['request_user_id']) and not user_info['is_superuser']:
+        err += 'Permission denied'
     if len(err) > 0:
         return False, err
     return True, err

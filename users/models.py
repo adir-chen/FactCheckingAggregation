@@ -46,7 +46,7 @@ auth.models.User.add_to_class('get_notifications', get_notifications)
 
 
 def upload_to(instance, filename):
-    return "images/{}/{}".format(instance.user.id, filename)
+    return "images/{}/{}".format(instance.user.id, str(instance.user.id) + '_image')
 
 
 class Users_Images(models.Model):

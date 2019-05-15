@@ -228,7 +228,8 @@ def check_tweets_for_claim_in_twitter(request):
         if len(tweets) > 0:
             for tweet in tweets:
                 tweet_link = 'https://twitter.com/{}/status/{}'.format(tweet.user.screen_name, tweet.id)
-                build_tweet(claim.id, tweet_link)
+                if len(Tweet.objects.filter(tweet_link=tweet_link)) == 0:
+                    build_tweet(claim.id, tweet_link)
             save_log_message(request.user.id, request.user.username,
                              'Extracting tweets for a claim with id ' + str(claim.id), True)
             return view_claim(return_get_request_to_user(request.user), claim.id)

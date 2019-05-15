@@ -27,8 +27,6 @@
             <br>
             <button id="change_profile_image" type="submit" class="btn btn-info">Change profile image</button>
             <br>
-            <p id="error_msg_change_profile_image" style="color: red; font-size: 12px;" hidden></p>
-            <p id="success_msg_change_profile_image" style="color: dodgerblue; font-size: 12px;" hidden>Profile image updated successfully.</p>
             {% if messages %}
             <div class="messages" >
                 {% for message in messages %}
@@ -43,6 +41,13 @@
                 <input type="hidden" name="user_id" value="{{ user.id }}">
                 <button type="submit" class="btn btn-info">Upload</button>
             </form>
+            <br>
+            <button id="change_username" type="submit" class="btn btn-info">Change your name</button>
+            <input id="new_username" hidden="hidden" placeholder="{{ user.username }}">
+            <button id="set_new_username" type="submit" class="btn btn-info" hidden="hidden">Change</button>
+            <p id="error_msg_change_username" style="color: red; font-size: 12px;" hidden></p>
+            <p id="success_msg_change_username" style="color: dodgerblue; font-size: 12px;" hidden>Name updated successfully</p>
+            <br>
         {% endif %}
         <hr>
         <h4> {{ user.username }}'s claims:</h4>
@@ -168,6 +173,10 @@
             $("#success_msg_add_false_label").attr("hidden", false);
             localStorage.clear();
         }
+        else if(localStorage.getItem("success_msg_change_username")){
+            $("#success_msg_change_username").attr("hidden", false);
+            localStorage.clear();
+        }
         window.onload = function() {
             let claims_images = document.getElementsByClassName('claim_image');
             for(let i = 0; i < claims_images.length; i++) {
@@ -182,11 +191,13 @@
             $("#success_msg_delete_true_label").attr("hidden", true);
             $("#success_msg_add_false_label").attr("hidden", true);
             $("#success_msg_delete_false_label").attr("hidden", true);
+            $("#success_msg_change_username").attr("hidden", true);
 
             $("#error_msg_add_true_label").attr("hidden", true);
             $("#error_msg_delete_true_label").attr("hidden", true);
             $("#error_msg_add_false_label").attr("hidden", true);
             $("#error_msg_delete_false_label").attr("hidden", true);
+            $("#error_msg_change_username").attr("hidden", true);
         }
 
         $("#add_true_label_submit").click(function(e){
@@ -293,17 +304,40 @@
             });
         });
 
+        $("#set_new_username").click(function(e){
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'users:change_username' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken') },
+                data: {
+                    user_id: '{{ user.id }}',
+                    new_username: $("#new_username").val()
+                },
+                success: function (request) {
+                    localStorage.setItem("success_msg_change_username", true);
+                    window.location.reload()
+                },
+                error: function (request) {
+                    hide_all_msgs();
+                    let err = request.responseJSON;
+                    document.getElementById("error_msg_change_username").innerHTML =
+                    'Error: <br>' + err;
+                    $("#error_msg_change_username").attr("hidden", false);
+                }
+            });
+        });
+
         $("#change_profile_image").click(function(e){
             $("#upload_user_img").attr("hidden", false);
-            $("#upload_user_img_cancel").attr("hidden", false);
             $("#change_profile_image").attr("hidden", true);
         });
 
-        function upload_user_img_cancel(){
-            $("#upload_user_img").attr("hidden", true);
-            $("#upload_user_img_cancel").attr("hidden", true);
-            $("#change_profile_image").attr("hidden", false);
-        }
+        $("#change_username").click(function(e){
+            $("#new_username").attr("hidden", false);
+            $("#set_new_username").attr("hidden", false);
+            $("#change_username").attr("hidden", true);
+        });
 
         function search_on_twitter(tag){
             window.open('https://twitter.com/search?q=' + tag, '_blank');
