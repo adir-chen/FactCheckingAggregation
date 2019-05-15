@@ -45,14 +45,6 @@ class Claim(models.Model):
     #     else:
     #         return None
 
-    # def max_comment_id(self):
-    #     from comments.models import Comment
-    #     max_comment_id = -1
-    #     for comment in Comment.objects.filter(claim_id=self.id):
-    #         if comment.id > max_comment_id:
-    #             max_comment_id = comment.id
-    #     return max_comment_id
-
 
 class Claims_Reports(models.Model):
     claim = models.ForeignKey(Claim, on_delete=models.CASCADE)

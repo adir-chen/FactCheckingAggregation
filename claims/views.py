@@ -355,12 +355,13 @@ def merging_claims(request):
         save_log_message(request.user.id, request.user.username,
                          'Merging claims. Error: ' + err_msg)
         return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
-    Comment.objects.filter(claim_id=merge_claims_info['claim_id_to_merge']).update(claim_id=merge_claims_info['claim_id'])
-    update_authenticity_grade(merge_claims_info['claim_id'])
-    Claim.objects.filter(id=merge_claims_info['claim_id_to_merge']).delete()
+    suggestion = Merging_Suggestions.objects.filter(id=merge_claims_info['suggestion_id']).first()
+    Comment.objects.filter(claim_id=suggestion.claim_to_merge_id).update(claim_id=suggestion.claim_id)
+    update_authenticity_grade(suggestion.claim_id)
+    Claim.objects.filter(id=suggestion.claim_to_merge_id).delete()
     save_log_message(request.user.id, request.user.username,
-                     'Merging claims - claim with id ' + str(merge_claims_info['claim_id_to_merge']) +
-                     ' and claim with id ' + str(merge_claims_info['claim_id']), True)
+                     'Merging claims - claim with id ' + str(suggestion.claim_to_merge_id) +
+                     ' and claim with id ' + str(suggestion.claim_id), True)
     return merging_claims_page(return_get_request_to_user(request.user))
 
 
@@ -369,22 +370,14 @@ def merging_claims(request):
 # The function returns true in case the fields are valid, otherwise false and an error
 def check_if_suggestion_is_valid(merge_claims_info):
     err = ''
-    if 'claim_id' not in merge_claims_info or not merge_claims_info['claim_id']:
-        err += 'Missing value for claim id'
-    elif 'claim_id_to_merge' not in merge_claims_info or not merge_claims_info['claim_id_to_merge']:
-        err += 'Missing value for claim id to be merge'
+    if 'suggestion_id' not in merge_claims_info or not merge_claims_info['suggestion_id']:
+        err += 'Missing value for suggestion id'
     elif 'user_id' not in merge_claims_info or not merge_claims_info['user_id']:
         err += 'Missing value for user id'
     elif 'is_superuser' not in merge_claims_info:
         err += 'Missing value for user type'
-    elif len(Claim.objects.filter(id=merge_claims_info['claim_id'])) == 0:
-        err += 'Claim ' + str(merge_claims_info['claim_id']) + ' does not exist'
-    elif len(Claim.objects.filter(id=merge_claims_info['claim_id_to_merge'])) == 0:
-        err += 'Claim ' + str(merge_claims_info['claim_id_to_merge']) + ' does not exist'
-    elif len(Merging_Suggestions.objects.filter(claim_id=merge_claims_info['claim_id'],
-                                                claim_to_merge_id=merge_claims_info['claim_id_to_merge'])) == 0:
-        err += 'Suggestion for merging claims ' + str(merge_claims_info['claim_id']) + ' and ' \
-               + str(merge_claims_info['claim_id']) + ' does not exist'
+    elif len(Merging_Suggestions.objects.filter(id=merge_claims_info['suggestion_id'])) == 0:
+        err += 'Suggestion ' + str(merge_claims_info['suggestion_id']) + ' does not exist'
     elif not check_if_user_exists_by_user_id(merge_claims_info['user_id']):
         err += 'User with id ' + str(merge_claims_info['user_id']) + ' does not exist'
     elif not merge_claims_info['is_superuser']:
@@ -406,13 +399,13 @@ def switching_claims(request):
         save_log_message(request.user.id, request.user.username,
                          'Switching claims. Error: ' + err_msg)
         return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
-    Merging_Suggestions.objects.filter(claim_id=switch_claims_info['claim_id'],
-                                       claim_to_merge_id=switch_claims_info['claim_id_to_merge']).update(
-        claim_id=switch_claims_info['claim_id_to_merge'],
-        claim_to_merge_id=switch_claims_info['claim_id'])
+    suggestion = Merging_Suggestions.objects.filter(id=switch_claims_info['suggestion_id']).first()
+    Merging_Suggestions.objects.filter(id=suggestion.id).update(
+        claim_id=suggestion.claim_to_merge_id,
+        claim_to_merge_id=suggestion.claim_id)
     save_log_message(request.user.id, request.user.username,
-                     'Switching claims - claim with id ' + str(switch_claims_info['claim_id_to_merge']) +
-                     ' and claim with id ' + str(switch_claims_info['claim_id']), True)
+                     'Switching claims - claim with id ' + str(suggestion.claim_id) +
+                     ' and claim with id ' + str(suggestion.claim_to_merge_id), True)
     return merging_claims_page(return_get_request_to_user(request.user))
 
 
@@ -428,12 +421,13 @@ def delete_suggestion_for_merging_claims(request):
         save_log_message(request.user.id, request.user.username,
                          'Deleting a suggestion for merging claims. Error: ' + err_msg)
         return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
-    Merging_Suggestions.objects.filter(claim_id=suggestion_to_delete['claim_id'],
-                                       claim_to_merge_id=suggestion_to_delete['claim_id_to_merge']).delete()
+    suggestion = Merging_Suggestions.objects.filter(id=suggestion_to_delete['suggestion_id']).first()
+    claim_id = suggestion.claim_id
+    claim_id_to_merge = suggestion.claim_to_merge_id
+    Merging_Suggestions.objects.filter(id=suggestion_to_delete['suggestion_id']).delete()
     save_log_message(request.user.id, request.user.username,
-                     'Deleting a suggestion for merging claims - claim with id ' +
-                     str(suggestion_to_delete['claim_id']) +
-                     ' with claim with id ' + str(suggestion_to_delete['claim_id_to_merge']), True)
+                     'Deleting a suggestion for merging claims - claim with id ' + str(claim_id) +
+                     ' with claim with id ' + str(claim_id_to_merge), True)
     return merging_claims_page(return_get_request_to_user(request.user))
 
 

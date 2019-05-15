@@ -10,11 +10,11 @@
         </div>
     </td>
     <td>
-        <button id="{{ suggestion.claim.id }}_{{ suggestion.claim_to_merge.id }}_merging_claims" type="submit" class="btn btn-info">Merge claims</button>
+        <button id="{{ suggestion.id }}_merging_claims" type="submit" class="btn btn-info">Merge claims</button>
         <br><br>
-        <button id="{{ suggestion.claim.id }}_{{ suggestion.claim_to_merge.id }}_switching_claims" type="submit" class="btn btn-info">Switch claims</button>
+        <button id="{{ suggestion.id }}_switching_claims" type="submit" class="btn btn-info">Switch claims</button>
         <br><br>
-        <button id="{{ suggestion.claim.id }}_{{ suggestion.claim_to_merge.id }}_delete" type="submit" class="btn btn-danger">Delete suggestion</button>
+        <button id="{{ suggestion.id }}_delete" type="submit" class="btn btn-danger">Delete suggestion</button>
     </td>
 </tr>
 
@@ -31,14 +31,13 @@
         $("#success_msg_switching_claims").attr("hidden", false);
         localStorage.clear();
     }
-    $("#{{ suggestion.claim.id }}_{{ suggestion.claim_to_merge.id }}_merging_claims").click(function(){
+    $("#{{ suggestion.id }}_merging_claims").click(function(){
         $.ajax({
             type: 'POST',
             url: "{% url 'claims:merging_claims' %}",
             headers: { "X-CSRFToken": getCookie('csrftoken') },
             data: {
-                claim_id: '{{ suggestion.claim.id }}',
-                claim_id_to_merge: '{{ suggestion.claim_to_merge.id }}',
+                suggestion_id: '{{ suggestion.id }}'
             },
             success: function () {
                 localStorage.setItem("success_msg_merging_claims", true);
@@ -54,14 +53,13 @@
         });
     });
 
-    $("#{{ suggestion.claim.id }}_{{ suggestion.claim_to_merge.id }}_switching_claims").click(function(){
+    $("#{{ suggestion.id }}_switching_claims").click(function(){
         $.ajax({
             type: 'POST',
             url: "{% url 'claims:switching_claims' %}",
             headers: { "X-CSRFToken": getCookie('csrftoken') },
             data: {
-                claim_id: '{{ suggestion.claim.id }}',
-                claim_id_to_merge: '{{ suggestion.claim_to_merge.id }}',
+                suggestion_id: '{{ suggestion.id }}'
             },
             success: function () {
                 localStorage.setItem("success_msg_switching_claims", true);
@@ -77,17 +75,16 @@
         });
     });
 
-    $("#{{ suggestion.claim.id }}_{{ suggestion.claim_to_merge.id }}_delete").click(function(e){
+    $("#{{ suggestion.id }}_delete").click(function(e){
         if (confirm('Are you sure that you want to delete this suggestion?')){
             e.preventDefault();
             $.ajax({
                 type: 'POST',
                 url: "{% url 'claims:delete_suggestion_for_merging_claims' %}",
                 headers: { "X-CSRFToken": getCookie('csrftoken') },
-            data: {
-                claim_id: '{{ suggestion.claim.id }}',
-                claim_id_to_merge: '{{ suggestion.claim_to_merge.id }}',
-            },
+                data: {
+                    suggestion_id: '{{ suggestion.id }}'
+                },
                 success: function () {
                     localStorage.setItem("success_msg_deleting_suggestion", true);
                     window.location.reload();
