@@ -29,9 +29,25 @@
 
         gtag('config', 'UA-137817705-1');
     </script>
+    <script>
+        function my_special_notification_callback(data) {
+            var list = document.getElementById("live_notifications_list");
+            while (list.hasChildNodes()) {
+              list.removeChild(list.firstChild);
+            }
+            for (var i=0; i < data.unread_list.length; i++) {
+                var element = document.createElement('li');
+                var actor = data.unread_list[i].actor;
+                var verb = data.unread_list[i].verb;
+                var target_id = data.unread_list[i].target_object_id;
+                element.innerHTML = "<a href ='#' onclick='read_notification(" + JSON.stringify(data.unread_list[i]) + ")'" + target_id + "'>" + actor + " " + verb + "</a>";
+                list.appendChild(element);
+            }
+        }
+    </script>
     {% load notifications_tags %}
     <script src="{% static 'notifications/notify.js' %}" type="text/javascript"></script>
-    {% register_notify_callbacks callbacks='fill_notification_list,fill_notification_badge' %}
+    {% register_notify_callbacks callbacks='fill_notification_badge,my_special_notification_callback' %}
 </head>
 <body>
     <header id="header">
@@ -44,7 +60,7 @@
                 {% if request.user.is_authenticated %}
                     <p>
                         Welcome <a href="/users/{{ request.user.id }}">{{request.user.username}}</a>
-                        <a style="color: #fff;" class="notification" onclick="showNotifiactions()">
+                        <a href="#" class="notification" onclick="showNotifiactions()">
                             <span><i class="fa fa-bell" style="margin-left: 10px;"></i></span>
                             {% notifications_unread as unread_count %}
                             {% if unread_count %}
@@ -57,15 +73,7 @@
                             <a href="/users/read_all_notifications">Mark all as read</a>
                         </div>
                         <div>
-                            <ul style="margin: 0;">
-                                {% for notification in request.user.get_notifications %}
-                                    {% if notification.unread %}
-                                        <li class="unread_notification"><a href="/claim/{{ notification.target.id }}" onclick="">{{ notification.actor }} {{ notification.verb }}</a></li>
-                                    {% else %}
-                                        <li><a href="/claim/{{ notification.target.id }}">{{ notification.actor }} {{ notification.verb }}</a></li>
-                                    {% endif %}
-                                {% endfor %}
-<!--                                {% live_notify_list %}-->
+                            <ul id="live_notifications_list" style="margin: 0;">
                             </ul>
                         </div>
                         <div style="background: #eee; padding: 10px;">
@@ -79,9 +87,9 @@
                     <p>
                         <ul>
                             <p>Sign in with:</p>
-                            <li><img src="{% static 'claims/assets/images/google_icon.jpg' %}" style="padding: 0; margin: 0;"><a href="{% url 'social:begin' 'google-oauth2' %}"> Google</a></li>
-                            <li><img src="{% static 'claims/assets/images/twitter_icon.png' %}"><a href="{% url 'social:begin' 'twitter' %}"> Twitter</a></li>
-                            <li><img src="{% static 'claims/assets/images/facebook_icon.png' %}"><a href="{% url 'social:begin' 'facebook' %}"> Facebook</a></li>
+                            <li><div style="display: inline-block"><img src="{% static 'claims/assets/images/google_icon.jpg' %}" style="padding: 0; margin: 0;"><a href="{% url 'social:begin' 'google-oauth2' %}"> Google</a></div></li>
+                            <li><div style="display: inline-block"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"><a href="{% url 'social:begin' 'twitter' %}"> Twitter</a></div></li>
+                            <li><div style="display: inline-block"><img src="{% static 'claims/assets/images/facebook_icon.png' %}"><a href="{% url 'social:begin' 'facebook' %}"> Facebook</a></div></li>
                         </ul>
                     </p>
                 {% endif %}
@@ -161,6 +169,32 @@
                 container.hide();
             }
         });
+
+        function read_notification(notification) {
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'users:read_notification' %}",
+                headers: { "X-CSRFToken": getCookie('csrftoken') },
+                data: {
+                    notification_id: notification.id,
+                },
+                success: function () {
+                    window.location.pathname = '/claim/' + notification.target_object_id;
+                },
+            });
+        }
+        function getCookie(c_name) {
+            if (document.cookie.length > 0) {
+                c_start = document.cookie.indexOf(c_name + "=");
+                if (c_start != -1) {
+                    c_start = c_start + c_name.length + 1;
+                    c_end = document.cookie.indexOf(";", c_start);
+                    if (c_end == -1) c_end = document.cookie.length;
+                    return unescape(document.cookie.substring(c_start, c_end));
+                }
+            }
+            return "";
+        }
 
         // {#grecaptcha.ready(function() {#}
         // {# for grecaptcha v3 #}
