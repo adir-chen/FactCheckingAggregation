@@ -686,7 +686,7 @@ def check_if_user_info_is_valid(user_info):
         err += 'User ' + str(user_info['user_id']) + ' does not exist'
     elif not check_if_user_exists_by_user_id(user_info['request_user_id']):
         err += 'User ' + str(user_info['request_user_id']) + ' does not exist'
-    elif (not user_info['user_id'] != user_info['request_user_id']) and not user_info['is_superuser']:
+    elif (user_info['user_id'] != user_info['request_user_id']) and not user_info['is_superuser']:
         err += 'Permission denied'
     if len(err) > 0:
         return False, err

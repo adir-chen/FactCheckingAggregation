@@ -15,8 +15,7 @@ from users.views import check_if_user_exists_by_user_id, get_username_by_user_id
     delete_false_label_from_scraper, check_if_scraper_new_label_is_valid, \
     check_if_scraper_label_delete_is_valid, check_if_scraper_labels_already_exist, \
     check_if_user_is_scraper, notifications_page, read_notification, delete_notification, \
-    check_if_notification_is_valid
-from users.models import get_user_image, get_user_rep, get_scraper, get_notifications
+    check_if_notification_is_valid, change_username, check_if_user_info_is_valid
 import json
 import random
 import datetime
@@ -86,6 +85,10 @@ class UsersTest(TestCase):
         self.num_of_saved_notifications = 1
         self.notification_info = {'notification_id': self.notification.id,
                                   'user_id': self.user_2.id}
+        self.user_info = {'new_username': "new_username",
+                          'user_id': self.user_1.id,
+                          'request_user_id': self.user_1.id,
+                          'is_superuser': False}
         self.error_code = 404
 
     def tearDown(self):
@@ -1279,6 +1282,129 @@ class UsersTest(TestCase):
         self.notification_info['user_id'] = self.user_3.id
         self.assertFalse(check_if_notification_is_valid(self.notification_info)[0])
 
+    def test_change_username(self):
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.user_info)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_1
+        self.assertTrue(change_username(self.post_request).status_code == 200)
+        self.assertTrue(User.objects.filter(id=self.user_info['user_id']).first().username
+                        == self.user_info['new_username'])
+
+    def test_change_username_of_another_user(self):
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.user_info)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_2
+        response = change_username(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
+
+    def test_change_username_of_another_user_by_admin(self):
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.user_info)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.admin
+        self.assertTrue(change_username(self.post_request).status_code == 200)
+        self.assertTrue(User.objects.filter(id=self.user_info['user_id']).first().username
+                        == self.user_info['new_username'])
+
+    def test_change_username_missing_user_id(self):
+        del self.user_info['user_id']
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.user_info)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_1
+        response = change_username(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
+
+    def test_change_username_invalid_user_id(self):
+        self.user_info['user_id'] = self.num_of_saved_users + random.randint(1, 10)
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.user_info)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_1
+        response = change_username(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
+
+    def test_change_username_missing_new_username(self):
+        del self.user_info['new_username']
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.user_info)
+        self.post_request.POST = query_dict
+        self.post_request.user = self.user_1
+        response = change_username(self.post_request)
+        self.assertTrue(response.status_code == self.error_code)
+
+    def test_change_username_by_anonymous_user(self):
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.user_info)
+        self.post_request.POST = query_dict
+        self.post_request.user = AnonymousUser()
+        self.assertRaises(PermissionDenied, change_username, self.post_request)
+
+    def test_change_username_invalid_request(self):
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(self.user_info)
+        self.get_request.POST = query_dict
+        self.get_request.user = self.user_1
+        self.assertRaises(PermissionDenied, change_username, self.get_request)
+
+    def test_change_username_missing_args(self):
+        del self.user_info['request_user_id']
+        del self.user_info['is_superuser']
+        for i in range(10):
+            dict_copy = self.user_info.copy()
+            args_to_remove = []
+            for j in range(random.randint(1, len(self.user_info.keys()) - 1)):
+                args_to_remove.append(list(self.user_info.keys())[j])
+            for j in range(len(args_to_remove)):
+                del self.user_info[args_to_remove[j]]
+            len_users = len(User.objects.all())
+            query_dict = QueryDict('', mutable=True)
+            query_dict.update(self.user_info)
+            self.post_request.POST = query_dict
+            self.post_request.user = self.user_1
+            response = change_username(self.post_request)
+            self.assertTrue(response.status_code == self.error_code)
+            self.assertTrue(len(User.objects.all()) == len_users)
+            self.user_info = dict_copy.copy()
+
+    def test_check_if_user_info_is_valid(self):
+        self.assertTrue(check_if_user_info_is_valid(self.user_info)[0])
+
+    def test_check_if_user_info_is_valid_missing_user_id(self):
+        del self.user_info['user_id']
+        self.assertFalse(check_if_user_info_is_valid(self.user_info)[0])
+
+    def test_check_if_user_info_is_valid_invalid_user_id(self):
+        self.user_info['user_id'] = self.num_of_saved_users + random.randint(1, 10)
+        self.assertFalse(check_if_user_info_is_valid(self.user_info)[0])
+
+    def test_check_if_user_info_is_valid_missing_new_username(self):
+        del self.user_info['new_username']
+        self.assertFalse(check_if_user_info_is_valid(self.user_info)[0])
+
+    def test_check_if_user_info_is_valid_missing_request_user_id(self):
+        del self.user_info['request_user_id']
+        self.assertFalse(check_if_user_info_is_valid(self.user_info)[0])
+
+    def test_check_if_user_info_is_valid_invalid_request_user_id(self):
+        self.user_info['request_user_id'] = self.num_of_saved_users + random.randint(1, 10)
+        self.assertFalse(check_if_user_info_is_valid(self.user_info)[0])
+
+    def test_check_if_user_info_is_valid_missing_user_type(self):
+        del self.user_info['is_superuser']
+        self.assertFalse(check_if_user_info_is_valid(self.user_info)[0])
+
+    def test_check_if_user_info_is_valid_by_another_user(self):
+        self.user_info['request_user_id'] = self.user_2.id
+        self.assertFalse(check_if_user_info_is_valid(self.user_info)[0])
+
+    def test_check_if_user_info_is_valid_by_admin_user(self):
+        self.user_info['request_user_id'] = self.admin.id
+        self.user_info['is_superuser'] = True
+        self.assertTrue(check_if_user_info_is_valid(self.user_info)[0])
+
     ################
     # Models Tests #
     ################
@@ -1311,7 +1437,7 @@ class UsersTest(TestCase):
         from users.models import upload_to
         file = 'file' + str(random.randint(1, 10))
         self.assertTrue(upload_to(user_1_img, file) ==
-                        "images/" + str(self.user_1.id) + "/" + file)
+                        "images/" + str(self.user_1.id) + "/" + str(self.user_1.id) + '_image')
 
     def test_image_url(self):
         default_media = 'https://wtfact.ise.bgu.ac.il/media/profile_default_image.jpg'

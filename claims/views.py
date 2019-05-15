@@ -564,7 +564,7 @@ def return_get_request_to_user(user):
     return request
 
 
-# This function add all similar claim there is for the given claim to the DB
+# This function add all similar claims for the given claim
 def check_for_similar_claims(claim):
     from difflib import SequenceMatcher
     from claims.models import Merging_Suggestions

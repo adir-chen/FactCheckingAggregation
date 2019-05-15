@@ -1717,11 +1717,23 @@ class CommentTests(TestCase):
                           verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
                           label='label1')
         comment.save()
+        url = 'http://factscan.ca/andrew-scheer-canadas-sovereignty/'
+        comment_2 = Comment(claim_id=self.claim_2.id,
+                          user_id=self.user_2.id,
+                          title=self.claim_2.claim,
+                          description='description1',
+                          url=url,
+                          tags='tag1',
+                          verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(1, 10)),
+                          label='label1')
+        comment_2.save()
+
         comment_preview = comment.get_preview()
         preview = {'title': "FACT CHECK: Does a Viral Video Really Show \'Game of Thrones\' Actress Bella Ramsey Break-Dancing?",
                    'description': 'The English actress may have moves on the battlefield, but does she have moves on the dance floor?',
                    'src': 'https://www.snopes.com/tachyon/2019/05/bella-ramsey-getty-british-academy-childrens-awards-2018.jpg?fit=1200,628'}
         self.assertTrue(json.dumps(preview) == comment_preview)
+        self.assertFalse(comment_2.get_preview())
 
     def test_vote_on_comment(self):
         from django.utils import timezone
