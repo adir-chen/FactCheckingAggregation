@@ -135,14 +135,12 @@ class ClaimTests(TestCase):
         self.test_file_invalid_header = SimpleUploadedFile("tests_invalid.csv", open(
             'claims/tests_invalid.csv', 'r', encoding='utf-8-sig').read().encode())
 
-        self.merging_claims = {'claim_id': self.claim_1.id,
-                               'claim_id_to_merge': self.claim_2.id,
+        suggestion = Merging_Suggestions.objects.create(claim_id=self.claim_1.id,
+                                                        claim_to_merge_id=self.claim_2.id)
+        self.num_of_saved_suggestions = 1
+        self.merging_claims = {'suggestion_id': suggestion.id,
                                'user_id': self.admin.id,
                                'is_superuser': True}
-
-        Merging_Suggestions.objects.create(claim_id=self.merging_claims['claim_id'],
-                                           claim_to_merge_id=self.merging_claims['claim_id_to_merge'])
-
         self.error_code = 404
 
     def tearDown(self):
@@ -836,64 +834,22 @@ class ClaimTests(TestCase):
         self.get_request.user = self.admin
         self.assertRaises(PermissionDenied, merging_claims, self.get_request)
 
-    def test_merging_claims_invalid_claim_id(self):
-        self.merging_claims['claim_id'] = self.num_of_saved_claims + random.randint(1, 10)
+    def test_merging_claims_invalid_suggestion_id(self):
+        self.merging_claims['suggestion_id'] = self.num_of_saved_suggestions + random.randint(1, 10)
         self.post_request.POST = self.merging_claims
         self.post_request.user = self.admin
         response = merging_claims(self.post_request)
         self.assertTrue(response.status_code == self.error_code)
-
-    def test_merging_claims_invalid_claim_id_to_merge(self):
-        self.merging_claims['claim_id_to_merge'] = self.num_of_saved_claims + random.randint(1, 10)
-        self.post_request.POST = self.merging_claims
-        self.post_request.user = self.admin
-        response = merging_claims(self.post_request)
-        self.assertTrue(response.status_code == self.error_code)
-
-    def test_merging_claims_invalid_suggestion(self):
-        temp_id = self.merging_claims['claim_id']
-        self.merging_claims['claim_id'] = self.merging_claims['claim_id_to_merge']
-        self.merging_claims['claim_id_to_merge'] = temp_id
-        self.post_request.POST = self.merging_claims
-        self.post_request.user = self.admin
-        response = switching_claims(self.post_request)
-        self.assertTrue(response.status_code == self.error_code)
-
-    def test_merging_claims_missing_args(self):
-        del self.merging_claims['user_id']
-        del self.merging_claims['is_superuser']
-        for i in range(10):
-            dict_copy = self.merging_claims.copy()
-            args_to_remove = []
-            for j in range(random.randint(1, len(self.merging_claims.keys()) - 1)):
-                args_to_remove.append(list(self.merging_claims.keys())[j])
-            for j in range(len(args_to_remove)):
-                del self.merging_claims[args_to_remove[j]]
-            query_dict = QueryDict('', mutable=True)
-            query_dict.update(self.merging_claims)
-            self.post_request.POST = query_dict
-            self.post_request.user = self.admin
-            response = merging_claims(self.post_request)
-            self.assertTrue(response.status_code == self.error_code)
-            self.merging_claims = dict_copy.copy()
 
     def test_check_if_suggestion_is_valid(self):
         self.assertTrue(check_if_suggestion_is_valid(self.merging_claims)[0])
 
-    def test_check_if_suggestion_is_valid_missing_claim_id(self):
-        del self.merging_claims['claim_id']
+    def test_check_if_suggestion_is_valid_missing_suggestion_id(self):
+        del self.merging_claims['suggestion_id']
         self.assertFalse(check_if_suggestion_is_valid(self.merging_claims)[0])
 
-    def test_check_if_suggestion_is_valid_invalid_claim_id(self):
-        self.merging_claims['claim_id'] = self.num_of_saved_claims + random.randint(1, 10)
-        self.assertFalse(check_if_suggestion_is_valid(self.merging_claims)[0])
-
-    def test_check_if_suggestion_is_valid_missing_claim_id_to_merge(self):
-        del self.merging_claims['claim_id_to_merge']
-        self.assertFalse(check_if_suggestion_is_valid(self.merging_claims)[0])
-
-    def test_check_if_suggestion_is_valid_invalid_claim_id_to_merge(self):
-        self.merging_claims['claim_id_to_merge'] = self.num_of_saved_claims + random.randint(1, 10)
+    def test_check_if_suggestion_is_valid_invalid_suggestion_id(self):
+        self.merging_claims['suggestion_id'] = self.num_of_saved_suggestions + random.randint(1, 10)
         self.assertFalse(check_if_suggestion_is_valid(self.merging_claims)[0])
 
     def test_check_if_suggestion_is_valid_missing_user_id(self):
@@ -914,14 +870,14 @@ class ClaimTests(TestCase):
         self.assertFalse(check_if_suggestion_is_valid(self.merging_claims)[0])
 
     def test_switching_claims(self):
-        self.assertTrue(len(Merging_Suggestions.objects.filter(claim_id=self.merging_claims['claim_id_to_merge'],
-                                                               claim_to_merge_id=self.merging_claims['claim_id'])) == 0)
+        self.assertTrue(len(Merging_Suggestions.objects.filter(claim_id=self.claim_2.id,
+                                                               claim_to_merge_id=self.claim_1.id)) == 0)
         self.post_request.POST = self.merging_claims
         self.post_request.user = self.admin
         response = switching_claims(self.post_request)
         self.assertTrue(response.status_code == 200)
-        self.assertTrue(len(Merging_Suggestions.objects.filter(claim_id=self.merging_claims['claim_id_to_merge'],
-                                                               claim_to_merge_id=self.merging_claims['claim_id'])) == 1)
+        self.assertTrue(len(Merging_Suggestions.objects.filter(claim_id=self.claim_2.id,
+                                                               claim_to_merge_id=self.claim_1.id)) == 1)
 
     def test_switching_claims_by_not_admin_user(self):
         self.post_request.POST = self.merging_claims
@@ -933,46 +889,19 @@ class ClaimTests(TestCase):
         self.get_request.user = self.admin
         self.assertRaises(PermissionDenied, switching_claims, self.get_request)
 
-    def test_switching_claims_invalid_claim_id(self):
-        self.merging_claims['claim_id'] = self.num_of_saved_claims + random.randint(1, 10)
+    def test_switching_claims_missing_suggestion_id(self):
+        del self.merging_claims['suggestion_id']
         self.post_request.POST = self.merging_claims
         self.post_request.user = self.admin
         response = switching_claims(self.post_request)
         self.assertTrue(response.status_code == self.error_code)
 
-    def test_switching_claims_invalid_claim_id_to_merge(self):
-        self.merging_claims['claim_id_to_merge'] = self.num_of_saved_claims + random.randint(1, 10)
+    def test_switching_claims_invalid_suggestion_id(self):
+        self.merging_claims['suggestion_id'] = self.num_of_saved_suggestions + random.randint(1, 10)
         self.post_request.POST = self.merging_claims
         self.post_request.user = self.admin
         response = switching_claims(self.post_request)
         self.assertTrue(response.status_code == self.error_code)
-
-    def test_switching_claims_invalid_suggestion(self):
-        temp_id = self.merging_claims['claim_id']
-        self.merging_claims['claim_id'] = self.merging_claims['claim_id_to_merge']
-        self.merging_claims['claim_id_to_merge'] = temp_id
-        self.post_request.POST = self.merging_claims
-        self.post_request.user = self.admin
-        response = switching_claims(self.post_request)
-        self.assertTrue(response.status_code == self.error_code)
-
-    def test_switching_claims_missing_args(self):
-        del self.merging_claims['user_id']
-        del self.merging_claims['is_superuser']
-        for i in range(10):
-            dict_copy = self.merging_claims.copy()
-            args_to_remove = []
-            for j in range(random.randint(1, len(self.merging_claims.keys()) - 1)):
-                args_to_remove.append(list(self.merging_claims.keys())[j])
-            for j in range(len(args_to_remove)):
-                del self.merging_claims[args_to_remove[j]]
-            query_dict = QueryDict('', mutable=True)
-            query_dict.update(self.merging_claims)
-            self.post_request.POST = query_dict
-            self.post_request.user = self.admin
-            response = switching_claims(self.post_request)
-            self.assertTrue(response.status_code == self.error_code)
-            self.merging_claims = dict_copy.copy()
 
     def test_delete_suggestion_for_merging_claims(self):
         claim_2_id = self.claim_2.id
@@ -995,46 +924,19 @@ class ClaimTests(TestCase):
         self.get_request.user = self.admin
         self.assertRaises(PermissionDenied, merging_claims, self.get_request)
 
-    def test_delete_suggestion_for_merging_claims_invalid_claim_id(self):
-        self.merging_claims['claim_id'] = self.num_of_saved_claims + random.randint(1, 10)
+    def test_delete_suggestion_for_merging_claims_missing_suggestion_id(self):
+        del self.merging_claims['suggestion_id']
         self.post_request.POST = self.merging_claims
         self.post_request.user = self.admin
         response = delete_suggestion_for_merging_claims(self.post_request)
         self.assertTrue(response.status_code == self.error_code)
 
-    def test_delete_suggestion_for_merging_claims_invalid_claim_id_to_merge(self):
-        self.merging_claims['claim_id_to_merge'] = self.num_of_saved_claims + random.randint(1, 10)
+    def test_delete_suggestion_for_merging_claims_invalid_suggestion_id(self):
+        self.merging_claims['suggestion_id'] = self.num_of_saved_suggestions + random.randint(1, 10)
         self.post_request.POST = self.merging_claims
         self.post_request.user = self.admin
         response = delete_suggestion_for_merging_claims(self.post_request)
         self.assertTrue(response.status_code == self.error_code)
-
-    def test_delete_suggestion_for_merging_claims_invalid_suggestion(self):
-        temp_id = self.merging_claims['claim_id']
-        self.merging_claims['claim_id'] = self.merging_claims['claim_id_to_merge']
-        self.merging_claims['claim_id_to_merge'] = temp_id
-        self.post_request.POST = self.merging_claims
-        self.post_request.user = self.admin
-        response = delete_suggestion_for_merging_claims(self.post_request)
-        self.assertTrue(response.status_code == self.error_code)
-
-    def test_delete_suggestion_for_merging_claims_missing_args(self):
-        del self.merging_claims['user_id']
-        del self.merging_claims['is_superuser']
-        for i in range(10):
-            dict_copy = self.merging_claims.copy()
-            args_to_remove = []
-            for j in range(random.randint(1, len(self.merging_claims.keys()) - 1)):
-                args_to_remove.append(list(self.merging_claims.keys())[j])
-            for j in range(len(args_to_remove)):
-                del self.merging_claims[args_to_remove[j]]
-            query_dict = QueryDict('', mutable=True)
-            query_dict.update(self.merging_claims)
-            self.post_request.POST = query_dict
-            self.post_request.user = self.admin
-            response = delete_suggestion_for_merging_claims(self.post_request)
-            self.assertTrue(response.status_code == self.error_code)
-            self.merging_claims = dict_copy.copy()
 
     def test_view_home_many_claims(self):
         for i in range(4, 24):
