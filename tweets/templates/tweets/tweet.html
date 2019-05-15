@@ -18,7 +18,11 @@
 <br><br>
 <script>
     $("#{{ tweet.id }}_add_comment_on_tweet").click(function(e){
+        let tweet_data_{{ tweet.id }} = JSON.parse("{{tweet.get_tweet_data | escapejs}}");
         document.getElementById("{{ tweet.claim.id }}_new_comment_url").value = '{{ tweet.tweet_link }}';
+        document.getElementById("{{ tweet.claim.id }}_new_comment_date").value = tweet_data_{{ tweet.id }}['tweet_date'];
+        document.getElementById("{{ tweet.claim.id }}_new_comment_title").value = tweet_data_{{ tweet.id }}['tweet_title'];
+        document.getElementById("{{ tweet.claim.id }}_new_comment_description").value = tweet_data_{{ tweet.id }}['tweet_text'];
         $('html, body').animate({
             scrollTop: $("#{{ tweet.claim.id }}_new_comment_url").offset().top
         }, 0);
