@@ -91,7 +91,7 @@
             {%  endif %}
         {% endwith %}
         </div>
-        <p id="{{ claim.id }}_offset" hidden="hidden"></p>
+        <span id="{{ claim.id }}_offset"></span>
         {% if request.user.is_authenticated and request.user.id not in claim.users_commented_ids %}
             <br><hr>
             <h3>Add new comment:</h3>
@@ -219,8 +219,9 @@
                     },
                     success: function () {
                         $('html, body').animate({
-                            scrollTop: $("{{ claim.id }}_offset").offset().top + 300
+                            scrollTop: $("#{{ claim.id }}_offset").offset().top - 300
                         }, 0);
+
                         window.location.reload();
                     },
                     error: function (request) {
