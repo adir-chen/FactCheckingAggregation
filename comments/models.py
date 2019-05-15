@@ -67,10 +67,12 @@ class Comment(models.Model):
             src = metas.find("meta", property="og:image")
             if src:
                 src = src['content']
-            result = {'title': title, 'description': description, 'src': src}
-            return json.dumps(result)
+            if title and description and src:
+                result = {'title': title, 'description': description, 'src': src}
+                return json.dumps(result)
         except:
-            return False
+            pass
+        return False
 
     def vote_on_comment(self):
         max_minutes_to_vote_comment = 10
