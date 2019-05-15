@@ -9,6 +9,7 @@ urlpatterns = [
     path('report_spam', views.report_spam, name='report_spam'),
     path('download_claims', views.download_claims, name='download_claims'),
     path('merging_claims', views.merging_claims, name='merging_claims'),
+    path('switching_claims', views.switching_claims, name='switching_claims'),
     path('delete_suggestion_for_merging_claims', views.delete_suggestion_for_merging_claims,
          name='delete_suggestion_for_merging_claims'),
     path('', views.view_home, name='home_page'),

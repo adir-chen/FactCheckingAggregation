@@ -48,9 +48,12 @@ class LoggerTest(TestCase):
         self.get_request = HttpRequest()
         self.get_request.method = 'GET'
         self.csv_fields = MultiValueDict({
-            'actions_to_export[]': ["Adding a new claim", "Adding a new comment", "Editing a claim", "Editing a comment",
-                                    "Deleting a claim", "Deleting a comment", "Reporting a claim as spam",
-                                    "Up voting a comment", "Sending an email", "Down voting a comment"],
+            'actions_to_export[]': ["Adding a new claim", "Adding a new comment",
+                                    "Adding a new tweet", "Adding a new reply",
+                                    "Editing a claim", "Editing a comment", "Editing a reply",
+                                    "Deleting a claim", "Deleting a comment", "Deleting a reply",
+                                    "Deleting a tweet", "Reporting a claim as spam", "Merging claims",
+                                    "Up voting a comment", "Down voting a comment"],
             'errors': 'with_errors',
             'date_start': [str(datetime.date.today() - datetime.timedelta(days=20))],
             'date_end': [str(datetime.date.today())]})

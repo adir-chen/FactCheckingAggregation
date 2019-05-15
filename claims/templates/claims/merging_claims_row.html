@@ -12,6 +12,8 @@
     <td>
         <button id="{{ suggestion.claim.id }}_{{ suggestion.claim_to_merge.id }}_merging_claims" type="submit" class="btn btn-info">Merge claims</button>
         <br><br>
+        <button id="{{ suggestion.claim.id }}_{{ suggestion.claim_to_merge.id }}_switching_claims" type="submit" class="btn btn-info">Switch claims</button>
+        <br><br>
         <button id="{{ suggestion.claim.id }}_{{ suggestion.claim_to_merge.id }}_delete" type="submit" class="btn btn-danger">Delete suggestion</button>
     </td>
 </tr>
@@ -25,7 +27,10 @@
         $("#success_msg_deleting_suggestion").attr("hidden", false);
         localStorage.clear();
     }
-
+    else if(localStorage.getItem("success_msg_switching_claims")){
+        $("#success_msg_switching_claims").attr("hidden", false);
+        localStorage.clear();
+    }
     $("#{{ suggestion.claim.id }}_{{ suggestion.claim_to_merge.id }}_merging_claims").click(function(){
         $.ajax({
             type: 'POST',
@@ -45,6 +50,29 @@
                 document.getElementById("error_msg_merging_claims").innerHTML =
                 'Error: <br>' + err;
                 $("#error_msg_merging_claims").attr("hidden", false);
+            }
+        });
+    });
+
+    $("#{{ suggestion.claim.id }}_{{ suggestion.claim_to_merge.id }}_switching_claims").click(function(){
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'claims:switching_claims' %}",
+            headers: { "X-CSRFToken": getCookie('csrftoken') },
+            data: {
+                claim_id: '{{ suggestion.claim.id }}',
+                claim_id_to_merge: '{{ suggestion.claim_to_merge.id }}',
+            },
+            success: function () {
+                localStorage.setItem("success_msg_switching_claims", true);
+                window.location.reload();
+            },
+            error: function (request) {
+                hide_all_msgs();
+                let err = request.responseJSON;
+                document.getElementById("error_msg_switching_claims").innerHTML =
+                'Error: <br>' + err;
+                $("#error_msg_switching_claims").attr("hidden", false);
             }
         });
     });

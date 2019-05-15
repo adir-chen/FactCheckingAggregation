@@ -96,11 +96,12 @@ def check_if_csv_fields_are_valid(csv_fields):
 # The function returns true in case they are valid, otherwise false and an error
 def check_if_actions_list_valid(actions_to_export):
     err = ''
-    valid_actions_to_export = ["Adding a new claim", "Adding a new comment", "Adding a new tweet",
-                               "Editing a claim", "Editing a comment",
-                               "Deleting a claim", "Deleting a comment", "Deleting a tweet",
-                               "Reporting a claim as spam", "Up voting a comment", "Down voting a comment",
-                               "Sending an email"]
+    valid_actions_to_export = ["Adding a new claim", "Adding a new comment",
+                               "Adding a new tweet", "Adding a new reply",
+                               "Editing a claim", "Editing a comment", "Editing a reply",
+                               "Deleting a claim", "Deleting a comment", "Deleting a reply",
+                               "Deleting a tweet", "Reporting a claim as spam", "Merging claims",
+                               "Up voting a comment", "Down voting a comment"]
     for action in actions_to_export:
         if action not in valid_actions_to_export:
             err += 'Action ' + str(action) + ' is not valid'

@@ -1,11 +1,11 @@
+from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
 from django.views.decorators.csrf import ensure_csrf_cookie
 from notifications.models import Notification
-
 from claims.models import Claim
 from comments.models import Comment
 from logger.views import save_log_message
@@ -571,6 +571,9 @@ def upload_user_img(request):
         user_and_img.user = user
         user_and_img.profile_img = file
         user_and_img.save()
+    else:
+        messages.error(request, 'Some error occurred. Please, make sure you upload an image file up to 10 MB')
+        return HttpResponseRedirect('/users/' + user_id)
     return user_page(return_get_request_to_user(request.user), user_id)
 
 

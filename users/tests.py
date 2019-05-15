@@ -36,7 +36,7 @@ class UsersTest(TestCase):
                                                    email='admin@gmail.com',
                                                    password='admin')
         self.init_rep = 1
-        self.rep = random.randint(1, 80)
+        self.rep = random.randint(2, 80)
         self.user_1_rep = Users_Reputations(user=self.user_1, reputation=self.rep)
         self.user_1_rep.save()
         self.all_users_dict = {1: self.user_1,

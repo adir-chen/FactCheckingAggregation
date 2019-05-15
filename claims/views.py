@@ -285,8 +285,8 @@ def report_spam(request):
         return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     save_log_message(request.user.id, request.user.username,
                      'Reporting a claim with id ' + str(request.POST.get('claim_id')) + ' as spam', True)
-    superusers = User.objects.filter(is_superuser=True)
-    notify.send(request.user, recipient=superusers, verb='Report claim https://wtfact.ise.bgu.ac.il/claim/' + str(request.POST.get('claim_id')) + ' as spam', target=Claim.objects.filter(id=request.POST.get('claim_id')).first())
+    superusers = User.objects.filter(is_superuser=True).exclude(id=request.user.id)
+    notify.send(request.user, recipient=superusers, verb='reported claim https://wtfact.ise.bgu.ac.il/claim/' + str(request.POST.get('claim_id')) + ' as spam', target=Claim.objects.filter(id=request.POST.get('claim_id')).first())
     return view_claim(return_get_request_to_user(request.user), request.POST.get('claim_id'))
 
 
@@ -359,8 +359,8 @@ def merging_claims(request):
     update_authenticity_grade(merge_claims_info['claim_id'])
     Claim.objects.filter(id=merge_claims_info['claim_id_to_merge']).delete()
     save_log_message(request.user.id, request.user.username,
-                     'Merging claim with id ' + str(merge_claims_info['claim_id_to_merge']) +
-                     ' with claim with id ' + str(merge_claims_info['claim_id']), True)
+                     'Merging claims - claim with id ' + str(merge_claims_info['claim_id_to_merge']) +
+                     ' and claim with id ' + str(merge_claims_info['claim_id']), True)
     return merging_claims_page(return_get_request_to_user(request.user))
 
 
@@ -381,6 +381,10 @@ def check_if_suggestion_is_valid(merge_claims_info):
         err += 'Claim ' + str(merge_claims_info['claim_id']) + ' does not exist'
     elif len(Claim.objects.filter(id=merge_claims_info['claim_id_to_merge'])) == 0:
         err += 'Claim ' + str(merge_claims_info['claim_id_to_merge']) + ' does not exist'
+    elif len(Merging_Suggestions.objects.filter(claim_id=merge_claims_info['claim_id'],
+                                                claim_to_merge_id=merge_claims_info['claim_id_to_merge'])) == 0:
+        err += 'Suggestion for merging claims ' + str(merge_claims_info['claim_id']) + ' and ' \
+               + str(merge_claims_info['claim_id']) + ' does not exist'
     elif not check_if_user_exists_by_user_id(merge_claims_info['user_id']):
         err += 'User with id ' + str(merge_claims_info['user_id']) + ' does not exist'
     elif not merge_claims_info['is_superuser']:
@@ -388,6 +392,28 @@ def check_if_suggestion_is_valid(merge_claims_info):
     if len(err) > 0:
         return False, err
     return True, err
+
+
+# This function switch two claims that have been found as identical
+def switching_claims(request):
+    if not request.user.is_superuser or request.method != "POST":
+        raise PermissionDenied
+    switch_claims_info = request.POST.copy()
+    switch_claims_info['user_id'] = request.user.id
+    switch_claims_info['is_superuser'] = request.user.is_superuser
+    valid_switching, err_msg = check_if_suggestion_is_valid(switch_claims_info)
+    if not valid_switching:
+        save_log_message(request.user.id, request.user.username,
+                         'Switching claims. Error: ' + err_msg)
+        return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
+    Merging_Suggestions.objects.filter(claim_id=switch_claims_info['claim_id'],
+                                       claim_to_merge_id=switch_claims_info['claim_id_to_merge']).update(
+        claim_id=switch_claims_info['claim_id_to_merge'],
+        claim_to_merge_id=switch_claims_info['claim_id'])
+    save_log_message(request.user.id, request.user.username,
+                     'Switching claims - claim with id ' + str(switch_claims_info['claim_id_to_merge']) +
+                     ' and claim with id ' + str(switch_claims_info['claim_id']), True)
+    return merging_claims_page(return_get_request_to_user(request.user))
 
 
 # This function deletes a suggestion for merging two claims

@@ -1,5 +1,5 @@
 from django.core.exceptions import PermissionDenied
-from django.http import Http404, HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from analytics.GoogleAPI.AnalyticReports import get_report_view_by_time, get_report_top_n_claims
 from claims.views import get_claim_by_id
