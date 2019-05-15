@@ -3,6 +3,7 @@
         <a href="{{ tweet.tweet_link }}"></a>
     </blockquote>
     {% if request.user.is_authenticated %}
+        <p>Bla bla</p>
         {% if request.user.id not in claim.users_commented_ids%}
             <button id="{{ tweet.id }}_add_comment_on_tweet" type="submit" class="btn btn-info">Use as comment reference</button>
         {% endif %}
