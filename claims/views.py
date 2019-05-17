@@ -451,7 +451,11 @@ def view_claim(request, claim_id):
         raise Http404('Error - claim ' + str(claim_id) + ' does not exist')
     elif request.method != "GET":
         raise PermissionDenied
-    return render(request, 'claims/claim.html', {'claim': claim})
+    tweets = claim.get_tweets_for_claim()
+    page = request.GET.get('tweets_page')
+    from django.core.paginator import Paginator
+    paginator = Paginator(tweets, 3)
+    return render(request, 'claims/claim.html', {'claim': claim, 'tweets': paginator.get_page(page)})
 
 
 # This function returns all the claims in the website
