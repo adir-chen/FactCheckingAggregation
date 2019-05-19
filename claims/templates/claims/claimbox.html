@@ -5,14 +5,18 @@
     <div class="claim_box_info" style="height: 100%;">
         <h6>{{ claim.claim }}</h6>
     </div>
-    <div style="position: absolute; bottom: 230px; padding: 15px;">
+    <div style="position: absolute; bottom: 210px; padding: 10px; background: #d9e7fb; margin: 0 15px; border-radius: 7px;">
         {% if claim.authenticity_grade >= 50 %}
-            <div style="width: 70px; border-radius: 7px; padding: 10px; background: #d4edda; color: #155724; text-align: center;"><b>{{ claim.authenticity_grade }}%</b></div>
+            <div style="width: 70px; border-radius: 7px; padding: 10px; background: #d4edda; color: #155724; text-align: center; float: left;"><b>{{ claim.authenticity_grade }}%</b></div>
         {% else %}
-            <div style="width: 70px; border-radius: 7px; padding: 10px; background: #d35b66; color: #721e3a; text-align: center;"><b>{{ claim.authenticity_grade }}%</b></div>
+            <div style="width: 70px; border-radius: 7px; padding: 10px; background: #d35b66; color: #721e3a; text-align: center; float: left;"><b>{{ claim.authenticity_grade }}%</b></div>
         {% endif %}
+        <div style="font-size: 12px; float: right; padding-left: 10px;">
+            <span style="color: #54e176;">▲</span> {{ claim.num_of_true_comments }} True<br>
+            <span style="color: #d52e3d;">▼</span> {{ claim.num_of_false_comments }} False
+        </div>
     </div>
-    <div class="claim_box_info" style="font-size: 16px; position: absolute; bottom: 150px;">
+    <div class="claim_box_info" style="font-size: 16px; position: absolute; bottom: 120px;">
         <p>Category: {{ claim.category }}</p>
     </div>
     <div class="claim_box_info" style="position: absolute; bottom: 0;">

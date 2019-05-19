@@ -57,18 +57,35 @@
         target="_blank" data-size="large"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"> Share claim on Twitter</a>
         <button type="submit" id="{{ claim.id }}_check_tweets_for_claim_in_twitter" class="btn twitter-share-btn" style="margin: 10px 0;"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"> Search for tweets (about this claim) in Twitter</button>
         <p id="error_msg_{{ claim.id }}_claim_extracting_tweets" class="action_msg error_msg" hidden></p>
-        {% with tweets=claim.get_tweets_for_claim %}
-            {% if tweets %}
-                <hr><br>
-                <div id="tweets">
-                    <h3>Related tweets:</h3>
-                    <br>
-                    {% for tweet in tweets %}
-                        {% include 'tweets/tweet.html' with tweet=tweet request=request only %}
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
+        {% if tweets %}
+            <hr><br>
+            <div id="tweets">
+                <h3>Related tweets:</h3>
+                <br>
+                {% for tweet in tweets %}
+                    {% include 'tweets/tweet.html' with tweet=tweet request=request only %}
+                {% endfor %}
+                {% if tweets.paginator.num_pages > 1 %}
+                    <div class="pagination">
+                        <span class="step-links">
+                            {% if tweets.has_previous %}
+                                <a href="?tweets_page=1" class="btn btn-info">&laquo; First</a>
+                                <a href="?tweets_page={{ tweets.previous_page_number }}" class="btn btn-info">previous</a>
+                            {% endif %}
+
+                            <span class="current" style="padding: 10px 20px;">
+                                Page {{ tweets.number }} of {{ tweets.paginator.num_pages }}
+                            </span>
+
+                            {% if tweets.has_next %}
+                                <a href="?tweets_page={{ tweets.next_page_number }}" class="btn btn-info">Next</a>
+                                <a href="?tweets_page={{ tweets.paginator.num_pages }}" class="btn btn-info">Last &raquo;</a>
+                            {% endif %}
+                        </span>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
         {% if 'Android' in request.META.HTTP_USER_AGENT %}
             <a id="{{ claim.id }}_claim_whatsApp_share" class="btn whatsApp-share-button" href="whatsapp://send?text={{ request.META.HTTP_HOST }}{{ request.path }}%20"
             data-size="large"><img src="{% static 'claims/assets/images/whatsApp_icon.png' %}"> Share claim on WhatsApp</a>

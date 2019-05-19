@@ -22,7 +22,7 @@ class Claim(models.Model):
 
     def get_tweets_for_claim(self):
         from tweets.models import Tweet
-        return Tweet.objects.filter(claim_id=self.id)
+        return Tweet.objects.filter(claim_id=self.id).order_by('-id')
 
     def users_commented_ids(self):
         from comments.models import Comment
@@ -36,6 +36,20 @@ class Claim(models.Model):
         user_ids = [user_id for user_id in users_with_num_of_comments if users_with_num_of_comments[user_id] >=
                     max_comments]
         return user_ids
+
+    def num_of_true_comments(self):
+        result = 0
+        for comment in self.get_comments_for_claim():
+            if comment.system_label == 'True':
+                result += 1
+        return result
+
+    def num_of_false_comments(self):
+        result = 0
+        for comment in self.get_comments_for_claim():
+            if comment.system_label == 'False':
+                result += 1
+        return result
 
     # def get_report_link(self):
     #     tap_url = ''
