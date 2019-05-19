@@ -45,6 +45,7 @@
             <button id="change_username" type="submit" class="btn btn-info">Change your name</button>
             <input id="new_username" hidden="hidden" placeholder="{{ user.username }}">
             <button id="set_new_username" type="submit" class="btn btn-info" hidden="hidden">Change</button>
+            <button id="change_username_cancel" hidden="hidden" type="submit" class="btn btn-info" onclick="change_username_cancel()">Cancel</button>
             <p id="error_msg_change_username" style="color: red; font-size: 12px;" hidden></p>
             <p id="success_msg_change_username" style="color: dodgerblue; font-size: 12px;" hidden>Name updated successfully</p>
             <br>
@@ -329,19 +330,30 @@
         });
 
         $("#change_profile_image").click(function(e){
+            hide_all_msgs();
             $("#upload_user_img").attr("hidden", false);
             $("#change_profile_image").attr("hidden", true);
         });
 
         $("#change_username").click(function(e){
+            hide_all_msgs();
             $("#new_username").attr("hidden", false);
             $("#set_new_username").attr("hidden", false);
             $("#change_username").attr("hidden", true);
+            $("#change_username_cancel").attr("hidden", false);
         });
 
         function search_on_twitter(tag){
             window.open('https://twitter.com/search?q=' + tag, '_blank');
             {# for google --> 'http://google.com/search?q='#}
+        }
+
+        function change_username_cancel() {
+            hide_all_msgs();
+            $("#new_username").attr("hidden", true);
+            $("#set_new_username").attr("hidden", true);
+            $("#change_username").attr("hidden", false);
+            $("#change_username_cancel").attr("hidden", true);
         }
 
         function getYoutubeVideoId(url) {
@@ -367,7 +379,7 @@
 {% endblock %}
 
 {% block meta_description %}
-    Determine whether a claim is True or False
+    Rate the Facts
 {% endblock %}
 
 {% block meta_src %}

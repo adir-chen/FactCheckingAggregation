@@ -38,7 +38,7 @@ def add_claim(request):
         claim=claim_info['claim'],
         category=claim_info['category'],
         tags=','.join(claim_info['tags'].split(',')),
-        authenticity_grade=0,
+        authenticity_grade=50,
         image_src=claim_info['image_src']
     )
     claim.save()

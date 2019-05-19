@@ -235,7 +235,7 @@ def check_tweets_for_claim_in_twitter(request):
             return view_claim(return_get_request_to_user(request.user), claim.id)
     except tweepy.TweepError as e:
         pass
-    err_msg = 'No tweets found'
+    err_msg = 'No tweets found according to claim\'s tags(keywords):\n' + claim.tags
     return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
 
 

@@ -9,47 +9,65 @@
     <div class="page_wrapper">
         <h3>Add new claim:</h3>
         <br>
-        <div class="new_comment claim_box" style="width: 100%; padding: 20px 40px 20px 20px;">
-            <p id="success_msg_add_new_claim" class="action_msg note_msg" hidden>Your claim has been added successfully.<br>
-                If you want to edit your claim\comment you will be able to do so during the next 10 minutes.</p>
-            <p id="error_msg_add_new_claim" class="action_msg error_msg" hidden> </p>
-            <h5>Claim Details:</h5>
-            <p style="width: 100%; margin: 10px;">Claim:</p>
-            <input id="claim" type="text" style="width: 100%; margin: 10px;"><br>
-            <p style="width: 100%; margin: 10px;">Category:</p>
-            <input id="category" type="text" style="width: 100%; margin: 10px;"><br>
-            <p style="width: 100%; margin: 10px;">Tags (optional, separated by comma. e.g. tag1,tag2,tag3):</p>
-            <p class="action_msg note_msg" style="margin-left: 10px;">Used for searching purpose.</p>
-            <input id="tags" type="text" style="width: 100%; margin: 10px;"><br>
-            <p style="width: 100%; margin: 10px;">Image Url (optional):</p>
-            <input id="image_src" type="text" style="width: 100%; margin: 10px;"><br>
-            <br>
-            <p style="width: 100%; margin: 10px;">In order to add your verdict on this claim, you should add your comment attached with title, description, website url, verdict date and label- True or False.
-                In case you have more details on the claim, but you couldn't decide its label, set the label as Unknown.</p>
-            <input id='add_comment' type="checkbox" onclick='enable_comment()'> Add your comment on this claim<br><br>
-            <h5>Comment Details (Source Information):</h5>
-            <p class="action_msg note_msg">
-                The claim will be submitted along with your comment containing your verdict on it (True/False/Unknown).<br>
-{#                Other Users will be able to comment their on verdicts.#}
-            </p>
-            <p style="width: 100%; margin: 10px;">Title:</p>
-            <input id="title" type="text" disabled="disabled" style="width: 100%; margin: 10px;"><br>
-            <p style="width: 100%; margin: 10px;">Description:</p>
-            <textarea id="description" disabled="disabled" style="width: 100%; margin: 10px;"></textarea><br>
-            <p style="width: 100%; margin: 10px;">Website Url:</p>
-            <input id="url" type="text" disabled="disabled" style="width: 100%; margin: 10px;"><br>
-            <p style="width: 100%; margin: 10px;">Verdict Date (according to source website):</p>
-            <input type="date" id="verdict_date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}" disabled="disabled" style="width: 100%; margin: 10px;">
-            <p style="width: 100%; margin: 10px;">Label:</p>
-            <div style="margin: 10px;">
-                <input type="radio" name="label" class="label" value="True" disabled="disabled">True<br>
-                <input type="radio" name="label" class="label" value="False" disabled="disabled">False<br>
-                <input type="radio" name="label" class="label" value="Unknown" disabled="disabled">Unknown<br>
+        <div class="new_comment comment_box" style="width: 100%;">
+            <div class="comment_header">
+                <div class="comment_user_image">
+                    {% load static %}
+                    <img src="{{ request.user.get_user_image.image_url }}">
+                </div>
+                <div class="comment_user_details">
+                    User: <a href="/users/{{ request.user.id }}">{{ request.user.username }}</a><br>
+                    {% load static %}
+                    {% for i in 'i'|rjust:request.user.get_user_rep.get_reputation %}
+                        <img src="{% static 'claims/assets/images/star.png' %}">
+                    {% endfor %}
+                    <br>
+                </div>
+
             </div>
-            <div id="g-recaptcha" class="g-recaptcha" data-sitekey="6Le4fp0UAAAAAJjD2ErEEZl8_G6uEl62Hon1g9Pv"></div>
-{#            <div id="g-recaptcha" class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>#}
-            <div id="g-recaptcha-response" hidden></div>
-            <button id="submit_claim" type="submit" class="btn btn-info" style="margin: 10px 0;">Add claim</button>
+            <hr>
+            <div style="padding: 20px 40px 20px 20px;">
+                <p id="success_msg_add_new_claim" class="action_msg note_msg" hidden>Your claim has been added successfully.<br>
+                    If you want to edit your claim\comment you will be able to do so during the next 10 minutes.</p>
+                <p id="error_msg_add_new_claim" class="action_msg error_msg" hidden> </p>
+                <h5>Claim Details:</h5>
+                <p style="width: 100%; margin: 10px;">Claim:</p>
+                <input id="claim" type="text" style="width: 100%; margin: 10px;"><br>
+                <p style="width: 100%; margin: 10px;">Category:</p>
+                <input id="category" type="text" style="width: 100%; margin: 10px;"><br>
+                <p style="width: 100%; margin: 10px;">Tags (optional, separated by comma. e.g. tag1,tag2,tag3):</p>
+                <p class="action_msg note_msg" style="margin-left: 10px;">Used for searching purpose.</p>
+                <input id="tags" type="text" style="width: 100%; margin: 10px;"><br>
+                <p style="width: 100%; margin: 10px;">Image Url (optional):</p>
+                <input id="image_src" type="text" style="width: 100%; margin: 10px;"><br>
+                <br>
+                <p style="width: 100%; margin: 10px;">In order to add your verdict on this claim, you should add your comment attached with reference(website url), title, description, verdict date and label- True or False.
+                    In case you have more details on the claim, but you couldn't decide its label, set the label as Unknown.</p>
+                <input id='add_comment' type="checkbox" onclick='enable_comment()'> Add your comment on this claim<br><br>
+                <h5>Comment Details (Source Information):</h5>
+                <p class="action_msg note_msg">
+                    The claim will be submitted along with your comment containing your verdict on it (True/False/Unknown).<br>
+    {#                Other Users will be able to comment their on verdicts.#}
+                </p>
+                <p style="width: 100%; margin: 10px;">Reference:</p>
+                <input id="url" type="text" disabled="disabled" style="width: 100%; margin: 10px;"><br>
+                <p style="width: 100%; margin: 10px;">Title:</p>
+                <input id="title" type="text" disabled="disabled" style="width: 100%; margin: 10px;"><br>
+                <p style="width: 100%; margin: 10px;">Description (describe how the reference supports the label you have chosen - True/False/Unknown)::</p>
+                <textarea id="description" disabled="disabled" style="width: 100%; margin: 10px;"></textarea><br>
+                <p style="width: 100%; margin: 10px;">Verdict Date (according to source website):</p>
+                <input type="date" id="verdict_date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}" disabled="disabled" style="width: 100%; margin: 10px;">
+                <p style="width: 100%; margin: 10px;">Label:</p>
+                <div style="margin: 10px;">
+                    <input type="radio" name="label" class="label" value="True" disabled="disabled">True<br>
+                    <input type="radio" name="label" class="label" value="False" disabled="disabled">False<br>
+                    <input type="radio" name="label" class="label" value="Unknown" disabled="disabled">Unknown<br>
+                </div>
+                <div id="g-recaptcha" class="g-recaptcha" data-sitekey="6Le4fp0UAAAAAJjD2ErEEZl8_G6uEl62Hon1g9Pv"></div>
+    {#            <div id="g-recaptcha" class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>#}
+                <div id="g-recaptcha-response" hidden></div>
+                <button id="submit_claim" type="submit" class="btn btn-info" style="margin: 10px 0;">Add claim</button>
+            </div>
         </div>
     </div>
     <script>

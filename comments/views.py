@@ -536,5 +536,19 @@ def update_authenticity_grade(claim_id):
         weighted_sum_true_label /= num_of_true_labels
     if not num_of_false_labels == 0:
         weighted_sum_false_label /= num_of_false_labels
-    authenticity_grade = max(0, (weighted_sum_true_label - weighted_sum_false_label) * 100)
+    total_weighted = weighted_sum_true_label - weighted_sum_false_label
+    if total_weighted < 0:
+        authenticity_grade = max(0, 0.5 + total_weighted)
+    elif total_weighted == 0:
+        authenticity_grade = 0.5
+    else:
+        authenticity_grade = min(1, 0.5 + total_weighted)
+    authenticity_grade *= 100
     Claim.objects.filter(id=claim_id).update(authenticity_grade=authenticity_grade)
+
+
+def update_authenticity_grade_for_all_claims(request):
+    for claim in Claim.objects.all():
+        update_authenticity_grade(claim.id)
+    from claims.views import view_home
+    return view_home(request)

@@ -10,4 +10,6 @@ urlpatterns = [
     path('up_vote', views.up_vote, name='up_vote'),
     path('down_vote', views.down_vote, name='down_vote'),
     path('export_to_csv', views.export_to_csv, name='export_to_csv'),
+    path('update_authenticity_grade_for_all_claims', views.update_authenticity_grade_for_all_claims,
+         name='update_authenticity_grade_for_all_claims'),
 ]
