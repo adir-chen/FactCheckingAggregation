@@ -1467,14 +1467,14 @@ class CommentTests(TestCase):
         self.comment_3.save()
         Comment.objects.filter(id=self.comment_3.id).update(system_label='True')
         update_authenticity_grade(self.claim_1.id)
-        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 60)
+        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 100)
 
     def test_update_authenticity_grade_true_and_false_comments(self):
         Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
         self.comment_3.save()
         Comment.objects.filter(id=self.comment_3.id).update(system_label='False')
         update_authenticity_grade(self.claim_1.id)
-        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 80)
+        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 90)
 
     def test_update_authenticity_grade_true_and_false_with_down_vote(self):
         Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
@@ -1508,7 +1508,7 @@ class CommentTests(TestCase):
                                                             datetime.timedelta(minutes=11))
         up_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
-        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 80)
+        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 90)
 
     def test_update_authenticity_grade_true_with_up_vote_and_false(self):
         Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
@@ -1525,10 +1525,11 @@ class CommentTests(TestCase):
                                                             datetime.timedelta(minutes=11))
         up_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
-        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 80)
+        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 90)
 
     def test_update_authenticity_grade_true_with_down_vote_and_false(self):
         Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
+        self.comment_3.save()
         Comment.objects.filter(id=self.comment_3.id).update(system_label='False')
         comment_to_vote = {'comment_id': self.comment_1.id}
         query_dict = QueryDict('', mutable=True)
@@ -1541,7 +1542,7 @@ class CommentTests(TestCase):
                                                             datetime.timedelta(minutes=11))
         down_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
-        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 0)
+        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 40)
 
     def test_update_authenticity_grade_true_with_down_vote_and_false_with_down_vote(self):
         Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
@@ -1567,7 +1568,7 @@ class CommentTests(TestCase):
                                                             datetime.timedelta(minutes=11))
         down_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
-        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 0)
+        self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 50)
 
     ################
     # Models Tests #

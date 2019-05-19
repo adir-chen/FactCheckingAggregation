@@ -532,11 +532,11 @@ def update_authenticity_grade(claim_id):
         elif comment.system_label == 'False':
             num_of_false_labels += 1
             weighted_sum_false_label += comment_score
-    if not num_of_true_labels == 0:
-        weighted_sum_true_label /= num_of_true_labels
-    if not num_of_false_labels == 0:
-        weighted_sum_false_label /= num_of_false_labels
-    total_weighted = weighted_sum_true_label - weighted_sum_false_label
+    if num_of_true_labels == num_of_false_labels == 0:
+        total_weighted = 0
+    else:
+        total_weighted = (weighted_sum_true_label - weighted_sum_false_label) / \
+                         (num_of_true_labels + num_of_false_labels)
     if total_weighted < 0:
         authenticity_grade = max(0, 0.5 + total_weighted)
     elif total_weighted == 0:
