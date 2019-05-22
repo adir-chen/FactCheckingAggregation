@@ -450,6 +450,7 @@ def view_home(request):
     return render(request, 'claims/index.html', {'claims': paginator.get_page(page)})
 
 
+# This function sorts the claims in the home page by ratings
 def sort_claims_by_ratings():
     res = {}
     for claim in Claim.objects.all():
@@ -457,6 +458,7 @@ def sort_claims_by_ratings():
     return sorted(res, key=res.__getitem__, reverse=True)
 
 
+# This function sorts the claims in the home page by controversial
 def sort_claims_by_controversial():
     res = list(Claim.objects.all())
     return sorted(res, key=lambda x: abs(x.authenticity_grade-50))

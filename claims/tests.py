@@ -7,7 +7,8 @@ from claims.views import add_claim, check_if_claim_is_valid, check_if_input_form
     post_above_limit, edit_claim, check_claim_new_fields, delete_claim, check_if_delete_claim_is_valid, \
     report_spam, check_if_spam_report_is_valid, download_claims, \
     merging_claims, check_if_suggestion_is_valid, switching_claims, delete_suggestion_for_merging_claims, \
-    view_home, view_claim, get_all_claims, get_newest_claims, get_claim_by_id, \
+    view_home, sort_claims_by_ratings, sort_claims_by_controversial, \
+    view_claim, get_all_claims, get_newest_claims, get_claim_by_id, \
     get_category_for_claim, get_tags_for_claim, logout_view, add_claim_page, \
     export_claims_page, post_claims_tweets_page, merging_claims_page, about_page,\
     handler_400, handler_403, handler_404, handler_500, \
@@ -972,6 +973,55 @@ class ClaimTests(TestCase):
 
     def test_view_home_not_valid_request(self):
         self.assertRaises(PermissionDenied, view_home, self.post_request)
+
+    def test_view_home_sort_claims_by_ratings(self):
+        self.get_request.GET['sort_method'] = 'Most rated'
+        response = view_home(self.get_request)
+        self.assertTrue(response.status_code == 200)
+
+    def test_view_home_sort_claims_by_controversial(self):
+        self.get_request.GET['sort_method'] = 'Most controversial'
+        response = view_home(self.get_request)
+        self.assertTrue(response.status_code == 200)
+
+    def test_sort_claims_by_ratings(self):
+        comment_1 = Comment(claim_id=self.claim_1.id,
+                            user_id=self.claim_1.user_id,
+                            title='title1',
+                            description='description1',
+                            url=self.url + str(random.randint(1, 10)),
+                            verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
+                            label='True')
+        comment_1.save()
+        comment_2 = Comment(claim_id=self.claim_1.id,
+                            user_id=self.claim_1.user_id,
+                            title='title1',
+                            description='description1',
+                            url=self.url + str(random.randint(1, 10)),
+                            verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
+                            label='True')
+        comment_2.save()
+        comment_3 = Comment(claim_id=self.claim_2.id,
+                            user_id=self.claim_2.user_id,
+                            title='title2',
+                            description='description2',
+                            url=self.url + str(random.randint(1, 10)),
+                            verdict_date=datetime.date.today() - datetime.timedelta(days=random.randint(0, 10)),
+                            label='False')
+        comment_3.save()
+        result = sort_claims_by_ratings()
+        self.assertTrue(result[0] == self.claim_1)
+        self.assertTrue(result[1] == self.claim_2)
+        self.assertTrue(result[2] == self.claim_3)
+
+    def test_sort_claims_by_controversial(self):
+        Claim.objects.filter(id=self.claim_1.id).update(authenticity_grade=50)
+        Claim.objects.filter(id=self.claim_2.id).update(authenticity_grade=90)
+        Claim.objects.filter(id=self.claim_3.id).update(authenticity_grade=30)
+        result = sort_claims_by_controversial()
+        self.assertTrue(result[0] == self.claim_1)
+        self.assertTrue(result[1] == self.claim_3)
+        self.assertTrue(result[2] == self.claim_2)
 
     def test_view_claim_valid(self):
         self.get_request.user = self.user
