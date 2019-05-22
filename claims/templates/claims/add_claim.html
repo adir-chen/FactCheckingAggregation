@@ -35,13 +35,13 @@
                 <input id="claim" type="text" style="width: 100%; margin: 10px;"><br>
                 <p style="width: 100%; margin: 10px;">Category:</p>
                 <input id="category" type="text" style="width: 100%; margin: 10px;"><br>
-                <p style="width: 100%; margin: 10px;">Tags (optional, separated by comma. e.g. tag1,tag2,tag3):</p>
+                <p style="width: 100%; margin: 10px;">Tags (optional, separated by comma. May be followed by space. e.g. tag1,tag2,tag3 or tag1, tag2, tag3):</p>
                 <p class="action_msg note_msg" style="margin-left: 10px;">Used for searching purpose.</p>
                 <input id="tags" type="text" style="width: 100%; margin: 10px;"><br>
                 <p style="width: 100%; margin: 10px;">Image Url (optional):</p>
                 <input id="image_src" type="text" style="width: 100%; margin: 10px;"><br>
                 <br>
-                <p style="width: 100%; margin: 10px;">In order to add your verdict on this claim, you should add your comment attached with reference(website url), title, description, verdict date and label- True or False.
+                <p style="width: 100%; margin: 10px;">In order to add your verdict on this claim, you should add your comment attached with reference (website url), title, description, verdict date and label- True or False.
                     In case you have more details on the claim, but you couldn't decide its label, set the label as Unknown.</p>
                 <input id='add_comment' type="checkbox" onclick='enable_comment()'> Add your comment on this claim<br><br>
                 <h5>Comment Details (Source Information):</h5>
@@ -53,7 +53,7 @@
                 <input id="url" type="text" disabled="disabled" style="width: 100%; margin: 10px;"><br>
                 <p style="width: 100%; margin: 10px;">Title:</p>
                 <input id="title" type="text" disabled="disabled" style="width: 100%; margin: 10px;"><br>
-                <p style="width: 100%; margin: 10px;">Description (describe how the reference supports the label you have chosen - True/False/Unknown)::</p>
+                <p style="width: 100%; margin: 10px;">Description (describe how the reference supports the label you have chosen- True/False/Unknown)::</p>
                 <textarea id="description" disabled="disabled" style="width: 100%; margin: 10px;"></textarea><br>
                 <p style="width: 100%; margin: 10px;">Verdict Date (according to source website):</p>
                 <input type="date" id="verdict_date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}" disabled="disabled" style="width: 100%; margin: 10px;">

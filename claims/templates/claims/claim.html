@@ -34,7 +34,7 @@
         <div id="claim_edit" hidden="hidden" class="claim_edit">
             Claim: <input id="{{ claim.id }}_claim" value="{{ claim.claim }}" type="text" placeholder="{{ claim.claim }}" class="claim_edit"><br>
             Category: <input id="{{ claim.id }}_category" value="{{ claim.category }}" type="text" placeholder="{{ claim.category }}" class="claim_edit"><br>
-            Tags (optional, separated by comma. e.g. tag1,tag2,tag3): <input id="{{ claim.id }}_tags" value="{{ claim.tags }}" type="text" placeholder="{{ claim.tags }}" class="claim_edit"><br>
+            Tags (optional, separated by comma. May be followed by space. e.g. tag1,tag2,tag3 or tag1, tag2, tag3): <input id="{{ claim.id }}_tags" value="{{ claim.tags }}" type="text" placeholder="{{ claim.tags }}" class="claim_edit"><br>
             Image Url (optional): <input id="{{ claim.id }}_image_src" value="{{ claim.image_src }}" type="text" placeholder="{{ claim.image_src }}" class="claim_edit">
         </div>
         <br>
@@ -95,6 +95,9 @@
         {% with comments=claim.get_comments_for_claim %}
             {% if comments %}
                 <h3>Users' verdicts:</h3>
+                {% if not request.user.is_authenticated %}
+                    <button type="submit" id="sign_in_{{ claim.id }}" class="btn twitter-share-btn" style="font-size: large">Sign in to vote or comment</button>
+                {% endif %}
                 <br>
                 {% for comment in comments %}
                     {% if comment.vote_on_comment or request.user.is_superuser or request.user.id == comment.user.id %}
@@ -140,11 +143,11 @@
                     Reference:
                     <input id="{{ claim.id }}_new_comment_url" type="text"><br>
                     Title: <input id="{{ claim.id }}_new_comment_title" type="text"><br>
-                    Description (describe how the reference supports the label you have chosen - True/False/Unknown):<br>
+                    Description (describe how the reference supports the label you have chosen- True/False/Unknown):<br>
                     <textarea id="{{ claim.id }}_new_comment_description"></textarea>
                 </div>
                 <div class="comment_footer">
-                    Tags (optional, separated by comma. e.g. tag1,tag2,tag3):
+                    Tags (optional, separated by comma. May be followed by space. e.g. tag1,tag2,tag3 or tag1, tag2, tag3):
                     <p class="action_msg note_msg">Used for searching purpose.</p>
                     <input id="{{ claim.id }}_new_comment_tags" type="text"><br>
                     <p id="add_new_comment" class="action_msg note_msg" >If you want to edit your comment you will be able to do so during the next 10 minutes from the moment you added it.</p>
@@ -364,6 +367,10 @@
                 }
             });
         });
+
+        $("#sign_in_{{ claim.id }}").click(function() {
+              $("html, body").animate({ scrollTop: 0 }, 0);
+            });
 
         function check_recaptcha() {
             if (grecaptcha === undefined) {

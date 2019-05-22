@@ -9,7 +9,7 @@ from comments.views import add_comment, build_comment, check_if_comment_is_valid
     delete_comment, check_if_delete_comment_is_valid, up_vote, down_vote, check_if_vote_is_valid, \
     export_to_csv, check_if_csv_fields_are_valid, check_if_fields_and_scrapers_lists_valid, \
     create_df_for_claims, get_all_comments_for_user_id, get_all_comments_for_claim_id, \
-    update_authenticity_grade
+    update_authenticity_grade, update_authenticity_grade_for_all_claims
 from replies.models import Reply
 from users.models import User, Scrapers, Users_Reputations
 import datetime
@@ -513,7 +513,7 @@ class CommentTests(TestCase):
     def test_check_if_comment_is_valid_with_invalid_format_for_tags(self):
         self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
         self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
-        self.new_comment_details_user_1['tags'] = 'tag1, tag2'
+        self.new_comment_details_user_1['tags'] = 'tag1,  tag2'
         self.new_comment_details_user_2['tags'] = 'tag3; tag4'
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
@@ -1569,6 +1569,12 @@ class CommentTests(TestCase):
         down_vote(self.post_request)
         update_authenticity_grade(self.claim_1.id)
         self.assertTrue(Claim.objects.filter(id=self.claim_1.id).first().authenticity_grade == 50)
+
+    def test_update_authenticity_grade_for_all_claims(self):
+        admin = User.objects.create_superuser(username='admin', password='admin', email='admin@gmail.com')
+        self.get_request.user = admin
+        response = update_authenticity_grade_for_all_claims(self.get_request)
+        self.assertTrue(response.status_code == 200)
 
     ################
     # Models Tests #

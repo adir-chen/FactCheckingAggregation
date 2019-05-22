@@ -159,7 +159,6 @@ class ClaimTests(TestCase):
         self.assertTrue(claim_4.claim == self.new_claim_details['claim'])
         self.assertTrue(claim_4.category == self.new_claim_details['category'])
         self.assertTrue(claim_4.tags == ','.join(self.new_claim_details['tags'].split(',')))
-        self.assertTrue(claim_4.authenticity_grade == 0)
 
     def test_add_claim_by_user_not_authenticated(self):
         from django.contrib.auth.models import AnonymousUser
@@ -1312,6 +1311,18 @@ class ClaimTests(TestCase):
 
         claim_3_users_commented_ids = self.claim_3.users_commented_ids()
         self.assertTrue(len(claim_3_users_commented_ids) == 0)
+
+    def test_num_of_true_comments(self):
+        Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
+        Comment.objects.filter(id=self.comment_2.id).update(system_label='False')
+        self.assertTrue(self.claim_1.num_of_true_comments() == 1)
+        self.assertTrue(self.claim_2.num_of_true_comments() == 0)
+
+    def test_num_of_false_comments(self):
+        Comment.objects.filter(id=self.comment_1.id).update(system_label='True')
+        Comment.objects.filter(id=self.comment_2.id).update(system_label='False')
+        self.assertTrue(self.claim_1.num_of_false_comments() == 0)
+        self.assertTrue(self.claim_2.num_of_false_comments() == 1)
 
     def test_claim_report_str(self):
         from claims.models import Claims_Reports

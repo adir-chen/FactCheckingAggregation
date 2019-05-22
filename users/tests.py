@@ -371,7 +371,7 @@ class UsersTest(TestCase):
         self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
 
     def test_check_if_scraper_info_is_valid_invalid_format_scrapers_true_labels(self):
-        self.new_scraper_details['scraper_true_labels'] = 'true, mostly true'
+        self.new_scraper_details['scraper_true_labels'] = 'true,  mostly true'
         self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
         self.new_scraper_details['scraper_true_labels'] = 'true,,mostly true'
         self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
@@ -381,7 +381,7 @@ class UsersTest(TestCase):
         self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
 
     def test_check_if_scraper_info_is_valid_invalid_format_scrapers_false_labels(self):
-        self.new_scraper_details['scraper_false_labels'] = 'false, mostly false'
+        self.new_scraper_details['scraper_false_labels'] = 'false,  mostly false'
         self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
         self.new_scraper_details['scraper_false_labels'] = 'false,,mostly false'
         self.assertFalse(check_if_scraper_info_is_valid(self.new_scraper_details)[0])
@@ -1235,7 +1235,7 @@ class UsersTest(TestCase):
         query_dict.update(notification_info)
         self.post_request.POST = query_dict
         self.post_request.user = self.user_2
-        response = read_notification(self.post_request)
+        response = delete_notification(self.post_request)
         self.assertTrue(response.status_code == self.error_code)
         self.assertTrue(len(Notification.objects.filter(id=self.notification.id)) == 1)
 
@@ -1246,7 +1246,7 @@ class UsersTest(TestCase):
         query_dict.update(notification_info)
         self.post_request.POST = query_dict
         self.post_request.user = AnonymousUser()
-        self.assertRaises(PermissionDenied, read_notification, self.post_request)
+        self.assertRaises(PermissionDenied, delete_notification, self.post_request)
         self.assertTrue(len(Notification.objects.filter(id=self.notification.id)) == 1)
 
     def test_delete_notification_invalid_request(self):
@@ -1256,7 +1256,7 @@ class UsersTest(TestCase):
         query_dict.update(notification_info)
         self.get_request.POST = query_dict
         self.get_request.user = self.user_2
-        self.assertRaises(PermissionDenied, read_notification, self.get_request)
+        self.assertRaises(PermissionDenied, delete_notification, self.get_request)
         self.assertTrue(len(Notification.objects.filter(id=self.notification.id)) == 1)
 
     def test_check_if_notification_is_valid(self):

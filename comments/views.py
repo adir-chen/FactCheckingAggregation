@@ -53,7 +53,7 @@ def build_comment(claim_id, user_id, title, description, url, tags, verdict_date
         title=title,
         description=description,
         url=url,
-        tags=','.join(tags.split(',')),
+        tags=','.join([tag.strip() for tag in tags.split(',')]),
         verdict_date=datetime.strptime(verdict_date, '%d/%m/%Y'),
         label=label,
         system_label=get_system_label_to_comment(label, user_id),
@@ -186,7 +186,7 @@ def edit_comment(request):
         title=new_comment_fields['comment_title'],
         description=new_comment_fields['comment_description'],
         url=new_comment_fields['comment_reference'],
-        tags=','.join(new_comment_fields['comment_tags'].split(',')),
+        tags=','.join([tag.strip() for tag in new_comment_fields['comment_tags'].split(',')]),
         verdict_date=datetime.strptime(new_comment_fields['comment_verdict_date'], '%d/%m/%Y'),
         system_label=new_comment_fields['comment_label'])
     claim_id = Comment.objects.filter(id=new_comment_fields['comment_id']).first().claim_id

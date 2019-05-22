@@ -37,7 +37,7 @@ def add_claim(request):
         user_id=claim_info['user_id'],
         claim=claim_info['claim'],
         category=claim_info['category'],
-        tags=','.join(claim_info['tags'].split(',')),
+        tags=','.join([tag.strip() for tag in claim_info['tags'].split(',')]),
         authenticity_grade=50,
         image_src=claim_info['image_src']
     )
@@ -126,11 +126,13 @@ def check_if_input_format_is_valid(user_input):
                user_inp == ',' or
                user_inp not in string.punctuation for user_inp in user_input):
         return False
+    first_tag = True
     for user_inp in user_input.split(','):
-        if not user_inp:
+        if not user_inp or user_inp.isspace():
             return False
-        elif user_inp.strip() != user_inp:
+        elif first_tag and user_inp[0].isspace():
             return False
+        first_tag = False
         num_spaces = 0
         for char in user_inp:
             if char.isspace():
@@ -181,7 +183,7 @@ def edit_claim(request):
     Claim.objects.filter(id=claim.id).update(
         claim=new_claim_fields['claim'],
         category=new_claim_fields['category'],
-        tags=','.join(new_claim_fields['tags'].split(',')),
+        tags=','.join([tag.strip() for tag in new_claim_fields['tags'].split(',')]),
         image_src=new_claim_fields['image_src'])
     save_log_message(request.user.id, request.user.username,
                      'Editing a claim with id ' + str(request.POST.get('claim_id')), True)
@@ -438,9 +440,26 @@ def view_home(request):
         raise PermissionDenied
     from django.core.paginator import Paginator
     claims = Claim.objects.all().order_by('-id')
+    sort_method = request.GET.get('sort_method')
+    if sort_method == 'Most controversial':
+        claims = sort_claims_by_controversial()
+    elif sort_method == 'Most rated':
+        claims = sort_claims_by_ratings()
     page = request.GET.get('page')
     paginator = Paginator(claims, 24)
     return render(request, 'claims/index.html', {'claims': paginator.get_page(page)})
+
+
+def sort_claims_by_ratings():
+    res = {}
+    for claim in Claim.objects.all():
+        res[claim] = claim.num_of_true_comments() + claim.num_of_false_comments()
+    return sorted(res, key=res.__getitem__, reverse=True)
+
+
+def sort_claims_by_controversial():
+    res = list(Claim.objects.all())
+    return sorted(res, key=lambda x: abs(x.authenticity_grade-50))
 
 
 # This function returns a claim page of a given claim id

@@ -1,7 +1,11 @@
 {% extends 'claims/layout.html' %}
 
 {% block page_content %}
-
+    <div style="margin: 20px auto; text-align: center">
+            <a href="?sort_method=Newest" class="btn btn-info" style="margin: 0 5px">Newest (default)</a>
+            <a href="?sort_method=Most rated" class="btn btn-info" style="margin: 0 5px">Most rated</a>
+            <a href="?sort_method=Most controversial" class="btn btn-info" style="margin: 0 5px">Most controversial</a>
+    </div>
     {% if claims.number == 1 %}
         <div class="headlines">
             <div id="claim_large_columns" style="max-width: 1150px; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
@@ -46,6 +50,7 @@
     </div>
 
     <script>
+
         window.onload = function() {
             let images = document.getElementsByClassName('claim_image');
             for (let i = 0; i < images.length; i++) {

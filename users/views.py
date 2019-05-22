@@ -264,8 +264,8 @@ def add_new_scraper(request):
     new_scraper_img_details = Scrapers(scraper_name=new_scraper.username,
                                        scraper=new_scraper,
                                        scraper_url=scraper_info['scraper_url'],
-                                       true_labels=','.join(true_labels),
-                                       false_labels=','.join(false_labels))
+                                       true_labels=','.join([tag.strip() for tag in true_labels]),
+                                       false_labels=','.join([tag.strip() for tag in false_labels]))
     new_scraper_img_details.save()
     save_log_message(request.user.id, request.user.username, 'Adding a new scraper', True)
     return add_scraper_guide(return_get_request_to_user(request.user))
