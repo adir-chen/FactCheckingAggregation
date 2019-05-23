@@ -445,9 +445,11 @@ def view_home(request):
         claims = sort_claims_by_controversial()
     elif sort_method == 'Most rated':
         claims = sort_claims_by_ratings()
+    else:
+        sort_method = 'Newest'
     page = request.GET.get('page')
     paginator = Paginator(claims, 24)
-    return render(request, 'claims/index.html', {'claims': paginator.get_page(page)})
+    return render(request, 'claims/index.html', {'claims': paginator.get_page(page), 'sort_method': sort_method})
 
 
 # This function sorts the claims in the home page by ratings

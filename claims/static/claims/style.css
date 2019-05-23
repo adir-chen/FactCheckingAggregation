@@ -6,10 +6,18 @@ body {
     HEADER
 ################*/
 
+#sticky_header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 10;
+}
+
 #header{
     /*background-image: linear-gradient(#121d59, #060536);*/
     background: #060536;
     padding: 20px;
+    transition: 0.5s;
 }
 
 @media (min-width: 800px) {
@@ -19,10 +27,12 @@ body {
         display: grid;
         grid-template-columns: 400px auto;
         grid-template-areas: 'site-logo header-tools';
+
     }
 
     .site-logo img{
         max-width: 500px;
+
     }
 
     .header-tools{
@@ -180,45 +190,17 @@ body {
     SEARCHBAR
 ################*/
 
-.search-container {
-    display: grid;
-    grid-template-columns: auto 35px;
-    grid-template-areas:
-    'searchbar searchbutton';
-    width: 100%;
-    margin-top: 20px;
-    border: 1px solid gray;
-    border-radius: 5px;
-}
-
-.searchbar{
-    grid-area: searchbar;
-}
-
-.searchbutton{
-    grid-area: searchbutton;
-}
-
-
-.search-container input[type=text] {
-  padding: 6px;
-  font-size: 17px;
-  border: none;
-    width: 100%;
-    border-radius: 4px 0 0 4px;
-}
-
-.search-container button {
-  padding: 6px 10px;
-  background: #ddd;
-  font-size: 17px;
-  border: none;
-  cursor: pointer;
-    border-radius: 0 4px 4px 0;
-}
-
-.topnav .search-container button:hover {
-  background: #ccc;
+#searchbar{
+  box-sizing: border-box;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  background-color: white;
+  background-position: 10px 12px;
+  background-repeat: no-repeat;
+  margin-top: 20px;
+  width: 100%;
+  padding: 12px 20px 12px 40px;
 }
 
 /*################

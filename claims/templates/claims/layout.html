@@ -58,89 +58,96 @@
     {% register_notify_callbacks callbacks='fill_notification_badge,my_special_notification_callback' %}
 </head>
 <body>
-    <header id="header">
-        <div id="header-wrapper">
-            <div class="site-logo">
-                <a href="/"><img src="{% static 'claims/assets/images/site_logo.png' %}"></a><br>
-                <h6><i>Rate the Facts</i></h6>
-            </div>
-            <div class="header-tools">
-                {% if request.user.is_authenticated %}
-                    <p>
-                        <span style="font-weight: bold;">Welcome </span><a href="/users/{{ request.user.id }}">{{request.user.username}}</a>
-                        <a href="#" class="notification" onclick="showNotifiactions()">
-                            <span><i class="fa fa-bell" style="margin-left: 10px;"></i></span>
-                            <span id="notify_badge" class="badge" hidden="hidden">{% live_notify_badge %}</span>
-                        </a> <a href="/users/notifications"><span style="font-size: 14px;">Notifications</span></a>
-                    </p>
-                    <div id="last-notifications" class="last-notifications">
-                        <div id="mark_all" style="background: #eee; padding: 10px; margin: 0;" hidden="hidden">
-                            <a href="/users/read_all_notifications">Mark all as read</a>
-                            <button onclick="showNotifiactions()" style="border: 1px solid #ccc; background: none; float: right;">X</button>
-                        </div>
-                        <div>
-                            <ul id="live_notifications_list" style="margin: 0;">
-                            </ul>
-                        </div>
-                        <div style="background: #eee; padding: 10px;">
-                            <a href="/users/notifications">See all notifications</a>
-                        </div>
-                    </div>
-                    <a href="/logout" style="font-size: 14px;">Sign Out</a>
-                {% else %}
-                    <p>Welcome guest.</p>
-                    <h6><i>Want to share information with us?</i></h6>
-                    <p>
-                        <ul>
-                            <p>Sign in with:</p>
-                            <li><div style="display: inline-block"><img src="{% static 'claims/assets/images/google_icon.jpg' %}" style="padding: 0; margin: 0;"><a href="{% url 'social:begin' 'google-oauth2' %}"> Google</a></div></li>
-                            <li><div style="display: inline-block"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"><a href="{% url 'social:begin' 'twitter' %}"> Twitter</a></div></li>
-                            <li><div style="display: inline-block"><img src="{% static 'claims/assets/images/facebook_icon.png' %}"><a href="{% url 'social:begin' 'facebook' %}"> Facebook</a></div></li>
-                        </ul>
-                    </p>
-                {% endif %}
-                <form class="search-container" action={% url 'search:search_result' %}>
-                    <div class="searchbar">
-                        <input type="text" placeholder="Search.." name="search_keywords" value="{{ request.GET.search_keywords }}">
-                    </div>
-                    <div class="searchbutton">
-                        <button type="submit"><i class="fa fa-search"></i></button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </header>
-    <div class="topnav">
-        <div class="nav-wrapper" id="myTopnav">
-            <a href="/">Home</a>
-            <a href="/about">About us</a>
-            <a href="/contact_us/contact_us_page">Contact us</a>
-            {% if request.user.is_authenticated %}
-                <a href="/add_claim_page">Add new claim</a>
-                <a href="/users/{{ request.user.id }}">My profile</a>
-            {% endif %}
-            {% if request.user.is_superuser %}
-                <div class="dropdown">
-                    <a class="dropdown-toggle">Admin tools</a>
-                    <div class="dropdown-content">
-                        <a href="/admin" target="_blank">Admin panel</a>
-{#                        <a href="/users/add_all_scrapers">Add all scrapers</a>#}
-                        <a href="/users/add_scraper_guide">Adding a scraper guide</a>
-                        <a href="/export_claims_page">Export claims as csv</a>
-                        <a href="/tweets/export_tweets_page">Export tweets as csv</a>
-                        <a href="/post_claims_tweets_page">Import claims/tweets from csv</a>
-                        <a href="/merging_claims_page">Merging claims suggestions</a>
-                        <a href="/logger/view_log">Logger</a>
-                        <a href="/analytics/" style="border-right: 0;">View analytics</a>
-{#                        <a href="/comments/update_authenticity_grade_for_all_claims" style="border-right: 0;">Update authenticities grades for all claims</a>#}
-                    </div>
+    <div id="sticky_header">
+        <header id="header">
+            <div id="header-wrapper">
+                <div class="site-logo">
+                    <a href="/"><img src="{% static 'claims/assets/images/site_logo.png' %}"></a><br>
+                    <h6 id="site_mantra"><i>Rate the Facts</i></h6>
                 </div>
-            {% endif %}
+                <div class="header-tools">
+                    {% if request.user.is_authenticated %}
+                        <div id="welcome_msg" style="padding-right: 20px;">
+                            <span style="font-weight: bold;">Welcome </span><a href="/users/{{ request.user.id }}">{{request.user.username}}</a>
+                            <a href="javascript:;" class="notification" onclick="showNotifiactions()">
+                                <span><i class="fa fa-bell" style="margin-left: 10px;"></i></span>
+                                <span id="notify_badge" class="badge" hidden="hidden">{% live_notify_badge %}</span>
+                            </a> <a href=""><span style="font-size: 14px;">Notifications</span></a>
+                        </div>
+                        <div id="last-notifications" class="last-notifications">
+                            <div id="mark_all" style="background: #eee; padding: 10px; margin: 0;" hidden="hidden">
+                                <a href="/users/read_all_notifications">Mark all as read</a>
+                                <button onclick="showNotifiactions()" style="border: 1px solid #ccc; background: none; float: right;">X</button>
+                            </div>
+                            <div>
+                                <ul id="live_notifications_list" style="margin: 0;">
+                                </ul>
+                            </div>
+                            <div style="background: #eee; padding: 10px;">
+                                <a href="/users/notifications">See all notifications</a>
+                            </div>
+                        </div>
+                        <a href="/logout" style="font-size: 14px;">Sign Out</a>
+                    {% else %}
+                        <div id="guest_msg">
+                            <p>Welcome guest.</p>
+                            <h6><i>Want to share information with us?</i></h6>
+                            <p>
+                                <ul>
+                                    <p>Sign in with:</p>
+                                    <li><div style="display: inline-block"><img src="{% static 'claims/assets/images/google_icon.jpg' %}" style="padding: 0; margin: 0;"><a href="{% url 'social:begin' 'google-oauth2' %}"> Google</a></div></li>
+                                    <li><div style="display: inline-block"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"><a href="{% url 'social:begin' 'twitter' %}"> Twitter</a></div></li>
+                                    <li><div style="display: inline-block"><img src="{% static 'claims/assets/images/facebook_icon.png' %}"><a href="{% url 'social:begin' 'facebook' %}"> Facebook</a></div></li>
+                                </ul>
+                            </p>
+                        </div>
+                        <div id="guest_msg_minimize" style="display: none;">
+                            Welcome guest
+                            <a href="#" class="btn btn-primary" style="margin-left: 20px;">Sign in</a>
+                        </div>
+                    {% endif %}
+                    <form id="search_form" action={% url 'search:search_result' %}>
+                        <input id="searchbar" type="text" name="search_keywords" placeholder="Search.." value="{{ request.GET.search_keywords }}" style="background-image: url('{% static 'claims/assets/images/searchicon.png' %}');">
+                    </form>
+                </div>
+            </div>
+        </header>
+        <div class="topnav">
+            <div class="nav-wrapper" id="myTopnav">
+                <a href="/">Home</a>
+                <a href="/about">About us</a>
+                <a href="/contact_us/contact_us_page">Contact us</a>
+                {% if request.user.is_authenticated %}
+                    <a href="/add_claim_page">Add new claim</a>
+                    <a href="/users/{{ request.user.id }}">My profile</a>
+                {% endif %}
+                {% if request.user.is_superuser %}
+                    <div class="dropdown">
+                        <a class="dropdown-toggle">Admin tools</a>
+                        <div class="dropdown-content">
+                            <a href="/admin" target="_blank">Admin panel</a>
+    {#                        <a href="/users/add_all_scrapers">Add all scrapers</a>#}
+                            <a href="/users/add_scraper_guide">Adding a scraper guide</a>
+                            <a href="/export_claims_page">Export claims as csv</a>
+                            <a href="/tweets/export_tweets_page">Export tweets as csv</a>
+                            <a href="/post_claims_tweets_page">Import claims/tweets from csv</a>
+                            <a href="/merging_claims_page">Merging claims suggestions</a>
+                            <a href="/logger/view_log">Logger</a>
+                            <a href="/analytics/" style="border-right: 0;">View analytics</a>
+    {#                        <a href="/comments/update_authenticity_grade_for_all_claims" style="border-right: 0;">Update authenticities grades for all claims</a>#}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            <a href="javascript:void(0);" class="nav-hamburger-icon" onclick="navFunc()"><i class="fa fa-bars"></i></a>
         </div>
-        <a href="javascript:void(0);" class="nav-hamburger-icon" onclick="navFunc()"><i class="fa fa-bars"></i></a>
     </div>
     <div>
-    <section id="page_content">
+    {% if request.user.is_authenticated %}
+        <section id="page_content" style="margin-top: 320px;">
+    {% else %}
+        <section id="page_content" style="margin-top: 370px;">
+    {% endif %}
     {% block page_content %}
 
     {% endblock %}
@@ -150,6 +157,48 @@
     </footer>
 
     <script>
+        window.onscroll = function() {scrollFunction()};
+
+        function scrollFunction() {
+          if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
+            document.getElementById("header").style.padding = "5px";
+            document.getElementById("header-wrapper").style.maxWidth = "950px";
+            document.getElementById("header-wrapper").style.gridTemplateColumns = "150px auto";
+            document.getElementsByClassName("site-logo")[0].style.width = "150px";
+            document.getElementById("site_mantra").style.display = "none";
+            {% if request.user.is_authenticated %}
+                document.getElementById("welcome_msg").style.display = "inline";
+            {% else %}
+                document.getElementById("guest_msg").style.display = "none";
+                document.getElementById("guest_msg_minimize").style.display = "inline";
+            {% endif %}
+            document.getElementById("searchbar").style.width = "300px";
+            document.getElementById("searchbar").style.margin = "0 0 0 30px";
+            document.getElementById("searchbar").style.padding = "5px 20px 5px 40px";
+            document.getElementById("searchbar").style.backgroundPosition = "10px 8px";
+            document.getElementById("search_form").style.display = "inline";
+            document.getElementsByClassName("header-tools")[0].style.paddingTop = "10px";
+          } else {
+            document.getElementById("header").style.padding = "20px";
+            document.getElementById("header-wrapper").style.maxWidth = "1150px";
+            document.getElementById("header-wrapper").style.gridTemplateColumns = "400px auto";
+            document.getElementsByClassName("site-logo")[0].style.width = "auto";
+            document.getElementById("site_mantra").style.display = "block";
+            {% if request.user.is_authenticated %}
+                document.getElementById("welcome_msg").style.display = "block";
+            {% else %}
+                document.getElementById("guest_msg").style.display = "block";
+                document.getElementById("guest_msg_minimize").style.display = "none";
+            {% endif %}
+            document.getElementById("searchbar").style.width = "100%";
+            document.getElementById("searchbar").style.padding = "12px 20px 12px 40px";
+            document.getElementById("searchbar").style.margin = "20px 0 0 0";
+            document.getElementById("searchbar").style.backgroundPosition = "10px 12px";
+            document.getElementById("search_form").style.display = "block";
+            document.getElementsByClassName("header-tools")[0].style.paddingTop = "0";
+          }
+        }
+
         function navFunc(){
             var x = document.getElementById("myTopnav");
             if (x.className === "topnav") {

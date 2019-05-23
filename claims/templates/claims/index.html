@@ -34,8 +34,8 @@
     <div class="pagination">
         <span class="step-links">
             {% if claims.has_previous %}
-                <a href="?page=1" class="btn btn-info">&laquo; First</a>
-                <a href="?page={{ claims.previous_page_number }}" class="btn btn-info">Previous</a>
+                <a href="?page=1&sort_method={{ sort_method }}" class="btn btn-info">&laquo; First</a>
+                <a href="?page={{ claims.previous_page_number }}&sort_method={{ sort_method }}" class="btn btn-info">Previous</a>
             {% endif %}
 
             <span class="current" style="padding: 10px 20px;">
@@ -43,8 +43,8 @@
             </span>
 
             {% if claims.has_next %}
-                <a href="?page={{ claims.next_page_number }}" class="btn btn-info">Next</a>
-                <a href="?page={{ claims.paginator.num_pages }}" class="btn btn-info">Last &raquo;</a>
+                <a href="?page={{ claims.next_page_number }}&sort_method={{ sort_method }}" class="btn btn-info">Next</a>
+                <a href="?page={{ claims.paginator.num_pages }}&sort_method={{ sort_method }}" class="btn btn-info">Last &raquo;</a>
             {% endif %}
         </span>
     </div>
