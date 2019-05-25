@@ -58,6 +58,7 @@
     {% register_notify_callbacks callbacks='fill_notification_badge,my_special_notification_callback' %}
 </head>
 <body>
+    <button onclick="topFunction()" id="scrollTopBtn" title="Go to top"><i class="fa fa-angle-up" style="font-size: 24px;"></i></button>
     <div id="sticky_header">
         <header id="header">
             <div id="header-wrapper">
@@ -197,6 +198,16 @@
             document.getElementById("search_form").style.display = "block";
             document.getElementsByClassName("header-tools")[0].style.paddingTop = "0";
           }
+          if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+            document.getElementById("scrollTopBtn").style.display = "block";
+          } else {
+            document.getElementById("scrollTopBtn").style.display = "none";
+          }
+        }
+
+        function topFunction() {
+          document.body.scrollTop = 0;
+          document.documentElement.scrollTop = 0;
         }
 
         function navFunc(){

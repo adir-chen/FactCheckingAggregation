@@ -207,6 +207,22 @@ body {
 GLOBAL LAYOUT CLASSES
 ################*/
 
+#scrollTopBtn {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  z-index: 99;
+  font-size: 18px;
+  border: none;
+  outline: none;
+  background-color: #060536;
+  color: white;
+  cursor: pointer;
+  padding: 10px 15px;
+  border-radius: 4px;
+}
+
 #footer{
     background-color: #060536;
     width:100%;
@@ -285,6 +301,14 @@ div.page_box{
     margin: 10px;
 }
 
+.claim_btn {
+    font-size: 14px;
+    text-align: center;
+    margin: 0 5px;
+    border: none;
+    background: none;
+}
+
 /*################
     CLAIMS
 ################*/
@@ -340,7 +364,6 @@ div.claim_page_title_wrapper{
     border-radius: 10px;
     background: #aabfd6;
     padding: 20px;
-    margin-bottom: 20px;
     width: 100%;
 }
 
@@ -362,9 +385,20 @@ div.claim_details{
     margin-left: 20px;
 }
 
+@media (min-width: 800px) {
+    div.claim_page_title_wrapper{
+        height: 405px;
+    }
+    .claim_page_title_wrapper img{
+        object-fit: cover;
+        max-height: 100%;
+    }
+}
+
 @media (max-width: 800px) {
     div.claim_page_title_wrapper{
         padding: 0;
+
     }
     .claim_page_title_wrapper img{
         float: none;
