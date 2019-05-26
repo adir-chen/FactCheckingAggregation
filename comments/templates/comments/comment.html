@@ -39,14 +39,14 @@
             <p id="success_msg_{{ comment.id }}_comment_vote" class="action_msg note_msg" hidden>Your vote has been accepted successfully</p>
             <p id="error_msg_{{ comment.id }}_comment_vote" class="action_msg error_msg" hidden></p>
             <div class="comment_voting_area">
-                <span style="font-size: 12px; color: #C0C0C0;">Agree</span>
+                <span style="font-size: 12px; color: #C0C0C0;">Agree</span><br>
                 {% if request.user.is_authenticated %}
                     <button id="{{ comment.id }}_arrow_up" class="arrow_up">▲</button>
                 {% else %}
                     <button id="{{ comment.id }}_arrow_up" class="arrow_up" disabled="disabled" title="Sign in and vote" style="color: #dddddd;">▲</button>
                 {% endif %}
                 <br>
-                <span id="{{ comment.id }}_voteCount" class="vote_count">{{ comment.up_votes.count|sub:comment.down_votes.count }}</span>
+                <span id="{{ comment.id }}_voteCount" class="vote_count">Votes: {{ comment.up_votes.count|sub:comment.down_votes.count }}</span>
                 <br>
                 {% if request.user.is_authenticated %}
                     <button id="{{ comment.id }}_arrow_down" class="arrow_down">▼</button>
@@ -398,7 +398,7 @@
             try {
                 if (result.title != "" && result.description != "" && result.src != "") {
                     $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
-                    document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML = "<div class=\"comment_refrence_preview\">\n" +
+                    document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML = "<div class=\"comment_reference_preview\">\n" +
                         "                        <div class=\"preview_img\">\n" +
                         "                            <a target=\"_blank\" href={{ comment.url }}><img src=\"" + result.src + "\"></a>\n" +
                         "                        </div>\n" +

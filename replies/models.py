@@ -11,4 +11,5 @@ class Reply(models.Model):
     timestamp = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return self.user.username + ' replied to comment ' + str(self.comment.id)
+        return self.user.username + ' replied to comment ' + str(self.comment.id) \
+               + ' in claim ' + str(self.comment.claim_id)

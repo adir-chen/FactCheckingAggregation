@@ -41,8 +41,8 @@
                 <p style="width: 100%; margin: 10px;">Image Url (optional):</p>
                 <input id="image_src" type="text" style="width: 100%; margin: 10px;"><br>
                 <br>
-                <p style="width: 100%; margin: 10px;">In order to add your verdict on this claim, you should add your comment attached with reference (website url), title, description, verdict date and label- True or False.
-                    In case you have more details on the claim, but you couldn't decide its label, set the label as Unknown.</p>
+                <p style="width: 100%; margin: 10px;">In order to add your verdict on this claim, you should add your comment attached with reference (website url), title, description, verdict date and verdict- True or False.
+                In case you have more details on the claim, but you couldn't decide its verdict, set the verdict as Unknown.</p>
                 <input id='add_comment' type="checkbox" onclick='enable_comment()'> Add your comment on this claim<br><br>
                 <h5>Comment Details (Source Information):</h5>
                 <p class="action_msg note_msg">
@@ -57,7 +57,7 @@
                 <textarea id="description" disabled="disabled" style="width: 100%; margin: 10px;"></textarea><br>
                 <p style="width: 100%; margin: 10px;">Verdict Date (according to source website):</p>
                 <input type="date" id="verdict_date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}" disabled="disabled" style="width: 100%; margin: 10px;">
-                <p style="width: 100%; margin: 10px;">Label:</p>
+                <p style="width: 100%; margin: 10px;">Verdict:</p>
                 <div style="margin: 10px;">
                     <input type="radio" name="label" class="label" value="True" disabled="disabled">True<br>
                     <input type="radio" name="label" class="label" value="False" disabled="disabled">False<br>

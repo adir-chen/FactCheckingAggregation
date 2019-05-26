@@ -505,6 +505,8 @@ class CommentTests(TestCase):
     ################
 
     def test__str__(self):
-        self.assertTrue(self.reply_1.__str__() == self.reply_1.user.username + ' replied to comment ' + str(self.reply_1.comment.id))
+        self.assertTrue(self.reply_1.__str__() ==
+                        self.reply_1.user.username + ' replied to comment ' +
+                        str(self.reply_1.comment.id) + ' in claim ' + str(self.claim_1.id))
 
 

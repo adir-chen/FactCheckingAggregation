@@ -22,7 +22,6 @@
                         <h5>Category: {{ claim.category }}</h5>
                     </div>
             </div>
-
             Published by:<br>
             <a href="/users/{{ claim.user.id }}" target="_blank"><img id="publisher_img" src="{{ claim.user.get_user_image.image_url }}" style="max-width: 90px; max-height: 50px;"></a><br>
             <a href="/users/{{ claim.user.id }}" target="_blank">{{ claim.user.username }}</a>
@@ -56,6 +55,10 @@
         <a id="{{ claim.id }}_claim_twitter_share" class="btn twitter-share-btn" href="https://twitter.com/intent/tweet?text=http://{{ request.META.HTTP_HOST }}{{ request.path }}%20"
         target="_blank" data-size="large"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"> Share claim on Twitter</a>
         <button type="submit" id="{{ claim.id }}_check_tweets_for_claim_in_twitter" class="btn twitter-share-btn" style="margin: 10px 0;"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"> Search for tweets (about this claim) in Twitter</button>
+        {% if 'Android' in request.META.HTTP_USER_AGENT %}
+            <a id="{{ claim.id }}_claim_whatsApp_share" class="btn whatsApp-share-button" href="whatsapp://send?text={{ request.META.HTTP_HOST }}{{ request.path }}%20"
+            data-size="large"><img src="{% static 'claims/assets/images/whatsApp_icon.png' %}"> Share claim on WhatsApp</a>
+        {% endif %}
         <p id="error_msg_{{ claim.id }}_claim_extracting_tweets" class="action_msg error_msg" hidden></p>
         {% if tweets %}
             <hr><br>
@@ -70,7 +73,7 @@
                         <span class="step-links">
                             {% if tweets.has_previous %}
                                 <a href="?tweets_page=1" class="btn btn-info">&laquo; First</a>
-                                <a href="?tweets_page={{ tweets.previous_page_number }}" class="btn btn-info">previous</a>
+                                <a href="?tweets_page={{ tweets.previous_page_number }}" class="btn btn-info">Previous</a>
                             {% endif %}
 
                             <span class="current" style="padding: 10px 20px;">
@@ -85,10 +88,6 @@
                     </div>
                 {% endif %}
             </div>
-        {% endif %}
-        {% if 'Android' in request.META.HTTP_USER_AGENT %}
-            <a id="{{ claim.id }}_claim_whatsApp_share" class="btn whatsApp-share-button" href="whatsapp://send?text={{ request.META.HTTP_HOST }}{{ request.path }}%20"
-            data-size="large"><img src="{% static 'claims/assets/images/whatsApp_icon.png' %}"> Share claim on WhatsApp</a>
         {% endif %}
         <br><hr><br>
         <div id="comments">
@@ -112,10 +111,10 @@
         <span id="{{ claim.id }}_offset"></span>
         {% if request.user.is_authenticated and request.user.id not in claim.users_commented_ids %}
             <br><hr>
-            <h3>Add new comment:</h3>
+            <h3>Add new comment with your verdict:</h3>
             <h5>(For claim {{ claim.claim }})</h5>
-            <p style="width: 100%; margin: 10px;">In order to add your verdict on this claim, you should add your comment attached with reference(website url), title, description, verdict date and label- True or False.
-                In case you have more details on the claim, but you couldn't decide its label, set the label as Unknown.</p>
+            <p style="width: 100%; margin: 10px;">In order to add your verdict on this claim, you should add your comment attached with reference (website url), title, description, verdict date and verdict- True or False.
+                In case you have more details on the claim, but you couldn't decide its verdict, set the verdict as Unknown.</p>
             <div class="comment_box" id="add_new_comment_box">
                 <div class="comment_header">
                     <div class="comment_user_image">
@@ -132,9 +131,10 @@
                         Verdict Date: <input id="{{ claim.id }}_new_comment_date" type="date" value="{% now "Y-m-d" %}" max="{% now "Y-m-d" %}">
                     </div>
                     <div style="grid-area: verdict; padding: 20px;">
+                        Verdict:<br><br>
                         <input type="radio" id="{{ claim.id }}_new_comment_true_label" name="{{ claim.id }}_new_comment_label" value="True"> True<br>
                         <input type="radio" id="{{ claim.id }}_new_comment_false_label" name="{{ claim.id }}_new_comment_label" value="False"> False<br>
-                        <input type="radio" id="{{ claim.id }}_new_comment_unknown_label" name="{{ claim.id }}_new_comment_label" value="Unknown" checked> Unknown
+                        <input type="radio" id="{{ claim.id }}_new_comment_unknown_label" name="{{ claim.id }}_new_comment_label" value="Unknown"> Unknown
                     </div>
                 </div>
                 <hr>
@@ -167,6 +167,23 @@
             if (!(image_{{ claim_id }}.complete && image_{{ claim_id }}.naturalHeight !== 0)) {
                 $("#img_src_{{ claim.id }}").attr("src", "/static/claims/assets/images/claim_default_image.jpg");
             }
+
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'tweets:check_tweets_for_claim_in_twitter' %}",
+                headers: { "X-CSRFToken": '{{ csrf_token }}' },
+                data: {
+                    claim_id: '{{ claim.id }}',
+                },
+                success: function () {
+
+                },
+                error: function (request) {
+                    hide_all_msgs();
+                    let err = request.responseJSON;
+                    document.getElementById("error_msg_{{ claim.id }}_claim_extracting_tweets").innerHTML = err;
+                }
+            });
         };
         let claim_timestamp = new Date('{{ claim.timestamp|date:"D, d M Y H:i:s" }}');
         {% if request.user.is_superuser %}
@@ -222,6 +239,7 @@
         $("#{{ claim.id }}_new_comment_save").click(function(){
             let debug_mode = '{% is_debug_mode %}' === 'True';
             if (debug_mode || (!debug_mode && check_recaptcha())){
+                $("#{{ claim.id }}_new_comment_save").attr("disabled", true);
                 $.ajax({
                     type: 'POST',
                     url: "{% url 'comments:add_comment' %}",
@@ -244,6 +262,7 @@
                         window.location.reload();
                     },
                     error: function (request) {
+                        $("#{{ claim.id }}_new_comment_save").attr("disabled", false);
                         hide_all_msgs();
                         grecaptcha.reset();
                         let err = request.responseJSON;
@@ -349,23 +368,12 @@
 
         $("#{{ claim.id }}_check_tweets_for_claim_in_twitter").click(function(e){
             e.preventDefault();
-            $.ajax({
-                type: 'POST',
-                url: "{% url 'tweets:check_tweets_for_claim_in_twitter' %}",
-                headers: { "X-CSRFToken": '{{ csrf_token }}' },
-                data: {
-                    claim_id: '{{ claim.id }}',
-                },
-                success: function () {
-                    window.location.reload();
-                },
-                error: function (request) {
-                    hide_all_msgs();
-                    document.getElementById("error_msg_{{ claim.id }}_claim_extracting_tweets").innerHTML =
-                        request.responseJSON
-                    $("#error_msg_{{ claim.id }}_claim_extracting_tweets").attr("hidden", false);
-                }
-            });
+            if (document.getElementById("error_msg_{{ claim.id }}_claim_extracting_tweets").innerHTML !== ''){
+                $("#error_msg_{{ claim.id }}_claim_extracting_tweets").attr("hidden", false);
+            }
+            else{
+                window.location.reload();
+            }
         });
 
         $("#sign_in_{{ claim.id }}").click(function() {

@@ -9,9 +9,9 @@ from django.core.paginator import Paginator
 def search(request):
     if request.method != "GET":
         raise PermissionDenied
-    keywords = request.GET.get('search_keywords')
-    search_result = Claim.objects.filter(Q(claim__icontains=keywords) | Q(tags__icontains=keywords) |
-                                  Q(user__username__icontains=keywords)).order_by('-id')
+    keywords = ' '.join([keyword.strip() for keyword in request.GET.get('search_keywords').split()])
+    search_results = Claim.objects.filter(Q(claim__icontains=keywords) | Q(tags__icontains=keywords) |
+                                          Q(user__username__icontains=keywords)).order_by('-id')
     page = request.GET.get('page')
-    paginator = Paginator(search_result, 24)
+    paginator = Paginator(search_results, 24)
     return render(request, 'search/search.html', {'search_result': paginator.get_page(page)})

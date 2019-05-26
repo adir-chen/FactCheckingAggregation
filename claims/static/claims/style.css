@@ -526,7 +526,7 @@ div.comment_verdict{
 div.comment_content{
     padding: 20px 35px;
     display: grid;
-    grid-template-columns: auto 50px;
+    grid-template-columns: auto 70px;
     grid-template-areas: 'comment-body voting';
 }
 
@@ -598,7 +598,7 @@ a.tag_link:hover{
     border-color: #000;
 }
 
-div.comment_refrence_preview{
+div.comment_reference_preview{
     padding: 20px;
     margin: 10px 0;
     border-radius: 7px;
@@ -609,7 +609,7 @@ div.comment_refrence_preview{
         'preview-img';
 }
 
-.comment_refrence_preview img{
+.comment_reference_preview img{
     max-width: 100%;
     width: auto;
     height: auto;
@@ -628,7 +628,7 @@ div.item_preview{
     }
 
 @media (min-width: 800px) {
-    div.comment_refrence_preview {
+    div.comment_reference_preview {
         grid-template-areas: 'preview-img preview-details';
     }
 

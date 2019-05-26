@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate
 from django.core.exceptions import PermissionDenied
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpRequest
 from django.shortcuts import render, get_object_or_404
 from claims.models import Claim
 from claims.views import view_home, return_get_request_to_user
@@ -8,6 +8,7 @@ from comments.views import is_valid_url
 from logger.views import save_log_message
 from tweets.models import Tweet
 from datetime import datetime
+from django.utils import timezone
 import json
 import csv
 
@@ -211,32 +212,48 @@ def check_tweets_for_claim_in_twitter(request):
         save_log_message(request.user.id, request.user.username,
                          'Extracting tweets for a claim. Error: ' + err_msg)
         return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
-    claim = Claim.objects.filter(id=claim_info['claim_id']).first()
-    if not claim.tags:
-        keywords = ' AND '.join(claim.claim.split())
+    tweets = Tweet.objects.filter(claim_id=claim_info['claim_id']).order_by('-id')
+    if len(tweets) == 0 or (timezone.now() - tweets.first().timestamp).days > 1:
+        claim = Claim.objects.filter(id=claim_info['claim_id']).first()
+        if not claim.tags:
+            keywords = ' AND '.join(claim.claim.split())
+        else:
+            keywords = ' AND '.join(claim.tags.split(','))
+        auth = OAuthHandler(settings.twitter_consumer_key, settings.twitter_consumer_secret)
+        auth.set_access_token(settings.twitter_access_token, settings.twitter_access_secret)
+        api = tweepy.API(auth)
+        try:
+            tweets = api.search(q=keywords,
+                                count=10,
+                                result_type='recent',
+                                lang="en")
+            if len(tweets) > 0:
+                for tweet in tweets:
+                    tweet_link = 'https://twitter.com/{}/status/{}'.format(tweet.user.screen_name, tweet.id)
+                    if len(Tweet.objects.filter(tweet_link=tweet_link)) == 0:
+                        build_tweet(claim.id, tweet_link)
+                save_log_message(request.user.id, request.user.username,
+                                 'Extracting tweets for a claim with id ' + str(claim.id), True)
+                return view_claim(return_get_request_to_user(request.user), claim.id)
+            err_msg = 'No tweets found according to claim\'s tags (keywords):\n' + claim.tags
+        except tweepy.TweepError as e:
+            err_msg = 'Can\'t search for latest tweets right now. Please try again later.'
     else:
-        keywords = ' AND '.join(claim.tags.split(','))
-    auth = OAuthHandler(settings.twitter_consumer_key, settings.twitter_consumer_secret)
-    auth.set_access_token(settings.twitter_access_token, settings.twitter_access_secret)
-    api = tweepy.API(auth)
-    try:
-        tweets = api.search(q=keywords,
-                            count=3,
-                            include_entities=True,
-                            result_type='popular',
-                            lang="en")
-        if len(tweets) > 0:
-            for tweet in tweets:
-                tweet_link = 'https://twitter.com/{}/status/{}'.format(tweet.user.screen_name, tweet.id)
-                if len(Tweet.objects.filter(tweet_link=tweet_link)) == 0:
-                    build_tweet(claim.id, tweet_link)
-            save_log_message(request.user.id, request.user.username,
-                             'Extracting tweets for a claim with id ' + str(claim.id), True)
-            return view_claim(return_get_request_to_user(request.user), claim.id)
-    except tweepy.TweepError as e:
-        pass
-    err_msg = 'No tweets found according to claim\'s tags(keywords):\n' + claim.tags
+        err_msg = 'Can\'t search for latest tweets right now. Please try again later.'
     return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
+
+
+# def get_tweets_for_claim(claim_id):
+#     from tweets.models import Tweet
+#     from users.models import User
+#     tweets = Tweet.objects.filter(claim_id=claim_id).order_by('-id')
+#     if len(tweets) == 0 or (timezone.now() - tweets.first().timestamp).days > 1:
+#         request = HttpRequest()
+#         request.user = User.objects.filter(is_superuser=True).order_by('+id').first()
+#         request.method = 'POST'
+#         request.POST['claim_id'] = claim_id
+#         check_tweets_for_claim_in_twitter(request)
+#     return Tweet.objects.filter(claim_id=claim_id).order_by('-id')
 
 
 # This function checks if the given fields for extracting tweets for a claim are valid,
