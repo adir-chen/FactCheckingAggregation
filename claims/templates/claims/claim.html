@@ -141,8 +141,7 @@
         <span id="{{ claim.id }}_offset"></span>
         {% if request.user.is_authenticated and request.user.id not in claim.users_commented_ids %}
             <br><hr>
-            <h3 id="new_comment">Add new comment:</h3>
-            <h3>Add new comment with your verdict:</h3>
+            <h3 id="new_comment">Add new comment with your verdict:</h3>
             <h5>(For claim {{ claim.claim }})</h5>
             <p style="width: 100%; margin: 10px;">In order to add your verdict on this claim, you should add your comment attached with reference (website url), title, description, verdict date and verdict- True or False.
                 In case you have more details on the claim, but you couldn't decide its verdict, set the verdict as Unknown.</p>
