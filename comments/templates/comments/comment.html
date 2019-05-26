@@ -381,7 +381,7 @@
         let comment_link = '{{ comment.url }}';
         if (comment_link.toLowerCase().startsWith("https://twitter.com/")){
             $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
-             document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML = "<blockquote class=\"twitter-tweet item_preview\" data-lang=\"en\">\n" +
+             document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML = "<blockquote class=\"twitter-tweet item_preview\" data-lang=\"en\" data-cards=\"hidden\">\n" +
                  "                    <a target=\"_blank\" href=\"{{ comment.url }}\"></a>\n" +
                  "                </blockquote>";
             $("#comment_{{ comment.id }}_reference_preview").attr("hidden", false);
@@ -399,9 +399,7 @@
                 if (result.title != "" && result.description != "" && result.src != "") {
                     $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
                     document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML = "<div class=\"comment_refrence_preview\">\n" +
-                        "                        <div class=\"preview_img\">\n" +
-                        "                            <a target=\"_blank\" href={{ comment.url }}><img src=\"" + result.src + "\"></a>\n" +
-                        "                        </div>\n" +
+                        "                        <a target=\"_blank\" href={{ comment.url }}><img src=\"" + result.src + "\"></a>\n" +
                         "                        <div class=\"preview_details\">\n" +
                         "                            <a target=\"_blank\" href=\"{{ comment.url }}\"><h5>" + result.title+ "</h5></a>\n" +
                         "                            <p>" + result.description + "</p>\n" +

@@ -73,7 +73,7 @@
                             <a href="javascript:;" class="notification" onclick="showNotifiactions()">
                                 <span><i class="fa fa-bell" style="margin-left: 10px;"></i></span>
                                 <span id="notify_badge" class="badge" hidden="hidden">{% live_notify_badge %}</span>
-                            </a> <a href=""><span style="font-size: 14px;">Notifications</span></a>
+                            </a> <a href="/users/notifications"><span style="font-size: 14px;">Notifications</span></a>
                         </div>
                         <div id="last-notifications" class="last-notifications">
                             <div id="mark_all" style="background: #eee; padding: 10px; margin: 0;" hidden="hidden">
@@ -144,11 +144,10 @@
         </div>
     </div>
     <div>
-    {% if request.user.is_authenticated %}
-        <section id="page_content" style="margin-top: 320px;">
-    {% else %}
-        <section id="page_content" style="margin-top: 370px;">
+    {% if not request.user.is_authenticated %}
+        <p style="height: 60px;"></p>
     {% endif %}
+    <section id="page_content">
     {% block page_content %}
 
     {% endblock %}

@@ -1,52 +1,40 @@
 {% extends 'claims/layout.html' %}
 
 {% block page_content %}
-    <div style="margin: 20px auto; text-align: center">
-            <a href="?sort_method=Newest" class="btn btn-info" style="margin: 5px">Newest (default)</a>
-            <a href="?sort_method=Most rated" class="btn btn-info" style="margin: 5px">Most rated</a>
-            <a href="?sort_method=Most controversial" class="btn btn-info" style="margin: 5px">Most controversial</a>
+    <div class="headlines">
+        <div style="max-width: 1150px; margin: 20px auto; overflow: auto;">
+            <h3 style="float: left;">Newest claims</h3>
+            <button class="btn btn-info" style="float: right;" onclick="location.href='/claims?sort_method=Newest'">View all <i class="fa fa-angle-double-right"></i></button>
+        </div>
+        <div id="claim_large_columns" style="max-width: 1150px; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
+            {% for claim in newest %}
+                {% include 'claims/claimbox_large.html' with claim=claim %}
+            {% endfor %}
+        </div>
     </div>
-    {% if claims.number == 1 %}
-        <div class="headlines">
-            <div id="claim_large_columns" style="max-width: 1150px; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
-                {% for claim in claims|slice:"0:4" %}
-                    {% include 'claims/claimbox_large.html' with claim=claim %}
-                {% endfor %}
-            </div>
-        </div>
-        <div class="page_wrapper">
-            <div id="claim_columns">
-                {% for claim in claims|slice:"4:" %}
-                    {% include 'claims/claimbox.html' with claim=claim %}
-                {% endfor %}
-            </div>
-        </div>
-    {% else %}
-        <div class="page_wrapper">
-            <div id="claim_columns">
-                {% for claim in claims %}
-                    {% include 'claims/claimbox.html' with claim=claim %}
-                {% endfor %}
-            </div>
-        </div>
-    {% endif %}
 
-    <div class="pagination">
-        <span class="step-links">
-            {% if claims.has_previous %}
-                <a href="?page=1&sort_method={{ sort_method }}" class="btn btn-info">&laquo; First</a>
-                <a href="?page={{ claims.previous_page_number }}&sort_method={{ sort_method }}" class="btn btn-info">Previous</a>
-            {% endif %}
+    <div class="headlines">
+        <div style="max-width: 1150px; margin: 20px auto; overflow: auto;">
+            <h3 style="float: left;">Most rated claims</h3>
+            <button class="btn btn-info" style="float: right;" onclick="location.href='/claims?sort_method=Most rated'">View all <i class="fa fa-angle-double-right"></i></button>
+        </div>
+        <div id="claim_large_columns" style="max-width: 1150px; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
+            {% for claim in most_rated %}
+                {% include 'claims/claimbox_large.html' with claim=claim %}
+            {% endfor %}
+        </div>
+    </div>
 
-            <span class="current" style="padding: 10px 20px;">
-                Page {{ claims.number }} of {{ claims.paginator.num_pages }}
-            </span>
-
-            {% if claims.has_next %}
-                <a href="?page={{ claims.next_page_number }}&sort_method={{ sort_method }}" class="btn btn-info">Next</a>
-                <a href="?page={{ claims.paginator.num_pages }}&sort_method={{ sort_method }}" class="btn btn-info">Last &raquo;</a>
-            {% endif %}
-        </span>
+    <div class="headlines">
+        <div style="max-width: 1150px; margin: 20px auto; overflow: auto;">
+            <h3 style="float: left;">Most controversial claims</h3>
+            <button class="btn btn-info" style="float: right;" onclick="location.href='/claims?sort_method=Most controversial'">View all <i class="fa fa-angle-double-right"></i></button>
+        </div>
+        <div id="claim_large_columns" style="max-width: 1150px; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
+            {% for claim in most_controversial %}
+                {% include 'claims/claimbox_large.html' with claim=claim %}
+            {% endfor %}
+        </div>
     </div>
 
     <script>

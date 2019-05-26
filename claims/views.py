@@ -438,6 +438,20 @@ def delete_suggestion_for_merging_claims(request):
 def view_home(request):
     if request.method != "GET":
         raise PermissionDenied
+    newest = Claim.objects.all().order_by('-id')[:4]
+    most_rated = sort_claims_by_ratings()[:4]
+    most_conrtoversial = sort_claims_by_controversial()[:4]
+    return render(request, 'claims/index.html',
+                  {'newest': newest,
+                   'most_rated': most_rated,
+                   'most_controversial': most_conrtoversial})
+
+
+# This function returns the claims page of the website
+@ensure_csrf_cookie
+def view_claims(request):
+    if request.method != "GET":
+        raise PermissionDenied
     from django.core.paginator import Paginator
     claims = Claim.objects.all().order_by('-id')
     sort_method = request.GET.get('sort_method')
@@ -449,7 +463,7 @@ def view_home(request):
         sort_method = 'Newest'
     page = request.GET.get('page')
     paginator = Paginator(claims, 24)
-    return render(request, 'claims/index.html', {'claims': paginator.get_page(page), 'sort_method': sort_method})
+    return render(request, 'claims/claims.html', {'claims': paginator.get_page(page), 'sort_method': sort_method})
 
 
 # This function sorts the claims in the home page by ratings

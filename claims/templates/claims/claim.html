@@ -7,11 +7,6 @@
         <script src='https://www.google.com/recaptcha/api.js' async defer></script>
     </head>
     <div class="page_wrapper">
-        <div id="publisher" style="float: right; margin: 0 0 40px 50px;">
-            Published by:<br>
-            <a href="/users/{{ claim.user.id }}" target="_blank"><img id="publisher_img" src="{{ claim.user.get_user_image.image_url }}" style="max-width: 90px; max-height: 50px;"></a><br>
-            <a href="/users/{{ claim.user.id }}" target="_blank">{{ claim.user.username }}</a>
-        </div>
         <h1 id="claim_page_title" style="margin-bottom: 30px;font-size: 32px; font-family: 'Signika', sans-serif;">{{ claim.claim }}</h1>
         <div id="claim_page_title_wrapper" class="claim_page_title_wrapper">
             <img id="img_src_{{ claim.id }}" src="{{ claim.image_src }}">
@@ -53,16 +48,14 @@
         {% endif %}
         </div>
         <p id="error_msg_{{ claim.id }}_claim_extracting_tweets" class="action_msg error_msg" hidden></p>
-        <div style="margin-top: 20px;">
+        <div class="claim_btn_row">
+            <div id="publisher" class="claim_btn" style="width: 100px;">
+                Published by:<br>
+                <a href="/users/{{ claim.user.id }}" target="_blank"><img id="publisher_img" src="{{ claim.user.get_user_image.image_url }}" style="max-width: 90px; max-height: 50px;"></a><br>
+                <a href="/users/{{ claim.user.id }}" target="_blank">{{ claim.user.username }}</a>
+            </div>
+            <div style="border-left: 2px solid #c0c0c0; height: 120px; display: inline-block; margin: 20px 30px 20px 10px;"></div>
             {% if request.user.is_authenticated %}
-                <button class="claim_btn" onclick="document.getElementById('new_comment').scrollIntoView()">
-                    <img src="{% static 'claims/assets/images/add_comment_btn.png' %}"><br>
-                    Add Comment
-                </button>
-                <button class="claim_btn" id="{{ claim.id }}_claim_report_spam">
-                    <img src="{% static 'claims/assets/images/report_spam_btn.png' %}"><br>
-                    Report Spam
-                </button>
                     {% if claim.user_id == request.user.id or request.user.is_superuser %}
                         <button class="claim_btn" id="{{ claim.id }}_claim_edit" onclick="edit_claim()">
                             <img src="{% static 'claims/assets/images/edit_claim_btn.png' %}"><br>
@@ -73,6 +66,14 @@
                             Delete Claim
                         </button>
                     {% endif %}
+                    <button class="claim_btn" onclick="document.getElementById('new_comment').scrollIntoView()">
+                    <img src="{% static 'claims/assets/images/add_comment_btn.png' %}"><br>
+                    Add Comment
+                    </button>
+                    <button class="claim_btn" id="{{ claim.id }}_claim_report_spam">
+                        <img src="{% static 'claims/assets/images/report_spam_btn.png' %}"><br>
+                        Report Spam
+                    </button>
             {% endif %}
             <button class="claim_btn" id="{{ claim.id }}_check_tweets_for_claim_in_twitter">
                 <img src="{% static 'claims/assets/images/twitter_btn.png' %}"><br>
@@ -162,7 +163,7 @@
                     <div style="grid-area: verdict; padding: 20px;">
                         <input type="radio" id="{{ claim.id }}_new_comment_true_label" name="{{ claim.id }}_new_comment_label" value="True"> True<br>
                         <input type="radio" id="{{ claim.id }}_new_comment_false_label" name="{{ claim.id }}_new_comment_label" value="False"> False<br>
-                        <input type="radio" id="{{ claim.id }}_new_comment_unknown_label" name="{{ claim.id }}_new_comment_label" value="Unknown" checked> Unknown
+                        <input type="radio" id="{{ claim.id }}_new_comment_unknown_label" name="{{ claim.id }}_new_comment_label" value="Unknown"> Unknown
                     </div>
                 </div>
                 <hr>
@@ -249,6 +250,9 @@
 
         $("#{{ claim.id }}_new_comment_save").click(function(){
             let debug_mode = '{% is_debug_mode %}' === 'True';
+            let label = '';
+            if ($('input[name="{{ claim.id }}_new_comment_label"]:checked').length > 0)
+                label = document.querySelector('input[name="{{ claim.id }}_new_comment_label"]:checked').value;
             if (debug_mode || (!debug_mode && check_recaptcha())){
                 $.ajax({
                     type: 'POST',
@@ -262,7 +266,7 @@
                         url: $("#{{ claim.id }}_new_comment_url").val(),
                         tags: $("#{{ claim.id }}_new_comment_tags").val(),
                         verdict_date: $("#{{ claim.id }}_new_comment_date").val(),
-                        label: document.querySelector('input[name="{{ claim.id }}_new_comment_label"]:checked').value,
+                        label: label,
                     },
                     success: function () {
                         $('html, body').animate({

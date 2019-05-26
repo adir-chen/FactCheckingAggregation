@@ -301,12 +301,14 @@ div.page_box{
     margin: 10px;
 }
 
-.claim_btn {
-    font-size: 14px;
-    text-align: center;
-    margin: 0 5px;
-    border: none;
-    background: none;
+#page_content {
+    margin-top: 320px;
+}
+
+@media (max-width: 800px) {
+    #page_content{
+        margin-top: 440px;
+    }
 }
 
 /*################
@@ -476,6 +478,22 @@ table.merging_suggestions_table{
 
 .merging_suggestions_table tr:nth-child(even){background-color: #e2e2e2;}
 
+.claim_btn {
+    font-size: 14px;
+    text-align: center;
+    margin: 20px 5px 0 5px;
+    padding: 0 3px;
+    background: none;
+    width: 81px;
+    border: none;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.claim_btn_row img{
+    margin-bottom: 7px;
+}
+
 /*################
     COMMENTS
 ################*/
@@ -619,38 +637,30 @@ div.comment_refrence_preview{
     margin: 10px 0;
     border-radius: 7px;
     background: #d7e5f2;
-    display: grid;
-    grid-template-areas:
-        'preview-details'
-        'preview-img';
-}
-
-.comment_refrence_preview img{
-    max-width: 100%;
-    width: auto;
-    height: auto;
-}
-
-.preview_img{
-    grid-area: preview-img;
-}
-
-.preview_details{
-    grid-area: preview-details;
+    overflow: auto;
 }
 
 div.item_preview{
         max-width: 100%;
     }
 
-@media (min-width: 800px) {
-    div.comment_refrence_preview {
-        grid-template-areas: 'preview-img preview-details';
+.comment_refrence_preview img{
+        object-fit: contain;
+        max-width: 100%;
     }
 
-    .preview_details{
-        grid-area: preview-details;
-        padding-left: 20px;
+@media (max-width: 800px) {
+    .comment_refrence_preview img {
+        margin-bottom: 20px;
+    }
+}
+
+@media (min-width: 800px) {
+    .comment_refrence_preview img{
+        float: left;
+        margin-right: 30px;
+        max-height: 300px;
+        max-width: 400px;
     }
 
     iframe.youtube_preview{
