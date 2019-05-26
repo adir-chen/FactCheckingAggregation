@@ -439,12 +439,12 @@ def view_home(request):
     if request.method != "GET":
         raise PermissionDenied
     newest = Claim.objects.all().order_by('-id')[:4]
-    most_rated = sort_claims_by_ratings()[:4]
-    most_conrtoversial = sort_claims_by_controversial()[:4]
+    most_commented = sort_claims_by_comments()[:4]
+    most_controversial = sort_claims_by_controversial()[:4]
     return render(request, 'claims/index.html',
                   {'newest': newest,
-                   'most_rated': most_rated,
-                   'most_controversial': most_conrtoversial})
+                   'most_commented': most_commented,
+                   'most_controversial': most_controversial})
 
 
 # This function returns the claims page of the website
@@ -457,8 +457,8 @@ def view_claims(request):
     sort_method = request.GET.get('sort_method')
     if sort_method == 'Most controversial':
         claims = sort_claims_by_controversial()
-    elif sort_method == 'Most rated':
-        claims = sort_claims_by_ratings()
+    elif sort_method == 'Most commented':
+        claims = sort_claims_by_comments()
     else:
         sort_method = 'Newest'
     page = request.GET.get('page')
@@ -466,7 +466,7 @@ def view_claims(request):
     return render(request, 'claims/claims.html', {'claims': paginator.get_page(page), 'sort_method': sort_method})
 
 
-# This function sorts the claims in the home page by ratings
+# This function sorts the claims in the home page by comments
 def sort_claims_by_comments():
     res = {}
     for claim in Claim.objects.all():

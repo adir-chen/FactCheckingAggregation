@@ -3,17 +3,17 @@
 {% block page_content %}
     <div style="margin: 40px auto; text-align: center">
         <div class="btn-group btn-group-lg" role="group" aria-label="Sorting Methods">
-            {% if sort_method == 'Most rated' %}
+            {% if sort_method == 'Most commented' %}
                 <a href="?sort_method=Newest" class="btn btn-secondary btn-info">Newest</a>
-                <a href="?sort_method=Most rated" class="btn btn-secondary">Most rated</a>
+                <a href="?sort_method=Most commented" class="btn btn-secondary">Most commented</a>
                 <a href="?sort_method=Most controversial" class="btn btn-secondary btn-info">Most controversial</a>
             {% elif sort_method == 'Most controversial' %}
                 <a href="?sort_method=Newest" class="btn btn-secondary btn-info">Newest</a>
-                <a href="?sort_method=Most rated" class="btn btn-secondary btn-info">Most rated</a>
+                <a href="?sort_method=Most commented" class="btn btn-secondary btn-info">Most commented</a>
                 <a href="?sort_method=Most controversial" class="btn btn-secondary">Most controversial</a>
             {% else %}
                 <a href="?sort_method=Newest" class="btn btn-secondary">Newest</a>
-                <a href="?sort_method=Most rated" class="btn btn-secondary btn-info">Most rated</a>
+                <a href="?sort_method=Most commented" class="btn btn-secondary btn-info">Most commented</a>
                 <a href="?sort_method=Most controversial" class="btn btn-secondary btn-info">Most controversial</a>
             {% endif %}
         </div>

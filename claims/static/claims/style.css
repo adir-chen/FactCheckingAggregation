@@ -84,6 +84,13 @@ body {
     NAVBAR
 ################*/
 
+@media (min-width: 800px) {
+    .br_nav {
+        display: none;
+    }
+}
+
+
 .topnav {
   background-color: #d1d1d1;
 }
@@ -632,7 +639,7 @@ a.tag_link:hover{
     border-color: #000;
 }
 
-div.comment_refrence_preview{
+div.comment_reference_preview{
     padding: 20px;
     margin: 10px 0;
     border-radius: 7px;
@@ -644,22 +651,22 @@ div.item_preview{
         max-width: 100%;
     }
 
-.comment_refrence_preview img{
+.comment_reference_preview img{
         object-fit: contain;
         max-width: 100%;
     }
 
 @media (max-width: 800px) {
-    .comment_refrence_preview img {
+    .comment_reference_preview img {
         margin-bottom: 20px;
     }
 }
 
 @media (min-width: 800px) {
-    .comment_refrence_preview img{
+    .comment_reference_preview img{
         float: left;
         margin-right: 30px;
-        max-height: 300px;
+        max-height: 250px;
         max-width: 400px;
     }
 

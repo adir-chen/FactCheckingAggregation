@@ -398,7 +398,7 @@
             try {
                 if (result.title != "" && result.description != "" && result.src != "") {
                     $("#comment_{{ comment.id }}_reference_link").attr("hidden", true);
-                    document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML = "<div class=\"comment_refrence_preview\">\n" +
+                    document.getElementById("comment_{{ comment.id }}_reference_preview").innerHTML = "<div class=\"comment_reference_preview\">\n" +
                         "                        <a target=\"_blank\" href={{ comment.url }}><img src=\"" + result.src + "\"></a>\n" +
                         "                        <div class=\"preview_details\">\n" +
                         "                            <a target=\"_blank\" href=\"{{ comment.url }}\"><h5>" + result.title+ "</h5></a>\n" +
