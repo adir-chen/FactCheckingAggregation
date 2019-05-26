@@ -13,6 +13,7 @@ urlpatterns = [
     path('delete_suggestion_for_merging_claims', views.delete_suggestion_for_merging_claims,
          name='delete_suggestion_for_merging_claims'),
     path('', views.view_home, name='home_page'),
+    path('claims', views.view_claims, name='view_claims'),
     path('claim/<int:claim_id>', views.view_claim, name='view_claim'),
     path('logout', views.logout_view, name='logout_view'),
     path('add_claim_page', views.add_claim_page, name='add_claim_page'),

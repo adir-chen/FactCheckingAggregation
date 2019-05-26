@@ -7,7 +7,7 @@
         <script src='https://www.google.com/recaptcha/api.js' async defer></script>
     </head>
     <div class="page_wrapper">
-        <h1 id="claim_page_title" style="margin-bottom: 30px;">{{ claim.claim }}</h1>
+        <h1 id="claim_page_title" style="margin-bottom: 30px;font-size: 32px; font-family: 'Signika', sans-serif;">{{ claim.claim }}</h1>
         <div id="claim_page_title_wrapper" class="claim_page_title_wrapper">
             <img id="img_src_{{ claim.id }}" src="{{ claim.image_src }}">
             <div class="claim_details">
@@ -18,48 +18,78 @@
                 {% endif %}
                         <span>Authenticity Grade:</span><br>
                         <span class="authenticity_grade">{{ claim.authenticity_grade }}%</span><br>
-                        <span>(correct)</span></div>
-                        <h5>Category: {{ claim.category }}</h5>
+                        <span>(correct)</span>
                     </div>
+                <h5>Category: {{ claim.category }}</h5>
             </div>
-            Published by:<br>
-            <a href="/users/{{ claim.user.id }}" target="_blank"><img id="publisher_img" src="{{ claim.user.get_user_image.image_url }}" style="max-width: 90px; max-height: 50px;"></a><br>
-            <a href="/users/{{ claim.user.id }}" target="_blank">{{ claim.user.username }}</a>
-            <br>
-            <p id="success_msg_{{ claim.id }}_claim_edit" class="action_msg note_msg" hidden>Claim was edited successfully</p>
-            <p id="error_msg_{{ claim.id }}_claim_edit" class="action_msg error_msg" hidden></p>
-            <p id="success_msg_{{ claim.id }}_claim_report_spam" class="action_msg note_msg" hidden>Claim was reported as spam successfully</p>
-            <p id="error_msg_{{ claim.id }}_claim_report_spam" class="action_msg error_msg" hidden></p>
+        </div>
+        <br>
+        <p id="success_msg_{{ claim.id }}_claim_edit" class="action_msg note_msg" hidden>Claim was edited successfully</p>
+        <p id="error_msg_{{ claim.id }}_claim_edit" class="action_msg error_msg" hidden></p>
+        <p id="success_msg_{{ claim.id }}_claim_report_spam" class="action_msg note_msg" hidden>Claim was reported as spam successfully</p>
+        <p id="error_msg_{{ claim.id }}_claim_report_spam" class="action_msg error_msg" hidden></p>
+
         <div id="claim_edit" hidden="hidden" class="claim_edit">
             Claim: <input id="{{ claim.id }}_claim" value="{{ claim.claim }}" type="text" placeholder="{{ claim.claim }}" class="claim_edit"><br>
             Category: <input id="{{ claim.id }}_category" value="{{ claim.category }}" type="text" placeholder="{{ claim.category }}" class="claim_edit"><br>
             Tags (optional, separated by comma. May be followed by space. e.g. tag1,tag2,tag3 or tag1, tag2, tag3): <input id="{{ claim.id }}_tags" value="{{ claim.tags }}" type="text" placeholder="{{ claim.tags }}" class="claim_edit"><br>
             Image Url (optional): <input id="{{ claim.id }}_image_src" value="{{ claim.image_src }}" type="text" placeholder="{{ claim.image_src }}" class="claim_edit">
         </div>
-        <br>
+        {% load static %}
         <div class="buttons_row">
         {% if claim.get_report_link %}
             <a href="{{ claim.get_report_link }}" class="btn btn-info">Link to report</a>
         {% endif %}
         {% if request.user.is_authenticated %}
                 {% if claim.user_id == request.user.id or request.user.is_superuser %}
-                    <button id="{{ claim.id }}_claim_edit" hidden="hidden" type="submit" class="btn btn-info" onclick="edit_claim()">Edit your claim</button>
                     <button id="{{ claim.id }}_claim_cancel" hidden="hidden" type="submit" class="btn btn-info" onclick="edit_claim_cancel()">Cancel</button>
                     <button id="{{ claim.id }}_claim_save" hidden="hidden" type="submit" class="btn btn-info">Save</button>
-                    <button id="{{ claim.id }}_claim_delete" type="submit" class="btn btn-danger">Delete</button>
                 {% endif %}
-                <button id="{{ claim.id }}_claim_report_spam" type="submit" class="btn btn-danger">Report as spam</button>
         {% endif %}
         </div>
-        {% load static %}
-        <a id="{{ claim.id }}_claim_twitter_share" class="btn twitter-share-btn" href="https://twitter.com/intent/tweet?text=http://{{ request.META.HTTP_HOST }}{{ request.path }}%20"
-        target="_blank" data-size="large"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"> Share claim on Twitter</a>
-        <button type="submit" id="{{ claim.id }}_check_tweets_for_claim_in_twitter" class="btn twitter-share-btn" style="margin: 10px 0;"><img src="{% static 'claims/assets/images/twitter_icon.png' %}"> Search for tweets (about this claim) in Twitter</button>
-        {% if 'Android' in request.META.HTTP_USER_AGENT %}
-            <a id="{{ claim.id }}_claim_whatsApp_share" class="btn whatsApp-share-button" href="whatsapp://send?text={{ request.META.HTTP_HOST }}{{ request.path }}%20"
-            data-size="large"><img src="{% static 'claims/assets/images/whatsApp_icon.png' %}"> Share claim on WhatsApp</a>
-        {% endif %}
         <p id="error_msg_{{ claim.id }}_claim_extracting_tweets" class="action_msg error_msg" hidden></p>
+        <div class="claim_btn_row">
+            <div id="publisher" class="claim_btn" style="width: 100px;">
+                Published by:<br>
+                <a href="/users/{{ claim.user.id }}" target="_blank"><img id="publisher_img" src="{{ claim.user.get_user_image.image_url }}" style="max-width: 90px; max-height: 50px;"></a><br>
+                <a href="/users/{{ claim.user.id }}" target="_blank">{{ claim.user.username }}</a>
+            </div>
+            <div style="border-left: 2px solid #c0c0c0; height: 120px; display: inline-block; margin: 20px 30px 20px 10px;"></div>
+            {% if request.user.is_authenticated %}
+                    {% if claim.user_id == request.user.id or request.user.is_superuser %}
+                        <button class="claim_btn" id="{{ claim.id }}_claim_edit" onclick="edit_claim()">
+                            <img src="{% static 'claims/assets/images/edit_claim_btn.png' %}"><br>
+                            Edit Claim
+                        </button>
+                        <button class="claim_btn" id="{{ claim.id }}_claim_delete">
+                            <img src="{% static 'claims/assets/images/delete_claim_btn.png' %}"><br>
+                            Delete Claim
+                        </button>
+                    {% endif %}
+                    <button class="claim_btn" onclick="document.getElementById('new_comment').scrollIntoView()">
+                    <img src="{% static 'claims/assets/images/add_comment_btn.png' %}"><br>
+                    Add Comment
+                    </button>
+                    <button class="claim_btn" id="{{ claim.id }}_claim_report_spam">
+                        <img src="{% static 'claims/assets/images/report_spam_btn.png' %}"><br>
+                        Report Spam
+                    </button>
+            {% endif %}
+            <button class="claim_btn" id="{{ claim.id }}_check_tweets_for_claim_in_twitter">
+                <img src="{% static 'claims/assets/images/twitter_btn.png' %}"><br>
+                Search for tweets
+            </button>
+            <button class="claim_btn" id="{{ claim.id }}_claim_twitter_share" onclick="window.open('https://twitter.com/intent/tweet?text=http://{{ request.META.HTTP_HOST }}{{ request.path }}%20', '_blank');">
+                <img src="{% static 'claims/assets/images/twitter_btn.png' %}"><br>
+                Share on Twitter
+            </button>
+            {% if 'Android' in request.META.HTTP_USER_AGENT %}
+                <button class="claim_btn" id="{{ claim.id }}_claim_whatsApp_share" onclick="location.href='whatsapp://send?text={{ request.META.HTTP_HOST }}{{ request.path }}%20';">
+                    <img src="{% static 'claims/assets/images/whatsapp_btn.png' %}"><br>
+                    Share on whatsApp
+                </button>
+            {% endif %}
+        </div>
         {% if tweets %}
             <hr><br>
             <div id="tweets">
@@ -111,6 +141,7 @@
         <span id="{{ claim.id }}_offset"></span>
         {% if request.user.is_authenticated and request.user.id not in claim.users_commented_ids %}
             <br><hr>
+            <h3 id="new_comment">Add new comment:</h3>
             <h3>Add new comment with your verdict:</h3>
             <h5>(For claim {{ claim.claim }})</h5>
             <p style="width: 100%; margin: 10px;">In order to add your verdict on this claim, you should add your comment attached with reference (website url), title, description, verdict date and verdict- True or False.
@@ -238,6 +269,9 @@
 
         $("#{{ claim.id }}_new_comment_save").click(function(){
             let debug_mode = '{% is_debug_mode %}' === 'True';
+            let label = '';
+            if ($('input[name="{{ claim.id }}_new_comment_label"]:checked').length > 0)
+                label = document.querySelector('input[name="{{ claim.id }}_new_comment_label"]:checked').value;
             if (debug_mode || (!debug_mode && check_recaptcha())){
                 $("#{{ claim.id }}_new_comment_save").attr("disabled", true);
                 $.ajax({
@@ -252,7 +286,7 @@
                         url: $("#{{ claim.id }}_new_comment_url").val(),
                         tags: $("#{{ claim.id }}_new_comment_tags").val(),
                         verdict_date: $("#{{ claim.id }}_new_comment_date").val(),
-                        label: document.querySelector('input[name="{{ claim.id }}_new_comment_label"]:checked').value,
+                        label: label,
                     },
                     success: function () {
                         $('html, body').animate({

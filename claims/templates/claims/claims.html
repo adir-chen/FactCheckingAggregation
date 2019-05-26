@@ -1,0 +1,79 @@
+{% extends 'claims/layout.html' %}
+
+{% block page_content %}
+    <div style="margin: 40px auto; text-align: center">
+        <div class="btn-group btn-group-lg" role="group" aria-label="Sorting Methods">
+            {% if sort_method == 'Most rated' %}
+                <a href="?sort_method=Newest" class="btn btn-secondary btn-info">Newest</a>
+                <a href="?sort_method=Most rated" class="btn btn-secondary">Most rated</a>
+                <a href="?sort_method=Most controversial" class="btn btn-secondary btn-info">Most controversial</a>
+            {% elif sort_method == 'Most controversial' %}
+                <a href="?sort_method=Newest" class="btn btn-secondary btn-info">Newest</a>
+                <a href="?sort_method=Most rated" class="btn btn-secondary btn-info">Most rated</a>
+                <a href="?sort_method=Most controversial" class="btn btn-secondary">Most controversial</a>
+            {% else %}
+                <a href="?sort_method=Newest" class="btn btn-secondary">Newest</a>
+                <a href="?sort_method=Most rated" class="btn btn-secondary btn-info">Most rated</a>
+                <a href="?sort_method=Most controversial" class="btn btn-secondary btn-info">Most controversial</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div id="claim_columns" style="max-width: 1150px; margin: auto;">
+        {% for claim in claims %}
+            {% include 'claims/claimbox.html' with claim=claim %}
+        {% endfor %}
+    </div>
+
+    <div class="pagination">
+        <span class="step-links">
+            {% if claims.has_previous %}
+                <a href="?page=1&sort_method={{ sort_method }}" class="btn btn-info">&laquo; First</a>
+                <a href="?page={{ claims.previous_page_number }}&sort_method={{ sort_method }}" class="btn btn-info">Previous</a>
+            {% endif %}
+
+            <span class="current" style="padding: 10px 20px;">
+                Page {{ claims.number }} of {{ claims.paginator.num_pages }}
+            </span>
+
+            {% if claims.has_next %}
+                <a href="?page={{ claims.next_page_number }}&sort_method={{ sort_method }}" class="btn btn-info">Next</a>
+                <a href="?page={{ claims.paginator.num_pages }}&sort_method={{ sort_method }}" class="btn btn-info">Last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+
+    <script>
+
+        window.onload = function() {
+            let images = document.getElementsByClassName('claim_image');
+            for (let i = 0; i < images.length; i++) {
+                if (!(images[i].complete && images[i].naturalHeight !== 0)) {
+                    images[i].setAttribute('src', "/static/claims/assets/images/claim_default_image.jpg");
+                }
+            }
+        };
+    </script>
+{% endblock %}
+
+
+{% block claim_head_title %}
+    {% if claims.number == 1 %}
+        WhatTheFact?! | Home
+    {%  else %}
+        WhatTheFact?! | Page {{ claims.number }}
+    {%  endif %}
+{% endblock %}
+
+{% block meta_title %}
+    WhatTheFact
+{% endblock %}
+
+{% block meta_description %}
+    Rate the Facts
+{% endblock %}
+
+{% block meta_src %}
+    {% load static %}
+    {% static 'claims/assets/images/site_logo.png' %}
+{% endblock %}

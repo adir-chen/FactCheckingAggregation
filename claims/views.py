@@ -438,16 +438,32 @@ def delete_suggestion_for_merging_claims(request):
 def view_home(request):
     if request.method != "GET":
         raise PermissionDenied
+    newest = Claim.objects.all().order_by('-id')[:4]
+    most_rated = sort_claims_by_ratings()[:4]
+    most_conrtoversial = sort_claims_by_controversial()[:4]
+    return render(request, 'claims/index.html',
+                  {'newest': newest,
+                   'most_rated': most_rated,
+                   'most_controversial': most_conrtoversial})
+
+
+# This function returns the claims page of the website
+@ensure_csrf_cookie
+def view_claims(request):
+    if request.method != "GET":
+        raise PermissionDenied
     from django.core.paginator import Paginator
     claims = Claim.objects.all().order_by('-id')
     sort_method = request.GET.get('sort_method')
     if sort_method == 'Most controversial':
         claims = sort_claims_by_controversial()
-    elif sort_method == 'Most commented':
-        claims = sort_claims_by_comments()
+    elif sort_method == 'Most rated':
+        claims = sort_claims_by_ratings()
+    else:
+        sort_method = 'Newest'
     page = request.GET.get('page')
     paginator = Paginator(claims, 24)
-    return render(request, 'claims/index.html', {'claims': paginator.get_page(page)})
+    return render(request, 'claims/claims.html', {'claims': paginator.get_page(page), 'sort_method': sort_method})
 
 
 # This function sorts the claims in the home page by ratings
@@ -467,7 +483,6 @@ def sort_claims_by_controversial():
 # This function returns a claim page of a given claim id
 # The function returns the claim page in case the claim is found, otherwise Http404
 def view_claim(request, claim_id):
-    # from tweets.views import get_tweets_for_claim
     claim = get_claim_by_id(claim_id)
     if claim is None:
         raise Http404('Error - claim ' + str(claim_id) + ' does not exist')
