@@ -59,20 +59,20 @@
                     {% if claim.user_id == request.user.id or request.user.is_superuser %}
                         <button class="claim_btn" id="{{ claim.id }}_claim_edit" onclick="edit_claim()">
                             <img src="{% static 'claims/assets/images/edit_claim_btn.png' %}"><br>
-                            Edit Claim
+                            Edit claim
                         </button>
                         <button class="claim_btn" id="{{ claim.id }}_claim_delete">
                             <img src="{% static 'claims/assets/images/delete_claim_btn.png' %}"><br>
-                            Delete Claim
+                            Delete claim
                         </button>
                     {% endif %}
                     <button class="claim_btn" onclick="document.getElementById('new_comment').scrollIntoView()">
                     <img src="{% static 'claims/assets/images/add_comment_btn.png' %}"><br>
-                    Add Comment
+                    Add comment
                     </button>
                     <button class="claim_btn" id="{{ claim.id }}_claim_report_spam">
                         <img src="{% static 'claims/assets/images/report_spam_btn.png' %}"><br>
-                        Report Spam
+                        Report spam
                     </button>
             {% endif %}
             <button class="claim_btn" id="{{ claim.id }}_check_tweets_for_claim_in_twitter">

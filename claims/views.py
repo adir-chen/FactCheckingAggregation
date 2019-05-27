@@ -438,13 +438,31 @@ def delete_suggestion_for_merging_claims(request):
 def view_home(request):
     if request.method != "GET":
         raise PermissionDenied
-    newest = Claim.objects.all().order_by('-id')[:4]
-    most_commented = sort_claims_by_comments()[:4]
-    most_controversial = sort_claims_by_controversial()[:4]
+    from django.utils import timezone
+    current_day = timezone.now()
+    delta = current_day - timezone.timedelta(days=14)
+    claims = Claim.objects.filter(timestamp__range=(delta, current_day))
+    newest = get_different_user_claims(claims.order_by('-id'))
+    most_commented = get_different_user_claims(sort_claims_by_comments(claims))
+    most_controversial = get_different_user_claims(sort_claims_by_controversial(claims))
     return render(request, 'claims/index.html',
                   {'newest': newest,
                    'most_commented': most_commented,
                    'most_controversial': most_controversial})
+
+
+def get_different_user_claims(claims):
+    different_user_claims = {}
+    back_up_claims, different_claims = [], []
+    for claim in claims:
+        if claim.user_id not in different_user_claims:
+            different_user_claims[claim.user_id] = claim
+        else:
+            back_up_claims.append(claim)
+    different_claims = list(different_user_claims.values())
+    for i in range(4 - len(different_claims)):
+        different_claims.append(back_up_claims[i])
+    return different_claims
 
 
 # This function returns the claims page of the website
@@ -466,17 +484,21 @@ def view_claims(request):
     return render(request, 'claims/claims.html', {'claims': paginator.get_page(page), 'sort_method': sort_method})
 
 
-# This function sorts the claims in the home page by comments
-def sort_claims_by_comments():
+# This function sorts the claims by num of comments
+def sort_claims_by_comments(claims=None):
     res = {}
-    for claim in Claim.objects.all():
+    if not claims:
+        claims = Claim.objects.all()
+    for claim in claims:
         res[claim] = claim.num_of_true_comments() + claim.num_of_false_comments()
     return sorted(res, key=res.__getitem__, reverse=True)
 
 
-# This function sorts the claims in the home page by controversial
-def sort_claims_by_controversial():
-    res = list(Claim.objects.all())
+# This function sorts the claims by controversial
+def sort_claims_by_controversial(claims=None):
+    if not claims:
+        claims = Claim.objects.all()
+    res = list(claims)
     return sorted(res, key=lambda x: abs(x.authenticity_grade-50))
 
 

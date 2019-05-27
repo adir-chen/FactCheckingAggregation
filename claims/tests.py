@@ -7,7 +7,7 @@ from claims.views import add_claim, check_if_claim_is_valid, check_if_input_form
     post_above_limit, edit_claim, check_claim_new_fields, delete_claim, check_if_delete_claim_is_valid, \
     report_spam, check_if_spam_report_is_valid, download_claims, \
     merging_claims, check_if_suggestion_is_valid, switching_claims, delete_suggestion_for_merging_claims, \
-    view_home, sort_claims_by_comments, sort_claims_by_controversial, \
+    view_home, view_claims, sort_claims_by_comments, sort_claims_by_controversial, \
     view_claim, get_all_claims, get_newest_claims, get_claim_by_id, \
     get_category_for_claim, get_tags_for_claim, logout_view, add_claim_page, \
     export_claims_page, post_claims_tweets_page, merging_claims_page, about_page,\
@@ -974,14 +974,18 @@ class ClaimTests(TestCase):
     def test_view_home_not_valid_request(self):
         self.assertRaises(PermissionDenied, view_home, self.post_request)
 
-    def test_view_home_sort_claims_by_comments(self):
-        self.get_request.GET['sort_method'] = 'Most commented'
-        response = view_home(self.get_request)
+    def test_view_claims_sort_claims_by_newest(self):
+        response = view_claims(self.get_request)
         self.assertTrue(response.status_code == 200)
 
-    def test_view_home_sort_claims_by_controversial(self):
+    def test_view_claims_sort_claims_by_comments(self):
+        self.get_request.GET['sort_method'] = 'Most commented'
+        response = view_claims(self.get_request)
+        self.assertTrue(response.status_code == 200)
+
+    def test_view_claims_sort_claims_by_controversial(self):
         self.get_request.GET['sort_method'] = 'Most controversial'
-        response = view_home(self.get_request)
+        response = view_claims(self.get_request)
         self.assertTrue(response.status_code == 200)
 
     def test_sort_claims_by_comments(self):
