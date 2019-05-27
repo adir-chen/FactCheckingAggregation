@@ -462,7 +462,7 @@ def get_different_user_claims(claims):
     different_claims = list(different_user_claims.values())
     for i in range(4 - len(different_claims)):
         different_claims.append(back_up_claims[i])
-    return different_claims
+    return different_claims[0:4]
 
 
 # This function returns the claims page of the website
