@@ -27,8 +27,8 @@
             </div>
             <hr>
             <div style="padding: 20px 40px 20px 20px;">
-                <p id="success_msg_add_new_claim" class="action_msg note_msg" hidden>Your claim has been added successfully.<br>
-                    If you want to edit your claim\comment you will be able to do so during the next 10 minutes.</p>
+{#                <p id="success_msg_add_new_claim" class="action_msg note_msg" hidden>Your claim has been added successfully.<br>#}
+{#                    If you want to edit your claim\comment you will be able to do so during the next 10 minutes.</p>#}
                 <p id="error_msg_add_new_claim" class="action_msg error_msg" hidden> </p>
                 <h5>Claim Details:</h5>
                 <p style="width: 100%; margin: 10px;">Claim:</p>
@@ -71,53 +71,50 @@
         </div>
     </div>
     <script>
-        if(localStorage.getItem("success_msg_add_new_claim")){
-            $("#success_msg_add_new_claim").attr("hidden", false);
-            localStorage.clear();
-        }
-
         function hide_all_msgs(){
-            $("#success_msg_add_new_claim").attr("hidden", true);
             $("#error_msg_add_new_claim").attr("hidden", true);
         }
 
         $("#submit_claim").click(function(e){
             let debug_mode = '{% is_debug_mode %}' == 'True';
-            if (debug_mode || (!debug_mode && check_recaptcha())){
-                e.preventDefault();
-                $.ajax({
-                    type: 'POST',
-                    url: "{% url 'claims:add_claim' %}",
-                    headers: { "X-CSRFToken": getCookie('csrftoken') },
-                    data: {
-                        g_recaptcha_response: $("#g-recaptcha-response").val(),
-                        claim: $("#claim").val(),
-                        category: $("#category").val(),
-                        tags: $("#tags").val(),
-                        image_src: $("#image_src").val(),
-                        add_comment: document.getElementById('add_comment').checked,
-                        title: $("#title").val(),
-                        description: $("#description").val(),
-                        url: $("#url").val(),
-                        verdict_date: $("#verdict_date").val(),
-                        label: $(".label:checked").val()
-                    },
-                    success: function (request) {
-                        localStorage.setItem("success_msg_add_new_claim", true);
-                        $("html, body").animate({ scrollTop: 200 }, 0);
-                        window.location.reload();
-                    },
-                    error: function (request) {
-                        hide_all_msgs();
-                        grecaptcha.reset();
-                        let err = request.responseJSON;
-                        document.getElementById("error_msg_add_new_claim").innerHTML =
-                        'Error: <br>' + err;
-                        $("#error_msg_add_new_claim").attr("hidden", false);
-                        $("html, body").animate({ scrollTop: 200 }, 0);
-                    }
-                });
+            if (!(debug_mode || (!debug_mode && check_recaptcha()))) {
+                return;
             }
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'claims:add_claim' %}",
+                headers: {"X-CSRFToken": getCookie('csrftoken')},
+                data: {
+                    g_recaptcha_response: $("#g-recaptcha-response").val(),
+                    claim: $("#claim").val(),
+                    category: $("#category").val(),
+                    tags: $("#tags").val(),
+                    image_src: $("#image_src").val(),
+                    add_comment: document.getElementById('add_comment').checked,
+                    title: $("#title").val(),
+                    description: $("#description").val(),
+                    url: $("#url").val(),
+                    verdict_date: $("#verdict_date").val(),
+                    label: $(".label:checked").val()
+                },
+                success: function (request) {
+                    console.log($(request).filter('title').text());
+                    let claim_id = $(request).filter('title').text().split('|')[1].trim();
+                    localStorage.setItem("success_msg_add_new_claim", true);
+                    {#location.href = "http://127.0.0.1:8000/claim/" + claim_id;#}
+                    location.href = "https://wtfact.ise.bgu.ac.il/claim/" + claim_id;
+                },
+                error: function (request) {
+                    hide_all_msgs();
+                    grecaptcha.reset();
+                    let err = request.responseJSON;
+                    document.getElementById("error_msg_add_new_claim").innerHTML =
+                        'Error: <br>' + err;
+                    $("#error_msg_add_new_claim").attr("hidden", false);
+                    $("html, body").animate({scrollTop: 200}, 0);
+                }
+            });
         });
 
         function enable_comment(){

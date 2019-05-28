@@ -100,7 +100,7 @@ class SystemTesting(TestCase):
         self.assertTrue(new_claim.category == self.new_claim_with_comment_details['category'])
         self.assertTrue(new_claim.tags == ', '.join(self.new_claim_with_comment_details['tags'].split()))
         self.assertTrue(new_claim.image_src == self.new_claim_with_comment_details['image_src'])
-        self.assertTrue(new_claim.authenticity_grade == 0)
+        self.assertTrue(new_claim.authenticity_grade == 30)
         self.num_of_saved_claims += 1
 
         self.assertTrue(new_comment.claim == new_claim)
@@ -125,7 +125,7 @@ class SystemTesting(TestCase):
         self.assertTrue(new_claim_after_edit.category == self.update_claim_details['category'])
         self.assertTrue(new_claim_after_edit.tags == ', '.join(self.update_claim_details['tags'].split()))
         self.assertTrue(new_claim_after_edit.image_src == self.update_claim_details['image_src'])
-        self.assertTrue(new_claim_after_edit.authenticity_grade == 0)
+        self.assertTrue(new_claim_after_edit.authenticity_grade == 30)
 
         self.update_claim_details_copy = self.update_claim_details.copy()
         del self.update_claim_details['claim_id']
@@ -191,7 +191,7 @@ class SystemTesting(TestCase):
         self.assertTrue(new_claim.category == self.new_claim_details['category'])
         self.assertTrue(new_claim.tags == ', '.join(''.split()))
         self.assertTrue(new_claim.image_src == self.new_claim_details['image_src'])
-        self.assertTrue(new_claim.authenticity_grade == 0)
+        self.assertTrue(new_claim.authenticity_grade == 50)
         self.num_of_saved_claims += 1
 
         self.new_comment_details['claim_id'] = str(self.num_of_saved_claims)

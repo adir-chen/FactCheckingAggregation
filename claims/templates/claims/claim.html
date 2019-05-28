@@ -232,6 +232,11 @@
             $("#success_msg_{{ claim.id }}_claim_report_spam").attr("hidden", false);
             localStorage.clear();
         }
+        else if(localStorage.getItem("success_msg_add_new_claim")){
+            alert('Your claim has been added successfully.\n' +
+                 'If you want to edit your claim\\comment you will be able to do so during the next 10 minutes.');
+            localStorage.clear();
+        }
 
         function hide_all_msgs(){
             $("#success_msg_{{ claim.id }}_claim_edit").attr("hidden", true);

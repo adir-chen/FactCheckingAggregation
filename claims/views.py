@@ -460,8 +460,13 @@ def get_different_user_claims(claims):
         else:
             back_up_claims.append(claim)
     different_claims = list(different_user_claims.values())
-    for i in range(4 - len(different_claims)):
-        different_claims.append(back_up_claims[i])
+    for i in range(4 - min(4, len(different_claims))):
+        if len(back_up_claims) > i:
+            different_claims.append(back_up_claims[i])
+        else:
+            break
+    if len(different_claims) <= 4:
+        return different_claims
     return different_claims[0:4]
 
 

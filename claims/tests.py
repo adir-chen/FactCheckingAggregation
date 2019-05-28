@@ -7,7 +7,7 @@ from claims.views import add_claim, check_if_claim_is_valid, check_if_input_form
     post_above_limit, edit_claim, check_claim_new_fields, delete_claim, check_if_delete_claim_is_valid, \
     report_spam, check_if_spam_report_is_valid, download_claims, \
     merging_claims, check_if_suggestion_is_valid, switching_claims, delete_suggestion_for_merging_claims, \
-    view_home, view_claims, sort_claims_by_comments, sort_claims_by_controversial, \
+    view_home, get_different_user_claims, view_claims, sort_claims_by_comments, sort_claims_by_controversial, \
     view_claim, get_all_claims, get_newest_claims, get_claim_by_id, \
     get_category_for_claim, get_tags_for_claim, logout_view, add_claim_page, \
     export_claims_page, post_claims_tweets_page, merging_claims_page, about_page,\
@@ -973,6 +973,36 @@ class ClaimTests(TestCase):
 
     def test_view_home_not_valid_request(self):
         self.assertRaises(PermissionDenied, view_home, self.post_request)
+
+    def test_get_different_user_claims(self):
+        result = get_different_user_claims(Claim.objects.all())
+        self.assertTrue(len(result) == 3)
+
+    def test_get_different_user_claims_many_claims(self):
+        user_2 = User(username='User2', email='user3@gmail.com')
+        user_2.save()
+        claim = Claim(user_id=user_2.id,
+                      claim='claim',
+                      category='category',
+                      tags='tag',
+                      authenticity_grade=50,
+                      image_src='image')
+        claim.save()
+        user_3 = User(username='User3', email='user3@gmail.com')
+        user_3.save()
+        claim = Claim(user_id=user_3.id,
+                      claim='claim',
+                      category='category',
+                      tags='tag',
+                      authenticity_grade=50,
+                      image_src='image')
+        claim.save()
+        result = get_different_user_claims(Claim.objects.all().order_by('-id'))
+        self.assertTrue(len(result) == 4)
+        self.assertTrue(result[0].user_id == user_3.id)
+        self.assertTrue(result[1].user_id == user_2.id)
+        self.assertTrue(result[2].user_id == self.user.id)
+        self.assertTrue(result[3].user_id == self.user.id)
 
     def test_view_claims_sort_claims_by_newest(self):
         response = view_claims(self.get_request)
