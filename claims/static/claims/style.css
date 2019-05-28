@@ -6,11 +6,13 @@ body {
     HEADER
 ################*/
 
-#sticky_header {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 10;
+@media (min-width: 800px) {
+    #sticky_header {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 10;
+    }
 }
 
 #header{
@@ -308,13 +310,9 @@ div.page_box{
     margin: 10px;
 }
 
-#page_content {
-    margin-top: 320px;
-}
-
-@media (max-width: 800px) {
-    #page_content{
-        margin-top: 440px;
+@media (min-width: 800px) {
+    #page_content {
+        margin-top: 320px;
     }
 }
 
