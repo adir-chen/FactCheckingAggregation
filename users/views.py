@@ -377,7 +377,7 @@ def add_true_label_to_scraper(request):
     if scraper.true_labels:
         true_labels = scraper.true_labels + ','
     Scrapers.objects.filter(id=scraper.id).update(true_labels=true_labels +
-                                                  scraper_info['scraper_label'].lower().strip())
+                                                  scraper_info['scraper_label'].lower().strip().lower().strip())
     update_scrapers_comments_verdicts(scraper.scraper.id)
     save_log_message(request.user.id, request.user.username,
                      'Adding a new label (T) for scraper - ' + scraper.scraper_name)
@@ -533,9 +533,9 @@ def update_scrapers_comments_verdicts(scraper_id):
     scraper = Scrapers.objects.filter(scraper=User.objects.filter(id=scraper_id).first()).first()
     for comment in Comment.objects.filter(user=scraper_id):
         label = comment.label.lower().strip()
-        if label in scraper.true_labels:
+        if label in scraper.true_labels.lower().strip():
             Comment.objects.filter(id=comment.id).update(system_label='True')
-        elif label in scraper.false_labels:
+        elif label in scraper.false_labels.lower().strip():
             Comment.objects.filter(id=comment.id).update(system_label='False')
         else:
             Comment.objects.filter(id=comment.id).update(system_label='Unknown')
