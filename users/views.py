@@ -377,7 +377,7 @@ def add_true_label_to_scraper(request):
     if scraper.true_labels:
         true_labels = scraper.true_labels + ','
     Scrapers.objects.filter(id=scraper.id).update(true_labels=true_labels +
-                                                  scraper_info['scraper_label'].lower().strip().lower().strip())
+                                                  scraper_info['scraper_label'].lower().strip())
     update_scrapers_comments_verdicts(scraper.scraper.id)
     save_log_message(request.user.id, request.user.username,
                      'Adding a new label (T) for scraper - ' + scraper.scraper_name)
@@ -480,10 +480,10 @@ def check_if_scraper_new_label_is_valid(scraper_info, add_label):
     elif len(User.objects.filter(id=scraper_info['scraper_id'])) == 0:
         err += 'Scraper with id ' + str(scraper_info['scraper_id']) + ' does not exist'
     elif add_label and any(scraper_info['scraper_label'].lower() == label
-                           for label in Scrapers.objects.filter(scraper=User.objects.filter(id=scraper_info['scraper_id']).first()).first().true_labels.split(',')):
+                           for label in Scrapers.objects.filter(scraper=User.objects.filter(id=scraper_info['scraper_id']).first()).first().true_labels.lower().split(',')):
         err += 'Label ' + scraper_info['scraper_label'] + ' already belongs to scraper\'s true labels'
     elif not add_label and any(scraper_info['scraper_label'].lower() == label
-                               for label in Scrapers.objects.filter(scraper=User.objects.filter(id=scraper_info['scraper_id']).first()).first().false_labels.split(',')):
+                               for label in Scrapers.objects.filter(scraper=User.objects.filter(id=scraper_info['scraper_id']).first()).first().false_labels.lower().split(',')):
         err += 'Label ' + scraper_info['scraper_label'] + ' already belongs to scraper\'s false labels'
     if len(err) > 0:
         return False, err
@@ -512,12 +512,12 @@ def check_if_scraper_labels_already_exist(scraper_id, labels_list, label):
     err = ''
     if label:  # true label case
         scraper_true_labels_list = Scrapers.objects.filter(
-            scraper=User.objects.filter(id=scraper_id).first()).first().true_labels.split(',')
+            scraper=User.objects.filter(id=scraper_id).first()).first().true_labels.lower().split(',')
         if not all(true_label in scraper_true_labels_list for true_label in labels_list):
             err += 'Label(s) does not(do not) belong to scraper\'s true labels'
     else:  # false label case
         scraper_false_labels_list = Scrapers.objects.filter(
-            scraper=User.objects.filter(id=scraper_id).first()).first().false_labels.split(',')
+            scraper=User.objects.filter(id=scraper_id).first()).first().false_labels.lower().split(',')
         if not all(false_label in scraper_false_labels_list for false_label in labels_list):
             err += 'Label(s) does not(do not) belong to scraper\'s false labels'
     if len(err) > 0:
