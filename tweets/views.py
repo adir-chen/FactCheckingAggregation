@@ -199,6 +199,7 @@ def download_tweets_for_claims(request):
     return view_home(return_get_request_to_user(request.user))
 
 
+# This function checks for latest tweets relating to a given claim
 def check_tweets_for_claim_in_twitter(request):
     import tweepy
     from tweepy import OAuthHandler
