@@ -34,6 +34,18 @@ def check_duplicate_log_for_user(user_id, action):
     return len(Logger.objects.filter(user_id=user_id, action__icontains=action)) > 0
 
 
+# This function checks for deleted tweet link
+def check_for_deleted_tweet(tweet_link):
+    tweets_logs = Logger.objects.filter(action__icontains='Deleting a tweet with id',)
+    for tweet_log in tweets_logs:
+        try:
+            if tweet_log.action.split('. Link: ')[1] == tweet_link:
+                return True
+        except:
+            pass
+    return False
+
+
 # This function returns a csv which contains all the details of the logger in the website
 def export_to_csv(request):
     if not request.user.is_superuser or request.method != "POST":

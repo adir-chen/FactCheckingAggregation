@@ -39,7 +39,7 @@
             <p id="success_msg_{{ comment.id }}_comment_vote" class="action_msg note_msg" hidden>Your vote has been accepted successfully</p>
             <p id="error_msg_{{ comment.id }}_comment_vote" class="action_msg error_msg" hidden></p>
             <div class="comment_voting_area">
-                <span style="font-size: 12px; color: #C0C0C0;">Agree</span><br>
+                <span style="font-size: 12px; color: #C0C0C0;">Good evidence</span><br>
                 {% if request.user.is_authenticated %}
                     <button id="{{ comment.id }}_arrow_up" class="arrow_up">▲</button>
                 {% else %}
@@ -53,18 +53,18 @@
                 {% else %}
                     <button id="{{ comment.id }}_arrow_down" class="arrow_down" disabled="disabled" title="Sign in and vote" style="color: #dddddd;">▼</button>
                 {% endif %}
-                <span style="font-size: 12px; color: #C0C0C0;">Disagree</span>
+                <span style="font-size: 12px; color: #C0C0C0;">Bad evidence</span>
             </div>
         </div>
         <div id="comment_content_{{ comment.id }}_edit" hidden="hidden" class="comment_content_edit">
-            Reference: <input id="comment_{{ comment.id }}_reference" value="{{ comment.url }}" type="text" placeholder="{{ comment.url }}"><br>
+            Evidence (url): <input id="comment_{{ comment.id }}_reference" value="{{ comment.url }}" type="text" placeholder="{{ comment.url }}"><br>
             Title: <input id="comment_{{ comment.id }}_title" value="{{ comment.title }}" type="text" placeholder="{{ comment.title }}"><br>
-            Description (describe how the reference supports the label you have chosen- True/False/Unknown):<br>
+            Description (describe how the evidence supports the label you have chosen- True/False/Unknown):<br>
             <textarea id="comment_{{ comment.id }}_description" placeholder="{{ comment.description }}">{{ comment.description }}</textarea>
         </div>
         <div class="comment_footer">
             <div id="comment_{{ comment.id }}_footer">
-                Reference:
+                Evidence:
                 <a id="comment_{{ comment.id }}_reference_link" target="_blank" href="{{ comment.url }}">link to source</a><br>
                 <div id="comment_{{ comment.id }}_reference_preview" hidden="hidden">
 
