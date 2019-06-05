@@ -642,13 +642,13 @@ def check_for_similar_claims(claim):
             Merging_Suggestions.objects.create(claim=c, claim_to_merge=claim)
 
 
-def update_tags_for_all_claims_and_comments(request):
-    for claim in Claim.objects.all():
-        if claim.tags:
-            Claim.objects.filter(id=claim.id).update(tags=','.join(
-                [tag for tag in claim.tags.split(',') if len(tag) > 1]))
-    for comment in Comment.objects.all():
-        if comment.tags:
-            Comment.objects.filter(id=comment.id).update(tags=','.join(
-                [tag for tag in comment.tags.split(',') if len(tag) > 1]))
-    return view_home(request)
+# def update_tags_for_all_claims_and_comments(request):
+#     for claim in Claim.objects.all():
+#         if claim.tags:
+#             Claim.objects.filter(id=claim.id).update(tags=','.join(
+#                 [tag for tag in claim.tags.split(',') if len(tag) > 1]))
+#     for comment in Comment.objects.all():
+#         if comment.tags:
+#             Comment.objects.filter(id=comment.id).update(tags=','.join(
+#                 [tag for tag in comment.tags.split(',') if len(tag) > 1]))
+#     return view_home(request)
