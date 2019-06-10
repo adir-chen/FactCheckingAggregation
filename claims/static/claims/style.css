@@ -6,6 +6,11 @@ body {
     HEADER
 ################*/
 
+#sticky_header_wrapper {
+    width: 100%;
+    border: 5px solid red;
+}
+
 @media (min-width: 800px) {
     #sticky_header {
         position: fixed;
@@ -17,7 +22,6 @@ body {
     #sticky_header_wrapper {
         position: fixed;
         top: 0;
-        width: 100%;
         z-index: 10;
     }
 }
