@@ -5,8 +5,8 @@ from django.core.exceptions import PermissionDenied
 from django.test import TestCase
 from django.utils.datastructures import MultiValueDict
 from logger.models import Logger
-from logger.views import view_log, save_log_message, check_duplicate_log_for_user, export_to_csv, \
-     check_if_csv_fields_are_valid, check_if_actions_list_valid, create_df_for_logger
+from logger.views import view_log, save_log_message, check_duplicate_log_for_user, check_for_deleted_tweet,\
+    export_to_csv, check_if_csv_fields_are_valid, check_if_actions_list_valid, create_df_for_logger
 import random
 import datetime
 
@@ -106,6 +106,33 @@ class LoggerTest(TestCase):
         user_id = random.randint(1, 10)
         save_log_message(user_id, 'user_1', 'Adding new claim')
         self.assertTrue(check_duplicate_log_for_user(user_id, 'Adding new claim'))
+
+    def test_check_for_deleted_tweet(self):
+        random_num = random.randint(1, 10)
+        log = Logger(date=timezone.now() - timezone.timedelta(days=10),
+                     user_id=self.user_1.id,
+                     username=self.user_1.username,
+                     action='Deleting a tweet with id ' + str(random_num) + '. Link: tweet_link',
+                     result=True)
+        log.save()
+        self.assertTrue(check_for_deleted_tweet('tweet_link'))
+
+    def test_check_for_deleted_tweet_invalid(self):
+        random_num = random.randint(1, 10)
+        log = Logger(date=timezone.now() - timezone.timedelta(days=random.randint(1, 10)),
+                     user_id=self.user_1.id,
+                     username=self.user_1.username,
+                     action='Deleting a tweet with id ' + str(random_num) + '. Link: tweet_link',
+                     result=True)
+        log.save()
+        self.assertFalse(check_for_deleted_tweet('other_tweet_link'))
+        log_2 = Logger(date=timezone.now() - timezone.timedelta(days=random.randint(1, 10)),
+                       user_id=self.user_1.id,
+                       username=self.user_1.username,
+                       action='Deleting a tweet with id ' + str(random_num + 1),
+                       result=True)
+        log_2.save()
+        self.assertFalse(check_for_deleted_tweet('other_tweet_link'))
 
     def test_export_to_csv(self):
         admin = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')

@@ -1,9 +1,18 @@
 {% extends 'claims/layout.html' %}
 
 {% block page_content %}
+
+    <div style="margin: 40px auto; text-align: center">
+        <div class="btn-group btn-group-lg" role="group" aria-label="Sorting Methods">
+                <a href="#newest_claims" class="btn btn-secondary btn-info">Newest</a>
+                <a href="#most_commented_claims" class="btn btn-secondary btn-info">Most commented</a>
+                <a href="#most_controversial_claims" class="btn btn-secondary btn-info">Most controversial</a>
+        </div>
+    </div>
+
     <div class="headlines">
         <div style="max-width: 1150px; margin: 20px auto; overflow: auto;">
-            <h3 style="float: left;">Newest claims</h3>
+            <h3 id="newest_claims" style="float: left;">Newest claims</h3>
             <button class="btn btn-info" style="float: right;" onclick="location.href='/claims?sort_method=Newest'">View all <i class="fa fa-angle-double-right"></i></button>
         </div>
         <div id="claim_large_columns" style="max-width: 1150px; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
@@ -15,7 +24,7 @@
 
     <div class="headlines">
         <div style="max-width: 1150px; margin: 20px auto; overflow: auto;">
-            <h3 style="float: left;">Most commented claims</h3>
+            <h3 id="most_commented_claims" style="float: left;">Most commented claims</h3>
             <button class="btn btn-info" style="float: right;" onclick="location.href='/claims?sort_method=Most commented'">View all <i class="fa fa-angle-double-right"></i></button>
         </div>
         <div id="claim_large_columns" style="max-width: 1150px; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">
@@ -27,7 +36,7 @@
 
     <div class="headlines">
         <div style="max-width: 1150px; margin: 20px auto; overflow: auto;">
-            <h3 style="float: left;">Most controversial claims</h3>
+            <h3 id="most_controversial_claims" style="float: left;">Most controversial claims</h3>
             <button class="btn btn-info" style="float: right;" onclick="location.href='/claims?sort_method=Most controversial'">View all <i class="fa fa-angle-double-right"></i></button>
         </div>
         <div id="claim_large_columns" style="max-width: 1150px; padding: 20px; border-radius: 10px; background: #aabfd6;margin: 0 auto;">

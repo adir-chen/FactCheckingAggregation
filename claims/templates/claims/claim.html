@@ -18,7 +18,6 @@
                 {% endif %}
                         <span>Authenticity Grade:</span><br>
                         <span class="authenticity_grade">{{ claim.authenticity_grade }}%</span><br>
-                        <span>(correct)</span>
                     </div>
                 <h5>Category: {{ claim.category }}</h5>
             </div>
@@ -33,7 +32,7 @@
             Claim: <input id="{{ claim.id }}_claim" value="{{ claim.claim }}" type="text" placeholder="{{ claim.claim }}" class="claim_edit"><br>
             Category: <input id="{{ claim.id }}_category" value="{{ claim.category }}" type="text" placeholder="{{ claim.category }}" class="claim_edit"><br>
             Tags (optional, separated by comma. May be followed by space. e.g. tag1,tag2,tag3 or tag1, tag2, tag3): <input id="{{ claim.id }}_tags" value="{{ claim.tags }}" type="text" placeholder="{{ claim.tags }}" class="claim_edit"><br>
-            Image Url (optional): <input id="{{ claim.id }}_image_src" value="{{ claim.image_src }}" type="text" placeholder="{{ claim.image_src }}" class="claim_edit">
+            Image url (optional): <input id="{{ claim.id }}_image_src" value="{{ claim.image_src }}" type="text" placeholder="{{ claim.image_src }}" class="claim_edit">
         </div>
         {% load static %}
         <div class="buttons_row">
@@ -143,7 +142,7 @@
             <br><hr>
             <h3 id="new_comment">Add new comment with your verdict:</h3>
             <h5>(For claim {{ claim.claim }})</h5>
-            <p style="width: 100%; margin: 10px;">In order to add your verdict on this claim, you should add your comment attached with reference (website url), title, description, verdict date and verdict- True or False.
+            <p style="width: 100%; margin: 10px;">In order to add your verdict on this claim, you should add your comment attached with evidence (website url), title, description, verdict date and verdict- True or False.
                 In case you have more details on the claim, but you couldn't decide its verdict, set the verdict as Unknown.</p>
             <div class="comment_box" id="add_new_comment_box">
                 <div class="comment_header">
@@ -170,10 +169,10 @@
                 <hr>
                 <div class="comment_content_edit">
                     <p id="error_msg_{{ claim.id }}_new_comment" class="action_msg error_msg" hidden></p>
-                    Reference:
+                    Evidence (url):
                     <input id="{{ claim.id }}_new_comment_url" type="text"><br>
                     Title: <input id="{{ claim.id }}_new_comment_title" type="text"><br>
-                    Description (describe how the reference supports the label you have chosen- True/False/Unknown):<br>
+                    Description (describe how the evidence supports the verdict you have chosen- True/False/Unknown):<br>
                     <textarea id="{{ claim.id }}_new_comment_description"></textarea>
                 </div>
                 <div class="comment_footer">

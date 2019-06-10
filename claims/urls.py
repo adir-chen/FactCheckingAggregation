@@ -21,4 +21,6 @@ urlpatterns = [
     path('post_claims_tweets_page', views.post_claims_tweets_page, name='post_claims_tweets_page'),
     path('merging_claims_page', views.merging_claims_page, name='merging_claims_page'),
     path('about', views.about_page, name='about'),
+    # path('update_tags_for_all_claims_and_comments', views.update_tags_for_all_claims_and_comments,
+    #      name='update_tags_for_all_claims_and_comments'),
 ]

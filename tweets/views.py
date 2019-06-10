@@ -5,7 +5,7 @@ from django.shortcuts import render, get_object_or_404
 from claims.models import Claim
 from claims.views import view_home, return_get_request_to_user
 from comments.views import is_valid_url
-from logger.views import save_log_message
+from logger.views import save_log_message, check_for_deleted_tweet
 from tweets.models import Tweet
 from datetime import datetime
 from django.utils import timezone
@@ -59,10 +59,11 @@ def delete_tweet(request):
                          'Deleting a tweet. Error: ' + err_msg)
         return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
     tweet = get_object_or_404(Tweet, id=request.POST.get('tweet_id'))
+    tweet_link = tweet.tweet_link
     claim_id = tweet.claim_id
     Tweet.objects.filter(id=request.POST.get('tweet_id')).delete()
     save_log_message(request.user.id, request.user.username,
-                     'Deleting a tweet with id ' + str(request.POST.get('tweet_id')), True)
+                     'Deleting a tweet with id ' + str(request.POST.get('tweet_id')) + '. Link: ' + tweet_link, True)
     return view_claim(return_get_request_to_user(request.user), claim_id)
 
 
@@ -231,7 +232,7 @@ def check_tweets_for_claim_in_twitter(request):
             if len(tweets) > 0:
                 for tweet in tweets:
                     tweet_link = 'https://twitter.com/{}/status/{}'.format(tweet.user.screen_name, tweet.id)
-                    if len(Tweet.objects.filter(tweet_link=tweet_link)) == 0:
+                    if len(Tweet.objects.filter(tweet_link=tweet_link)) == 0 or not check_for_deleted_tweet(tweet_link):
                         build_tweet(claim.id, tweet_link)
                 save_log_message(request.user.id, request.user.username,
                                  'Extracting tweets for a claim with id ' + str(claim.id), True)
