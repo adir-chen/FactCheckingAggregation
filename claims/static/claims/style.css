@@ -6,7 +6,7 @@ body {
     HEADER
 ################*/
 
-#sticky_header_wrapper {
+#sticky_header_2 {
     width: 100%;
     border: 5px solid red;
 }
@@ -39,7 +39,6 @@ body {
         display: grid;
         grid-template-columns: 400px auto;
         grid-template-areas: 'site-logo header-tools';
-
     }
 
     .site-logo img{
