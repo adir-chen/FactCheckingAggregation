@@ -46,7 +46,7 @@
                     <button id="{{ comment.id }}_arrow_up" class="arrow_up" disabled="disabled" title="Sign in and vote" style="color: #dddddd;">▲</button>
                 {% endif %}
                 <br>
-                <span id="{{ comment.id }}_voteCount" class="vote_count">Votes: {{ comment.up_votes.count|sub:comment.down_votes.count }}</span>
+                Votes: <span id="{{ comment.id }}_voteCount" class="vote_count">{{ comment.up_votes.count|sub:comment.down_votes.count }}</span>
                 <br>
                 {% if request.user.is_authenticated %}
                     <button id="{{ comment.id }}_arrow_down" class="arrow_down">▼</button>
