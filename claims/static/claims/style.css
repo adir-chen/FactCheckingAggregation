@@ -13,6 +13,13 @@ body {
         width: 100%;
         z-index: 10;
     }
+
+    #sticky_header_wrapper {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 10;
+    }
 }
 
 #header{
