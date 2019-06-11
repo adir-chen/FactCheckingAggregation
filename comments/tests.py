@@ -1173,10 +1173,6 @@ class CommentTests(TestCase):
         del self.csv_fields['fields_to_export[]']
         self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
 
-    def test_check_if_csv_fields_are_valid_missing_scrapers_ids(self):
-        del self.csv_fields['scrapers_ids[]']
-        self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])
-
     def test_check_if_csv_fields_are_valid_missing_verdict_date_start(self):
         del self.csv_fields['verdict_date_start']
         self.assertFalse(check_if_csv_fields_are_valid(self.csv_fields)[0])

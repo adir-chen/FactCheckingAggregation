@@ -416,10 +416,10 @@ def check_if_csv_fields_are_valid(csv_fields):
     err = ''
     if 'regular_users' not in csv_fields:
         csv_fields['regular_users'] = False
+    if 'scrapers_ids[]' not in csv_fields:
+        csv_fields['scrapers_ids[]'] = []
     if 'fields_to_export[]' not in csv_fields:
         err += 'Missing values for fields'
-    elif 'scrapers_ids[]' not in csv_fields:
-        err += 'Missing value for scrapers_ids'
     elif 'verdict_date_start' not in csv_fields:
         err += 'Missing value for verdict date start'
     elif 'verdict_date_end' not in csv_fields:
