@@ -465,7 +465,9 @@ def get_different_user_claims(claims):
             different_claims.append(back_up_claims[i])
         else:
             break
-    return different_claims
+    if len(different_claims) < 4:
+        return different_claims
+    return different_claims[0:4]
 
 
 # This function returns the claims page of the website
