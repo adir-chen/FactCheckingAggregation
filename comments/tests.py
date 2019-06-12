@@ -1,6 +1,7 @@
 from django.http import HttpRequest, QueryDict
 from django.core.exceptions import PermissionDenied
-from django.test import TestCase, override_settings
+from django.test import TestCase
+from django.test.utils import override_settings
 from django.utils.datastructures import MultiValueDict
 from claims.models import Claim
 from comments.models import Comment
@@ -17,7 +18,6 @@ import string
 import random
 
 
-@override_settings(DEBUG=False)
 class CommentTests(TestCase):
     def setUp(self):
         self.user_1 = User(username="User1", email='user1@gmail.com')
@@ -202,6 +202,24 @@ class CommentTests(TestCase):
         new_comment = Comment.objects.all().order_by('-id').first()
         self.assertTrue(new_comment.id == self.num_of_saved_comments + 1)
         self.assertTrue(new_comment.claim_id == self.comment_3.claim_id)
+        self.assertTrue(new_comment.user_id == self.comment_3.user_id)
+        self.assertTrue(new_comment.title == self.comment_3.title)
+        self.assertTrue(new_comment.description == self.comment_3.description)
+        self.assertTrue(new_comment.url == self.comment_3.url)
+        self.assertTrue(new_comment.verdict_date == self.comment_3.verdict_date)
+        self.assertTrue(new_comment.label == self.comment_3.label)
+
+    @override_settings(DEBUG=False)
+    def test_add_comment_by_user_2_on_user_1_claim(self):
+        len_comments = len(Comment.objects.filter(claim_id=self.claim_1.id))
+        self.new_comment_details_user_2['claim_id'] = self.claim_1.id
+        self.post_request.POST = self.new_comment_details_user_2
+        self.post_request.user = self.user_2
+        self.assertTrue(add_comment(self.post_request).status_code == 200)
+        self.assertTrue(len(Comment.objects.filter(claim_id=self.claim_1.id)) == len_comments + 1)
+        new_comment = Comment.objects.all().order_by('-id').first()
+        self.assertTrue(new_comment.id == self.num_of_saved_comments + 1)
+        self.assertTrue(new_comment.claim_id == self.claim_1.id)
         self.assertTrue(new_comment.user_id == self.comment_3.user_id)
         self.assertTrue(new_comment.title == self.comment_3.title)
         self.assertTrue(new_comment.description == self.comment_3.description)

@@ -284,7 +284,7 @@ class ClaimTests(TestCase):
         self.new_claim_details['is_superuser'] = True
         self.assertTrue(check_if_claim_is_valid(self.new_claim_details)[0])
 
-    def test_check_if_claim_is_valid_invalid_format_for_tags(self):
+    def test_check_if_claim_is_valid_incorrect_format_for_tags(self):
         invalid_input = 'tag1,'
         for i in range(random.randint(1, 10)):
             invalid_input += ' '
@@ -618,6 +618,17 @@ class ClaimTests(TestCase):
         self.update_claim_details['tags'] = '输入英语以外的语言 输入英语以外的语言'
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
         self.update_claim_details['is_superuser'] = True
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+
+    def test_check_claim_new_fields_incorrect_format_for_tags(self):
+        incorrect_format = 'tag1,tag2,'
+        self.update_claim_details['user_id'] = self.user.id
+        self.update_claim_details['is_superuser'] = False
+        self.update_claim_details['tags'] = incorrect_format
+        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        incorrect_format = ' tag1,tag2'
+        self.update_claim_details['is_superuser'] = True
+        self.update_claim_details['tags'] = incorrect_format
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_delete_claim_valid_claim(self):
