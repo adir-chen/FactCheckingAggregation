@@ -252,6 +252,14 @@ class ClaimTests(TestCase):
         self.new_claim_details['user_id'] = self.user.id
         self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
 
+    def test_check_if_claim_is_valid_missing_captcha(self):
+        self.new_claim_details['user_id'] = self.user.id
+        self.new_claim_details['is_superuser'] = False
+        del self.new_claim_details['g_recaptcha_response']
+        self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
+        self.new_claim_details['is_superuser'] = True
+        self.assertFalse(check_if_claim_is_valid(self.new_claim_details)[0])
+
     def test_check_if_claim_is_valid_missing_claim(self):
         self.new_claim_details['user_id'] = self.user.id
         self.new_claim_details['is_superuser'] = False
@@ -390,6 +398,8 @@ class ClaimTests(TestCase):
         for i in range(random.randint(1, 10)):
             invalid_input += ','
         invalid_input += 'tag2'
+        self.assertFalse(check_if_input_format_is_valid(invalid_input))
+        invalid_input = ' tag1'
         self.assertFalse(check_if_input_format_is_valid(invalid_input))
 
     def test_is_english_input_valid(self):
@@ -562,11 +572,12 @@ class ClaimTests(TestCase):
                           authenticity_grade=0,
                           image_src='image')
         new_claim.save()
+        self.update_claim_details['user_id'] = self.user.id
         self.update_claim_details['claim_id'] = new_claim.id
         self.update_claim_details['is_superuser'] = False
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
         self.update_claim_details['is_superuser'] = True
-        self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
+        self.assertTrue(check_claim_new_fields(self.update_claim_details)[0])
 
     def test_check_claim_new_fields_existing_claim(self):
         self.update_claim_details['user_id'] = self.user.id
@@ -604,7 +615,7 @@ class ClaimTests(TestCase):
     def test_check_claim_new_fields_invalid_input_for_tags(self):
         self.update_claim_details['user_id'] = self.user.id
         self.update_claim_details['is_superuser'] = False
-        self.update_claim_details['category'] = '输入英语以外的语言 输入英语以外的语言'
+        self.update_claim_details['tags'] = '输入英语以外的语言 输入英语以外的语言'
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
         self.update_claim_details['is_superuser'] = True
         self.assertFalse(check_claim_new_fields(self.update_claim_details)[0])
@@ -1017,6 +1028,9 @@ class ClaimTests(TestCase):
         self.get_request.GET['sort_method'] = 'Most controversial'
         response = view_claims(self.get_request)
         self.assertTrue(response.status_code == 200)
+
+    def test_view_claims_invalid_request(self):
+        self.assertRaises(PermissionDenied, view_claims, self.post_request)
 
     def test_sort_claims_by_comments(self):
         comment_1 = Comment(claim_id=self.claim_1.id,

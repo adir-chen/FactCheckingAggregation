@@ -81,6 +81,8 @@ def check_if_comment_is_valid(comment_info):
         err += 'Invalid Captcha'
     elif not check_if_input_format_is_valid(comment_info['tags']):
         err += 'Incorrect format for tags'
+    elif 'is_superuser' not in comment_info:
+        err += 'Missing value for user type'
     elif 'claim_id' not in comment_info or not comment_info['claim_id']:
         err += 'Missing value for claim id'
     elif 'title' not in comment_info or not comment_info['title']:

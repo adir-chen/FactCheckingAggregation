@@ -1,6 +1,6 @@
 from django.http import HttpRequest, QueryDict
 from django.core.exceptions import PermissionDenied
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils.datastructures import MultiValueDict
 from claims.models import Claim
 from comments.models import Comment
@@ -17,6 +17,7 @@ import string
 import random
 
 
+@override_settings(DEBUG=False)
 class CommentTests(TestCase):
     def setUp(self):
         self.user_1 = User(username="User1", email='user1@gmail.com')
@@ -376,6 +377,22 @@ class CommentTests(TestCase):
         self.assertTrue(check_if_comment_is_valid(self.new_comment_details_user_2))
 
     def test_check_if_comment_is_valid_missing_user_id(self):
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+
+    def test_check_if_comment_is_valid_missing_user_type(self):
+        self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
+        self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
+        del self.new_comment_details_user_1['is_superuser']
+        del self.new_comment_details_user_2['is_superuser']
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
+        self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
+
+    def test_check_if_comment_is_valid_missing_captcha(self):
+        self.new_comment_details_user_1['user_id'] = str(self.user_1.id)
+        self.new_comment_details_user_2['user_id'] = str(self.user_2.id)
+        del self.new_comment_details_user_1['g_recaptcha_response']
+        del self.new_comment_details_user_2['g_recaptcha_response']
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_1)[0])
         self.assertFalse(check_if_comment_is_valid(self.new_comment_details_user_2)[0])
 
@@ -749,6 +766,16 @@ class CommentTests(TestCase):
         self.update_comment_details['user_id'] = str(self.user_1.id)
         self.update_comment_details['is_superuser'] = False
         del self.update_comment_details['comment_reference']
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+        self.update_comment_details['is_superuser'] = True
+        self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
+
+    def test_check_comment_new_fields_invalid_reference(self):
+        letters = string.ascii_lowercase
+        self.update_comment_details['comment_id'] = str(self.comment_1.id)
+        self.update_comment_details['user_id'] = str(self.user_1.id)
+        self.update_comment_details['is_superuser'] = False
+        self.update_comment_details['comment_reference'] = ''.join(random.choice(letters) for i in range(random.randint(1, 10)))
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
         self.update_comment_details['is_superuser'] = True
         self.assertFalse(check_comment_new_fields(self.update_comment_details)[0])
