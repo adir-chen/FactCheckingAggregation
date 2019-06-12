@@ -804,7 +804,7 @@ div.last-notifications {
   display: none; /* Hidden by default */
   position: fixed; /* Stay in place */
   z-index: 11; /* Sit on top */
-  padding-top: 100px; /* Location of the box */
+  padding-top: 50px; /* Location of the box */
   left: 0;
   top: 0;
   width: 100%; /* Full width */
@@ -843,7 +843,7 @@ div.last-notifications {
 
 /* Slideshow container */
 .slideshow-container {
-  max-width: 1000px;
+  max-width: 850px;
   position: relative;
   margin: auto;
 }

@@ -59,27 +59,10 @@
         <script src="{% static 'notifications/notify.js' %}" type="text/javascript"></script>
         {% register_notify_callbacks callbacks='fill_notification_badge,my_special_notification_callback' %}
     {% endif %}
-
-    <style>
-        #page_content {
-            margin-top: 0;
-        }
-        @media (min-width: 800px) {
-            #sticky_header_wrapper {
-                position: fixed;
-                top: 0;
-                width: 100%;
-                z-index: 10;
-            }
-            #page_content {
-                margin-top: 320px;
-            }
-        }
-    </style>
 </head>
 <body>
     <button onclick="topFunction()" id="scrollTopBtn" title="Go to top"><i class="fa fa-angle-up" style="font-size: 24px;"></i></button>
-    <div id="sticky_header_wrapper">
+    <div id="sticky_header">
         <header id="header">
             <div id="header-wrapper">
                 <div class="site-logo">
@@ -171,6 +154,63 @@
         <p style="height: 60px;"></p>
     {% endif %}
     <section id="page_content">
+
+        <!-- The Modal -->
+        <div id="myModal" class="modal">
+
+            <!-- Modal content -->
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div class="slideshow-container">
+                    <div class="mySlides">
+                        <div class="numbertext">1 / 3</div>
+                        <p>
+                            Welcome to WhatTheFact!<br><br>
+                            Our Site aggregates <b>claims</b> from different sources (published by other websites or by our community's users) and together we try to determine if they are correct or wrong/fake-news.<br>
+                            Each claim get an <b>authenticity grade</b> of its correctness, from <b>0%</b> (False) to <b>100%</b> (True).<br>
+                            The grade is determined by the users who <b>comment</b> on the claim. Every user can share his opinion and classify the claim as <b>'True'</b>, <b>'False'</b> or <b>'Unknown'</b>.
+                        </p>
+                        <img src="{% static 'claims/assets/images/tutorial_1.jpg' %}" style="max-width:100%">
+                    </div>
+                    <div class="mySlides">
+                        <div class="numbertext">2 / 3</div>
+                        <p>
+                            Each comment includes the <b>verdict</b> (classification of the claim) and an <b>evidence</b> that support that verdict.<br>
+                            In order for the verdicts to be meaningful, adding an evidence is a mandatory.<br>
+                            Also, for each comment a user publish, other users can <b>vote</b> for it - if they think the evidence is good they can vote-up and otherwise vote down.<br>
+                            As user gets more votes for his comments, his/her <b>reputation</b> is increased.<br>
+                            The user's reputation is presented as starts (from 1 star to 5 stars). The higher the reputation, the more weight the user's comments get.<br>
+                            For Example, a comment from a 4-stars user is considered more than a 1-star's when calculating the authenticity grade of the claim.
+                        </p>
+                        <img src="{% static 'claims/assets/images/tutorial_2.jpg' %}" style="max-width:100%">
+                    </div>
+                    <div class="mySlides">
+                        <div class="numbertext">3 / 3</div>
+                        <p>
+                            If you don't have an evidence, and just want to leave your opinion on what other user have said in his/her comment - that's also fine.<br>
+                            At the bottom of each comment there is replies section where users can have a free discussion about that comment.<br>
+                        </p>
+                        <img src="{% static 'claims/assets/images/tutorial_3.jpg' %}" style="max-width:100%">
+                        <p>
+                            As guests you can view all claims, comments and replies on our site.<br>
+                            However, if you wish to take an active stance by adding your own claims/comments/replies - you can do it easily by signing in with your Google/Facebook/Twitter account.<br>
+                            Have fun and lets uncover the truth together!
+                        </p>
+                        <p style="text-align: center">
+                            <button class="btn btn-primary" onclick="closeModal()">Sign in</button>
+                        </p>
+                    </div>
+                    <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+                    <a class="next" onclick="plusSlides(1)">&#10095;</a>
+                </div>
+                <br>
+                <div style="text-align:center; margin-top: 20px;">
+                    <span class="dot" onclick="currentSlide(1)"></span>
+                    <span class="dot" onclick="currentSlide(2)"></span>
+                    <span class="dot" onclick="currentSlide(3)"></span>
+                </div>
+            </div>
+        </div>
     {% block page_content %}
 
     {% endblock %}
@@ -180,6 +220,66 @@
     </footer>
 
     <script>
+        // Get the modal
+        var modal = document.getElementById("myModal");
+
+        // Get the button that opens the modal
+        var btn = document.getElementById("myBtn");
+
+        // Get the <span> element that closes the modal
+        var span = document.getElementsByClassName("close")[0];
+
+        // if first time visited, open modal
+        // modal.style.display = "block";
+        if(!localStorage.getItem("visited")){
+           modal.style.display = "block";
+           localStorage.setItem("visited", true);
+        }
+
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
+          modal.style.display = "none";
+        }
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+          if (event.target == modal) {
+            modal.style.display = "none";
+          }
+        }
+
+        function closeModal(){
+            modal.style.display = "none";
+            document.documentElement.scrollTop = 0;
+        }
+
+        var slideIndex = 1;
+        showSlides(slideIndex);
+
+        function plusSlides(n) {
+          showSlides(slideIndex += n);
+        }
+
+        function currentSlide(n) {
+          showSlides(slideIndex = n);
+        }
+
+        function showSlides(n) {
+          var i;
+          var slides = document.getElementsByClassName("mySlides");
+          var dots = document.getElementsByClassName("dot");
+          if (n > slides.length) {slideIndex = 1}
+          if (n < 1) {slideIndex = slides.length}
+          for (i = 0; i < slides.length; i++) {
+              slides[i].style.display = "none";
+          }
+          for (i = 0; i < dots.length; i++) {
+              dots[i].className = dots[i].className.replace(" active", "");
+          }
+          slides[slideIndex-1].style.display = "block";
+          dots[slideIndex-1].className += " active";
+        }
+
         window.onscroll = function() {scrollFunction()};
 
         function scrollFunction() {
