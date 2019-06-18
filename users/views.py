@@ -567,14 +567,17 @@ def upload_user_img(request):
         if os.path.exists("media/images/{}".format(user_id)):
             import shutil
             shutil.rmtree("media/images/{}".format(user_id))
-        user_and_img = form.save(commit=False)
-        user_and_img.user = user
-        user_and_img.profile_img = file
-        user_and_img.save()
-    else:
-        messages.error(request, 'Some error occurred. Please, make sure you upload an image file up to 0.5 MB')
-        return HttpResponseRedirect('/users/' + user_id)
-    return user_page(return_get_request_to_user(request.user), user_id)
+        try:
+            user_and_img = form.save(commit=False)
+            user_and_img.user = user
+            user_and_img.profile_img = file
+            user_and_img.save()
+            return user_page(return_get_request_to_user(request.user), user_id)
+        except Exception:
+            pass
+    messages.error(request, 'Some error occurred. Please, make sure you upload an image file up to 0.5 MB')
+    return HttpResponseRedirect('/users/' + str(user_id))
+
 
 
 # This function return an HTML page for adding a new scraper

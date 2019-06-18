@@ -180,8 +180,8 @@
                     <p class="action_msg note_msg">Used for searching purpose.</p>
                     <input id="{{ claim.id }}_new_comment_tags" type="text"><br>
                     <p id="add_new_comment" class="action_msg note_msg" >If you want to edit your comment you will be able to do so during the next 10 minutes from the moment you added it.</p>
-<!--                    <div class="g-recaptcha" data-sitekey="6Le4fp0UAAAAAJjD2ErEEZl8_G6uEl62Hon1g9Pv"></div>-->
-                    <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+                    <div class="g-recaptcha" data-sitekey="6Le4fp0UAAAAAJjD2ErEEZl8_G6uEl62Hon1g9Pv"></div>
+{#                    <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>#}
                     <div id="g-recaptcha-response" hidden></div>
                     <button type="submit" id="{{ claim.id }}_new_comment_save" class="btn btn-info" style="margin: 10px 0;">Add your comment</button>
                 </div>
@@ -196,23 +196,25 @@
             if (!(image_{{ claim_id }}.complete && image_{{ claim_id }}.naturalHeight !== 0)) {
                 $("#img_src_{{ claim.id }}").attr("src", "/static/claims/assets/images/claim_default_image.jpg");
             }
+            let debug_mode = '{% is_debug_mode %}' == 'True';
+            if (!debug_mode){
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'tweets:check_tweets_for_claim_in_twitter' %}",
+                    headers: { "X-CSRFToken": '{{ csrf_token }}' },
+                    data: {
+                        claim_id: '{{ claim.id }}',
+                    },
+                    success: function () {
 
-            $.ajax({
-                type: 'POST',
-                url: "{% url 'tweets:check_tweets_for_claim_in_twitter' %}",
-                headers: { "X-CSRFToken": '{{ csrf_token }}' },
-                data: {
-                    claim_id: '{{ claim.id }}',
-                },
-                success: function () {
-
-                },
-                error: function (request) {
-                    hide_all_msgs();
-                    let err = request.responseJSON;
-                    document.getElementById("error_msg_{{ claim.id }}_claim_extracting_tweets").innerHTML = err;
-                }
-            });
+                    },
+                    error: function (request) {
+                        hide_all_msgs();
+                        let err = request.responseJSON;
+                        document.getElementById("error_msg_{{ claim.id }}_claim_extracting_tweets").innerHTML = err;
+                    }
+                });
+            }
         };
         let claim_timestamp = new Date('{{ claim.timestamp|date:"D, d M Y H:i:s" }}');
         {% if request.user.is_superuser %}

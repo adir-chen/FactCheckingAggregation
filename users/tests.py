@@ -1,4 +1,6 @@
 from django.contrib.auth.models import AnonymousUser
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.contrib.messages.middleware import MessageMiddleware
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpRequest, QueryDict, Http404
 from django.core.exceptions import PermissionDenied
@@ -1157,8 +1159,8 @@ class UsersTest(TestCase):
         query_dict.update(user_image)
         self.post_request.POST = query_dict
         self.assertTrue(upload_user_img(self.post_request).status_code == 200)
-        self.assertTrue(
-            Users_Images.objects.filter(user=self.user_2).first().profile_img.url == '/media/images/2/2_image')
+        self.assertTrue(Users_Images.objects.filter(user=self.user_2).first().profile_img.url ==
+                        '/media/images/2/2_image')
         self.post_request = HttpRequest()
         self.post_request.method = 'POST'
         self.post_request.user = self.user_2
@@ -1167,10 +1169,10 @@ class UsersTest(TestCase):
         self.post_request.FILES['profile_img'] = self.image_file_test
         self.post_request.POST = query_dict
         self.assertTrue(upload_user_img(self.post_request).status_code == 200)
-        self.assertTrue(
-            Users_Images.objects.filter(user=self.user_2).first().profile_img.url == '/media/images/2/2_image')
+        self.assertTrue(Users_Images.objects.filter(user=self.user_2).first().profile_img.url ==
+                        '/media/images/2/2_image')
 
-    def test_upload_user_img_invalid_image(self):
+    def test_upload_user_img_missing_image(self):
         Users_Images.objects.create(user=self.user_2)
         user_image = {'user_id': self.user_2.id}
         self.post_request.FILES['profile_img'] = ''
@@ -1178,8 +1180,43 @@ class UsersTest(TestCase):
         query_dict = QueryDict('', mutable=True)
         query_dict.update(user_image)
         self.post_request.POST = query_dict
-        self.assertRaises(Exception, upload_user_img, self.post_request)
-        self.assertTrue(Users_Images.objects.filter(user=self.user_2).first().image_url() == 'https://wtfact.ise.bgu.ac.il/media/profile_default_image.jpg')
+
+        middleware = SessionMiddleware()
+        middleware.process_request(self.post_request)
+        self.post_request.session.save()
+
+        middleware = MessageMiddleware()
+        middleware.process_request(self.post_request)
+        self.post_request.session.save()
+
+        response = upload_user_img(self.post_request)
+        self.assertTrue(response.status_code == 302)
+        self.assertTrue(response.url == '/users/' + str(self.user_2.id))
+        self.assertTrue(Users_Images.objects.filter(user=self.user_2).first().image_url() ==
+                        'https://wtfact.ise.bgu.ac.il/media/profile_default_image.jpg')
+
+    def test_upload_user_img_invalid_image(self):
+        Users_Images.objects.create(user=self.user_2)
+        user_image = {'user_id': self.user_2.id}
+        self.post_request.FILES['profile_img'] = self.image_file_test_invalid
+        self.post_request.user = self.user_2
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(user_image)
+        self.post_request.POST = query_dict
+
+        middleware = SessionMiddleware()
+        middleware.process_request(self.post_request)
+        self.post_request.session.save()
+
+        middleware = MessageMiddleware()
+        middleware.process_request(self.post_request)
+        self.post_request.session.save()
+
+        response = upload_user_img(self.post_request)
+        self.assertTrue(response.status_code == 302)
+        self.assertTrue(response.url == '/users/' + str(self.user_2.id))
+        self.assertTrue(Users_Images.objects.filter(user=self.user_2).first().image_url() ==
+                        'https://wtfact.ise.bgu.ac.il/media/profile_default_image.jpg')
 
     def test_upload_user_img_user_not_authenticated(self):
         Users_Images.objects.create(user=self.user_2)
@@ -1190,8 +1227,8 @@ class UsersTest(TestCase):
         query_dict.update(user_image)
         self.post_request.POST = query_dict
         self.assertRaises(PermissionDenied, upload_user_img, self.post_request)
-        self.assertTrue(Users_Images.objects.filter(
-            user=self.user_2).first().image_url() == 'https://wtfact.ise.bgu.ac.il/media/profile_default_image.jpg')
+        self.assertTrue(Users_Images.objects.filter(user=self.user_2).first().image_url() ==
+                        'https://wtfact.ise.bgu.ac.il/media/profile_default_image.jpg')
 
     def test_notifications_page(self):
         self.get_request.user = self.user_1

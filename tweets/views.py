@@ -245,19 +245,6 @@ def check_tweets_for_claim_in_twitter(request):
     return HttpResponse(json.dumps(err_msg), content_type='application/json', status=404)
 
 
-# def get_tweets_for_claim(claim_id):
-#     from tweets.models import Tweet
-#     from users.models import User
-#     tweets = Tweet.objects.filter(claim_id=claim_id).order_by('-id')
-#     if len(tweets) == 0 or (timezone.now() - tweets.first().timestamp).days > 1:
-#         request = HttpRequest()
-#         request.user = User.objects.filter(is_superuser=True).order_by('+id').first()
-#         request.method = 'POST'
-#         request.POST['claim_id'] = claim_id
-#         check_tweets_for_claim_in_twitter(request)
-#     return Tweet.objects.filter(claim_id=claim_id).order_by('-id')
-
-
 # This function checks if the given fields for extracting tweets for a claim are valid,
 # i.e. the fields are with the correct format.
 # The function returns true in case the fields are valid, otherwise false and an error
