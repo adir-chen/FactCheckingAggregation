@@ -18,6 +18,11 @@ from django.contrib.staticfiles.templatetags.staticfiles import static
 def authenticated_browser(browser, client, live_server_url, user):
     client.force_login(user)
     browser.get(live_server_url)
+    try:
+        time.sleep(2)
+        browser.find_element_by_class_name('close').click()
+    except Exception as e:
+        pass
     cookie = client.cookies['sessionid']
     browser.add_cookie({'name': 'sessionid', 'value': cookie.value, 'secure': False, 'path': '/'})
     browser.refresh()
@@ -59,7 +64,7 @@ class UITests(StaticLiveServerTestCase):
     def tearDown(self):
         self.browser.close()
 
-    def add_tweet(self, user_id):
+    def add_tweet(self):
         tweet_1 = Tweet(claim_id=self.claim_1.id,
                         tweet_link='http://url1/',)
         tweet_1.save()
@@ -68,6 +73,8 @@ class UITests(StaticLiveServerTestCase):
 
     def test_guest_navbar_links(self):
         self.browser.get(self.live_server_url)
+        time.sleep(2)
+        self.browser.find_element_by_class_name('close').click()
         self.assertEqual(
             [a.text for a in self.browser.find_element_by_class_name('nav-wrapper').find_elements_by_tag_name('a')],
             ['Home', 'About us', 'Contact us']
@@ -91,6 +98,8 @@ class UITests(StaticLiveServerTestCase):
 
     def test_click_about_us(self):
         self.browser.get(self.live_server_url)
+        time.sleep(2)
+        self.browser.find_element_by_class_name('close').click()
         about = self.browser.find_element_by_link_text('About us')
         about.click()
         self.assertEqual(
@@ -100,6 +109,8 @@ class UITests(StaticLiveServerTestCase):
 
     def test_click_contact_us(self):
         self.browser.get(self.live_server_url)
+        time.sleep(2)
+        self.browser.find_element_by_class_name('close').click()
         about = self.browser.find_element_by_link_text('Contact us')
         about.click()
         self.assertEqual(
@@ -127,6 +138,8 @@ class UITests(StaticLiveServerTestCase):
 
     def test_user_see_claim_on_home_page(self):
         self.browser.get(self.live_server_url)
+        time.sleep(2)
+        self.browser.find_element_by_class_name('close').click()
         self.assertEqual(
             self.browser.find_element_by_tag_name('h5').text,
             'claim1'
@@ -134,6 +147,8 @@ class UITests(StaticLiveServerTestCase):
 
     def test_view_claim(self):
         self.browser.get(self.live_server_url)
+        time.sleep(2)
+        self.browser.find_element_by_class_name('close').click()
         self.browser.find_element_by_class_name('claim_box').find_element_by_class_name('btn').click()
         self.assertEqual(
             self.browser.current_url,
@@ -196,8 +211,10 @@ class UITests(StaticLiveServerTestCase):
         )
 
     def test_view_tweet(self):
-        tweet_1 = self.add_tweet(self.claim_1.user_id)
+        tweet_1 = self.add_tweet()
         self.browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        time.sleep(2)
+        self.browser.find_element_by_class_name('close').click()
         self.assertEqual(
             self.browser.find_element_by_id('tweet_box_' + str(tweet_1.id)).find_element_by_class_name('twitter-tweet').find_element_by_tag_name('a').get_attribute('href'),
             tweet_1.tweet_link
@@ -210,6 +227,8 @@ class UITests(StaticLiveServerTestCase):
         reply_1.save()
         time.sleep(1)
         self.browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        time.sleep(2)
+        self.browser.find_element_by_class_name('close').click()
         self.assertEqual(
             self.browser.find_element_by_class_name('reply_img').find_element_by_tag_name('img').get_attribute(
                 'src'),
@@ -342,7 +361,7 @@ class UITests(StaticLiveServerTestCase):
         )
 
     def test_delete_tweet_by_admin(self):
-        tweet_1 = self.add_tweet(self.user2.id)
+        tweet_1 = self.add_tweet()
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.admin)
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
         browser.find_element_by_id(str(tweet_1.id) + '_tweet_delete').click()
@@ -355,7 +374,7 @@ class UITests(StaticLiveServerTestCase):
         )
 
     def test_regular_user_cannot_delete_tweet(self):
-        tweet_1 = self.add_tweet(self.user2.id)
+        tweet_1 = self.add_tweet()
         browser = authenticated_browser(self.browser, self.client, self.live_server_url, self.user2)
         browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
         self.assertEqual(
@@ -364,16 +383,20 @@ class UITests(StaticLiveServerTestCase):
         )
 
     def test_guest_cannot_delete_tweet(self):
-        tweet_1 = self.add_tweet(self.user2.id)
+        tweet_1 = self.add_tweet()
         self.browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        time.sleep(2)
+        self.browser.find_element_by_class_name('close').click()
         self.assertEqual(
             len(self.browser.find_elements_by_id(str(tweet_1.id) + '_tweet_delete')),
             0
         )
 
     def test_guest_cannot_view_add_tweet_as_reference_button(self):
-        tweet_1 = self.add_tweet(self.user2.id)
+        tweet_1 = self.add_tweet()
         self.browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        time.sleep(2)
+        self.browser.find_element_by_class_name('close').click()
         self.assertEqual(
             len(self.browser.find_elements_by_id(str(tweet_1.id) + '_add_comment_on_tweet)')),
             0
@@ -409,6 +432,8 @@ class UITests(StaticLiveServerTestCase):
 
     def test_guest_cannot_view_add_comment_form(self):
         self.browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        time.sleep(2)
+        self.browser.find_element_by_class_name('close').click()
         self.assertEqual(
             len(self.browser.find_elements_by_class_name('comment_box')),
             1
@@ -747,6 +772,8 @@ class UITests(StaticLiveServerTestCase):
 
     def test_vote_disabled_for_guest(self):
         self.browser.get(self.live_server_url + '/claim/' + str(self.claim_1.id))
+        time.sleep(2)
+        self.browser.find_element_by_class_name('close').click()
         self.assertFalse(
             self.browser.find_element_by_class_name('arrow_up').is_enabled()
         )
@@ -792,6 +819,8 @@ class UITests(StaticLiveServerTestCase):
         tag_num = random.randint(1, 4)
         search_tag = 'tag'+str(tag_num)
         self.browser.get(self.live_server_url)
+        time.sleep(2)
+        self.browser.find_element_by_class_name('close').click()
         self.browser.find_element_by_name('search_keywords').send_keys(search_tag)
         self.browser.find_element_by_name('search_keywords').send_keys(Keys.ENTER)
         time.sleep(2)  # wait 2 second for search results
@@ -826,6 +855,8 @@ class UITests(StaticLiveServerTestCase):
         # search for a random claim
         search_claim = 'claim'+str(random.randint(1, 3))
         self.browser.get(self.live_server_url)
+        time.sleep(2)
+        self.browser.find_element_by_class_name('close').click()
         self.browser.find_element_by_name('search_keywords').send_keys(search_claim)
         self.browser.find_element_by_name('search_keywords').send_keys(Keys.ENTER)
         time.sleep(2)  # wait 2 second for search results
@@ -854,6 +885,8 @@ class UITests(StaticLiveServerTestCase):
         # search for a random claim
         num = random.randint(1, 3)
         self.browser.get(self.live_server_url)
+        time.sleep(2)
+        self.browser.find_element_by_class_name('close').click()
         self.browser.find_element_by_name('search_keywords').send_keys(str(num))
         self.browser.find_element_by_name('search_keywords').send_keys(Keys.ENTER)
         time.sleep(2)  # wait 2 second for search results

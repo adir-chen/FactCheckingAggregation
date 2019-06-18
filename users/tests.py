@@ -15,7 +15,7 @@ from users.views import check_if_user_exists_by_user_id, get_username_by_user_id
     add_true_label_to_scraper, delete_true_label_from_scraper, add_false_label_to_scraper, \
     delete_false_label_from_scraper, check_if_scraper_new_label_is_valid, \
     check_if_scraper_label_delete_is_valid, check_if_scraper_labels_already_exist, \
-    check_if_user_is_scraper, upload_user_img, notifications_page, read_all_notifications, read_notification, \
+    update_scrapers_comments_verdicts, check_if_user_is_scraper, upload_user_img, notifications_page, read_all_notifications, read_notification, \
     delete_notification, check_if_notification_is_valid, change_username, check_if_user_info_is_valid
 import json
 import random
@@ -90,8 +90,10 @@ class UsersTest(TestCase):
                           'user_id': self.user_1.id,
                           'request_user_id': self.user_1.id,
                           'is_superuser': False}
-        self.image_file_test = SimpleUploadedFile(name="profile_default_image_test.jpg.", content=open(
+        self.image_file_test = SimpleUploadedFile(name="profile_default_image_test.jpg", content=open(
             'users/profile_default_image_test.jpg', 'rb').read(), content_type='image/jpeg')
+        self.image_file_test_invalid = SimpleUploadedFile(name="profile_default_image_test_invalid.jpg", content=open(
+            'users/profile_default_image_test_invalid.jpg', 'rb').read(), content_type='image/jpeg')
         self.error_code = 404
 
     def tearDown(self):
@@ -1134,14 +1136,7 @@ class UsersTest(TestCase):
         self.assertTrue(Comment.objects.filter(id=self.comment_1.id).first().system_label == 'Unknown')
 
     def test_update_scrapers_comments_verdicts_invalid_scraper(self):
-        random_label = ['accurate', 'correct', 'mostly correct'][random.randint(0, 2)]
-        self.new_label_for_scraper['scraper_label'] = random_label
-        self.new_label_for_scraper['scraper_id'] = self.num_of_saved_users + random.randint(1, 10)
-        query_dict = QueryDict('', mutable=True)
-        query_dict.update(self.new_label_for_scraper)
-        self.post_request.POST = query_dict
-        self.post_request.user = self.admin
-        self.assertTrue(add_true_label_to_scraper(self.post_request).status_code == self.error_code)
+        self.assertTrue(update_scrapers_comments_verdicts(self.num_of_saved_users + random.randint(1, 10)).status_code == self.error_code)
 
     def test_check_if_user_is_scraper(self):
         Scrapers.objects.create(scraper=self.new_scraper)
@@ -1152,6 +1147,51 @@ class UsersTest(TestCase):
 
     def test_check_if_user_is_scraper_not_scraper(self):
         self.assertFalse(check_if_user_is_scraper(self.user_1.id))
+
+    def test_upload_user_img(self):
+        Users_Images.objects.create(user=self.user_2)
+        user_image = {'user_id': self.user_2.id}
+        self.post_request.FILES['profile_img'] = self.image_file_test
+        self.post_request.user = self.user_2
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(user_image)
+        self.post_request.POST = query_dict
+        self.assertTrue(upload_user_img(self.post_request).status_code == 200)
+        self.assertTrue(
+            Users_Images.objects.filter(user=self.user_2).first().profile_img.url == '/media/images/2/2_image')
+        self.post_request = HttpRequest()
+        self.post_request.method = 'POST'
+        self.post_request.user = self.user_2
+        self.image_file_test = SimpleUploadedFile(name="profile_default_image_test.jpg", content=open(
+            'users/profile_default_image_test.jpg', 'rb').read(), content_type='image/jpeg')
+        self.post_request.FILES['profile_img'] = self.image_file_test
+        self.post_request.POST = query_dict
+        self.assertTrue(upload_user_img(self.post_request).status_code == 200)
+        self.assertTrue(
+            Users_Images.objects.filter(user=self.user_2).first().profile_img.url == '/media/images/2/2_image')
+
+    def test_upload_user_img_invalid_image(self):
+        Users_Images.objects.create(user=self.user_2)
+        user_image = {'user_id': self.user_2.id}
+        self.post_request.FILES['profile_img'] = ''
+        self.post_request.user = self.user_2
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(user_image)
+        self.post_request.POST = query_dict
+        self.assertRaises(Exception, upload_user_img, self.post_request)
+        self.assertTrue(Users_Images.objects.filter(user=self.user_2).first().image_url() == 'https://wtfact.ise.bgu.ac.il/media/profile_default_image.jpg')
+
+    def test_upload_user_img_user_not_authenticated(self):
+        Users_Images.objects.create(user=self.user_2)
+        user_image = {'user_id': self.user_2.id}
+        self.post_request.FILES['profile_img'] = self.image_file_test
+        self.post_request.user = AnonymousUser()
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(user_image)
+        self.post_request.POST = query_dict
+        self.assertRaises(PermissionDenied, upload_user_img, self.post_request)
+        self.assertTrue(Users_Images.objects.filter(
+            user=self.user_2).first().image_url() == 'https://wtfact.ise.bgu.ac.il/media/profile_default_image.jpg')
 
     def test_notifications_page(self):
         self.get_request.user = self.user_1
@@ -1473,7 +1513,7 @@ class UsersTest(TestCase):
                         "images/" + str(self.user_1.id) + "/" + str(self.user_1.id) + '_image')
 
     def test_image_url(self):
-        default_media = 'https://wtfact.ise.bgu.ac.il/media/profile_default_image_test.jpg'
+        default_media = 'https://wtfact.ise.bgu.ac.il/media/profile_default_image.jpg'
         import tempfile
         image = tempfile.NamedTemporaryFile(suffix=".jpg").name
         user_1_img = Users_Images(user=self.user_1, profile_img=image)
@@ -1536,18 +1576,3 @@ class UsersTest(TestCase):
     def test_scraper_str(self):
         scraper = Scrapers.objects.create(scraper=self.new_scraper, scraper_name=self.new_scraper.username)
         self.assertTrue(scraper.__str__() == self.new_scraper.username)
-
-    # def test_upload_user_img(self):
-    #     Users_Images.objects.create(user=self.user_2)
-    #     from users.forms import ImageUploadForm
-    #     form = ImageUploadForm(data={'user_id': self.user_2.id, 'profile_img': self.image_file_test})
-    #     self.get_request.user = self.user_2
-    #     response = user_page(self.get_request, self.user_2.id)
-    #     self.assertTrue(response.status_code == 200)
-    #     user_image = {'user_id': self.user_2.id}
-    #     self.post_request.FILES['profile_img'] = self.image_file_test
-    #     self.post_request.user = self.user_2
-    #     query_dict = QueryDict('', mutable=True)
-    #     query_dict.update(user_image)
-    #     self.post_request.POST = query_dict
-    #     a = upload_user_img(self.post_request)
