@@ -579,7 +579,6 @@ def upload_user_img(request):
     return HttpResponseRedirect('/users/' + str(user_id))
 
 
-
 # This function return an HTML page for adding a new scraper
 def notifications_page(request):
     if not request.user.is_authenticated or request.method != 'GET':

@@ -156,7 +156,7 @@ class Analytics(TestCase):
         from claims.views import view_claim
         ten_claims_ids = []
         self.get_request.user = self.admin
-        for i in range(random.randint(40, 50)):
+        for i in range(random.randint(60, 80)):
             claim = Claim(user_id=self.admin.id,
                           claim='claim' + str(i),
                           category='category' + str(i),

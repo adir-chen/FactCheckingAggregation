@@ -64,7 +64,7 @@
     <script>
         if(localStorage.getItem("success_msg")){
             $("#success_msg").attr("hidden", false);
-            localStorage.clear();
+            localStorage.removeItem("success_msg");
         }
 
         $("#add_scraper_submit").click(function(e){

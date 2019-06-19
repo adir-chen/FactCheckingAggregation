@@ -25,7 +25,7 @@
     <script>
         if(localStorage.getItem("success_msg_send_email")){
             $("#success_msg_send_email").attr("hidden", false);
-            localStorage.clear();
+            localStorage.removeItem("success_msg_send_email");
         }
         $("#submit_email").click(function(e){
             e.preventDefault();

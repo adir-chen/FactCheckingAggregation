@@ -143,11 +143,11 @@
     {% endif %}
     if(localStorage.getItem("success_msg_{{ comment.id }}_comment_edit")){
         $("#success_msg_{{ comment.id }}_comment_edit").attr("hidden", false);
-        localStorage.clear();
+        localStorage.removeItem("success_msg_{{ comment.id }}_comment_edit");
     }
     else if(localStorage.getItem("success_msg_{{ comment.id }}_comment_vote")){
         $("#success_msg_{{ comment.id }}_comment_vote").attr("hidden", false);
-        localStorage.clear();
+        localStorage.removeItem("success_msg_{{ comment.id }}_comment_vote");
     }
 
     function hide_all_msgs(){

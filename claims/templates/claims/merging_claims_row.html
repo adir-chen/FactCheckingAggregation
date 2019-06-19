@@ -21,15 +21,15 @@
 <script>
     if(localStorage.getItem("success_msg_merging_claims")){
         $("#success_msg_merging_claims").attr("hidden", false);
-        localStorage.clear();
+        localStorage.removeItem("success_msg_merging_claims");
     }
     else if(localStorage.getItem("success_msg_deleting_suggestion")){
         $("#success_msg_deleting_suggestion").attr("hidden", false);
-        localStorage.clear();
+        localStorage.removeItem("success_msg_deleting_suggestion");
     }
     else if(localStorage.getItem("success_msg_switching_claims")){
         $("#success_msg_switching_claims").attr("hidden", false);
-        localStorage.clear();
+        localStorage.removeItem("success_msg_switching_claims");
     }
     $("#{{ suggestion.id }}_merging_claims").click(function(){
         $.ajax({

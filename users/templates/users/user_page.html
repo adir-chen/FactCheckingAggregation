@@ -160,23 +160,23 @@
     <script>
         if(localStorage.getItem("success_msg_delete_true_label")){
             $("#success_msg_delete_true_label").attr("hidden", false);
-            localStorage.clear();
+            localStorage.removeItem("success_msg_delete_true_label");
         }
         else if(localStorage.getItem("success_msg_delete_false_label")){
             $("#success_msg_delete_false_label").attr("hidden", false);
-            localStorage.clear();
+            localStorage.removeItem("success_msg_delete_false_label");
         }
         else if(localStorage.getItem("success_msg_add_true_label")){
             $("#success_msg_add_true_label").attr("hidden", false);
-            localStorage.clear();
+            localStorage.removeItem("success_msg_add_true_label");
         }
         else if(localStorage.getItem("success_msg_add_false_label")){
             $("#success_msg_add_false_label").attr("hidden", false);
-            localStorage.clear();
+            localStorage.removeItem("success_msg_add_false_label");
         }
         else if(localStorage.getItem("success_msg_change_username")){
             $("#success_msg_change_username").attr("hidden", false);
-            localStorage.clear();
+            localStorage.removeItem("success_msg_change_username");
         }
         window.onload = function() {
             let claims_images = document.getElementsByClassName('claim_image');

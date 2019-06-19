@@ -18,7 +18,7 @@
 <script>
     if(localStorage.getItem("success_msg_deleting_notification")){
         $("#success_msg_deleting_notification").attr("hidden", false);
-        localStorage.clear();
+        localStorage.removeItem("success_msg_deleting_notification");
     }
 
     $("#{{ notification.id }}_read").click(function(){

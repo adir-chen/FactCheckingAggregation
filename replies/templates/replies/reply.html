@@ -31,7 +31,7 @@
 
     if(localStorage.getItem("success_msg_{{ reply.id }}_reply_edit")){
         $("#success_msg_{{ reply.id }}_reply_edit").attr("hidden", false);
-        localStorage.clear();
+        localStorage.removeItem("success_msg_{{ reply.id }}_reply_edit");
     }
 
     function hide_all_msgs(){
